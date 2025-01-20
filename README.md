@@ -1,5 +1,5 @@
 # Project Title: NestJS User Authentication System
-
+https://aka.ms/edge/workspaceslaunch?code=dHlwZT0xJmlkPWFIUjBjSE02THk5b2IyMWxMbTFwWTNKdmMyOW1kSEJsY25OdmJtRnNZMjl1ZEdWdWRDNWpiMjB2T25VNkwyY3ZZMjl1ZEdWdWRITjBiM0poWjJVdk5rTjZibWxvVGpOMk1IVjVNWHBMTlVaeVVrTmlkMll6WlRCbFpEQmtNREF3TlRobFpHUjNiM0pyYzNCaFkyVnpMMGxSVEVWZmNqWlZkRWt5UkZNMVVqVlJhR1JmYkdkSFNVRlZSM0pFYlVzMFVHUTBRMXA0Vlhvd1prVlpiWEZOJnN0b3JlPTUmc291cmNlPVdvcmtzcGFjZXMmcmVkZWVtQ29kZT0mYXBwSWRHdWlkPWI2ZDgzM2NmLWI1NGUtNGNhYi04MTQzLTEzMThlMGJjNTBlMQ%3D%3D&source=Workspaces
 ## Description
 This project is a user authentication system built with NestJS, TypeScript, TypeORM, and MySQL. It provides functionalities for user registration, login, and role-based access control. The application is structured to include guards, validation, error handling, and various other features to ensure security and maintainability.
 
