@@ -1,0 +1,26 @@
+{
+  "preset": "@shelf/jest-mongodb",
+  "testEnvironment": "node",
+  "testMatch": [
+    "**/*.e2e-spec.ts"
+  ],
+  "transform": {
+    "^.+\\.ts$": "ts-jest"
+  },
+  "moduleFileExtensions": [
+    "js",
+    "json",
+    "ts"
+  ],
+  "globalSetup": "./test/setup.ts",
+  "globalTeardown": "./test/teardown.ts",
+  "setupFilesAfterEnv": ["<rootDir>/test/setupAfterEnv.ts"],
+  "coverageDirectory": "./coverage",
+  "collectCoverage": true,
+  "collectCoverageFrom": [
+    "src/**/*.{js,ts}",
+    "!src/**/*.module.{js,ts}",
+    "!src/**/*.interface.{js,ts}",
+    "!src/**/*.dto.{js,ts}"
+  ]
+}
