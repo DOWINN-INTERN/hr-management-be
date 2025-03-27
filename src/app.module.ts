@@ -1,28 +1,35 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { UsersModule } from './modules/users/users.module';
-import { AuthModule } from './modules/auth/auth.module';
-import { EmailModule } from './email/email.module';
+import { CommonModule } from './common/common.module';
+import { configValidationSchema } from './config.schema';
+import { DatabaseModule } from './database/database.module';
+import { AccountManagementModule } from './modules/account-management/account-management.module';
+import { AttendanceManagementModule } from './modules/attendance-management/attendance-management.module';
+import { DocumentsModule } from './modules/documents/documents.module';
+import { EmployeeManagementModule } from './modules/employee-management/employee-management.module';
+import { FilesModule } from './modules/files/files.module';
+import { LogsModule } from './modules/logs/logs.module';
+import { NotificationsModule } from './modules/notifications/notifications.module';
+import { ScheduleManagementModule } from './modules/schedule-management/schedule-management.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
+      envFilePath: [`.env.stage.${process.env.STAGE}`],
+      validationSchema: configValidationSchema,
     }),
-    TypeOrmModule.forRoot({
-      type: 'mysql',
-      host: process.env.DB_HOST,
-      port: parseInt(process.env.DB_PORT, 10),
-      username: process.env.DB_USERNAME,
-      password: process.env.DB_PASSWORD,
-      database: process.env.DB_DATABASE,
-      entities: [__dirname + '/**/*.entity{.ts,.js}'],
-      synchronize: process.env.NODE_ENV !== 'production',
-    }),
-    UsersModule,
-    AuthModule,
-    EmailModule,
+    DatabaseModule,
+    CommonModule,
+    LogsModule,
+    FilesModule,
+    NotificationsModule,
+    DocumentsModule,
+    EmployeeManagementModule,
+    AccountManagementModule,
+    ScheduleManagementModule,
+    AttendanceManagementModule
   ],
+  controllers: [],
 })
 export class AppModule {}

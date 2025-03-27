@@ -1,0 +1,70 @@
+import { ApiProperty } from '@nestjs/swagger';
+import { IsInt, IsOptional, IsString, IsUUID, Min } from 'class-validator';
+import { FindManyOptions } from 'typeorm';
+
+export class PaginationDto<T> {
+  @ApiProperty({
+    description: 'Number of items to skip',
+    required: false,
+    minimum: 0,
+    default: 0,
+  })
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  skip?: number = 0;
+
+  @ApiProperty({
+    description: 'Number of items to take',
+    required: false,
+    minimum: 1,
+    default: 10,
+  })
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  take?: number = 10;
+
+  @ApiProperty({
+    description: 'Filter criteria in JSON string format',
+    required: false,
+    example: '{"field": "value"}',
+  })
+  @IsOptional()
+  @IsString()
+  filter?: string;
+
+  @ApiProperty({
+    description: 'Sort criteria in JSON string format',
+    required: false,
+    example: '{"field": "ASC"}',
+  })
+  @IsOptional()
+  @IsString()
+  sort?: string;
+
+  @ApiProperty({
+    description: 'User ID for filtering',
+    required: false,
+    format: 'uuid',
+  })
+  @IsOptional()
+  @IsUUID()
+  userId?: string;
+
+  toFindManyOptions(baseWhere: Partial<T> = {}): FindManyOptions<T> {
+    const filterWhere = this.filter ? JSON.parse(this.filter) : {};
+    const userWhere = this.userId ? { userId: this.userId } : {};
+
+    const defaultWhere = filterWhere.hasOwnProperty('isDeleted') ? {} : { isDeleted: false };
+
+    const options: FindManyOptions<T> = {
+      skip: this.skip,
+      take: this.take,
+      where: { ...baseWhere, ...filterWhere, ...userWhere, ...defaultWhere },
+      order: this.sort ? JSON.parse(this.sort) : undefined,
+    };
+
+    return options;
+  }
+}

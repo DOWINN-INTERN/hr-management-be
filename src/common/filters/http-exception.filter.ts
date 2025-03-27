@@ -1,13 +1,13 @@
-import { 
-  ExceptionFilter, 
-  Catch, 
-  ArgumentsHost, 
-  HttpException, 
-  HttpStatus, 
-  Logger 
+import {
+  ArgumentsHost,
+  Catch,
+  ExceptionFilter,
+  HttpException,
+  HttpStatus,
+  Logger
 } from '@nestjs/common';
-import { Request, Response } from 'express';
 import * as crypto from 'crypto';
+import { Request, Response } from 'express';
 
 /**
  * HttpExceptionFilter is a global filter that handles all exceptions thrown in the application.
@@ -18,7 +18,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
   private readonly logger = new Logger(HttpExceptionFilter.name);
   private readonly errorCount = new Map<string, number>();
   private readonly SENSITIVE_PATTERNS = [
-    /password/i, 
+    /(?:confirm)?password/i,
     /token/i, 
     /credit.?card/i, 
     /secret/i,
@@ -29,6 +29,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
     /pin/i, 
     /passcode/i
   ];
+
 
   /**
    * Catches and handles exceptions thrown in the application.
@@ -46,22 +47,14 @@ export class HttpExceptionFilter implements ExceptionFilter {
     const error = this.normalizeError(exception);
     const timestamp = new Date().toISOString();
 
-    // Track error frequency
-    const clientIp = request.ip || 'unknown';
-    this.trackErrorFrequency(clientIp, status);
+    // Get client IP with fallbacks
+    const clientIp = 
+      request.socket.remoteAddress ||
+      request.ip ||
+      'unknown';
 
-    // Log error with context
-    this.logError({
-      traceId,
-      timestamp,
-      path: request.url,
-      method: request.method,
-      status,
-      error: error.message,
-      ip: clientIp,
-      headers: this.sanitizeHeaders(request.headers),
-      stack: this.sanitizeStackTrace(error.stack),
-    });
+    // Track error frequency
+    this.trackErrorFrequency(clientIp, status);
 
     // Prepare client response
     const clientResponse = {
@@ -69,11 +62,10 @@ export class HttpExceptionFilter implements ExceptionFilter {
       timestamp,
       traceId,
       path: request.url,
-      message: this.getClientMessage(error.message, status),
-      ...(process.env.NODE_ENV === 'development' && {
-        detail: error.message,
-        stack: error.stack,
-      }),
+      detail: error.name,
+      message: exception instanceof HttpException 
+        ? (exception.getResponse() as any).message || error.message
+        : this.getClientMessage(error.message, status),
     };
 
     response.status(status).json(clientResponse);
@@ -120,30 +112,12 @@ export class HttpExceptionFilter implements ExceptionFilter {
   }
 
   /**
-   * Sanitizes the stack trace to remove unnecessary lines.
-   * @param stack - The stack trace to sanitize.
-   * @returns The sanitized stack trace.
-   */
-  private sanitizeStackTrace(stack?: string): string | undefined {
-    if (!stack || process.env.NODE_ENV === 'production') {
-      return undefined;
-    }
-    return stack
-      .split('\n')
-      .filter(line => !line.includes('node_modules'))
-      .join('\n');
-  }
-
-  /**
    * Generates a user-friendly message for the client.
    * @param message - The original error message.
    * @param status - The HTTP status code.
    * @returns The user-friendly message.
    */
   private getClientMessage(message: string, status: number): string {
-    if (status >= 500) {
-      return 'An internal server error occurred';
-    }
     return this.sanitizeSensitiveData(message);
   }
 

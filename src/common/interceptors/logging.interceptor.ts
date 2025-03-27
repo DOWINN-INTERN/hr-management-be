@@ -1,7 +1,7 @@
-import { Injectable, NestInterceptor, ExecutionContext, CallHandler, Logger } from '@nestjs/common';
-import { Observable } from 'rxjs';
-import { tap, catchError } from 'rxjs/operators';
+import { CallHandler, ExecutionContext, Injectable, Logger, NestInterceptor } from '@nestjs/common';
 import * as crypto from 'crypto';
+import { Observable } from 'rxjs';
+import { catchError, tap } from 'rxjs/operators';
 
 /**
  * LoggingInterceptor is a NestJS interceptor that logs HTTP requests and responses.
@@ -10,7 +10,7 @@ import * as crypto from 'crypto';
 @Injectable()
 export class LoggingInterceptor implements NestInterceptor {
   private readonly logger = new Logger('HTTP');
-  private readonly SENSITIVE_FIELDS = ['password', 'token', 'authorization', 'creditCard'];
+  private readonly SENSITIVE_FIELDS = ['password', 'confirmPassword', 'token', 'authorization', 'creditCard'];
   private readonly ALLOWED_HEADERS = ['user-agent', 'content-type', 'accept', 'origin'];
 
   /**
@@ -39,7 +39,6 @@ export class LoggingInterceptor implements NestInterceptor {
       body: this.sanitizeData(request.body),
       headers: this.filterHeaders(request.headers),
       ip: request.ip,
-      userAgent: request.get('user-agent'),
     });
 
     return next.handle().pipe(
@@ -123,7 +122,7 @@ export class LoggingInterceptor implements NestInterceptor {
       duration: `${Date.now() - startTime}ms`,
       statusCode: error.status || 500,
       message: error.message,
-      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined,
+      stack: error.stack || 'No stack trace available'
     });
   }
 }
