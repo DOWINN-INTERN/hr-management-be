@@ -1,5 +1,6 @@
 import { Profile } from '@/modules/account-management/profiles/entities/profile.entity';
 import { Address } from '@/modules/addresses/entities/address.entity';
+import { DocumentType } from '@/modules/documents/document-types/entities/document-type.entity';
 import { ConfigService } from '@nestjs/config';
 import { config } from 'dotenv';
 import { DataSource, DataSourceOptions } from 'typeorm';
@@ -15,7 +16,7 @@ export const dataSourceOptions: DataSourceOptions = {
     username: configService.get('DB_USERNAME'),
     password: configService.get('DB_PASSWORD'),
     database: configService.get('DB_DATABASE'),
-    entities: ['dist/**/*.entity{.ts,.js}', Address, Profile],
+    entities: ['dist/**/*.entity{.ts,.js}', Address, Profile, DocumentType],
     migrations: ['dist/database/migrations/*{.ts,.js}'],
     synchronize: !isProduction,
     logging: false,

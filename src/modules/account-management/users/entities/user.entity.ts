@@ -1,4 +1,5 @@
 
+import { Document } from '@/modules/documents/entities/document.entity';
 import { Employee } from '@/modules/employee-management/entities/employee.entity';
 import { ActivityLog } from '@/modules/logs/entities/activity-logs.entity';
 import { Column, Entity, OneToMany, OneToOne } from 'typeorm';
@@ -52,6 +53,9 @@ export class User extends BaseEntity<User> {
 
   @OneToMany(() => ActivityLog, (activityLog: ActivityLog) => activityLog.actor)
   activityLogs?: ActivityLog[];
+
+  @OneToMany(() => Document, (document: Document) => document.user)
+  documents?: Document[];
 
   @OneToOne(() => Employee, (employee) => employee.user)
   employee?: Employee;

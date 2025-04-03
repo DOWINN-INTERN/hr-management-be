@@ -32,7 +32,8 @@ import { ScheduleManagementModule } from './modules/schedule-management/schedule
     ScheduleManagementModule,
     AttendanceManagementModule,
     OrganizationManagementModule,
-    AddressesModule
+    AddressesModule,
+    DocumentsModule,
   ],
   controllers: [],
 })
