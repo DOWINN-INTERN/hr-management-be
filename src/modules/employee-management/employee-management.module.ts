@@ -16,7 +16,7 @@ import { RolesModule } from './roles/roles.module';
         PermissionsModule,
         RouterModule.register([
             {
-                path: 'employee',
+                path: 'employees',
                 module: EmployeeManagementModule,
                 children: [
                     { 

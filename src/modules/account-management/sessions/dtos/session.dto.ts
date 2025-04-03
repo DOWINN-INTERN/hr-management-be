@@ -1,8 +1,9 @@
-import { createGetDto } from "@/common/utils/create-get-dto";
+import { BaseDto } from "@/common/dtos/base.dto";
+import { createGetDto } from "@/common/factories/create-get-dto.factory";
 import { ApiProperty, PartialType } from "@nestjs/swagger";
 import { IsNotEmpty, IsString } from "class-validator";
 
-export class SessionDto
+export class SessionDto extends PartialType(BaseDto)
 {
     @ApiProperty({ example: 'userId123', description: 'The ID of the user' })
     @IsString()
@@ -17,4 +18,4 @@ export class SessionDto
 
 export class UpdateSessionDto extends PartialType(SessionDto) {}
 
-export class GetSessionDto extends createGetDto(SessionDto) {}
+export class GetSessionDto extends createGetDto(UpdateSessionDto) {}

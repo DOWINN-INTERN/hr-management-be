@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Expose } from 'class-transformer';
-import { IsEmail, IsNotEmpty, IsString, Matches, MinLength, ValidateIf } from 'class-validator';
+import { Expose, Type } from 'class-transformer';
+import { IsEmail, IsNotEmpty, IsOptional, IsString, Matches, MinLength, ValidateIf } from 'class-validator';
+import { ProfileDto } from '../../profiles/dtos/profile.dto';
 
 export class RegisterUserDto {
     @ApiProperty({ example: 'user@example.com', description: 'The email of the user' })
@@ -31,4 +32,9 @@ export class RegisterUserDto {
     @Matches(/(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*\W)/, { message: 'Confirm Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character' })
     @ValidateIf((o: RegisterUserDto) => o.password === o.confirmPassword, { message: 'Passwords do not match' })
     confirmPassword!: string;
+
+    @ApiProperty({ description: 'Profile information', required: false })
+    @IsOptional()
+    @Type(() => ProfileDto)
+    profile?: ProfileDto;
 }

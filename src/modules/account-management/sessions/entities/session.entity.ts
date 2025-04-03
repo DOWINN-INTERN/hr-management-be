@@ -3,7 +3,7 @@ import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
 import { BaseEntity } from '../../../../database/entities/base.entity';
 import { User } from '../../users/entities/user.entity';
 
-@Entity()
+@Entity('sessions')
 export class Session extends BaseEntity<Session> {
   @Column()
   refreshToken?: string;
@@ -14,8 +14,8 @@ export class Session extends BaseEntity<Session> {
   @Column({ type: 'timestamp', nullable: true })
   lastActiveAt?: Date;
 
-  @ManyToOne(() => User)
-  @JoinColumn()
+  @ManyToOne(() => User, (user: User) => user.sessions, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'userId' })
   user!: User;
 
   @Column({ nullable: true })

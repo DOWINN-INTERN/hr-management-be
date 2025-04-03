@@ -2,7 +2,7 @@ import { BaseService } from "@/common/services/base.service";
 import { Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
-import { UsersService } from "../../users/users.service";
+import { UsersService } from "../account-management/users/users.service";
 import { Address } from "./entities/address.entity";
 
 

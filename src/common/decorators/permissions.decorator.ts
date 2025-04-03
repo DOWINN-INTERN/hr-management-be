@@ -23,5 +23,5 @@ export const PERMISSIONS_KEY = 'permissions';
  * }
  * ```
  */
-export const Permissions = (requirements: IPermission[] = []) => 
+export const Permissions = (requirements: IPermission[] | ((this: any) => IPermission[]) = []) => 
   SetMetadata(PERMISSIONS_KEY, requirements);

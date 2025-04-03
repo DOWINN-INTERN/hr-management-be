@@ -7,22 +7,83 @@ import {
     Delete,
     Get,
     HttpStatus,
+    InternalServerErrorException,
+    NotFoundException,
     Param,
+    Post,
+    Put,
     Query
 } from '@nestjs/common';
 import { ApiBody, ApiOperation, ApiParam, ApiQuery, ApiResponse } from '@nestjs/swagger';
 import { ClassConstructor, plainToInstance } from 'class-transformer';
-import { DeepPartial } from 'typeorm';
+import { DeepPartial, FindOptionsOrder, FindOptionsRelations, FindOptionsSelect } from 'typeorm';
 import { Authorize } from '../decorators/authorize.decorator';
 import { CurrentUser } from '../decorators/current-user.decorator';
+import { Action } from '../enums/action.enum';
+import { createPermissions } from '../factories/create-permissions.factory';
 import { UtilityHelper } from '../helpers/utility.helper';
+import { IPermission } from '../interfaces/permission.interface';
+
+export interface ControllerPermissions {
+    Create?: IPermission[];
+    Read?: IPermission[];
+    Update?: IPermission[];
+    Delete?: IPermission[];
+    Manage?: IPermission[];
+}
+
+// Add this to a types file or at the top of your controller
+interface FindEntityOptions<T> {
+    relations?: FindOptionsRelations<T>;
+    select?: FindOptionsSelect<T>;
+    order?: FindOptionsOrder<T>;
+    withDeleted?: boolean;
+    cache?: boolean | number | { id: any; milliseconds: number };
+    loadEagerRelations?: boolean;
+    transaction?: boolean;
+}
 
 export abstract class BaseController<T extends BaseEntity<T>, GetDto, EntityDto = null, UpdateDto = null> {
+    // Static permissions map that all instances share
+    public static permissionsMap: Record<string, ControllerPermissions> = {};
+    protected permissions: ControllerPermissions = { Create: [], Read: [], Update: [], Delete: [] };
+    
     constructor(
         protected readonly baseService: BaseService<T>,
-        protected readonly getDtoClass: ClassConstructor<GetDto>
-    ) {}
+        protected readonly getDtoClass: ClassConstructor<GetDto>,
+        protected readonly entityName: string,
+        entityNameOrPermissions?: string | ControllerPermissions
+    ) { 
+        // Initialize static map if not exists
+        if (!BaseController.permissionsMap) {
+            BaseController.permissionsMap = {};
+        }
+        
+        // If string is passed, it's the entity name - generate permissions
+        if (typeof entityNameOrPermissions === 'string') {
+            entityName = entityNameOrPermissions;
+            const generatedPermissions = createPermissions(entityNameOrPermissions);
+            // Populate permissions with generated ones
+            this.permissions = {
+                Create: [generatedPermissions.Create],
+                Read: [generatedPermissions.Read],
+                Update: [generatedPermissions.Update],
+                Delete: [generatedPermissions.Delete],
+                Manage: [generatedPermissions.Manage],
+            };
+            
+            // Store in static map
+            BaseController.permissionsMap[this.constructor.name] = this.permissions;
+        } 
+        else if (entityNameOrPermissions) {
+            this.permissions = entityNameOrPermissions;
+            BaseController.permissionsMap[this.constructor.name] = this.permissions;
+        }
+    }
 
+    @Post()
+    @Authorize({ endpointType: Action.CREATE })
+    @ApiOperation({ summary: 'Create an entity' })
     @ApiResponse({ status: HttpStatus.BAD_REQUEST, description: 'Invalid input data.' })
     @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized.' })
     @ApiResponse({ status: HttpStatus.CONFLICT, description: 'Entity already exists.' })
@@ -32,12 +93,12 @@ export abstract class BaseController<T extends BaseEntity<T>, GetDto, EntityDto 
     @ApiResponse({ status: HttpStatus.CREATED, description: 'The entity has been successfully created.' })
     async create(@Body() entityDto: EntityDto, @CurrentUser('sub') createdById: string): Promise<GetDto> {
         const entity = await this.baseService.create(entityDto as DeepPartial<T>, createdById);
-        return plainToInstance(this.getDtoClass, entity, { excludeExtraneousValues: true, exposeDefaultValues: false });
+        return plainToInstance(this.getDtoClass, entity);
     }
 
-    @Authorize()
+    @Put(':id')
+    @Authorize({ endpointType: Action.UPDATE })
     @ApiOperation({ summary: 'Update an entity' })
-    @ApiParam({ name: 'id', description: 'Entity ID' })
     @ApiResponse({ status: HttpStatus.OK, description: 'The entity has been successfully updated.' })
     @ApiResponse({ status: HttpStatus.BAD_REQUEST, description: 'Invalid input data.' })
     @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized.' })
@@ -54,6 +115,7 @@ export abstract class BaseController<T extends BaseEntity<T>, GetDto, EntityDto 
     }
 
     @Get()
+    @Authorize({ endpointType: Action.READ })
     @ApiOperation({
         summary: 'Get filtered entities with advanced filtering',
         description: `
@@ -176,34 +238,129 @@ export abstract class BaseController<T extends BaseEntity<T>, GetDto, EntityDto 
     async findAllAdvanced(
         @Query() paginationDto: PaginationDto<T>,
     ): Promise<PaginatedResponseDto<T>> {
-        return await this.baseService.findAll(paginationDto);
+        return await this.baseService.findAllComplex(paginationDto);
     }
 
-    @Get(':id')
+    @Get('find')
+    @Authorize({ endpointType: Action.READ })
+    @ApiOperation({ 
+        summary: 'Find an entity by any field',
+        description: 'Search for an entity using field-value pairs. Multiple criteria can be combined.'
+    })
+    @ApiQuery({ 
+        name: 'fields', 
+        required: true, 
+        type: String, 
+        description: 'Search fields in format field:value (comma-separated)',
+        example: 'id:123,name:example'
+    })
+    @ApiQuery({ 
+        name: 'relations', 
+        required: false, 
+        type: String, 
+        description: 'Relations to include in the response (comma-separated)',
+        example: 'user,category,tags'
+    })
+    @ApiQuery({ 
+        name: 'select', 
+        required: false, 
+        type: String, 
+        description: 'Fields to select in the response (comma-separated). Only these fields will be returned.',
+        example: 'id,name,createdAt'
+    })
+    @ApiResponse({ 
+        status: HttpStatus.OK, 
+        description: 'Entity found successfully',
+        schema: {
+            type: 'object',
+            example: {
+            id: 123,
+            name: 'Example Entity',
+            createdAt: '2023-01-01T00:00:00Z'
+            }
+        }
+    })
+    @ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Entity not found with the specified criteria' })
+    @ApiResponse({ status: HttpStatus.FORBIDDEN, description: 'Forbidden. User does not have permission to access this resource' })
+    @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized. Authentication is required' })
+    @ApiResponse({ status: HttpStatus.INTERNAL_SERVER_ERROR, description: 'Internal server error' })
+    async findOne(
+        @Query('fields') fieldsString: string,
+        @Query('relations') relations?: string,
+        @Query('select') select?: string
+    ): Promise<GetDto> {
+        // Create options object for the service
+        const options: FindEntityOptions<T> = {};
+        
+        // Parse search criteria from query string (format: field1:value1,field2:value2)
+        const criteria: Partial<T> = {};
+        if (fieldsString) {
+            const fieldPairs = fieldsString.split(',');
+            for (const pair of fieldPairs) {
+                const [key, value] = pair.trim().split(':');
+                if (key && value !== undefined) {
+                    // Convert value types appropriately
+                    if (value === 'true') {
+                        criteria[key as keyof T] = true as any;
+                    } else if (value === 'false') {
+                        criteria[key as keyof T] = false as any;
+                    } else if (value === 'null') {
+                        criteria[key as keyof T] = null as any;
+                    } else if (!isNaN(Number(value))) {
+                        criteria[key as keyof T] = Number(value) as any;
+                    } else {
+                        criteria[key as keyof T] = value as any;
+                    }
+                }
+            }
+        }
+        
+        // Parse relations if provided
+        if (relations) {
+            options.relations = UtilityHelper.parseRelations(relations);
+        }
+        
+        // Parse select fields if provided
+        if (select) {
+            options.select = UtilityHelper.parseSelect(select);
+        }
+        
+        try {
+            // Use the service with proper typing and options
+            const entity = await this.baseService.findOneByOrFail(
+                criteria,
+                options
+            );
+            
+            return plainToInstance(this.getDtoClass, entity);
+        } catch (error) {
+            if (error instanceof NotFoundException) {
+                throw error;
+            }
+            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+            throw new InternalServerErrorException(
+                `Error retrieving ${this.entityName} with criteria ${JSON.stringify(criteria)}: ${errorMessage}`
+            );
+        }
+    }
+    
+    @Get('find/:id')
+    @Authorize({ endpointType: Action.READ })
     @ApiOperation({ summary: 'Get an entity by id' })
     @ApiParam({ name: 'id', description: 'Entity ID' })
-    @ApiQuery({ name: 'relations', required: false, type: String, description: 'Relations to include' })
+    @ApiQuery({ name: 'relations', required: false, type: String, description: 'Relations to include (comma-separated)' })
+    @ApiQuery({ name: 'select', required: false, type: String, description: 'Fields to select (comma-separated)' })
     @ApiResponse({ status: HttpStatus.FORBIDDEN, description: 'Forbidden.' })
     @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized.' })
     @ApiResponse({ status: HttpStatus.INTERNAL_SERVER_ERROR, description: 'Internal server error.' })
     @ApiResponse({ status: HttpStatus.OK, description: 'Return the entity' })
     @ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Entity not found' })
-    async findOne(
+    async findById(
         @Param('id') id: string,
-        @Query('relations') relations?: string
+        @Query('relations') relations?: string,
+        @Query('select') select?: string
     ): Promise<GetDto> {
-        // Parse relations string into relations object if provided
-        const relationsObj = relations ? 
-            UtilityHelper.parseRelations(relations) : 
-            undefined;
-            
-        // Use the service with proper typing and relations
-        const entity = await this.baseService.findOneByOrFail(
-            { id } as Partial<T>,
-            relationsObj
-        );
-        
-        return plainToInstance(this.getDtoClass, entity);
+        return this.findOne(`id:${id}`, relations, select);
     }
 
     // @Get()
@@ -217,8 +374,8 @@ export abstract class BaseController<T extends BaseEntity<T>, GetDto, EntityDto 
     //     return await this.baseService.findAll(paginationDto);
     // }
 
-    @Delete(':id')
-    @Authorize()
+    @Delete('delete/:id')
+    @Authorize({ endpointType: Action.DELETE })
     @ApiOperation({ summary: 'Delete an entity' })
     @ApiParam({ name: 'id', description: 'Entity ID' })
     @ApiResponse({ status: HttpStatus.NO_CONTENT, description: 'The entity has been successfully deleted.' })
@@ -232,7 +389,7 @@ export abstract class BaseController<T extends BaseEntity<T>, GetDto, EntityDto 
     }
 
     @Delete()
-    @Authorize()
+    @Authorize({ endpointType: Action.DELETE })
     @ApiOperation({ summary: 'Delete multiple entities' })
     @ApiBody({
         schema: {

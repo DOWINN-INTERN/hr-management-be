@@ -1,7 +1,7 @@
 import { BadRequestException } from '@nestjs/common';
 import { ApiProperty } from '@nestjs/swagger';
 import { Transform, Type } from 'class-transformer';
-import { IsInt, IsOptional, IsUUID, Min } from 'class-validator';
+import { IsInt, IsOptional, Min } from 'class-validator';
 import { Between, FindManyOptions, FindOptionsSelect, FindOptionsWhere, ILike, In, LessThan, LessThanOrEqual, Like, MoreThan, MoreThanOrEqual, Not } from 'typeorm';
 
 /**
@@ -172,15 +172,6 @@ export class PaginationDto<T> {
   @IsOptional()
   select?: string | string[];
 
-  @ApiProperty({
-    description: 'User ID for filtering',
-    required: false,
-    format: 'uuid',
-  })
-  @IsOptional()
-  @IsUUID()
-  userId?: string;
-
   toFindManyOptions(baseWhere: Partial<T> = {}): FindManyOptions<T> {
     const filterObj = this.parseStringInput(this.filter);
     const sortObj = this.parseStringInput(this.sort);
@@ -195,9 +186,6 @@ export class PaginationDto<T> {
         isDeleted: false
       };
     }
-
-    // Add user filter if provided
-    const userWhere = this.userId ? { userId: this.userId } : {};
     
     // Process relations
     let relations: FindManyOptions<T>['relations'] = undefined;
@@ -242,7 +230,6 @@ export class PaginationDto<T> {
       where: { 
         ...baseWhere,
         ...filterWhere,
-        ...userWhere,
       } as FindOptionsWhere<T>,
       order: sortObj || undefined,
       relations,

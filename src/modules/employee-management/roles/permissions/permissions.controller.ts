@@ -1,27 +1,33 @@
-import { BaseController } from '@/common/controllers/base.controller';
-import { Controller } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
-import { GetPermissionDto } from './dtos/get-permission.dto';
+import { createController } from '@/common/factories/create-controller.factory';
+import { GetPermissionDto } from './dtos/permission.dto';
 import { Permission } from './entities/permission.entity';
 import { PermissionsService } from './permissions.service';
-import { createPermissions } from './utils/create-permissions.utils';
 
-// Controller permissions
-export const PermissionPermissions = createPermissions('permissions');
-const { Read, Create, Update, Delete } = PermissionPermissions;
-
-@ApiTags('Permissions')
-@Controller()
-export class PermissionsController extends BaseController<Permission, GetPermissionDto> {
-    constructor(private readonly permissionsService: PermissionsService) {
-        super(permissionsService, GetPermissionDto);
+export class PermissionsController extends createController<
+    Permission,
+    GetPermissionDto
+>(
+    'Permissions',       // Entity name for Swagger documentation
+    PermissionsService, // The service handling Permission-related operations
+    GetPermissionDto,  // DTO for retrieving Permissions
+) {
+    override async findOne(id: string, relations?: string, select?: string): Promise<GetPermissionDto> {
+        return await super.findOne(id, relations, select);
     }
 
     override async delete(id: string): Promise<void> {
-        await super.delete(id);
+        return await super.delete(id);
     }
 
     override async deleteMany(ids: string[], hardDelete?: boolean): Promise<void> {
-        await super.deleteMany(ids, hardDelete);
+        return await super.deleteMany(ids, hardDelete);
+    }
+
+    override async create(entityDto: null, createdById: string): Promise<GetPermissionDto> {
+        return await super.create(entityDto, createdById);
+    }
+
+    override async update(id: string, entityDto: null, updatedById: string): Promise<GetPermissionDto> {
+        return await super.update(id, entityDto, updatedById);
     }
 }

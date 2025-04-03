@@ -6,6 +6,7 @@ import { Role } from '@/common/enums/role.enum';
 import { AuthService } from '@/modules/account-management/auth/auth.service';
 import { LoginUserDto } from '@/modules/account-management/auth/dto/login-user.dto';
 import { EmployeesService } from '@/modules/employee-management/employees.service';
+import { Employee } from '@/modules/employee-management/entities/employee.entity';
 import { RolesService } from '@/modules/employee-management/roles/roles.service';
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
@@ -33,24 +34,102 @@ export class UserSeederService implements OnModuleInit {
     const superAdminPassword = this.configService.getOrThrow('SUPER_ADMIN_PASSWORD');
     this.logger.log('Checking if super admin role exists...');
     
-    // Check if super admin role exists
-    let superAdminRole = await this.rolesService.findOneBy({ name: Role.SUPERADMIN });
+    const superAdminRole = await this.seedSuperAdminRole();
+    const employeeRole = await this.seedEmployeeRole();
+    let superAdminEmployee = await this.seedSuperAdminEmployee();
 
-    // Check if employee role exists
-    let employeeRole = await this.rolesService.findOneBy({ name: Role.EMPLOYEE });
+    // check if super admin employee has the super admin and employee role
+    const hasSuperAdminAndEmployeeRole = 
+      superAdminEmployee.roles?.some(role => role.name === Role.SUPERADMIN) && 
+      superAdminEmployee.roles?.some(role => role.name === Role.EMPLOYEE);
 
-    if (!employeeRole) {
-      this.logger.log('Creating Employee role...');
-      employeeRole = await this.rolesService.create({
-        name: Role.EMPLOYEE,
-        description: 'Employee Role',
-        scope: RoleScopeType.OWNED,
-      });
-      this.logger.log('Employee role created successfully');
+    if (!hasSuperAdminAndEmployeeRole) {
+      this.logger.warn('Super admin employee does not have the super admin and employee role');
+      superAdminEmployee.roles = [superAdminRole, employeeRole];
+      await this.employeesService.update(superAdminEmployee.id, superAdminEmployee);
+      this.logger.log('Super admin employee associated with the super admin and employee role successfully');
     } else {
-      this.logger.log('Employee role already exists');
+      this.logger.log('Super admin employee already has the super admin and employee role');
     }
 
+    // Check if super admin user exists
+    let superAdminUser = await this.usersService.findOneBy(
+      { employee: { id: superAdminEmployee.id } as Employee },
+      { relations: { employee: true } }
+    );
+    
+    if (!superAdminUser) {
+
+      // Check if super admin user exists with the super admin email
+      superAdminUser = await this.usersService.findOneBy({ email: superAdminEmail });
+
+      if (superAdminUser) {
+        this.logger.warn('Super admin user exists but is not associated with the super admin employee');
+        superAdminEmployee.user = superAdminUser;
+      }
+      else {
+        this.logger.log('Creating super admin user...');
+
+        // create super admin user
+        superAdminUser = await this.usersService.create({
+          email: superAdminEmail,
+          password: await bcrypt.hash(superAdminPassword, 10),
+          userName: superAdminEmail,
+          employee: superAdminEmployee
+        });
+        this.logger.log('Super admin user created successfully');
+      }
+    } else {
+      // Check if super admin email is the same as the one in the config
+      if (superAdminUser.email !== superAdminEmail) {
+        // log super admin email
+        this.logger.log('Super admin email is different from the one in the config');
+        this.logger.log('Super admin user exists with email or username: ' + superAdminUser.email);
+        this.logger.log('Super admin email: ' + superAdminEmail);
+        this.logger.warn('Super admin email is different from the one in the config');
+
+        // Update super admin email to the one in the config
+        superAdminUser.email = superAdminEmail;
+        superAdminUser.userName = superAdminEmail;
+        await this.usersService.update(superAdminUser.id, superAdminUser);
+        this.logger.log('Super admin email updated successfully');
+      }
+
+      // log super admin exist email
+      this.logger.log('Super admin user exists with email or username: ' + superAdminUser.email);
+
+      // check if password is the same as the one in the config
+      var loginCredentials: LoginUserDto = {
+        emailOrUserName: superAdminUser.email ?? "",
+        password: superAdminPassword
+      }
+
+      if (await this.authService.validateUser(loginCredentials)) {
+        this.logger.log('Super admin password is the same as the one in the config');
+      }
+      else
+      {
+        this.logger.warn('Super admin password is different from the one in the config');
+
+        // Update super admin password to the one in the config
+        superAdminUser.password = await bcrypt.hash(superAdminPassword, 10);
+        await this.usersService.update(superAdminUser.id, superAdminUser);
+        this.logger.log('Super admin password updated successfully');
+      }
+    }
+
+    // check if superAdminUser is associated with the super admin employee
+    if (superAdminUser.employee?.id !== superAdminEmployee.id) {
+      this.logger.warn('Super admin user is not associated with the super admin employee');
+      superAdminUser.employee = superAdminEmployee;
+      await this.usersService.update(superAdminUser.id, superAdminUser);
+      this.logger.log('Super admin user associated with the super admin employee successfully');
+    }
+  }
+
+  async seedSuperAdminRole() {
+    // Check if super admin role exists
+    let superAdminRole = await this.rolesService.findOneBy({ name: Role.SUPERADMIN });
     // Create super admin role if it doesn't exist
     if (!superAdminRole) {
       this.logger.log('Creating SuperAdmin role...');
@@ -64,101 +143,48 @@ export class UserSeederService implements OnModuleInit {
       this.logger.log('SuperAdmin role already exists');
     }
 
-    // find the employee with the super admin role
-    let superAdminEmployee = await this.employeesService.include(e => e.roles).where(e => e.roles?.some(r => r.id === superAdminRole.id) ?? false).firstOrDefault();
-    
-    // log super admin employee
-    console.log(JSON.stringify(superAdminEmployee, null, 2));
+    return superAdminRole;
+  }
 
-    if (superAdminEmployee) {
-      this.logger.log('Super admin employee already exists');
-    }
-    else {
-      // find the user with the employee number SA-001
-      superAdminEmployee = await this.employeesService.findOneBy({ employeeNumber: 'SA-001' });
+  async seedEmployeeRole() {
+    // Check if employee role exists
+    let employeeRole = await this.rolesService.findOneBy({ name: Role.EMPLOYEE });
 
-      if (superAdminEmployee) {
-        this.logger.warn('Super admin employee exists but is not associated with the super admin role');
-        superAdminEmployee.roles = [superAdminRole, employeeRole];
-        await this.employeesService.update(superAdminEmployee.id, superAdminEmployee);
-        this.logger.log('Super admin employee associated with the super admin role successfully');
-      }
-      else {
-        this.logger.log('Creating super admin employee...');
-        superAdminEmployee = await this.employeesService.create({
-            employeeNumber: 'SA-001',
-            employmentStatus: EmploymentStatus.ACTIVE,
-            employmentCondition: EmploymentCondition.REGULAR,
-            employmentType: EmploymentType.FULL_TIME,
-            commencementDate: new Date(),
-            roles: [superAdminRole, employeeRole],
-        });
-        this.logger.log('Super admin employee created successfully');
-      }
-    }
-
-    // Check if super admin user exists
-    let superAdminExists = await this.usersService.include(u => u.employee).where(u => u.employee?.id === superAdminEmployee.id).firstOrDefault();
-
-    if (!superAdminExists) {
-
-      // Check if super admin user exists with the super admin email
-      superAdminExists = await this.usersService.findOneBy({ email: superAdminEmail });
-
-      if (superAdminExists) {
-        this.logger.warn('Super admin user exists but is not associated with the super admin employee');
-        superAdminExists.employee = superAdminEmployee;
-        await this.usersService.update(superAdminExists.id, superAdminExists);
-        this.logger.log('Super admin user associated with the super admin employee successfully');
-      }
-      else {
-        this.logger.log('Creating super admin user...');
-
-        // create super admin user
-        superAdminExists = await this.usersService.create({
-          email: superAdminEmail,
-          password: await bcrypt.hash(superAdminPassword, 10),
-          userName: superAdminEmail,
-          employee: superAdminEmployee
-        });
-
-        // update super admin employee with the super admin user
-        superAdminEmployee.user = superAdminExists;
-        await this.employeesService.update(superAdminEmployee.id, superAdminEmployee);
-        this.logger.log('Super admin user created successfully');
-      }
-
+    // Create employee role if it doesn't exist
+    if (!employeeRole) {
+      this.logger.log('Creating Employee role...');
+      employeeRole = await this.rolesService.create({
+        name: Role.EMPLOYEE,
+        description: 'Employee Role',
+        scope: RoleScopeType.OWNED,
+      });
+      this.logger.log('Employee role created successfully');
     } else {
-      this.logger.log('Super admin user already exists');
-      
-      // Check if super admin email is the same as the one in the config
-      if (superAdminExists.email !== superAdminEmail) {
-        this.logger.warn('Super admin email is different from the one in the config');
-
-        // Update super admin email to the one in the config
-        superAdminExists.email = superAdminEmail;
-        await this.usersService.update(superAdminExists.id, superAdminExists);
-        this.logger.log('Super admin email updated successfully');
-      }
-
-      // check if password is the same as the one in the config
-      var loginCredentials: LoginUserDto = {
-        emailOrUserName: superAdminExists.email ?? "",
-        password: superAdminPassword
-      }
-
-      if (await this.authService.validateUser(loginCredentials)) {
-        this.logger.log('Super admin password is the same as the one in the config');
-      }
-      else
-      {
-        this.logger.warn('Super admin password is different from the one in the config');
-
-        // Update super admin password to the one in the config
-        superAdminExists.password = await bcrypt.hash(superAdminPassword, 10);
-        await this.usersService.update(superAdminExists.id, superAdminExists);
-        this.logger.log('Super admin password updated successfully');
-      }
+      this.logger.log('Employee role already exists');
     }
+
+    return employeeRole;
+  }
+
+  async seedSuperAdminEmployee() {
+    // Check if super admin employee exists
+    let superAdminEmployee = await this.employeesService.findOneBy({ employeeNumber: 'SA-001' }, { relations: { roles: true } });
+
+    // Create super admin employee if it doesn't exist
+    if (!superAdminEmployee) {
+      this.logger.log('Creating SuperAdmin employee...');
+      superAdminEmployee = await this.employeesService.create({
+        employeeNumber: 'SA-001',
+        employmentStatus: EmploymentStatus.ACTIVE,
+        employmentCondition: EmploymentCondition.REGULAR,
+        employmentType: EmploymentType.FULL_TIME,
+        commencementDate: new Date(),
+      });
+      this.logger.log('SuperAdmin employee created successfully');
+    } else {
+      this.logger.log('SuperAdmin employee already exists');
+    }
+
+    return superAdminEmployee;
   }
 }

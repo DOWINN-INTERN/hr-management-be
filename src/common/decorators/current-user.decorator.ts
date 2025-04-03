@@ -29,7 +29,7 @@ export const CurrentUser = createParamDecorator(
     const request = context.switchToHttp().getRequest();
     
     if (!request.user) {
-      throw new UnauthorizedException('User is not authenticated.');
+      throw new UnauthorizedException('User claims is missing.');
     }
 
     if (!data) {

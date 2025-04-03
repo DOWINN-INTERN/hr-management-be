@@ -1,4 +1,4 @@
-import { createGetDto } from '@/common/utils/create-get-dto';
+import { createGetDto } from '@/common/factories/create-get-dto.factory';
 import { ApiProperty, PartialType } from '@nestjs/swagger';
 import { IsNotEmpty, IsNumber, IsString, MaxLength } from 'class-validator';
 

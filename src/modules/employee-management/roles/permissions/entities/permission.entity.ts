@@ -3,7 +3,7 @@ import { Action } from '../../../../../common/enums/action.enum';
 import { BaseEntity } from '../../../../../database/entities/base.entity';
 import { Role } from '../../entities/role.entity';
 
-@Entity()
+@Entity('permissions')
 export class Permission extends BaseEntity<Permission> {
     @Column({nullable: true})
     name?: string;

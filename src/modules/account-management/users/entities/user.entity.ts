@@ -1,8 +1,10 @@
 
 import { Employee } from '@/modules/employee-management/entities/employee.entity';
-import { Column, Entity, OneToOne } from 'typeorm';
+import { ActivityLog } from '@/modules/logs/entities/activity-logs.entity';
+import { Column, Entity, OneToMany, OneToOne } from 'typeorm';
 import { BaseEntity } from '../../../../database/entities/base.entity';
 import { Profile } from '../../profiles/entities/profile.entity';
+import { Session } from '../../sessions/entities/session.entity';
 
 @Entity()
 export class User extends BaseEntity<User> {
@@ -16,7 +18,7 @@ export class User extends BaseEntity<User> {
   userName!: string;
 
   @OneToOne(() => Profile, (profile: Profile) => profile.user, { cascade: true })
-  profile!: Profile;
+  profile?: Profile;
 
   @Column({ type: 'timestamp', nullable: true })
   lastLogin?: Date;
@@ -45,9 +47,11 @@ export class User extends BaseEntity<User> {
   @Column({ type: 'timestamp', nullable: true })
   lockOutEnd?: Date;
 
+  @OneToMany(() => Session, (session: Session) => session.user)
+  sessions?: Session[];
 
-  // @OneToMany(() => ActivityLog, (activityLog: ActivityLog) => activityLog.actor)
-  // activityLogs?: ActivityLog[];
+  @OneToMany(() => ActivityLog, (activityLog: ActivityLog) => activityLog.actor)
+  activityLogs?: ActivityLog[];
 
   @OneToOne(() => Employee, (employee) => employee.user)
   employee?: Employee;

@@ -1,9 +1,12 @@
+import { BaseDto } from '@/common/dtos/base.dto';
+import { ReferenceDto } from '@/common/dtos/reference.dto';
 import { RoleScopeType } from '@/common/enums/role-scope-type.enum';
-import { createGetDto } from '@/common/utils/create-get-dto';
+import { createGetDto } from '@/common/factories/create-get-dto.factory';
 import { ApiProperty, ApiPropertyOptional, PartialType } from '@nestjs/swagger';
-import { IsEnum, IsNotEmpty, IsOptional, IsString, IsUUID, MaxLength, MinLength } from 'class-validator';
+import { Type } from 'class-transformer';
+import { IsEnum, IsNotEmpty, IsOptional, IsString, MaxLength, MinLength, ValidateNested } from 'class-validator';
 
-export class RoleDto {
+export class RoleDto extends PartialType(BaseDto) {
   @ApiProperty({
     description: 'The name of the role',
     example: 'admin',
@@ -33,25 +36,26 @@ export class RoleDto {
   @IsNotEmpty()
   scope: RoleScopeType = RoleScopeType.OWNED;
 
-  @ApiPropertyOptional({
-    description: 'List of permission IDs to associate with this role',
-    type: [String],
-    example: ['uuid1', 'uuid2'],
+  @ApiProperty({ 
+    description: 'List of permissions assigned to this role', 
+    type: [ReferenceDto],
+    required: false 
   })
-  @IsUUID('4', { each: true })
   @IsOptional()
-  permissionIds?: string[];
+  @ValidateNested({ each: true })
+  @Type(() => ReferenceDto)
+  permissions?: ReferenceDto[];
 
-  @ApiPropertyOptional({
-    description: 'List of user IDs to assign this role to',
-    type: [String],
-    example: ['uuid1', 'uuid2'],
+  @ApiPropertyOptional({ 
+    description: 'Users associated with this role',
+    type: [ReferenceDto]
   })
-  @IsUUID('4', { each: true })
   @IsOptional()
-  userIds?: string[];
+  @ValidateNested({ each: true })
+  @Type(() => ReferenceDto)
+  users?: ReferenceDto[];
 }
 
 export class UpdateRoleDto extends PartialType(RoleDto) {}
 
-export class GetRoleDto extends createGetDto(RoleDto) {}
+export class GetRoleDto extends createGetDto(UpdateRoleDto) {}

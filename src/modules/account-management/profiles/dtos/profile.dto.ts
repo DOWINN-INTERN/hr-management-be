@@ -1,17 +1,21 @@
-import { createGetDto } from '@/common/utils/create-get-dto';
+import { createGetDto } from '@/common/factories/create-get-dto.factory';
 import { ApiProperty, PartialType } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import {
-    IsArray,
-    IsDate,
-    IsNotEmpty,
-    IsOptional, IsString, IsUUID,
-    ValidateNested
+  IsDate,
+  IsNotEmpty,
+  IsOptional, IsString, IsUUID,
+  ValidateNested
 } from 'class-validator';
-import { AddressDto } from '../addresses/dtos/address.dto';
+import { AddressDto } from '../../../addresses/dtos/address.dto';
 
 export class ProfileDto {
-  @ApiProperty({ description: 'First name of the profile' })
+  @ApiProperty({ description: 'User ID associated with the profile' })
+  @IsNotEmpty()
+  @IsUUID()
+  userId!: string;
+
+  @ApiProperty({ description: 'First name of the profile', example: 'John' })
   @IsNotEmpty()
   @IsString()
   firstName!: string;
@@ -46,7 +50,7 @@ export class ProfileDto {
   @IsString()
   profilePicture?: string;
 
-  @ApiProperty({ description: 'Birth date of the profile', required: false, type: Date })
+  @ApiProperty({ description: 'Birth date of the profile', required: false, type: Date, example: '1990-01-01' })
   @IsOptional()
   @IsDate()
   @Type(() => Date)
@@ -57,11 +61,10 @@ export class ProfileDto {
   @IsString()
   civilStatus?: string;
 
-  @ApiProperty({ description: 'Citizenships of the profile', required: false, type: [String] })
+  @ApiProperty({ description: 'Citizenship of the profile', required: false})
   @IsOptional()
-  @IsArray()
-  @IsString({ each: true })
-  citizenships?: string[];
+  @IsString()
+  citizenship?: string;
 
   @ApiProperty({ description: 'Nationality of the profile', required: false })
   @IsOptional()
@@ -72,11 +75,6 @@ export class ProfileDto {
   @IsOptional()
   @IsString()
   religion?: string;
-
-  @ApiProperty({ description: 'User ID associated with the profile' })
-  @IsNotEmpty()
-  @IsUUID()
-  userId!: string;
 
   @ApiProperty({ description: 'Address information', required: false })
   @IsOptional()

@@ -1,15 +1,21 @@
-import { BaseController } from '@/common/controllers/base.controller';
-import { Controller } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
-import { RegisterUserDto } from '../auth/dto/register-user.dto';
-import { GetUserDto } from './dtos/user.dto';
-import { User } from './entities/user.entity';
-import { UsersService } from './users.service';
+import { createController } from "@/common/factories/create-controller.factory";
+import { GetUserDto, UpdateUserDto, UserDto } from "./dtos/user.dto";
+import { User } from "./entities/user.entity";
+import { UsersService } from "./users.service";
 
-@ApiTags('Users')
-@Controller()
-export class UsersController extends BaseController<User, GetUserDto, RegisterUserDto> {
-    constructor(private readonly usersService: UsersService) {
-        super(usersService, GetUserDto);
-    }
+export class UsersController extends createController<
+  User,
+  GetUserDto,
+  UserDto,
+  UpdateUserDto
+>(
+    'Users',       // Entity name for Swagger documentation
+    UsersService, // The service handling Users-related operations
+    GetUserDto,  // DTO for retrieving Users
+    UserDto,     // DTO for creating Users
+    UpdateUserDto // DTO for updating Users
+) {
+  override async create(entityDto: UserDto, createdById: string): Promise<GetUserDto> {
+      return await super.create(entityDto, createdById);
+  }
 }

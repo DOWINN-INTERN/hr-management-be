@@ -2,6 +2,7 @@ import {
     Column,
     CreateDateColumn,
     DeleteDateColumn,
+    Index,
     PrimaryGeneratedColumn,
     BaseEntity as TypeOrmBaseEntity,
     UpdateDateColumn,
@@ -36,4 +37,20 @@ export abstract class BaseEntity<T> extends TypeOrmBaseEntity {
 
     @DeleteDateColumn({ type: 'timestamp', nullable: true })
     deletedAt?: Date;
+
+    @Column({ nullable: true })
+    @Index("idx_organization")
+    organizationId?: string;
+
+    @Column({ nullable: true })
+    @Index("idx_branch")
+    branchId?: string;
+
+    @Column({ nullable: true })
+    @Index("idx_department")
+    departmentId?: string;
+
+    @Column({ nullable: true })
+    @Index("idx_user")
+    userId?: string;
 }

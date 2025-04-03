@@ -70,55 +70,114 @@ export class PermissionSeederService implements OnModuleInit {
   }
   
   async scanForPermissions(): Promise<any[]> {
-    const permissions = [];
+    const permissions: any[] = [];
     const controllers = await this.findControllerFiles();
     
     for (const file of controllers) {
       const fileContent = fs.readFileSync(file, 'utf8');
       
-      // Find createPermissions calls
-      const permissionsMatches = fileContent.match(/const\s+Permissions\s*=\s*createPermissions\s*\(\s*['"]([^'"]+)['"]\s*\)/g);
+      // Find all permission definitions using various patterns
+      this.extractNamedPermissions(fileContent, permissions);
       
-      if (permissionsMatches) {
-        for (const permMatch of permissionsMatches) {
-          // Extract resource name
-          const resourceMatch = permMatch.match(/createPermissions\s*\(\s*['"]([^'"]+)['"]\s*\)/);
-          if (resourceMatch && resourceMatch[1]) {
-            const subject = resourceMatch[1];
+      // Get all @Authorize decorator usages with their permission references
+      this.extractAuthorizationRules(fileContent, permissions);
+    }
+    
+    return this.removeDuplicates(permissions);
+  }
+  
+  private extractNamedPermissions(fileContent: string, permissions: any[]): void {
+    // Find both ProfilePermissions and other similar patterns
+    const permissionDefRegex = /export\s+const\s+(\w+)Permissions\s*=\s*createPermissions\s*\(\s*['"]([^'"]+)['"]\s*\)/g;
+    let permMatch;
+    
+    while ((permMatch = permissionDefRegex.exec(fileContent)) !== null) {
+      const prefix = permMatch[1]; // e.g., "Profile"
+      const subject = permMatch[2]; // e.g., "profiles"
+      
+      // Extract destructured permission variables
+      const destructureRegex = new RegExp(`const\\s*{\\s*([^}]+)\\s*}\\s*=\\s*${prefix}Permissions`, 'g');
+      let destructureMatch;
+      
+      while ((destructureMatch = destructureRegex.exec(fileContent)) !== null) {
+        if (destructureMatch[1]) {
+          // Split and process each permission action
+          const actionNames = destructureMatch[1].split(',').map(a => a.trim());
+          
+          for (const actionName of actionNames) {
+            const action = this.mapActionNameToEnum(actionName);
             
-            // Find all @Authorize decorators
-            const authorizeRegex = /@Authorize\s*\(\s*\{[^}]*permissions\s*:\s*\[\s*([\s\S]*?)\s*\]/g;
-            const authorizeMatches = [...fileContent.matchAll(authorizeRegex)];
-            
-            if (authorizeMatches.length) {
-              for (const authMatch of authorizeMatches) {
-                if (authMatch[1]) {
-                  // Extract permission references
-                  const permRefs = authMatch[1].split(',').map(p => p.trim());
+            permissions.push({
+              action,
+              subject,
+              name: `${actionName} ${subject}`,
+              description: `Permission to ${actionName.toLowerCase()} ${subject}`
+            });
+          }
+        }
+      }
+    }
+  }
+  
+  private extractAuthorizationRules(fileContent: string, permissions: any[]): void {
+    // First identify all subject names from createPermissions calls
+    const subjectMap = new Map<string, string>();
+    const permDefRegex = /export\s+const\s+(\w+)Permissions\s*=\s*createPermissions\s*\(\s*['"]([^'"]+)['"]\s*\)/g;
+    let permDefMatch;
+    
+    while ((permDefMatch = permDefRegex.exec(fileContent)) !== null) {
+      const prefix = permDefMatch[1]; // e.g., "Profile"
+      const subject = permDefMatch[2]; // e.g., "profiles"
+      subjectMap.set(prefix, subject);
+    }
+    
+    // Find all @Authorize decorators with permission arrays
+    const authorizeRegex = /@Authorize\s*\(\s*\{[^}]*permissions\s*:\s*\[([\s\S]*?)\]\s*\}/g;
+    let authorizeMatch;
+    
+    while ((authorizeMatch = authorizeRegex.exec(fileContent)) !== null) {
+      if (authorizeMatch[1]) {
+        // Extract permission references
+        const permRefs = authorizeMatch[1].split(',').map(p => p.trim());
+        
+        for (const permRef of permRefs) {
+          // Handle both formats: direct reference and prefix.Action pattern
+          if (permRef.includes('.')) {
+            // Format: PrefixPermissions.Action (e.g., ProfilePermissions.Read)
+            const parts = permRef.split('.');
+            if (parts.length === 2) {
+              // Get subject from the map if available
+              for (const [prefix, subject] of subjectMap.entries()) {
+                if (permRef.startsWith(prefix)) {
+                  const actionName = parts[1].trim();
+                  const action = this.mapActionNameToEnum(actionName);
                   
-                  for (const permRef of permRefs) {
-                    // Match Permissions.Action pattern
-                    const actionMatch = permRef.match(/Permissions\.(\w+)/);
-                    if (actionMatch && actionMatch[1]) {
-                      const action = this.mapActionNameToEnum(actionMatch[1]);
-                      
-                      permissions.push({
-                        action,
-                        subject,
-                        name: `${actionMatch[1]} ${subject}`,
-                        description: `Permission to ${actionMatch[1].toLowerCase()} ${subject}`
-                      });
-                    }
-                  }
+                  permissions.push({
+                    action,
+                    subject,
+                    name: `${actionName} ${subject}`,
+                    description: `Permission to ${actionName.toLowerCase()} ${subject}`
+                  });
                 }
               }
+            }
+          } else {
+            // Direct reference (e.g., Read, Manage)
+            // Find the subject from context (in this case we need to infer it from the file)
+            for (const subject of subjectMap.values()) {
+              const action = this.mapActionNameToEnum(permRef);
+              
+              permissions.push({
+                action,
+                subject,
+                name: `${permRef} ${subject}`,
+                description: `Permission to ${permRef.toLowerCase()} ${subject}`
+              });
             }
           }
         }
       }
     }
-    
-    return this.removeDuplicates(permissions);
   }
   
   private async findControllerFiles(): Promise<string[]> {

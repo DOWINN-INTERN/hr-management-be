@@ -1,29 +1,35 @@
-import { BaseController } from '@/common/controllers/base.controller';
-import { Authorize } from '@/common/decorators/authorize.decorator';
-import { CurrentUser } from '@/common/decorators/current-user.decorator';
-import { Override } from '@/common/decorators/override.decorator';
-import { Body, Controller, Post } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
-import { createPermissions } from '../../employee-management/roles/permissions/utils/create-permissions.utils';
+import { PaginatedResponseDto } from '@/common/dtos/paginated-response.dto';
+import { PaginationDto } from '@/common/dtos/pagination.dto';
+import { createController } from '@/common/factories/create-controller.factory';
 import { GetProfileDto, ProfileDto, UpdateProfileDto } from './dtos/profile.dto';
 import { Profile } from './entities/profile.entity';
 import { ProfilesService } from './profiles.service';
 
-// Controller permissions
-export const ProfilePermissions = createPermissions('profiles');
-const { Read, Create, Update, Delete } = ProfilePermissions;
-
-@ApiTags('Profiles')
-@Controller()
-export class ProfilesController extends BaseController<Profile, GetProfileDto, ProfileDto, UpdateProfileDto> {
-    constructor(private readonly profilesService: ProfilesService) {
-        super(profilesService, GetProfileDto);
+export class ProfilesController extends createController<
+    Profile,
+    GetProfileDto,
+    ProfileDto,
+    UpdateProfileDto
+>(
+    'Profiles',       // Entity name for Swagger documentation
+    ProfilesService, // The service handling Profile-related operations
+    GetProfileDto,  // DTO for retrieving profiles
+    ProfileDto,     // DTO for creating profiles
+    UpdateProfileDto, // DTO for updating profiles
+) {
+    override async findAllAdvanced(paginationDto: PaginationDto<Profile>): Promise<PaginatedResponseDto<Profile>> {
+        return await super.findAllAdvanced(paginationDto);
     }
 
-    @Post()
-    @Authorize()
-    @Override()
-    override async create(@Body() createDto: ProfileDto, @CurrentUser('sub') createdById: string): Promise<GetProfileDto> {
-        return super.create(createDto, createdById);
+    override async findOne(id: string): Promise<GetProfileDto> {
+        return await super.findOne(id);
+    }
+
+    override async delete(id: string): Promise<void> {
+        return await super.delete(id);
+    }
+
+    override deleteMany(ids: string[], hardDelete?: boolean): Promise<void> {
+        return super.deleteMany(ids, hardDelete);
     }
 }

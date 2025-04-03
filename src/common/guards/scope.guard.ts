@@ -10,6 +10,12 @@ export class ScopeGuard implements CanActivate {
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
     const { resourceScope } = request;
+    const method = request.method;
+
+    // Check if the method is POST (creation) or PUT (update)
+    if (method !== 'POST' && method !== 'PUT') {
+      return true; // Allow other methods
+    }
         
     const body = request.body;
     
@@ -52,8 +58,12 @@ export class ScopeGuard implements CanActivate {
         
       case RoleScopeType.OWNED:
         // Usually can't create resources for others
-        return false;
-        
+        if (data.userId) {
+          return resourceScope.userId === data.userId;
+        }
+        // If no userId is provided, allow creation
+        return true;
+
       default:
         return false;
     }

@@ -12,7 +12,7 @@ export interface AccessOptions {
   branches?: string[];
   organizations?: string[];
   roles?: string[];
-  permissions?: IPermission[];
+  permissions?: IPermission[] | ((this: any) => IPermission[]);
 }
 
 /**

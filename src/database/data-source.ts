@@ -1,5 +1,5 @@
-import { Address } from '@/modules/account-management/profiles/addresses/entities/address.entity';
 import { Profile } from '@/modules/account-management/profiles/entities/profile.entity';
+import { Address } from '@/modules/addresses/entities/address.entity';
 import { ConfigService } from '@nestjs/config';
 import { config } from 'dotenv';
 import { DataSource, DataSourceOptions } from 'typeorm';

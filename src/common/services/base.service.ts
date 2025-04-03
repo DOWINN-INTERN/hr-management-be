@@ -1,8 +1,8 @@
 import dataSource from '@/database/data-source';
 import { BaseEntity } from '@/database/entities/base.entity';
 import { UsersService } from '@/modules/account-management/users/users.service';
-import { BadRequestException, Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
-import { DeepPartial, FindOptionsRelations, FindOptionsWhere, In, Repository, SelectQueryBuilder } from 'typeorm';
+import { BadRequestException, ConflictException, Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
+import { DeepPartial, FindOneOptions, FindOptionsOrder, FindOptionsRelations, FindOptionsSelect, FindOptionsWhere, In, Repository, SelectQueryBuilder } from 'typeorm';
 import { PaginatedResponseDto } from '../dtos/paginated-response.dto';
 import { PaginationDto } from '../dtos/pagination.dto';
 import { UtilityHelper } from '../helpers/utility.helper';
@@ -134,34 +134,65 @@ export abstract class BaseService<T extends BaseEntity<T>> {
     }
   }
 
-
-  // DONE
-  async findAll(paginationDto: PaginationDto<T>): Promise<PaginatedResponseDto<T>> {
-    const [data, totalCount] = await this.repository.findAndCount({
-      ...paginationDto.toFindManyOptions(),
-    });
-    
-    return {
-      data,
-      totalCount,
-      meta: paginationDto,
-    };
-  }
-
-  // DONE
-  async findOneBy(criteria: Partial<T>, relations?: FindOptionsRelations<T>): Promise<T | null> {
-    return await this.repository.findOne({
-      relations: relations,
+  /**
+   * Finds a single entity matching the specified criteria.
+   * 
+   * @param criteria - Fields to search by (partial entity)
+   * @param options - Additional query options
+   * @param options.relations - Relations to eager load with the entity
+   * @param options.select - Fields to select from the entity
+   * @param options.order - Sort order for the query results
+   * @param options.withDeleted - Whether to include soft-deleted entities (default: false)
+   * @param options.cache - Enable result caching (boolean, TTL in ms, or cache options object)
+   * @param options.loadEagerRelations - Whether to load eager relations (default: true)
+   * @param options.transaction - Whether the query should use an existing transaction
+   * 
+   * @returns A Promise resolving to the matched entity or null if not found
+   * 
+   * @example
+   * // Find a user by email
+   * const user = await userService.findOneBy({ email: 'example@domain.com' });
+   * 
+   * // Find a user with related posts
+   * const userWithPosts = await userService.findOneBy(
+   *   { id: 123 },
+   *   { relations: { posts: true } }
+   * );
+   */
+  async findOneBy(
+    criteria: Partial<T>,
+    options?: {
+      relations?: FindOptionsRelations<T>;
+      select?: FindOptionsSelect<T>;
+      order?: FindOptionsOrder<T>;
+      withDeleted?: boolean;
+      cache?: boolean | number | { id: any; milliseconds: number };
+      loadEagerRelations?: boolean;
+      transaction?: boolean;
+    }
+  ): Promise<T | null> {
+    const findOptions: FindOneOptions<T> = {
       where: {
-        ...('isDeleted' in criteria ? {} : { isDeleted: false }),
+        ...(!options?.withDeleted && 'isDeleted' in criteria ? {} : { isDeleted: false }),
         ...(criteria as FindOptionsWhere<T>)
-      }
-    });
+      },
+      ...options
+    };
+    
+    return await this.repository.findOne(findOptions);
   }
-  
-  // DONE
-  async findOneByOrFail(criteria: Partial<T>, relations?: FindOptionsRelations<T>): Promise<T> {
-    const entity = await this.findOneBy(criteria, relations);
+
+  async findOneByOrFail(criteria: Partial<T>,
+    options?: {
+      relations?: FindOptionsRelations<T>;
+      select?: FindOptionsSelect<T>;
+      order?: FindOptionsOrder<T>;
+      withDeleted?: boolean;
+      cache?: boolean | number | { id: any; milliseconds: number };
+      loadEagerRelations?: boolean;
+      transaction?: boolean;
+    }): Promise<T> {
+    const entity = await this.findOneBy(criteria, options);
     if (!entity) {
       throw new NotFoundException(`${this.entityName} with ${UtilityHelper.formatCriteria(criteria)} not found`);
     }
@@ -169,29 +200,47 @@ export abstract class BaseService<T extends BaseEntity<T>> {
   }
 
   // DONE
-  async create(createDto: DeepPartial<T>, createdById?: string): Promise<T> {
+  async create(createDto: DeepPartial<T>, createdBy?: string): Promise<T> {
     const entity = this.repository.create({
         ...createDto,
-        createdById
+        createdBy
     });
-    return await this.repository.save(entity);
+    
+    try {
+      return await this.repository.save(entity);
+    } catch (error) {
+      console.log('Full error object:', JSON.stringify(error, null, 2));
+      // Check if the error is a foreign key constraint failure
+      if (
+        error && 
+        typeof error === 'object' &&
+        'message' in error &&
+        typeof error.message === 'string' && 
+        (error.message.includes('a foreign key constraint fails') || 
+         ('name' in error && error.name === 'QueryFailedError'))
+      ) {
+        throw new ConflictException(`Failed to create ${this.entityName}. It appears that the related entity does not exist or the ${this.entityName} already exists.`);
+      }
+      // Re-throw other errors
+      throw error;
+    }
   }
 
   // DONE
-  async update(id: string, updateDto: DeepPartial<T>, updatedById?: string): Promise<T> {
+  async update(id: string, updateDto: DeepPartial<T>, updatedBy?: string): Promise<T> {
       const entity = await this.findOneByOrFail({ id } as Partial<T>);
       const updatedEntity = await this.repository.save({
           ...entity,
           ...updateDto,
-          updatedById
+          updatedBy
       });
       return updatedEntity;
   }
   
   // DONE
-  async softDelete(id: string, deletedById?: string): Promise<T> {
-    if (deletedById) {
-        await this.repository.update(id, { deletedById } as any);
+  async softDelete(id: string, deletedBy?: string): Promise<T> {
+    if (deletedBy) {
+        await this.repository.update(id, { deletedBy } as any);
     }
     
     await this.repository.softDelete(id);
@@ -664,6 +713,11 @@ export abstract class BaseService<T extends BaseEntity<T>> {
     const parameters: Record<string, any> = {};
     const alias = this.repository.metadata.name.toLowerCase();
     
+    // Check for logical operators (AND, OR)
+    if (funcStr.includes('&&') || funcStr.includes('||')) {
+      return this.parseLogicalExpression(funcStr, alias);
+    }
+    
     // Handle basic comparison operations
     const comparisonRegex = /=>.*?\.([a-zA-Z0-9_]+)\s*(===|==|!==|!=|>=|<=|>|<)\s*([^;)]+)/;
     const comparisonMatch = funcStr.match(comparisonRegex);
@@ -725,18 +779,119 @@ export abstract class BaseService<T extends BaseEntity<T>> {
             query: `${alias}.${property} LIKE :${paramName}`,
             parameters: { [paramName]: `%${parsedArgs[0]}` }
           };
+        case 'indexOf':
+          return {
+            query: `${alias}.${property} LIKE :${paramName}`,
+            parameters: { [paramName]: `%${parsedArgs[0]}%` }
+          };
+        case 'toLowerCase':
+          return {
+            query: `LOWER(${alias}.${property}) = LOWER(:${paramName})`,
+            parameters: { [paramName]: parsedArgs[0] || '' }
+          };
+        case 'toUpperCase':
+          return {
+            query: `UPPER(${alias}.${property}) = UPPER(:${paramName})`,
+            parameters: { [paramName]: parsedArgs[0] || '' }
+          };
+        case 'trim':
+          return {
+            query: `TRIM(${alias}.${property}) = :${paramName}`,
+            parameters: { [paramName]: parsedArgs[0] || '' }
+          };
         default:
           throw new Error(`Unsupported method: ${method}`);
       }
     }
     
+    // Handle null/undefined checks
+    const nullCheckRegex = /=>.*?\.([a-zA-Z0-9_]+)\s*===?\s*(null|undefined)/;
+    const nullCheckMatch = funcStr.match(nullCheckRegex);
+    
+    if (nullCheckMatch) {
+      const [_, property] = nullCheckMatch;
+      return {
+        query: `${alias}.${property} IS NULL`,
+        parameters: {}
+      };
+    }
+    
+    const notNullCheckRegex = /=>.*?\.([a-zA-Z0-9_]+)\s*!==?\s*(null|undefined)/;
+    const notNullCheckMatch = funcStr.match(notNullCheckRegex);
+    
+    if (notNullCheckMatch) {
+      const [_, property] = notNullCheckMatch;
+      return {
+        query: `${alias}.${property} IS NOT NULL`,
+        parameters: {}
+      };
+    }
+    
     // Fallback for unrecognized expressions
+    this.logger.warn(`Could not parse expression: ${funcStr}. Using default true condition.`);
     return {
       query: '1=1', // Always true
       parameters: {}
     };
   }
-  
+
+  /**
+   * Parse logical expressions with AND (&&) or OR (||)
+   */
+  private parseLogicalExpression(funcStr: string, alias: string): { query: string; parameters: Record<string, any> } {
+    let parameters: Record<string, any> = {};
+    
+    // Function to create a dummy Expression
+    const createDummyExpression = (expressionStr: string): Expression<any, boolean> => {
+      return new Function(`return ${expressionStr}`)() as Expression<any, boolean>;
+    };
+    
+    // Split by OR first (lower precedence)
+    if (funcStr.includes('||')) {
+      const orParts = funcStr.split('||').map(part => {
+        // Extract just the lambda function part for each condition
+        const lambdaMatch = part.match(/(?:^\s*|[|&]{2}\s*)(\([^=]*=>\s*[^|&]*)/);
+        if (lambdaMatch && lambdaMatch[1]) {
+          const fixedExpression = `${lambdaMatch[1]})`;
+          const result = this.parseExpression(createDummyExpression(fixedExpression));
+          parameters = { ...parameters, ...result.parameters };
+          return `(${result.query})`;
+        }
+        return '1=1'; // Default to true for parts we can't parse
+      });
+      
+      return {
+        query: orParts.join(' OR '),
+        parameters
+      };
+    }
+    
+    // Split by AND
+    if (funcStr.includes('&&')) {
+      const andParts = funcStr.split('&&').map(part => {
+        // Extract just the lambda function part for each condition
+        const lambdaMatch = part.match(/(?:^\s*|[|&]{2}\s*)(\([^=]*=>\s*[^|&]*)/);
+        if (lambdaMatch && lambdaMatch[1]) {
+          const fixedExpression = `${lambdaMatch[1]})`;
+          const result = this.parseExpression(createDummyExpression(fixedExpression));
+          parameters = { ...parameters, ...result.parameters };
+          return `(${result.query})`;
+        }
+        return '1=1'; // Default to true for parts we can't parse
+      });
+      
+      return {
+        query: andParts.join(' AND '),
+        parameters
+      };
+    }
+    
+    // Should not reach here
+    return {
+      query: '1=1',
+      parameters: {}
+    };
+  }
   /**
    * Map JavaScript operators to SQL operators
    */

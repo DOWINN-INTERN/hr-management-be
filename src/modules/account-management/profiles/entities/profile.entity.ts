@@ -1,14 +1,14 @@
 import { BaseEntity } from '@/database/entities/base.entity';
 import {
-    Column,
-    Entity,
-    JoinColumn,
-    OneToOne
+  Column,
+  Entity,
+  JoinColumn,
+  OneToOne
 } from 'typeorm';
+import { Address } from '../../../addresses/entities/address.entity';
 import { User } from '../../users/entities/user.entity';
-import { Address } from '../addresses/entities/address.entity';
 
-@Entity()
+@Entity('profiles')
 export class Profile extends BaseEntity<Profile> {
   @Column()
   firstName!: string;
@@ -47,9 +47,14 @@ export class Profile extends BaseEntity<Profile> {
   religion?: string;
 
   @OneToOne(() => User, (user: User) => user.profile)
-  @JoinColumn()
+  @JoinColumn({ name: 'userId' })
   user!: User;
 
-  @OneToOne(() => Address, (address: Address) => address.profile)
+  @Column({ unique: true })
+  userId!: string;
+
+  @OneToOne(() => Address, (address: Address) => address.profile, {
+    cascade: true
+  })
   address?: Address;
 }

@@ -3,8 +3,10 @@ import { CurrentUser } from '@/common/decorators/current-user.decorator';
 import { IJwtPayload } from '@/common/interfaces/jwt-payload.interface';
 import { Body, Controller, Get, Post, Req, Res, UnauthorizedException, UseGuards } from '@nestjs/common';
 import { ApiBody, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { plainToInstance } from 'class-transformer';
 import { Request, Response } from 'express';
 import { GoogleAuthGuard } from '../../../common/guards/google-auth.guard';
+import { GetUserDto } from '../users/dtos/user.dto';
 import { AuthService } from './auth.service';
 import { LoginUserDto } from './dto/login-user.dto';
 import { RegisterUserDto } from './dto/register-user.dto';
@@ -23,9 +25,10 @@ export class AuthController {
   @ApiResponse({ status: 200, description: 'User logged in successfully.' })
   async login(
     @Body() loginDto: LoginUserDto, 
+    @Req() request: Request,
     @Res({ passthrough: true }) response: Response
   ) {
-    const login = await this.authService.loginUser(loginDto);
+    const login = await this.authService.loginUser(loginDto, request);
     await this.authService.setAuthCookies(response, login);
     return login;
   }
@@ -55,7 +58,7 @@ export class AuthController {
     schema: {
       type: 'object',
       properties: {
-        refresh_token: { 
+        refreshToken: { 
           type: 'string',
           description: 'Refresh token (optional if provided in cookies)',
         },
@@ -80,7 +83,6 @@ export class AuthController {
     
     const tokens = await this.authService.refreshTokens(refreshToken);
     await this.authService.setAuthCookies(response, tokens);
-    
     return tokens;
   }
   
@@ -91,7 +93,7 @@ export class AuthController {
     schema: {
       type: 'object',
       properties: {
-        refresh_token: { 
+        refreshToken: { 
           type: 'string',
           description: 'Refresh token (optional if provided in cookies)',
         },
@@ -122,8 +124,8 @@ export class AuthController {
   @Post('register')
   @ApiOperation({ summary: 'Register a new user' })
   @ApiResponse({ status: 201, description: 'User registered successfully.' })
-  async register(@Body() registerDto: RegisterUserDto) {
-    return this.authService.registerUser(registerDto);
+  async register(@Body() registerDto: RegisterUserDto): Promise<GetUserDto> {
+    return plainToInstance(GetUserDto, this.authService.registerUser(registerDto));
   }
 
   // @Get('google')

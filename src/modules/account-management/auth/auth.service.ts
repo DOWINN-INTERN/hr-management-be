@@ -1,4 +1,3 @@
-import { GeneralResponseDto } from '@/common/dtos/generalresponse.dto';
 import { UtilityHelper } from '@/common/helpers/utility.helper';
 import { CommonService } from '@/common/services/common.service';
 import { ConflictException, Injectable, Logger, UnauthorizedException } from '@nestjs/common';
@@ -6,7 +5,6 @@ import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcrypt';
 import { CookieOptions, Request, Response } from 'express';
 import { SessionsService } from '../sessions/sessions.service';
-import { GetUserDto } from '../users/dtos/user.dto';
 import { User } from '../users/entities/user.entity';
 import { UsersService } from '../users/users.service';
 import { LoginResponseDto } from './dto/login-response.dto';
@@ -38,15 +36,15 @@ export class AuthService {
     var user: User | null = null;
     if (UtilityHelper.isEmail(model.emailOrUserName)) {
       // check if email exists
-      user = await this.usersService.findOneBy({ email: model.emailOrUserName.toLowerCase().trim() }, { employee: { roles: true } });
+      user = await this.usersService.findOneBy({ email: model.emailOrUserName.toLowerCase().trim() }, { relations: { employee: { roles: true } } });
+        
       if (!user) {
         return null;
       }
     }
     else {
       // check if username exists
-      this.logger.log(`Validating user name: ${model.emailOrUserName}`);
-      user = await this.usersService.findOneBy({ userName: model.emailOrUserName.toLowerCase().trim() }, { employee: { roles: true } });
+      user = await this.usersService.findOneBy({ userName: model.emailOrUserName.toLowerCase().trim() }, { relations: { employee: { roles: true } } });
       if (!user) {
         return null;
       }
@@ -205,7 +203,7 @@ export class AuthService {
   //   });
   // }
 
-  async registerUser(model: RegisterUserDto): Promise<GeneralResponseDto<GetUserDto>> {
+  async registerUser(model: RegisterUserDto): Promise<User> {
     // check if user already exists
     const existingEmail = await this.usersService.findOneBy({ email: model.email.toLowerCase().trim() });
 
@@ -261,26 +259,39 @@ export class AuthService {
   }
 
   async refreshTokens(refreshToken: string): Promise<LoginResponseDto> {
-    // Verify refresh token
-    try
-    {
-      const payload = await this.jwtService.verifyToken(refreshToken);
-      // Check if user exists
-      const user = await this.usersService.findOneByOrFail({id: payload.sub}, { employee: { roles: true } });
-      
-      // Create new tokens
-      const newRefreshToken = await this.jwtService.createRefreshToken();
-      const newPayload = this.jwtService.createPayload(user, newRefreshToken);
-      const accessToken = await this.jwtService.createToken(newPayload);
-      
-      return {
-        accessToken,
-      };
+    const session = await this.sessionsService.findOneBy(
+      { refreshToken },
+      {
+        relations: { 
+          user: { employee: { roles: true } }     // Include nested employee relation
+        },
+        order: { createdAt: 'DESC' },  // Get the newest session first
+      }
+    );
+
+    if (!session) {
+      throw new UnauthorizedException('Refresh token not found');
     }
-    catch (error)
-    {
-      throw new UnauthorizedException('Invalid refresh token');
+
+    if (session.expiresAt && session.expiresAt < new Date()) {
+      throw new UnauthorizedException('Refresh token expired');
     }
+
+    // Check if user exists
+    const user = session.user;
+
+    if (!user) {
+      throw new UnauthorizedException('User not found');
+    }
+      
+    // Create new tokens
+    const newRefreshToken = await this.jwtService.createRefreshToken();
+    const newPayload = this.jwtService.createPayload(user, newRefreshToken);
+    const accessToken = await this.jwtService.createToken(newPayload);
+    
+    return {
+      accessToken,
+    };
   }
 
   // login user
@@ -297,11 +308,12 @@ export class AuthService {
     // Calculate expiration time for refresh token
     const refreshTokenExpirationMinutes = this.configService.getOrThrow<number>('REFRESH_TOKEN_EXPIRATION_MINUTES');
     const expiresAt = new Date();
-    expiresAt.setMinutes(expiresAt.getMinutes() + refreshTokenExpirationMinutes);
+    expiresAt.setMinutes(expiresAt.getMinutes() + refreshTokenExpirationMinutes * 2);
 
     // save refresh token to database
     await this.sessionsService.create({
       refreshToken,
+      userId: user.id,
       expiresAt,
       userAgent: req?.headers['user-agent'],
       ipAddress: req?.ip,
