@@ -14,7 +14,18 @@ export class AccessTokenStrategy extends PassportStrategy(Strategy, 'jwt') {
     private readonly userService: UsersService,
   ) {
     super({
-      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+      // Combine extractors to check both the Authorization header and the query parameter
+      jwtFromRequest: (req) => {
+        // Try to extract JWT from the Authorization header
+        const authHeaderToken = ExtractJwt.fromAuthHeaderAsBearerToken()(req);
+        if (authHeaderToken) {
+            return authHeaderToken;
+        }
+
+        // If not found, try to extract JWT from the query parameter named 'token'
+        const queryToken = ExtractJwt.fromUrlQueryParameter('token')(req);
+        return queryToken;
+      },
       secretOrKey: configService.getOrThrow<string>('ACCESS_TOKEN_SECRET'),
       ignoreExpiration: false,
     });

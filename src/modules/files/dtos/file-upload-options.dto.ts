@@ -6,4 +6,5 @@ export class FileUploadOptions {
     contentType?: string;
     maxSizeBytes?: number;
     allowedTypes?: string[];
+    token?: string;
 }

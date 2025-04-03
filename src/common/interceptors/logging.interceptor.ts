@@ -24,6 +24,16 @@ export class LoggingInterceptor implements NestInterceptor {
     const response = context.switchToHttp().getResponse();
     const correlationId = request.headers['x-correlation-id'] || crypto.randomUUID();
     const startTime = Date.now();
+    const method = request.method;
+    const url = request.originalUrl || request.url;
+    const userAgent = request.get('user-agent') || '';
+    const ip = this.getClientIp(request);
+
+     // Skip logging body for streaming endpoints
+     if (url.includes('/stream/') || url.includes('/download/')) {
+      this.logger.log(`${method} ${url} ${ip} ${userAgent} [STREAMING]`);
+      return next.handle(); // Don't try to log response for streaming
+    }
 
     // Set correlation ID in response headers
     response.setHeader('x-correlation-id', correlationId);
@@ -50,6 +60,13 @@ export class LoggingInterceptor implements NestInterceptor {
         throw error;
       }),
     );
+  }
+
+  private getClientIp(req: any): string {
+    return req.ip || 
+           req.connection?.remoteAddress || 
+           req.headers['x-forwarded-for']?.split(',')[0] || 
+           'unknown';
   }
 
   /**

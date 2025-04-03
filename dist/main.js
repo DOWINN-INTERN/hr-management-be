@@ -18,10 +18,10 @@ const express_rate_limit_1 = __importDefault(__webpack_require__(6));
 const helmet_1 = __importDefault(__webpack_require__(7));
 const morgan_1 = __importDefault(__webpack_require__(8));
 const app_module_1 = __webpack_require__(9);
-const http_exception_filter_1 = __webpack_require__(145);
-const logging_interceptor_1 = __webpack_require__(146);
-const transform_interceptor_1 = __webpack_require__(148);
-const swagger_config_1 = __webpack_require__(149);
+const http_exception_filter_1 = __webpack_require__(152);
+const logging_interceptor_1 = __webpack_require__(153);
+const transform_interceptor_1 = __webpack_require__(155);
+const swagger_config_1 = __webpack_require__(156);
 async function bootstrap() {
     const app = await core_1.NestFactory.create(app_module_1.AppModule);
     const configService = app.get(config_1.ConfigService);
@@ -155,10 +155,10 @@ const attendance_management_module_1 = __webpack_require__(108);
 const documents_module_1 = __webpack_require__(111);
 const employee_management_module_1 = __webpack_require__(67);
 const files_module_1 = __webpack_require__(112);
-const logs_module_1 = __webpack_require__(122);
-const notifications_module_1 = __webpack_require__(124);
-const organization_management_module_1 = __webpack_require__(128);
-const schedule_management_module_1 = __webpack_require__(140);
+const logs_module_1 = __webpack_require__(129);
+const notifications_module_1 = __webpack_require__(131);
+const organization_management_module_1 = __webpack_require__(135);
+const schedule_management_module_1 = __webpack_require__(147);
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -6074,7 +6074,7 @@ let AuthService = AuthService_1 = class AuthService {
             order: { createdAt: 'DESC' }, // Get the newest session first
         });
         if (!session) {
-            throw new common_1.UnauthorizedException('Refresh token not found');
+            throw new common_1.UnauthorizedException('Session not found');
         }
         if (session.expiresAt && session.expiresAt < new Date()) {
             throw new common_1.UnauthorizedException('Refresh token expired');
@@ -6448,7 +6448,17 @@ const jwt_service_1 = __webpack_require__(96);
 let AccessTokenStrategy = class AccessTokenStrategy extends (0, passport_1.PassportStrategy)(passport_jwt_1.Strategy, 'jwt') {
     constructor(configService, jwtService, userService) {
         super({
-            jwtFromRequest: passport_jwt_1.ExtractJwt.fromAuthHeaderAsBearerToken(),
+            // Combine extractors to check both the Authorization header and the query parameter
+            jwtFromRequest: (req) => {
+                // Try to extract JWT from the Authorization header
+                const authHeaderToken = passport_jwt_1.ExtractJwt.fromAuthHeaderAsBearerToken()(req);
+                if (authHeaderToken) {
+                    return authHeaderToken;
+                }
+                // If not found, try to extract JWT from the query parameter named 'token'
+                const queryToken = passport_jwt_1.ExtractJwt.fromUrlQueryParameter('token')(req);
+                return queryToken;
+            },
             secretOrKey: configService.getOrThrow('ACCESS_TOKEN_SECRET'),
             ignoreExpiration: false,
         });
@@ -6987,13 +6997,17 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.FilesModule = void 0;
 const common_1 = __webpack_require__(1);
+const users_module_1 = __webpack_require__(11);
 const file_provider_config_1 = __webpack_require__(113);
+const files_controller_1 = __webpack_require__(123);
 let FilesModule = class FilesModule {
 };
 exports.FilesModule = FilesModule;
 exports.FilesModule = FilesModule = __decorate([
     (0, common_1.Module)({
+        imports: [users_module_1.UsersModule],
         providers: [...file_provider_config_1.fileProviders],
+        controllers: [files_controller_1.FilesController],
     })
 ], FilesModule);
 
@@ -7091,14 +7105,17 @@ const fs = __importStar(__webpack_require__(82));
 const fs_1 = __webpack_require__(82);
 const mime = __importStar(__webpack_require__(115));
 const path_1 = __importDefault(__webpack_require__(116));
-const base_file_service_1 = __webpack_require__(117);
+const file_list_options_dto_1 = __webpack_require__(117);
+const base_file_service_1 = __webpack_require__(118);
 let LocalFileService = class LocalFileService extends base_file_service_1.BaseFileService {
     constructor(configService) {
-        super();
+        const uploadDir = configService.getOrThrow('FILE_DIRECTORY');
+        const baseUrl = configService.getOrThrow('FILE_BASE_URL');
+        super(uploadDir, baseUrl);
         this.configService = configService;
         this.chunkUploads = new Map();
-        this.uploadDir = configService.getOrThrow('FILE_DIRECTORY');
-        this.baseUrl = configService.getOrThrow('FILE_BASE_URL');
+        this.uploadDir = uploadDir; // Keep for backward compatibility
+        this.baseUrl = baseUrl; // Keep for backward compatibility
         this.tempDir = path_1.default.join(this.uploadDir, 'temp');
         // Ensure upload directories exist
         if (!fs.existsSync(this.uploadDir)) {
@@ -7108,26 +7125,48 @@ let LocalFileService = class LocalFileService extends base_file_service_1.BaseFi
         if (!fs.existsSync(this.tempDir)) {
             fs.mkdirSync(this.tempDir, { recursive: true });
         }
+        // Create a dir for tracking upload metadata
+        this.metadataDir = path_1.default.join(this.uploadDir, 'metadata');
+        if (!fs.existsSync(this.metadataDir)) {
+            fs.mkdirSync(this.metadataDir, { recursive: true });
+        }
     }
+    // Replace chunkUploads in-memory map with file-based storage
     async initiateChunkedUpload(fileInfo) {
         try {
-            // Generate a unique ID for this upload
             const uploadId = crypto.randomUUID();
-            // Store upload info in memory
-            // In a production app, this should be stored in a database
-            this.chunkUploads.set(uploadId, {
+            // Store metadata in a file instead of memory
+            const metadataPath = path_1.default.join(this.metadataDir, `${uploadId}.json`);
+            await fs_1.promises.writeFile(metadataPath, JSON.stringify({
                 info: fileInfo,
-                chunks: new Set(),
-                chunkPaths: Array(fileInfo.totalChunks).fill('')
-            });
-            this.logger.log(`Initiated chunked upload ${uploadId} for ${fileInfo.filename} (${fileInfo.totalChunks} chunks)`);
+                chunks: [],
+                chunkPaths: Array(fileInfo.totalChunks).fill(''),
+                createdAt: new Date().toISOString()
+            }));
+            this.logger.log(`Initiated chunked upload ${uploadId} for ${fileInfo.filename}`);
             return uploadId;
         }
         catch (error) {
-            const err = error;
-            this.logger.error(`Error initiating chunked upload: ${err.message}`, err.stack);
             throw error;
         }
+    }
+    // Update getChunkUploadData helper
+    async getChunkUploadData(uploadId) {
+        const metadataPath = path_1.default.join(this.metadataDir, `${uploadId}.json`);
+        if (!fs.existsSync(metadataPath)) {
+            throw new Error(`Upload with ID ${uploadId} not found`);
+        }
+        const data = JSON.parse(await fs_1.promises.readFile(metadataPath, 'utf8'));
+        // Convert chunks array back to Set for backwards compatibility
+        data.chunks = new Set(data.chunks);
+        return data;
+    }
+    // Update saveChunkUploadData helper
+    async saveChunkUploadData(uploadId, data) {
+        const metadataPath = path_1.default.join(this.metadataDir, `${uploadId}.json`);
+        // Convert Set back to array for storage
+        const toSave = Object.assign(Object.assign({}, data), { chunks: Array.from(data.chunks) });
+        await fs_1.promises.writeFile(metadataPath, JSON.stringify(toSave));
     }
     async uploadChunk(uploadId, chunkNumber, chunk) {
         try {
@@ -7249,9 +7288,11 @@ let LocalFileService = class LocalFileService extends base_file_service_1.BaseFi
         if (folder && !fs.existsSync(finalDir)) {
             fs.mkdirSync(finalDir, { recursive: true });
         }
-        const fileName = (options === null || options === void 0 ? void 0 : options.customFileName) || this.generateUniqueFileName(file.originalname);
+        const fileName = this.generateUniqueFileName(file.originalname);
         const filePath = path_1.default.join(finalDir, fileName);
         const fileKey = folder ? `${folder}/${fileName}` : fileName;
+        // url encode the file key
+        const encodedFileKey = encodeURIComponent(fileKey);
         // Write file
         await fs_1.promises.writeFile(filePath, file.buffer);
         // Get file stats
@@ -7261,7 +7302,7 @@ let LocalFileService = class LocalFileService extends base_file_service_1.BaseFi
             originalName: file.originalname,
             size: file.size,
             mimeType: file.mimetype,
-            url: `${this.baseUrl}/${fileKey}`,
+            url: `${this.baseUrl}/${encodedFileKey}?token=${options === null || options === void 0 ? void 0 : options.token}`,
             createdAt: stats.birthtime,
             lastModified: stats.mtime,
             encoding: file.encoding,
@@ -7304,47 +7345,335 @@ let LocalFileService = class LocalFileService extends base_file_service_1.BaseFi
         return true;
     }
     async fileExists(fileKey) {
-        const filePath = path_1.default.join(this.uploadDir, fileKey);
-        return fs.existsSync(filePath);
+        try {
+            const filePath = path_1.default.join(this.uploadDir, fileKey);
+            return fs.existsSync(filePath);
+        }
+        catch (error) {
+            return false;
+        }
     }
     async listFiles(options) {
-        const dir = (options === null || options === void 0 ? void 0 : options.prefix)
-            ? path_1.default.join(this.uploadDir, options.prefix)
-            : this.uploadDir;
-        if (!fs.existsSync(dir)) {
-            return [];
+        try {
+            // Set default options
+            const opts = Object.assign({ limit: 100, includeDirs: true, recursive: false, sortDirection: 'asc' }, options);
+            // Resolve base directory
+            const baseDir = opts.prefix
+                ? path_1.default.join(this.uploadDir, opts.prefix)
+                : this.uploadDir;
+            // Check if directory exists
+            if (!fs.existsSync(baseDir)) {
+                return {
+                    files: [],
+                    directories: [],
+                    count: 0,
+                    prefix: opts.prefix,
+                    hasMore: false,
+                    totalSize: 0,
+                };
+            }
+            // Initialize result containers
+            const files = [];
+            const directories = [];
+            let totalSize = 0;
+            // Helper function to check if file matches filters
+            const matchesFilters = async (filePath, stats) => {
+                // Extension filter
+                if (opts.extensions) {
+                    const fileExt = path_1.default.extname(filePath).toLowerCase().replace('.', '');
+                    const allowedExts = opts.extensions.split(',').map(e => e.trim().toLowerCase());
+                    if (!allowedExts.includes(fileExt))
+                        return false;
+                }
+                // Size filter
+                if (opts.size) {
+                    if (opts.size.min !== undefined && stats.size < opts.size.min)
+                        return false;
+                    if (opts.size.max !== undefined && stats.size > opts.size.max)
+                        return false;
+                }
+                // Create date filter
+                if (opts.createdAt) {
+                    const createTime = stats.birthtime.getTime();
+                    if (opts.createdAt.from && createTime < new Date(opts.createdAt.from).getTime())
+                        return false;
+                    if (opts.createdAt.to && createTime > new Date(opts.createdAt.to).getTime())
+                        return false;
+                }
+                // Modified date filter
+                if (opts.modifiedAt) {
+                    const modTime = stats.mtime.getTime();
+                    if (opts.modifiedAt.from && modTime < new Date(opts.modifiedAt.from).getTime())
+                        return false;
+                    if (opts.modifiedAt.to && modTime > new Date(opts.modifiedAt.to).getTime())
+                        return false;
+                }
+                // MIME type filter
+                if (opts.mimeType) {
+                    const fileMime = mime.lookup(filePath) || 'application/octet-stream';
+                    if (!fileMime.includes(opts.mimeType))
+                        return false;
+                }
+                // Text search filter
+                if (opts.searchTerm) {
+                    const fileName = path_1.default.basename(filePath).toLowerCase();
+                    if (!fileName.includes(opts.searchTerm.toLowerCase()))
+                        return false;
+                }
+                return true;
+            };
+            // Function to process directory content
+            const processDirectory = async (dirPath, relPath = '') => {
+                const items = await fs_1.promises.readdir(dirPath);
+                // Process directories first
+                if (opts.includeDirs) {
+                    for (const item of items) {
+                        const itemPath = path_1.default.join(dirPath, item);
+                        const stats = await fs_1.promises.stat(itemPath);
+                        if (stats.isDirectory()) {
+                            const dirRelPath = relPath ? `${relPath}/${item}` : item;
+                            const dirKey = opts.prefix ? `${opts.prefix}/${dirRelPath}` : dirRelPath;
+                            // Skip if this is the root of a recursive search
+                            if (dirPath === baseDir) {
+                                // Calculate directory size and item count (can be expensive for large dirs)
+                                let dirSize = 0;
+                                let itemCount = 0;
+                                try {
+                                    const dirItems = await fs_1.promises.readdir(itemPath);
+                                    itemCount = dirItems.length;
+                                    // Optionally calculate directory size
+                                    // This can be expensive, so we might want to make it optional
+                                    if (opts.includeSizes) {
+                                        dirSize = await this.calculateDirectorySize(itemPath);
+                                    }
+                                }
+                                catch (err) {
+                                    const error = err;
+                                    this.logger.warn(`Error reading directory ${dirKey}: ${error.message}`);
+                                }
+                                directories.push({
+                                    key: dirKey,
+                                    name: item,
+                                    createdAt: stats.birthtime,
+                                    lastModified: stats.mtime,
+                                    itemCount,
+                                    size: dirSize
+                                });
+                            }
+                            // If recursive, process subdirectories
+                            if (opts.recursive) {
+                                await processDirectory(itemPath, dirRelPath);
+                            }
+                        }
+                    }
+                }
+                // Process files
+                for (const item of items) {
+                    const itemPath = path_1.default.join(dirPath, item);
+                    const stats = await fs_1.promises.stat(itemPath);
+                    if (stats.isFile()) {
+                        const fileRelPath = relPath ? `${relPath}/${item}` : item;
+                        const fileKey = opts.prefix ? `${opts.prefix}/${fileRelPath}` : fileRelPath;
+                        // Apply filters
+                        if (await matchesFilters(itemPath, stats)) {
+                            totalSize += stats.size;
+                            files.push({
+                                key: fileKey,
+                                originalName: item,
+                                size: stats.size,
+                                mimeType: mime.lookup(itemPath) || 'application/octet-stream',
+                                url: opts.includeUrls ? `${this.baseUrl}/${fileKey}` : undefined,
+                                createdAt: stats.birthtime,
+                                lastModified: stats.mtime,
+                            });
+                        }
+                    }
+                }
+            };
+            // Process main directory and all subdirectories if recursive
+            await processDirectory(baseDir);
+            // Generate breadcrumbs
+            const breadcrumbs = [];
+            if (opts.prefix) {
+                const segments = opts.prefix.split('/');
+                let currentPath = '';
+                breadcrumbs.push({ name: 'Home', path: '' });
+                for (let i = 0; i < segments.length; i++) {
+                    currentPath = currentPath ? `${currentPath}/${segments[i]}` : segments[i];
+                    breadcrumbs.push({
+                        name: segments[i],
+                        path: currentPath
+                    });
+                }
+            }
+            // Calculate parent directory
+            let parentDir = undefined;
+            if (opts.prefix) {
+                const segments = opts.prefix.split('/');
+                segments.pop();
+                parentDir = segments.join('/');
+            }
+            // Apply sorting
+            const sortItems = (a, b) => {
+                var _a, _b, _c, _d, _e, _f;
+                const direction = opts.sortDirection === file_list_options_dto_1.SortDirection.DESC ? -1 : 1;
+                switch (opts.sortBy) {
+                    case file_list_options_dto_1.FileSortField.NAME:
+                        return ((_a = a.originalName) === null || _a === void 0 ? void 0 : _a.localeCompare(b.originalName || b.name)) * direction;
+                    case file_list_options_dto_1.FileSortField.SIZE:
+                        return ((a.size || 0) - (b.size || 0)) * direction;
+                    case file_list_options_dto_1.FileSortField.DATE_CREATED:
+                        return (((_b = a.createdAt) === null || _b === void 0 ? void 0 : _b.getTime()) - ((_c = b.createdAt) === null || _c === void 0 ? void 0 : _c.getTime())) * direction;
+                    case file_list_options_dto_1.FileSortField.DATE_MODIFIED:
+                        return (((_d = a.lastModified) === null || _d === void 0 ? void 0 : _d.getTime()) - ((_e = b.lastModified) === null || _e === void 0 ? void 0 : _e.getTime())) * direction;
+                    case file_list_options_dto_1.FileSortField.TYPE:
+                        const aType = a.mimeType || '';
+                        const bType = b.mimeType || '';
+                        return aType.localeCompare(bType) * direction;
+                    default:
+                        return ((_f = a.originalName) === null || _f === void 0 ? void 0 : _f.localeCompare(b.originalName || b.name)) * direction;
+                }
+            };
+            // Sort files and directories
+            files.sort(sortItems);
+            directories.sort(sortItems);
+            // Apply pagination
+            let hasMore = false;
+            let nextMarker = undefined;
+            // Calculate actual limit considering marker-based pagination
+            let startIdx = 0;
+            const combinedItems = [...directories, ...files];
+            if (opts.marker) {
+                // Find the index after the marker
+                startIdx = combinedItems.findIndex(item => (item.key || '') === opts.marker) + 1;
+                if (startIdx <= 0)
+                    startIdx = 0;
+            }
+            // Slice the results based on pagination
+            const endIdx = opts.limit ? startIdx + opts.limit : combinedItems.length;
+            const paginatedItems = combinedItems.slice(startIdx, endIdx);
+            // Calculate if there are more results and next marker
+            hasMore = endIdx < combinedItems.length;
+            if (hasMore && paginatedItems.length > 0) {
+                nextMarker = paginatedItems[paginatedItems.length - 1].key;
+            }
+            // Separate files and directories again
+            const paginatedFiles = paginatedItems
+                .filter(item => 'originalName' in item);
+            const paginatedDirs = paginatedItems
+                .filter(item => !('originalName' in item));
+            return {
+                files: paginatedFiles,
+                directories: opts.includeDirs ? paginatedDirs : undefined,
+                count: paginatedFiles.length + ((paginatedDirs === null || paginatedDirs === void 0 ? void 0 : paginatedDirs.length) || 0),
+                prefix: opts.prefix,
+                hasMore,
+                nextMarker,
+                totalSize,
+                parentDir,
+                breadcrumbs: breadcrumbs.length > 0 ? breadcrumbs : undefined
+            };
         }
-        const files = await fs_1.promises.readdir(dir);
-        const results = [];
-        for (const file of files) {
-            const filePath = path_1.default.join(dir, file);
-            const stats = await fs_1.promises.stat(filePath);
+        catch (error) {
+            const err = error;
+            this.logger.error(`Error listing files: ${err.message}`, err.stack);
+            throw error;
+        }
+    }
+    // Helper method to calculate directory size
+    async calculateDirectorySize(dirPath) {
+        let totalSize = 0;
+        const items = await fs_1.promises.readdir(dirPath);
+        for (const item of items) {
+            const itemPath = path_1.default.join(dirPath, item);
+            const stats = await fs_1.promises.stat(itemPath);
             if (stats.isFile()) {
-                const fileKey = (options === null || options === void 0 ? void 0 : options.prefix) ? `${options.prefix}/${file}` : file;
-                results.push({
-                    key: fileKey,
-                    originalName: file,
-                    size: stats.size,
-                    mimeType: mime.lookup(filePath) || 'application/octet-stream',
-                    url: (options === null || options === void 0 ? void 0 : options.includeUrls) ? `${this.baseUrl}/${fileKey}` : undefined,
-                    createdAt: stats.birthtime,
-                    lastModified: stats.mtime,
-                });
+                totalSize += stats.size;
+            }
+            else if (stats.isDirectory()) {
+                totalSize += await this.calculateDirectorySize(itemPath);
             }
         }
-        // Sort if needed
-        if (options === null || options === void 0 ? void 0 : options.sortBy) {
-            results.sort((a, b) => {
-                const direction = options.sortDirection === 'desc' ? -1 : 1;
-                if (options.sortBy === 'name') {
-                    return a.originalName.localeCompare(b.originalName) * direction;
-                }
-                else {
-                    return (a.createdAt.getTime() - b.createdAt.getTime()) * direction;
-                }
-            });
+        return totalSize;
+    }
+    async createDirectory(dirPath) {
+        try {
+            const fullPath = path_1.default.join(this.uploadDir, dirPath);
+            if (fs.existsSync(fullPath)) {
+                throw new Error(`Directory ${dirPath} already exists`);
+            }
+            await fs_1.promises.mkdir(fullPath, { recursive: true });
+            const stats = await fs_1.promises.stat(fullPath);
+            return {
+                key: dirPath,
+                name: path_1.default.basename(dirPath),
+                createdAt: stats.birthtime,
+                lastModified: stats.mtime,
+                itemCount: 0,
+                size: 0
+            };
         }
-        return (options === null || options === void 0 ? void 0 : options.limit) ? results.slice(0, options.limit) : results;
+        catch (error) {
+            const err = error;
+            this.logger.error(`Error creating directory: ${err.message}`, err.stack);
+            throw error;
+        }
+    }
+    async deleteDirectory(dirPath, recursive = false) {
+        try {
+            const fullPath = path_1.default.join(this.uploadDir, dirPath);
+            if (!fs.existsSync(fullPath)) {
+                return false;
+            }
+            const stats = await fs_1.promises.stat(fullPath);
+            if (!stats.isDirectory()) {
+                throw new Error(`Path ${dirPath} is not a directory`);
+            }
+            // Check if directory is empty
+            const items = await fs_1.promises.readdir(fullPath);
+            if (items.length > 0 && !recursive) {
+                throw new Error(`Directory ${dirPath} is not empty. Use recursive=true to delete anyway.`);
+            }
+            await fs_1.promises.rm(fullPath, { recursive, force: true });
+            return true;
+        }
+        catch (error) {
+            const err = error;
+            this.logger.error(`Error deleting directory: ${err.message}`, err.stack);
+            throw error;
+        }
+    }
+    async renameDirectory(oldPath, newPath) {
+        try {
+            const oldFullPath = path_1.default.join(this.uploadDir, oldPath);
+            const newFullPath = path_1.default.join(this.uploadDir, newPath);
+            if (!fs.existsSync(oldFullPath)) {
+                throw new Error(`Directory ${oldPath} does not exist`);
+            }
+            if (fs.existsSync(newFullPath)) {
+                throw new Error(`Target directory ${newPath} already exists`);
+            }
+            const stats = await fs_1.promises.stat(oldFullPath);
+            if (!stats.isDirectory()) {
+                throw new Error(`Path ${oldPath} is not a directory`);
+            }
+            await fs_1.promises.rename(oldFullPath, newFullPath);
+            const newStats = await fs_1.promises.stat(newFullPath);
+            const items = await fs_1.promises.readdir(newFullPath);
+            return {
+                key: newPath,
+                name: path_1.default.basename(newPath),
+                createdAt: newStats.birthtime,
+                lastModified: newStats.mtime,
+                itemCount: items.length,
+                size: await this.calculateDirectorySize(newFullPath)
+            };
+        }
+        catch (error) {
+            const err = error;
+            this.logger.error(`Error renaming directory: ${err.message}`, err.stack);
+            throw error;
+        }
     }
     async getFileStream(fileKey) {
         const filePath = path_1.default.join(this.uploadDir, fileKey);
@@ -7360,10 +7689,11 @@ let LocalFileService = class LocalFileService extends base_file_service_1.BaseFi
         }
         return fs_1.promises.readFile(filePath);
     }
-    async getFileUrl(fileKey, expiresIn) {
+    async getFileUrl(fileKey, expiresIn, authorization) {
         // Local storage doesn't support presigned URLs with expiration
         // Just return a direct URL
-        return `${this.baseUrl}/${fileKey}`;
+        const encodedFileKey = encodeURIComponent(fileKey);
+        return `${this.baseUrl}/${encodedFileKey}?token=${authorization}`;
     }
     async getContentType(fileKey) {
         const filePath = path_1.default.join(this.uploadDir, fileKey);
@@ -7391,6 +7721,185 @@ module.exports = require("path");
 
 /***/ }),
 /* 117 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.FileListOptions = exports.SizeRangeFilter = exports.DateRangeFilter = exports.SortDirection = exports.FileSortField = void 0;
+const swagger_1 = __webpack_require__(4);
+const class_transformer_1 = __webpack_require__(37);
+const class_validator_1 = __webpack_require__(38);
+var FileSortField;
+(function (FileSortField) {
+    FileSortField["NAME"] = "name";
+    FileSortField["SIZE"] = "size";
+    FileSortField["DATE_CREATED"] = "createdAt";
+    FileSortField["DATE_MODIFIED"] = "lastModified";
+    FileSortField["TYPE"] = "mimeType";
+})(FileSortField || (exports.FileSortField = FileSortField = {}));
+var SortDirection;
+(function (SortDirection) {
+    SortDirection["ASC"] = "asc";
+    SortDirection["DESC"] = "desc";
+})(SortDirection || (exports.SortDirection = SortDirection = {}));
+class DateRangeFilter {
+}
+exports.DateRangeFilter = DateRangeFilter;
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ description: 'Start date for range filter' }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsDateString)(),
+    __metadata("design:type", String)
+], DateRangeFilter.prototype, "from", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ description: 'End date for range filter' }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsDateString)(),
+    __metadata("design:type", String)
+], DateRangeFilter.prototype, "to", void 0);
+class SizeRangeFilter {
+}
+exports.SizeRangeFilter = SizeRangeFilter;
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ description: 'Minimum file size in bytes' }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsNumber)(),
+    (0, class_transformer_1.Type)(() => Number),
+    __metadata("design:type", Number)
+], SizeRangeFilter.prototype, "min", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ description: 'Maximum file size in bytes' }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsNumber)(),
+    (0, class_transformer_1.Type)(() => Number),
+    __metadata("design:type", Number)
+], SizeRangeFilter.prototype, "max", void 0);
+class FileListOptions {
+    constructor() {
+        this.includeDirs = true;
+        this.includeSizes = true;
+        this.recursive = false;
+        this.sortDirection = SortDirection.ASC;
+    }
+}
+exports.FileListOptions = FileListOptions;
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ description: 'Directory path to list files from' }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], FileListOptions.prototype, "prefix", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ description: 'Maximum number of items to return' }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsNumber)(),
+    (0, class_transformer_1.Type)(() => Number),
+    __metadata("design:type", Number)
+], FileListOptions.prototype, "limit", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ description: 'Pagination marker/cursor' }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], FileListOptions.prototype, "marker", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ description: 'Whether to include file URLs in response' }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsBoolean)(),
+    (0, class_transformer_1.Type)(() => Boolean),
+    __metadata("design:type", Boolean)
+], FileListOptions.prototype, "includeUrls", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ description: 'Whether to include directories in results' }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsBoolean)(),
+    (0, class_transformer_1.Type)(() => Boolean),
+    __metadata("design:type", Boolean)
+], FileListOptions.prototype, "includeDirs", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ description: 'Whether to include file sizes in response' }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsBoolean)(),
+    (0, class_transformer_1.Type)(() => Boolean),
+    __metadata("design:type", Boolean)
+], FileListOptions.prototype, "includeSizes", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ description: 'Whether to recursively traverse directories' }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsBoolean)(),
+    (0, class_transformer_1.Type)(() => Boolean),
+    __metadata("design:type", Boolean)
+], FileListOptions.prototype, "recursive", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        enum: FileSortField,
+        description: 'Field to sort by'
+    }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsEnum)(FileSortField),
+    __metadata("design:type", String)
+], FileListOptions.prototype, "sortBy", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        enum: SortDirection,
+        description: 'Sort direction'
+    }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsEnum)(SortDirection),
+    __metadata("design:type", String)
+], FileListOptions.prototype, "sortDirection", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ description: 'Search term for filename' }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], FileListOptions.prototype, "searchTerm", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ description: 'File extensions to filter by (comma-separated)' }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], FileListOptions.prototype, "extensions", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ description: 'Filter by file size' }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.ValidateNested)(),
+    (0, class_transformer_1.Type)(() => SizeRangeFilter),
+    __metadata("design:type", SizeRangeFilter)
+], FileListOptions.prototype, "size", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ description: 'Filter by creation date' }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.ValidateNested)(),
+    (0, class_transformer_1.Type)(() => DateRangeFilter),
+    __metadata("design:type", DateRangeFilter)
+], FileListOptions.prototype, "createdAt", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ description: 'Filter by modification date' }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.ValidateNested)(),
+    (0, class_transformer_1.Type)(() => DateRangeFilter),
+    __metadata("design:type", DateRangeFilter)
+], FileListOptions.prototype, "modifiedAt", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ description: 'Filter by MIME type' }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], FileListOptions.prototype, "mimeType", void 0);
+
+
+/***/ }),
+/* 118 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -7433,44 +7942,136 @@ var __importStar = (this && this.__importStar) || (function () {
         return result;
     };
 })();
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.BaseFileService = void 0;
 const common_1 = __webpack_require__(1);
-const crypto = __importStar(__webpack_require__(118));
-const csv_writer_1 = __webpack_require__(119);
-const ExcelJS = __importStar(__webpack_require__(120));
+const crypto = __importStar(__webpack_require__(119));
+const csv_writer_1 = __webpack_require__(120);
+const ExcelJS = __importStar(__webpack_require__(121));
+const fs = __importStar(__webpack_require__(82));
 const path = __importStar(__webpack_require__(116));
-const pdfkit_1 = __importDefault(__webpack_require__(121));
+const pdfkit_1 = __importDefault(__webpack_require__(122));
 let BaseFileService = class BaseFileService {
-    constructor() {
+    constructor(uploadDir, baseUrl) {
         this.logger = new common_1.Logger(this.constructor.name);
+        this.uploadDir = uploadDir || '';
+        this.baseUrl = baseUrl || '';
     }
     // Common implementable methods
-    async streamFile(fileKey, res, inline = false) {
+    async streamFile(fileKey, res, inline = null) {
+        var _a;
         try {
+            // Check if file exists first to handle 404 gracefully
+            if (!(await this.fileExists(fileKey))) {
+                res.status(404).send('File not found');
+                return;
+            }
             const contentType = await this.getContentType(fileKey);
             const metadata = await this.getFileMetadata(fileKey);
             const filename = path.basename(fileKey);
+            const fileSize = metadata.size;
+            const filePath = path.join(this.uploadDir, fileKey);
+            // Auto-detect if inline should be true based on content type if not explicitly set
+            if (inline === null) {
+                inline = contentType.startsWith('video/') ||
+                    contentType.startsWith('audio/') ||
+                    contentType === 'application/pdf' ||
+                    contentType.startsWith('image/');
+            }
+            // Set common headers
+            res.setHeader('Access-Control-Allow-Origin', '*');
+            res.setHeader('Access-Control-Allow-Headers', 'Range');
+            res.setHeader('Accept-Ranges', 'bytes');
+            // Set cache control based on file type
+            if (contentType.startsWith('image/')) {
+                // Cache images longer
+                res.setHeader('Cache-Control', 'public, max-age=86400, immutable');
+            }
+            else if (contentType.startsWith('video/') || contentType.startsWith('audio/')) {
+                // Streaming media cache
+                res.setHeader('Cache-Control', 'public, max-age=3600');
+            }
+            else {
+                // Default cache for documents and other files
+                res.setHeader('Cache-Control', 'public, max-age=3600, must-revalidate');
+            }
+            // Set content type and disposition
             res.setHeader('Content-Type', contentType);
-            res.setHeader('Content-Length', metadata.size);
             res.setHeader('Content-Disposition', `${inline ? 'inline' : 'attachment'}; filename="${encodeURIComponent(filename)}"`);
-            const stream = await this.getFileStream(fileKey);
+            // Get range header from request
+            const range = res.req.headers.range;
+            // Apply range requests for videos, audio, and large files
+            const isRangeSupported = contentType.startsWith('video/') ||
+                contentType.startsWith('audio/') ||
+                contentType === 'application/pdf' ||
+                fileSize > 10 * 1024 * 1024; // 10MB+
+            // If no range header or range not supported for this file type, send entire file
+            if (!range || !isRangeSupported) {
+                res.setHeader('Content-Length', fileSize);
+                const stream = await this.getFileStream(fileKey);
+                return new Promise((resolve, reject) => {
+                    stream.pipe(res)
+                        .on('finish', () => resolve())
+                        .on('error', (err) => {
+                        this.logger.error(`Error streaming file: ${err.message}`, err.stack);
+                        reject(err);
+                    });
+                });
+            }
+            // Handle range request
+            const parts = range.replace(/bytes=/, '').split('-');
+            const start = parseInt(parts[0], 10);
+            const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
+            // Validate range request
+            if (isNaN(start) || isNaN(end) || start >= fileSize || end >= fileSize) {
+                // Return 416 Range Not Satisfiable if range is invalid
+                res.status(416);
+                res.setHeader('Content-Range', `bytes */${fileSize}`);
+                res.end();
+                return;
+            }
+            const chunkSize = end - start + 1;
+            // Set partial content headers
+            res.status(206);
+            res.setHeader('Content-Range', `bytes ${start}-${end}/${fileSize}`);
+            res.setHeader('Content-Length', chunkSize);
+            // Create read stream with range
+            const stream = fs.createReadStream(filePath, { start, end });
             return new Promise((resolve, reject) => {
                 stream.pipe(res)
                     .on('finish', () => resolve())
-                    .on('error', (err) => reject(err));
+                    .on('error', (err) => {
+                    this.logger.error(`Error streaming file range: ${err.message}`, err.stack);
+                    reject(err);
+                });
             });
         }
         catch (error) {
             const err = error;
             this.logger.error(`Error streaming file: ${err.message}`, err.stack);
+            // If headers haven't been sent yet, send appropriate error response
+            if (!res.headersSent) {
+                if ((_a = err.message) === null || _a === void 0 ? void 0 : _a.includes('not found')) {
+                    res.status(404).send('File not found');
+                }
+                else {
+                    res.status(500).send('Error streaming file');
+                }
+            }
+            else {
+                // If headers were sent, just end the response
+                res.end();
+            }
             throw error;
         }
     }
-    async downloadFile(fileKey, res, filename) {
+    async downloadFile(fileKey, res) {
         try {
             return this.streamFile(fileKey, res, false);
         }
@@ -7584,36 +8185,742 @@ let BaseFileService = class BaseFileService {
 };
 exports.BaseFileService = BaseFileService;
 exports.BaseFileService = BaseFileService = __decorate([
-    (0, common_1.Injectable)()
+    (0, common_1.Injectable)(),
+    __metadata("design:paramtypes", [String, String])
 ], BaseFileService);
 
-
-/***/ }),
-/* 118 */
-/***/ ((module) => {
-
-module.exports = require("crypto");
 
 /***/ }),
 /* 119 */
 /***/ ((module) => {
 
-module.exports = require("csv-writer");
+module.exports = require("crypto");
 
 /***/ }),
 /* 120 */
 /***/ ((module) => {
 
-module.exports = require("exceljs");
+module.exports = require("csv-writer");
 
 /***/ }),
 /* 121 */
 /***/ ((module) => {
 
-module.exports = require("pdfkit");
+module.exports = require("exceljs");
 
 /***/ }),
 /* 122 */
+/***/ ((module) => {
+
+module.exports = require("pdfkit");
+
+/***/ }),
+/* 123 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
+var FilesController_1;
+var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r, _s;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.FilesController = void 0;
+const authorize_decorator_1 = __webpack_require__(39);
+const current_user_decorator_1 = __webpack_require__(54);
+const common_1 = __webpack_require__(1);
+const platform_express_1 = __webpack_require__(124);
+const swagger_1 = __webpack_require__(4);
+const express_1 = __webpack_require__(92);
+const file_provider_config_1 = __webpack_require__(113);
+const directory_metadata_dto_1 = __webpack_require__(125);
+const file_list_response_dto_1 = __webpack_require__(126);
+const file_meta_data_dto_1 = __webpack_require__(127);
+const file_service_interface_1 = __webpack_require__(128);
+let FilesController = FilesController_1 = class FilesController {
+    constructor(fileService) {
+        this.fileService = fileService;
+        this.logger = new common_1.Logger(FilesController_1.name);
+    }
+    async uploadFile(file, folder, userId, authorization) {
+        if (!file) {
+            throw new common_1.BadRequestException('No file provided');
+        }
+        try {
+            return await this.fileService.uploadFile(file, {
+                folder,
+                token: authorization,
+                metadata: { uploadedBy: userId || 'anonymous' }
+            });
+        }
+        catch (error) {
+            if (error instanceof Error) {
+                throw new common_1.BadRequestException(`File upload failed: ${error.message}`);
+            }
+            throw new common_1.BadRequestException('File upload failed');
+        }
+    }
+    async uploadMultiple(files, folder, userId) {
+        if (!files || files.length === 0) {
+            throw new common_1.BadRequestException('No files provided');
+        }
+        try {
+            return await this.fileService.uploadFiles(files, {
+                folder,
+                metadata: { uploadedBy: userId || 'anonymous' }
+            });
+        }
+        catch (error) {
+            if (error instanceof Error) {
+                throw new common_1.BadRequestException(`Files upload failed: ${error.message}`);
+            }
+            throw new common_1.BadRequestException('Files upload failed');
+        }
+    }
+    async getFileMetadata(key) {
+        try {
+            return await this.fileService.getFileMetadata(key);
+        }
+        catch (error) {
+            throw new common_1.NotFoundException(`File not found: ${key}`);
+        }
+    }
+    async downloadFile(key, res) {
+        try {
+            await this.fileService.downloadFile(key, res);
+        }
+        catch (error) {
+            throw new common_1.NotFoundException(`File not found: ${key}`);
+        }
+    }
+    async streamFile(key, res) {
+        try {
+            // Check if file exists first before starting to stream
+            if (!(await this.fileService.fileExists(key))) {
+                res.status(404).send(`File not found: ${key}`);
+                return;
+            }
+            // Stream the file - no try/catch here to prevent header modifications after streaming
+            await this.fileService.streamFile(key, res, true);
+        }
+        catch (error) {
+            // Only set status and send error if headers haven't been sent yet
+            if (!res.headersSent) {
+                res.status(500).send('Error streaming file');
+            }
+        }
+    }
+    async getFileUrl(key, expiresIn, authorization) {
+        try {
+            const url = await this.fileService.getFileUrl(key, expiresIn, authorization);
+            return { url };
+        }
+        catch (error) {
+            throw new common_1.NotFoundException(`File not found: ${key}`);
+        }
+    }
+    async listFiles(prefix, limit, marker, includeUrls, includeDirs, includeSizes, recursive, sortBy, sortDirection, searchTerm, extensions) {
+        var _a, _b;
+        // Transform boolean strings to actual booleans
+        const boolFromString = (val) => {
+            if (val === 'true')
+                return true;
+            if (val === 'false')
+                return false;
+            return val === true;
+        };
+        const options = {
+            prefix,
+            limit: limit ? parseInt(String(limit), 10) : undefined,
+            marker,
+            includeUrls: boolFromString(includeUrls),
+            includeDirs: includeDirs !== undefined ? boolFromString(includeDirs) : true,
+            recursive: boolFromString(recursive),
+            sortBy: sortBy,
+            sortDirection: sortDirection || 'asc',
+            searchTerm,
+            extensions
+        };
+        try {
+            const result = await this.fileService.listFiles(options);
+            // If the result is already in the correct format, return it directly
+            if ('directories' in result) {
+                return result;
+            }
+            // Otherwise, build the response in the correct format
+            // This is for backward compatibility with implementations that don't return directories
+            return {
+                files: Array.isArray(result) ? result : (result.files || []),
+                directories: result.directories || [],
+                count: Array.isArray(result) ? result.length : (result.count || ((_a = result.files) === null || _a === void 0 ? void 0 : _a.length) || 0),
+                prefix: options.prefix,
+                hasMore: Array.isArray(result)
+                    ? result.length === options.limit
+                    : (result.hasMore || (((_b = result.files) === null || _b === void 0 ? void 0 : _b.length) === options.limit)),
+                nextMarker: result.nextMarker,
+                totalSize: result.totalSize,
+                parentDir: result.parentDir,
+                breadcrumbs: result.breadcrumbs
+            };
+        }
+        catch (error) {
+            if (error instanceof Error) {
+                throw new common_1.BadRequestException(`Failed to list files: ${error.message}`);
+            }
+            throw new common_1.BadRequestException('Failed to list files');
+        }
+    }
+    async deleteFile(key) {
+        const success = await this.fileService.deleteFile(key);
+        return { success };
+    }
+    async fileExists(key) {
+        const exists = await this.fileService.fileExists(key);
+        return { exists };
+    }
+    async createDirectory(dirPath, userId) {
+        if (!dirPath) {
+            throw new common_1.BadRequestException('No directory path provided');
+        }
+        try {
+            return await this.fileService.createDirectory(dirPath);
+        }
+        catch (error) {
+            if (error instanceof Error) {
+                throw new common_1.BadRequestException(`Directory creation failed: ${error.message}`);
+            }
+            throw new common_1.BadRequestException('Directory creation failed');
+        }
+    }
+    async deleteDirectory(dirPath, recursive = false, userId) {
+        try {
+            const success = await this.fileService.deleteDirectory(dirPath, recursive);
+            return { success };
+        }
+        catch (error) {
+            if (error instanceof Error) {
+                throw new common_1.BadRequestException(`Directory deletion failed: ${error.message}`);
+            }
+            throw new common_1.BadRequestException('Directory deletion failed');
+        }
+    }
+    async renameDirectory(dirPath, newPath, userId) {
+        if (!newPath) {
+            throw new common_1.BadRequestException('No new path provided');
+        }
+        try {
+            return await this.fileService.renameDirectory(dirPath, newPath);
+        }
+        catch (error) {
+            if (error instanceof Error) {
+                throw new common_1.BadRequestException(`Directory rename failed: ${error.message}`);
+            }
+            throw new common_1.BadRequestException('Directory rename failed');
+        }
+    }
+};
+exports.FilesController = FilesController;
+__decorate([
+    (0, common_1.Post)('upload'),
+    (0, authorize_decorator_1.Authorize)(),
+    (0, swagger_1.ApiOperation)({ summary: 'Upload a single file' }),
+    (0, swagger_1.ApiConsumes)('multipart/form-data'),
+    (0, swagger_1.ApiBody)({
+        schema: {
+            type: 'object',
+            properties: {
+                file: {
+                    type: 'string',
+                    format: 'binary',
+                    description: 'File to upload'
+                }
+            }
+        }
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: 201,
+        description: 'File uploaded successfully',
+        type: file_meta_data_dto_1.FileMetadata
+    }),
+    (0, common_1.UseInterceptors)((0, platform_express_1.FileInterceptor)('file')),
+    __param(0, (0, common_1.UploadedFile)()),
+    __param(1, (0, common_1.Query)('folder')),
+    __param(2, (0, current_user_decorator_1.CurrentUser)('sub')),
+    __param(3, (0, common_1.Headers)('authorization')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [typeof (_c = typeof Express !== "undefined" && (_b = Express.Multer) !== void 0 && _b.File) === "function" ? _c : Object, String, String, String]),
+    __metadata("design:returntype", typeof (_d = typeof Promise !== "undefined" && Promise) === "function" ? _d : Object)
+], FilesController.prototype, "uploadFile", null);
+__decorate([
+    (0, common_1.Post)('upload-multiple'),
+    (0, authorize_decorator_1.Authorize)(),
+    (0, swagger_1.ApiOperation)({ summary: 'Upload multiple files' }),
+    (0, swagger_1.ApiConsumes)('multipart/form-data'),
+    (0, swagger_1.ApiBody)({
+        schema: {
+            type: 'object',
+            properties: {
+                files: {
+                    type: 'array',
+                    items: {
+                        type: 'string',
+                        format: 'binary'
+                    },
+                    description: 'Files to upload (max 10)'
+                }
+            }
+        }
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: 201,
+        description: 'Files uploaded successfully',
+        type: [file_meta_data_dto_1.FileMetadata]
+    }),
+    (0, common_1.UseInterceptors)((0, platform_express_1.FilesInterceptor)('files', 10)),
+    __param(0, (0, common_1.UploadedFiles)()),
+    __param(1, (0, common_1.Query)('folder')),
+    __param(2, (0, current_user_decorator_1.CurrentUser)('sub')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Array, String, String]),
+    __metadata("design:returntype", typeof (_e = typeof Promise !== "undefined" && Promise) === "function" ? _e : Object)
+], FilesController.prototype, "uploadMultiple", null);
+__decorate([
+    (0, common_1.Get)('metadata/:key'),
+    (0, authorize_decorator_1.Authorize)(),
+    (0, swagger_1.ApiOperation)({ summary: 'Get file metadata' }),
+    (0, swagger_1.ApiParam)({ name: 'key', description: 'File key' }),
+    (0, swagger_1.ApiResponse)({
+        status: 200,
+        description: 'File metadata retrieved successfully',
+        type: file_meta_data_dto_1.FileMetadata
+    }),
+    (0, swagger_1.ApiResponse)({ status: 404, description: 'File not found' }),
+    __param(0, (0, common_1.Param)('key')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", typeof (_f = typeof Promise !== "undefined" && Promise) === "function" ? _f : Object)
+], FilesController.prototype, "getFileMetadata", null);
+__decorate([
+    (0, common_1.Get)('download/:key'),
+    (0, authorize_decorator_1.Authorize)(),
+    (0, swagger_1.ApiOperation)({ summary: 'Download a file' }),
+    (0, swagger_1.ApiParam)({ name: 'key', description: 'File key' }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'File download' }),
+    (0, swagger_1.ApiResponse)({ status: 404, description: 'File not found' }),
+    __param(0, (0, common_1.Param)('key')),
+    __param(1, (0, common_1.Res)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, typeof (_g = typeof express_1.Response !== "undefined" && express_1.Response) === "function" ? _g : Object]),
+    __metadata("design:returntype", typeof (_h = typeof Promise !== "undefined" && Promise) === "function" ? _h : Object)
+], FilesController.prototype, "downloadFile", null);
+__decorate([
+    (0, common_1.Get)('stream/:key'),
+    (0, authorize_decorator_1.Authorize)(),
+    (0, swagger_1.ApiOperation)({ summary: 'Stream a file (for browser viewing)' }),
+    (0, swagger_1.ApiParam)({ name: 'key', description: 'File key' }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'File stream' }),
+    (0, swagger_1.ApiResponse)({ status: 404, description: 'File not found' })
+    // This properly disables all interceptors for this route
+    ,
+    (0, common_1.UseInterceptors)()
+    // Important! Add this to bypass global interceptors
+    ,
+    (0, common_1.Version)(common_1.VERSION_NEUTRAL),
+    __param(0, (0, common_1.Param)('key')),
+    __param(1, (0, common_1.Res)({ passthrough: false })),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, typeof (_j = typeof express_1.Response !== "undefined" && express_1.Response) === "function" ? _j : Object]),
+    __metadata("design:returntype", typeof (_k = typeof Promise !== "undefined" && Promise) === "function" ? _k : Object)
+], FilesController.prototype, "streamFile", null);
+__decorate([
+    (0, common_1.Get)('url/:key'),
+    (0, swagger_1.ApiOperation)({ summary: 'Get a temporary URL for a file with user current token' }),
+    (0, swagger_1.ApiParam)({ name: 'key', description: 'File key' }),
+    (0, swagger_1.ApiQuery)({
+        name: 'expiresIn',
+        required: false,
+        description: 'URL expiration time in seconds (default: 3600)'
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: 200,
+        description: 'File URL',
+        schema: {
+            type: 'object',
+            properties: {
+                url: { type: 'string' }
+            }
+        }
+    }),
+    __param(0, (0, common_1.Param)('key')),
+    __param(1, (0, common_1.Query)('expiresIn')),
+    __param(2, (0, common_1.Headers)('authorization')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Number, String]),
+    __metadata("design:returntype", typeof (_l = typeof Promise !== "undefined" && Promise) === "function" ? _l : Object)
+], FilesController.prototype, "getFileUrl", null);
+__decorate([
+    (0, common_1.Get)('list'),
+    (0, authorize_decorator_1.Authorize)(),
+    (0, swagger_1.ApiOperation)({ summary: 'List files and directories' }),
+    (0, swagger_1.ApiQuery)({
+        name: 'prefix',
+        required: false,
+        description: 'Directory path to list files from'
+    }),
+    (0, swagger_1.ApiQuery)({
+        name: 'limit',
+        required: false,
+        description: 'Maximum number of items to return'
+    }),
+    (0, swagger_1.ApiQuery)({
+        name: 'marker',
+        required: false,
+        description: 'Pagination marker/cursor for fetching next page'
+    }),
+    (0, swagger_1.ApiQuery)({
+        name: 'includeUrls',
+        required: false,
+        type: Boolean,
+        description: 'Whether to include file URLs in response'
+    }),
+    (0, swagger_1.ApiQuery)({
+        name: 'includeDirs',
+        required: false,
+        type: Boolean,
+        description: 'Whether to include directories in results'
+    }),
+    (0, swagger_1.ApiQuery)({
+        name: 'includeSizes',
+        required: false,
+        type: Boolean,
+        description: 'Whether to include file sizes in response'
+    }),
+    (0, swagger_1.ApiQuery)({
+        name: 'recursive',
+        required: false,
+        type: Boolean,
+        description: 'Whether to recursively list files in subdirectories'
+    }),
+    (0, swagger_1.ApiQuery)({
+        name: 'sortBy',
+        required: false,
+        enum: ['name', 'size', 'createdAt', 'lastModified', 'mimeType'],
+        description: 'Field to sort by'
+    }),
+    (0, swagger_1.ApiQuery)({
+        name: 'sortDirection',
+        required: false,
+        enum: ['asc', 'desc'],
+        description: 'Sort direction (asc or desc)'
+    }),
+    (0, swagger_1.ApiQuery)({
+        name: 'searchTerm',
+        required: false,
+        description: 'Filter files by filename search term'
+    }),
+    (0, swagger_1.ApiQuery)({
+        name: 'extensions',
+        required: false,
+        description: 'Filter by file extensions (comma-separated)'
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: 200,
+        description: 'Files and directories listed successfully',
+        type: file_list_response_dto_1.FileListResponseDto
+    }),
+    __param(0, (0, common_1.Query)('prefix')),
+    __param(1, (0, common_1.Query)('limit')),
+    __param(2, (0, common_1.Query)('marker')),
+    __param(3, (0, common_1.Query)('includeUrls')),
+    __param(4, (0, common_1.Query)('includeDirs')),
+    __param(5, (0, common_1.Query)('includeSizes')),
+    __param(6, (0, common_1.Query)('recursive')),
+    __param(7, (0, common_1.Query)('sortBy')),
+    __param(8, (0, common_1.Query)('sortDirection')),
+    __param(9, (0, common_1.Query)('searchTerm')),
+    __param(10, (0, common_1.Query)('extensions')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Number, String, Boolean, Boolean, Boolean, Boolean, String, String, String, String]),
+    __metadata("design:returntype", typeof (_m = typeof Promise !== "undefined" && Promise) === "function" ? _m : Object)
+], FilesController.prototype, "listFiles", null);
+__decorate([
+    (0, common_1.Delete)(':key'),
+    (0, authorize_decorator_1.Authorize)(),
+    (0, swagger_1.ApiOperation)({ summary: 'Delete a file' }),
+    (0, swagger_1.ApiParam)({ name: 'key', description: 'File key' }),
+    (0, swagger_1.ApiResponse)({
+        status: 200,
+        description: 'File deleted successfully',
+        schema: {
+            type: 'object',
+            properties: {
+                success: { type: 'boolean' }
+            }
+        }
+    }),
+    __param(0, (0, common_1.Param)('key')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", typeof (_o = typeof Promise !== "undefined" && Promise) === "function" ? _o : Object)
+], FilesController.prototype, "deleteFile", null);
+__decorate([
+    (0, common_1.Get)('validate/:key'),
+    (0, authorize_decorator_1.Authorize)(),
+    (0, swagger_1.ApiOperation)({ summary: 'Check if a file exists' }),
+    (0, swagger_1.ApiParam)({ name: 'key', description: 'File key' }),
+    (0, swagger_1.ApiResponse)({
+        status: 200,
+        description: 'File existence status',
+        schema: {
+            type: 'object',
+            properties: {
+                exists: { type: 'boolean' }
+            }
+        }
+    }),
+    __param(0, (0, common_1.Param)('key')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", typeof (_p = typeof Promise !== "undefined" && Promise) === "function" ? _p : Object)
+], FilesController.prototype, "fileExists", null);
+__decorate([
+    (0, common_1.Post)('directories'),
+    (0, authorize_decorator_1.Authorize)(),
+    (0, swagger_1.ApiOperation)({ summary: 'Create a new directory' }),
+    (0, swagger_1.ApiBody)({
+        schema: {
+            type: 'object',
+            properties: {
+                path: {
+                    type: 'string',
+                    description: 'Directory path to create'
+                }
+            }
+        }
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: 201,
+        description: 'Directory created successfully',
+        type: directory_metadata_dto_1.DirectoryMetadata
+    }),
+    __param(0, (0, common_1.Body)('path')),
+    __param(1, (0, current_user_decorator_1.CurrentUser)('sub')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String]),
+    __metadata("design:returntype", typeof (_q = typeof Promise !== "undefined" && Promise) === "function" ? _q : Object)
+], FilesController.prototype, "createDirectory", null);
+__decorate([
+    (0, common_1.Delete)('directories/:path(*)'),
+    (0, authorize_decorator_1.Authorize)(),
+    (0, swagger_1.ApiOperation)({ summary: 'Delete a directory' }),
+    (0, swagger_1.ApiParam)({ name: 'path', description: 'Directory path to delete' }),
+    (0, swagger_1.ApiQuery)({
+        name: 'recursive',
+        required: false,
+        description: 'Whether to recursively delete non-empty directories'
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: 200,
+        description: 'Directory deleted successfully',
+        schema: {
+            type: 'object',
+            properties: {
+                success: { type: 'boolean' }
+            }
+        }
+    }),
+    __param(0, (0, common_1.Param)('path')),
+    __param(1, (0, common_1.Query)('recursive')),
+    __param(2, (0, current_user_decorator_1.CurrentUser)('sub')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Boolean, String]),
+    __metadata("design:returntype", typeof (_r = typeof Promise !== "undefined" && Promise) === "function" ? _r : Object)
+], FilesController.prototype, "deleteDirectory", null);
+__decorate([
+    (0, common_1.Put)('directories/:path(*)'),
+    (0, authorize_decorator_1.Authorize)(),
+    (0, swagger_1.ApiOperation)({ summary: 'Rename a directory' }),
+    (0, swagger_1.ApiParam)({ name: 'path', description: 'Current directory path' }),
+    (0, swagger_1.ApiBody)({
+        schema: {
+            type: 'object',
+            properties: {
+                newPath: {
+                    type: 'string',
+                    description: 'New directory path'
+                }
+            }
+        }
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: 200,
+        description: 'Directory renamed successfully',
+        type: directory_metadata_dto_1.DirectoryMetadata
+    }),
+    __param(0, (0, common_1.Param)('path')),
+    __param(1, (0, common_1.Body)('newPath')),
+    __param(2, (0, current_user_decorator_1.CurrentUser)('sub')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String, String]),
+    __metadata("design:returntype", typeof (_s = typeof Promise !== "undefined" && Promise) === "function" ? _s : Object)
+], FilesController.prototype, "renameDirectory", null);
+exports.FilesController = FilesController = FilesController_1 = __decorate([
+    (0, swagger_1.ApiTags)('Files'),
+    (0, common_1.Controller)('files'),
+    __param(0, (0, common_1.Inject)(file_provider_config_1.FILE_SERVICE)),
+    __metadata("design:paramtypes", [typeof (_a = typeof file_service_interface_1.IFileService !== "undefined" && file_service_interface_1.IFileService) === "function" ? _a : Object])
+], FilesController);
+
+
+/***/ }),
+/* 124 */
+/***/ ((module) => {
+
+module.exports = require("@nestjs/platform-express");
+
+/***/ }),
+/* 125 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var _a, _b;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.DirectoryMetadata = void 0;
+const swagger_1 = __webpack_require__(4);
+class DirectoryMetadata {
+}
+exports.DirectoryMetadata = DirectoryMetadata;
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Directory path/key' }),
+    __metadata("design:type", String)
+], DirectoryMetadata.prototype, "key", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Directory name' }),
+    __metadata("design:type", String)
+], DirectoryMetadata.prototype, "name", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ description: 'Directory creation date' }),
+    __metadata("design:type", typeof (_a = typeof Date !== "undefined" && Date) === "function" ? _a : Object)
+], DirectoryMetadata.prototype, "createdAt", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ description: 'Last modified date' }),
+    __metadata("design:type", typeof (_b = typeof Date !== "undefined" && Date) === "function" ? _b : Object)
+], DirectoryMetadata.prototype, "lastModified", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ description: 'Item count in directory' }),
+    __metadata("design:type", Number)
+], DirectoryMetadata.prototype, "itemCount", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ description: 'Total size of all files in directory' }),
+    __metadata("design:type", Number)
+], DirectoryMetadata.prototype, "size", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ description: 'Whether this is a parent directory link' }),
+    __metadata("design:type", Boolean)
+], DirectoryMetadata.prototype, "isParent", void 0);
+
+
+/***/ }),
+/* 126 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var _a;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.FileListResponseDto = void 0;
+const swagger_1 = __webpack_require__(4);
+const directory_metadata_dto_1 = __webpack_require__(125);
+const file_meta_data_dto_1 = __webpack_require__(127);
+class FileListResponseDto {
+}
+exports.FileListResponseDto = FileListResponseDto;
+__decorate([
+    (0, swagger_1.ApiProperty)({ type: [file_meta_data_dto_1.FileMetadata], description: 'List of files' }),
+    __metadata("design:type", Array)
+], FileListResponseDto.prototype, "files", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ type: [directory_metadata_dto_1.DirectoryMetadata], description: 'List of directories' }),
+    __metadata("design:type", Array)
+], FileListResponseDto.prototype, "directories", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Total count of files in result' }),
+    __metadata("design:type", Number)
+], FileListResponseDto.prototype, "count", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ description: 'Current directory/prefix' }),
+    __metadata("design:type", String)
+], FileListResponseDto.prototype, "prefix", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Whether there are more results available' }),
+    __metadata("design:type", Boolean)
+], FileListResponseDto.prototype, "hasMore", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ description: 'Pagination marker for next page' }),
+    __metadata("design:type", String)
+], FileListResponseDto.prototype, "nextMarker", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ description: 'Total size of all files in bytes' }),
+    __metadata("design:type", Number)
+], FileListResponseDto.prototype, "totalSize", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ description: 'Parent directory path' }),
+    __metadata("design:type", String)
+], FileListResponseDto.prototype, "parentDir", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ description: 'Breadcrumb navigation path segments' }),
+    __metadata("design:type", typeof (_a = typeof Array !== "undefined" && Array) === "function" ? _a : Object)
+], FileListResponseDto.prototype, "breadcrumbs", void 0);
+
+
+/***/ }),
+/* 127 */
+/***/ ((__unused_webpack_module, exports) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.FileMetadata = void 0;
+class FileMetadata {
+}
+exports.FileMetadata = FileMetadata;
+
+
+/***/ }),
+/* 128 */
+/***/ ((__unused_webpack_module, exports) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+
+
+/***/ }),
+/* 129 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -7628,7 +8935,7 @@ exports.LogsModule = void 0;
 const common_1 = __webpack_require__(1);
 const typeorm_1 = __webpack_require__(12);
 const activity_logs_entity_1 = __webpack_require__(29);
-const logs_service_1 = __webpack_require__(123);
+const logs_service_1 = __webpack_require__(130);
 let LogsModule = class LogsModule {
 };
 exports.LogsModule = LogsModule;
@@ -7642,7 +8949,7 @@ exports.LogsModule = LogsModule = __decorate([
 
 
 /***/ }),
-/* 123 */
+/* 130 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -7714,7 +9021,7 @@ exports.LogsService = LogsService = __decorate([
 
 
 /***/ }),
-/* 124 */
+/* 131 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -7727,8 +9034,8 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.NotificationsModule = void 0;
 const common_1 = __webpack_require__(1);
-const notifications_gateway_1 = __webpack_require__(125);
-const notifications_service_1 = __webpack_require__(127);
+const notifications_gateway_1 = __webpack_require__(132);
+const notifications_service_1 = __webpack_require__(134);
 let NotificationsModule = class NotificationsModule {
 };
 exports.NotificationsModule = NotificationsModule;
@@ -7740,7 +9047,7 @@ exports.NotificationsModule = NotificationsModule = __decorate([
 
 
 /***/ }),
-/* 125 */
+/* 132 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -7755,7 +9062,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.NotificationsGateway = void 0;
-const websockets_1 = __webpack_require__(126);
+const websockets_1 = __webpack_require__(133);
 let NotificationsGateway = class NotificationsGateway {
     handleMessage(client, payload) {
         return 'Hello world!';
@@ -7774,13 +9081,13 @@ exports.NotificationsGateway = NotificationsGateway = __decorate([
 
 
 /***/ }),
-/* 126 */
+/* 133 */
 /***/ ((module) => {
 
 module.exports = require("@nestjs/websockets");
 
 /***/ }),
-/* 127 */
+/* 134 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -7802,7 +9109,7 @@ exports.NotificationsService = NotificationsService = __decorate([
 
 
 /***/ }),
-/* 128 */
+/* 135 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -7818,11 +9125,11 @@ const common_1 = __webpack_require__(1);
 const core_1 = __webpack_require__(3);
 const typeorm_1 = __webpack_require__(12);
 const users_module_1 = __webpack_require__(11);
-const branches_module_1 = __webpack_require__(129);
-const departments_module_1 = __webpack_require__(133);
+const branches_module_1 = __webpack_require__(136);
+const departments_module_1 = __webpack_require__(140);
 const organization_entity_1 = __webpack_require__(26);
-const organizations_controller_1 = __webpack_require__(137);
-const organizations_service_1 = __webpack_require__(139);
+const organizations_controller_1 = __webpack_require__(144);
+const organizations_service_1 = __webpack_require__(146);
 let OrganizationManagementModule = class OrganizationManagementModule {
 };
 exports.OrganizationManagementModule = OrganizationManagementModule;
@@ -7864,7 +9171,7 @@ exports.OrganizationManagementModule = OrganizationManagementModule = __decorate
 
 
 /***/ }),
-/* 129 */
+/* 136 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -7879,9 +9186,9 @@ exports.BranchesModule = void 0;
 const users_module_1 = __webpack_require__(11);
 const common_1 = __webpack_require__(1);
 const typeorm_1 = __webpack_require__(12);
-const branches_controller_1 = __webpack_require__(130);
-const branches_service_1 = __webpack_require__(131);
-const departments_module_1 = __webpack_require__(133);
+const branches_controller_1 = __webpack_require__(137);
+const branches_service_1 = __webpack_require__(138);
+const departments_module_1 = __webpack_require__(140);
 const branch_entity_1 = __webpack_require__(27);
 let BranchesModule = class BranchesModule {
 };
@@ -7898,22 +9205,22 @@ exports.BranchesModule = BranchesModule = __decorate([
 
 
 /***/ }),
-/* 130 */
+/* 137 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.BranchesController = void 0;
 const create_controller_factory_1 = __webpack_require__(33);
-const branches_service_1 = __webpack_require__(131);
-const branch_dto_1 = __webpack_require__(132);
+const branches_service_1 = __webpack_require__(138);
+const branch_dto_1 = __webpack_require__(139);
 class BranchesController extends (0, create_controller_factory_1.createController)('Branches', branches_service_1.BranchesService, branch_dto_1.GetBranchDto, branch_dto_1.BranchDto, branch_dto_1.UpdateBranchDto) {
 }
 exports.BranchesController = BranchesController;
 
 
 /***/ }),
-/* 131 */
+/* 138 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -7954,7 +9261,7 @@ exports.BranchesService = BranchesService = __decorate([
 
 
 /***/ }),
-/* 132 */
+/* 139 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -8039,7 +9346,7 @@ exports.GetBranchDto = GetBranchDto;
 
 
 /***/ }),
-/* 133 */
+/* 140 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -8054,8 +9361,8 @@ exports.DepartmentsModule = void 0;
 const users_module_1 = __webpack_require__(11);
 const common_1 = __webpack_require__(1);
 const typeorm_1 = __webpack_require__(12);
-const departments_controller_1 = __webpack_require__(134);
-const departments_service_1 = __webpack_require__(135);
+const departments_controller_1 = __webpack_require__(141);
+const departments_service_1 = __webpack_require__(142);
 const department_entity_1 = __webpack_require__(24);
 let DepartmentsModule = class DepartmentsModule {
 };
@@ -8074,15 +9381,15 @@ exports.DepartmentsModule = DepartmentsModule = __decorate([
 
 
 /***/ }),
-/* 134 */
+/* 141 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.DepartmentsController = void 0;
 const create_controller_factory_1 = __webpack_require__(33);
-const departments_service_1 = __webpack_require__(135);
-const department_dto_1 = __webpack_require__(136);
+const departments_service_1 = __webpack_require__(142);
+const department_dto_1 = __webpack_require__(143);
 class DepartmentsController extends (0, create_controller_factory_1.createController)('Departments', // Entity name for Swagger documentation
 departments_service_1.DepartmentsService, // The service handling Department-related operations
 department_dto_1.GetDepartmentDto, // DTO for retrieving departments
@@ -8094,7 +9401,7 @@ exports.DepartmentsController = DepartmentsController;
 
 
 /***/ }),
-/* 135 */
+/* 142 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -8135,7 +9442,7 @@ exports.DepartmentsService = DepartmentsService = __decorate([
 
 
 /***/ }),
-/* 136 */
+/* 143 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -8220,22 +9527,22 @@ exports.GetDepartmentDto = GetDepartmentDto;
 
 
 /***/ }),
-/* 137 */
+/* 144 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.OrganizationsController = void 0;
 const create_controller_factory_1 = __webpack_require__(33);
-const organization_dto_1 = __webpack_require__(138);
-const organizations_service_1 = __webpack_require__(139);
+const organization_dto_1 = __webpack_require__(145);
+const organizations_service_1 = __webpack_require__(146);
 class OrganizationsController extends (0, create_controller_factory_1.createController)('Organizations', organizations_service_1.OrganizationsService, organization_dto_1.GetOrganizationDto, organization_dto_1.OrganizationDto, organization_dto_1.UpdateOrganizationDto) {
 }
 exports.OrganizationsController = OrganizationsController;
 
 
 /***/ }),
-/* 138 */
+/* 145 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -8314,7 +9621,7 @@ exports.GetOrganizationDto = GetOrganizationDto;
 
 
 /***/ }),
-/* 139 */
+/* 146 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -8355,7 +9662,7 @@ exports.OrganizationsService = OrganizationsService = __decorate([
 
 
 /***/ }),
-/* 140 */
+/* 147 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -8368,10 +9675,10 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ScheduleManagementModule = void 0;
 const common_1 = __webpack_require__(1);
-const schedules_module_1 = __webpack_require__(141);
-const shifts_module_1 = __webpack_require__(142);
-const groups_module_1 = __webpack_require__(143);
-const holidays_module_1 = __webpack_require__(144);
+const schedules_module_1 = __webpack_require__(148);
+const shifts_module_1 = __webpack_require__(149);
+const groups_module_1 = __webpack_require__(150);
+const holidays_module_1 = __webpack_require__(151);
 let ScheduleManagementModule = class ScheduleManagementModule {
 };
 exports.ScheduleManagementModule = ScheduleManagementModule;
@@ -8383,7 +9690,7 @@ exports.ScheduleManagementModule = ScheduleManagementModule = __decorate([
 
 
 /***/ }),
-/* 141 */
+/* 148 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -8405,7 +9712,7 @@ exports.SchedulesModule = SchedulesModule = __decorate([
 
 
 /***/ }),
-/* 142 */
+/* 149 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -8427,7 +9734,7 @@ exports.ShiftsModule = ShiftsModule = __decorate([
 
 
 /***/ }),
-/* 143 */
+/* 150 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -8449,7 +9756,7 @@ exports.GroupsModule = GroupsModule = __decorate([
 
 
 /***/ }),
-/* 144 */
+/* 151 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -8471,7 +9778,7 @@ exports.HolidaysModule = HolidaysModule = __decorate([
 
 
 /***/ }),
-/* 145 */
+/* 152 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -8518,7 +9825,7 @@ var HttpExceptionFilter_1;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.HttpExceptionFilter = void 0;
 const common_1 = __webpack_require__(1);
-const crypto = __importStar(__webpack_require__(118));
+const crypto = __importStar(__webpack_require__(119));
 /**
  * HttpExceptionFilter is a global filter that handles all exceptions thrown in the application.
  * It logs the error details, sanitizes sensitive information, and sends a user-friendly response to the client.
@@ -8669,7 +9976,7 @@ exports.HttpExceptionFilter = HttpExceptionFilter = HttpExceptionFilter_1 = __de
 
 
 /***/ }),
-/* 146 */
+/* 153 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -8715,8 +10022,8 @@ var __importStar = (this && this.__importStar) || (function () {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.LoggingInterceptor = void 0;
 const common_1 = __webpack_require__(1);
-const crypto = __importStar(__webpack_require__(118));
-const operators_1 = __webpack_require__(147);
+const crypto = __importStar(__webpack_require__(119));
+const operators_1 = __webpack_require__(154);
 /**
  * LoggingInterceptor is a NestJS interceptor that logs HTTP requests and responses.
  * It also sanitizes sensitive data and adds a correlation ID to each request and response.
@@ -8738,6 +10045,15 @@ let LoggingInterceptor = class LoggingInterceptor {
         const response = context.switchToHttp().getResponse();
         const correlationId = request.headers['x-correlation-id'] || crypto.randomUUID();
         const startTime = Date.now();
+        const method = request.method;
+        const url = request.originalUrl || request.url;
+        const userAgent = request.get('user-agent') || '';
+        const ip = this.getClientIp(request);
+        // Skip logging body for streaming endpoints
+        if (url.includes('/stream/') || url.includes('/download/')) {
+            this.logger.log(`${method} ${url} ${ip} ${userAgent} [STREAMING]`);
+            return next.handle(); // Don't try to log response for streaming
+        }
         // Set correlation ID in response headers
         response.setHeader('x-correlation-id', correlationId);
         // Log request
@@ -8758,6 +10074,13 @@ let LoggingInterceptor = class LoggingInterceptor {
             this.logError(correlationId, startTime, error);
             throw error;
         }));
+    }
+    getClientIp(req) {
+        var _a, _b;
+        return req.ip ||
+            ((_a = req.connection) === null || _a === void 0 ? void 0 : _a.remoteAddress) ||
+            ((_b = req.headers['x-forwarded-for']) === null || _b === void 0 ? void 0 : _b.split(',')[0]) ||
+            'unknown';
     }
     /**
      * Sanitizes sensitive data in the request body or query parameters.
@@ -8837,13 +10160,13 @@ exports.LoggingInterceptor = LoggingInterceptor = __decorate([
 
 
 /***/ }),
-/* 147 */
+/* 154 */
 /***/ ((module) => {
 
 module.exports = require("rxjs/operators");
 
 /***/ }),
-/* 148 */
+/* 155 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -8857,7 +10180,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.TransformInterceptor = void 0;
 const common_1 = __webpack_require__(1);
 const class_transformer_1 = __webpack_require__(37);
-const operators_1 = __webpack_require__(147);
+const operators_1 = __webpack_require__(154);
 /**
  * A NestJS interceptor that transforms the response data.
  *
@@ -8889,7 +10212,7 @@ exports.TransformInterceptor = TransformInterceptor = __decorate([
 
 
 /***/ }),
-/* 149 */
+/* 156 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
@@ -8897,7 +10220,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.swaggerCustomOptions = exports.swaggerConfig = void 0;
 const config_1 = __webpack_require__(2);
 const swagger_1 = __webpack_require__(4);
-const os_1 = __webpack_require__(150);
+const os_1 = __webpack_require__(157);
 // Initialize ConfigService
 const configService = new config_1.ConfigService();
 // Get local IP address
@@ -8955,7 +10278,7 @@ exports.swaggerCustomOptions = {
 
 
 /***/ }),
-/* 150 */
+/* 157 */
 /***/ ((module) => {
 
 module.exports = require("os");

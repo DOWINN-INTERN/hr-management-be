@@ -270,7 +270,7 @@ export class AuthService {
     );
 
     if (!session) {
-      throw new UnauthorizedException('Refresh token not found');
+      throw new UnauthorizedException('Session not found');
     }
 
     if (session.expiresAt && session.expiresAt < new Date()) {

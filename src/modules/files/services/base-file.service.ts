@@ -3,11 +3,16 @@ import * as crypto from 'crypto';
 import { createObjectCsvStringifier } from 'csv-writer';
 import * as ExcelJS from 'exceljs';
 import { Response } from 'express';
+import * as fs from 'fs';
 import * as path from 'path';
 import PDFDocument from 'pdfkit';
 import { Readable } from 'stream';
+import { ChunkUploadResult } from '../dtos/chunk-upload-result.dto';
+import { ChunkedFileInfo } from '../dtos/chunked-file-info.dto';
+import { DirectoryMetadata } from '../dtos/directory-metadata.dto';
 import { FileExportOptions } from '../dtos/file-export-options.dto';
 import { FileListOptions } from '../dtos/file-list-options.dto';
+import { FileListResponseDto } from '../dtos/file-list-response.dto';
 import { FileMetadata } from '../dtos/file-meta-data.dto';
 import { FileUploadOptions } from '../dtos/file-upload-options.dto';
 import { IFileService } from '../interfaces/file-service.interface';
@@ -16,6 +21,17 @@ import { IFileService } from '../interfaces/file-service.interface';
 @Injectable()
 export abstract class BaseFileService implements IFileService {
   protected readonly logger = new Logger(this.constructor.name);
+  protected readonly uploadDir: string;
+  protected readonly baseUrl: string;
+  
+  constructor(uploadDir?: string, baseUrl?: string) {
+    this.uploadDir = uploadDir || '';
+    this.baseUrl = baseUrl || '';
+  }
+  abstract listFiles(options?: FileListOptions, authorization?: string): Promise<FileListResponseDto>;
+  abstract createDirectory(dirPath: string): Promise<DirectoryMetadata>;
+  abstract deleteDirectory(dirPath: string, recursive?: boolean): Promise<boolean>;
+  abstract renameDirectory(oldPath: string, newPath: string): Promise<DirectoryMetadata>;
 
   abstract initiateChunkedUpload(fileInfo: ChunkedFileInfo): Promise<string>;
   abstract uploadChunk(uploadId: string, chunkNumber: number, chunk: Buffer): Promise<ChunkUploadResult>;
@@ -24,43 +40,137 @@ export abstract class BaseFileService implements IFileService {
   // Abstract methods to be implemented by provider-specific services
   abstract uploadFile(file: Express.Multer.File, options?: FileUploadOptions): Promise<FileMetadata>;
   abstract uploadFiles(files: Express.Multer.File[], options?: FileUploadOptions): Promise<FileMetadata[]>;
-  abstract getFileMetadata(fileKey: string): Promise<FileMetadata>;
+  abstract getFileMetadata(fileKey: string, authorization?: string): Promise<FileMetadata>;
   abstract deleteFile(fileKey: string): Promise<boolean>;
   abstract fileExists(fileKey: string): Promise<boolean>;
-  abstract listFiles(options?: FileListOptions): Promise<FileMetadata[]>;
   abstract getFileStream(fileKey: string): Promise<Readable>;
   abstract getFileBuffer(fileKey: string): Promise<Buffer>;
-  abstract getFileUrl(fileKey: string, expiresIn?: number): Promise<string>;
+  abstract getFileUrl(fileKey: string, authorization?: string): Promise<string>;
   abstract getContentType(fileKey: string): Promise<string>;
   
   // Common implementable methods
-  async streamFile(fileKey: string, res: Response, inline = false): Promise<void> {
+  async streamFile(fileKey: string, res: Response, inline: boolean | null = null): Promise<void> {
     try {
+      // Check if file exists first to handle 404 gracefully
+      if (!(await this.fileExists(fileKey))) {
+        res.status(404).send('File not found');
+        return;
+      }
+  
       const contentType = await this.getContentType(fileKey);
       const metadata = await this.getFileMetadata(fileKey);
       const filename = path.basename(fileKey);
+      const fileSize = metadata.size;
+      const filePath = path.join(this.uploadDir, fileKey);
 
+      // Auto-detect if inline should be true based on content type if not explicitly set
+      if (inline === null) {
+        inline = contentType.startsWith('video/') || 
+                contentType.startsWith('audio/') || 
+                contentType === 'application/pdf' || 
+                contentType.startsWith('image/');
+      }
+  
+      // Set common headers
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      res.setHeader('Access-Control-Allow-Headers', 'Range');
+      res.setHeader('Accept-Ranges', 'bytes');
+      
+      // Set cache control based on file type
+      if (contentType.startsWith('image/')) {
+        // Cache images longer
+        res.setHeader('Cache-Control', 'public, max-age=86400, immutable');
+      } else if (contentType.startsWith('video/') || contentType.startsWith('audio/')) {
+        // Streaming media cache
+        res.setHeader('Cache-Control', 'public, max-age=3600');
+      } else {
+        // Default cache for documents and other files
+        res.setHeader('Cache-Control', 'public, max-age=3600, must-revalidate');
+      }
+  
+      // Set content type and disposition
       res.setHeader('Content-Type', contentType);
-      res.setHeader('Content-Length', metadata.size);
       res.setHeader(
         'Content-Disposition',
         `${inline ? 'inline' : 'attachment'}; filename="${encodeURIComponent(filename)}"`
       );
-
-      const stream = await this.getFileStream(fileKey);
+  
+      // Get range header from request
+      const range = res.req.headers.range;
+      
+      // Apply range requests for videos, audio, and large files
+      const isRangeSupported = contentType.startsWith('video/') || 
+                              contentType.startsWith('audio/') || 
+                              contentType === 'application/pdf' ||
+                              fileSize > 10 * 1024 * 1024; // 10MB+
+      
+      // If no range header or range not supported for this file type, send entire file
+      if (!range || !isRangeSupported) {
+        res.setHeader('Content-Length', fileSize);
+        const stream = await this.getFileStream(fileKey);
+        return new Promise<void>((resolve, reject) => {
+          stream.pipe(res)
+            .on('finish', () => resolve())
+            .on('error', (err) => {
+              this.logger.error(`Error streaming file: ${err.message}`, err.stack);
+              reject(err);
+            });
+        });
+      }
+      
+      // Handle range request
+      const parts = range.replace(/bytes=/, '').split('-');
+      const start = parseInt(parts[0], 10);
+      const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
+      
+      // Validate range request
+      if (isNaN(start) || isNaN(end) || start >= fileSize || end >= fileSize) {
+        // Return 416 Range Not Satisfiable if range is invalid
+        res.status(416);
+        res.setHeader('Content-Range', `bytes */${fileSize}`);
+        res.end();
+        return;
+      }
+      
+      const chunkSize = end - start + 1;
+      
+      // Set partial content headers
+      res.status(206);
+      res.setHeader('Content-Range', `bytes ${start}-${end}/${fileSize}`);
+      res.setHeader('Content-Length', chunkSize);
+      
+      // Create read stream with range
+      const stream = fs.createReadStream(filePath, { start, end });
+      
       return new Promise<void>((resolve, reject) => {
         stream.pipe(res)
           .on('finish', () => resolve())
-          .on('error', (err) => reject(err));
+          .on('error', (err) => {
+            this.logger.error(`Error streaming file range: ${err.message}`, err.stack);
+            reject(err);
+          });
       });
     } catch (error) {
       const err = error as Error;
       this.logger.error(`Error streaming file: ${err.message}`, err.stack);
+      
+      // If headers haven't been sent yet, send appropriate error response
+      if (!res.headersSent) {
+        if (err.message?.includes('not found')) {
+          res.status(404).send('File not found');
+        } else {
+          res.status(500).send('Error streaming file');
+        }
+      } else {
+        // If headers were sent, just end the response
+        res.end();
+      }
+      
       throw error;
     }
   }
   
-  async downloadFile(fileKey: string, res: Response, filename?: string): Promise<void> {
+  async downloadFile(fileKey: string, res: Response): Promise<void> {
     try {
       return this.streamFile(fileKey, res, false);
     } catch (error) {
