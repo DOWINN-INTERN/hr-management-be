@@ -5,7 +5,9 @@
   "author": "",
   "private": true,
   "license": "UNLICENSED",
+  "schematics": "./schematics/collection.json",
   "scripts": {
+    "build:schematics": "tsc -p schematics/tsconfig.json",
     "build": "nest build && tsc-alias",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",

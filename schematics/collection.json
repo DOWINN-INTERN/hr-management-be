@@ -1,0 +1,10 @@
+{
+  "$schema": "../node_modules/@angular-devkit/schematics/collection-schema.json",
+  "schematics": {
+    "general-controller": {
+      "description": "Generate a general controller with standard CRUD operations",
+      "factory": "./dist/general-controller/index#main",
+      "schema": "./dist/general-controller/schema.json"
+    }
+  }
+}

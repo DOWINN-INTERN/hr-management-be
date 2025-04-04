@@ -38,11 +38,11 @@ export class Employee extends BaseEntity<Employee> {
     @Column({ type: 'float', nullable: true, default: 0 })
     leaveCredits?: number;
 
-    @OneToOne(() => User, (user) => user.employee)
-    @JoinColumn({ name: 'user_id' }) // Foreign key column
+    @OneToOne(() => User, (user) => user.employee, { cascade: true })
+    @JoinColumn({ name: 'userId' }) // Foreign key column
     user!: User;
 
-    @ManyToMany(() => Role, (role: Role) => role.employees)
+    @ManyToMany(() => Role, (role: Role) => role.employees, { nullable: true, cascade: true })
     @JoinTable({
         name: 'employee_roles',
         joinColumn: { name: 'employee_id', referencedColumnName: 'id' },

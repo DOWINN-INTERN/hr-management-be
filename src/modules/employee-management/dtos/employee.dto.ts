@@ -1,13 +1,20 @@
 import { BaseDto } from "@/common/dtos/base.dto";
+import { ReferenceDto } from "@/common/dtos/reference.dto";
 import { EmploymentCondition } from "@/common/enums/employment/employment-condition.enum";
 import { EmploymentStatus } from "@/common/enums/employment/employment-status.enum";
 import { EmploymentType } from "@/common/enums/employment/employment-type.enum";
 import { createGetDto } from "@/common/factories/create-get-dto.factory";
-import { ApiProperty, PartialType } from "@nestjs/swagger";
+import { UserDto } from "@/modules/account-management/users/dtos/user.dto";
+import { ApiProperty, ApiPropertyOptional, PartialType } from "@nestjs/swagger";
 import { Type } from "class-transformer";
-import { IsArray, IsDate, IsEnum, IsNotEmpty, IsNumber, IsOptional, IsString, IsUUID, Min } from "class-validator";
+import { IsDate, IsEnum, IsNotEmpty, IsNumber, IsOptional, IsString, Min, ValidateNested } from "class-validator";
 
 export class EmployeeDto extends PartialType(BaseDto) {
+    @ApiProperty({ description: 'Account information', required: true })
+    @ValidateNested()
+    @Type(() => UserDto)
+    user!: UserDto;
+
     @ApiProperty({ description: 'Unique employee number' })
     @IsNotEmpty()
     @IsString()
@@ -61,15 +68,14 @@ export class EmployeeDto extends PartialType(BaseDto) {
     @Min(0)
     leaveCredits?: number;
 
-    @ApiProperty({
-        description: 'IDs of roles assigned to the employee',
-        type: [String],
-        required: false,
+    @ApiPropertyOptional({ 
+        description: 'Roles associated with this employee',
+        type: [ReferenceDto]
     })
     @IsOptional()
-    @IsArray()
-    @IsUUID('4', { each: true })
-    roleIds?: string[];
+    @ValidateNested({ each: true })
+    @Type(() => ReferenceDto)
+    roles?: ReferenceDto[];
 }
 
 export class UpdateEmployeeDto extends PartialType(EmployeeDto) {}

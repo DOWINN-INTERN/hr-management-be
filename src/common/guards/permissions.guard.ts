@@ -5,6 +5,7 @@ import { BaseController } from "../controllers/base.controller";
 import { PERMISSION_ENDPOINT_TYPE } from "../decorators/authorize.decorator";
 import { PERMISSIONS_KEY } from "../decorators/permissions.decorator";
 import { Action } from "../enums/action.enum";
+import { Role } from "../enums/role.enum";
 import { IJwtPayload } from "../interfaces/jwt-payload.interface";
 import { IPermission } from "../interfaces/permission.interface";
 
@@ -98,13 +99,11 @@ export class PermissionsGuard implements CanActivate {
         return true;
       }
 
-
-      
       // If user has the super admin role, allow access
-      // const hasSuperAdminRole = user.employee?.roles?.some(role => role.name === Role.SUPERADMIN);
-      // if (hasSuperAdminRole) {
-        //   return true;
-        // }
+      const hasSuperAdminRole = user.employee?.roles?.some(role => role.name === Role.SUPERADMIN);
+      if (hasSuperAdminRole) {
+        return true;
+      }
         
         // Check if the user has every required permissions for some role
         const userPermissions = [

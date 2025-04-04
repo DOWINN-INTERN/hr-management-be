@@ -1,37 +1,37 @@
 import { Authorize } from '@/common/decorators/authorize.decorator';
 import { CurrentUser } from '@/common/decorators/current-user.decorator';
 import {
-    BadRequestException,
-    Body,
-    Controller,
-    Delete,
-    Get,
-    Headers,
-    Inject,
-    Logger,
-    NotFoundException,
-    Param,
-    Post,
-    Put,
-    Query,
-    Res,
-    UploadedFile,
-    UploadedFiles,
-    UseInterceptors,
-    Version,
-    VERSION_NEUTRAL
+  BadRequestException,
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Inject,
+  Logger,
+  NotFoundException,
+  Param,
+  Post,
+  Put,
+  Query,
+  Req,
+  Res,
+  UploadedFile,
+  UploadedFiles,
+  UseInterceptors,
+  Version,
+  VERSION_NEUTRAL
 } from '@nestjs/common';
 import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 import {
-    ApiBody,
-    ApiConsumes,
-    ApiOperation,
-    ApiParam,
-    ApiQuery,
-    ApiResponse,
-    ApiTags
+  ApiBody,
+  ApiConsumes,
+  ApiOperation,
+  ApiParam,
+  ApiQuery,
+  ApiResponse,
+  ApiTags
 } from '@nestjs/swagger';
-import { Response } from 'express';
+import { Request, Response } from 'express';
 import { FILE_SERVICE } from './config/file-provider.config';
 import { DirectoryMetadata } from './dtos/directory-metadata.dto';
 import { FileListOptions, FileSortField, SortDirection } from './dtos/file-list-options.dto';
@@ -72,15 +72,17 @@ import { IFileService } from './interfaces/file-service.interface';
     @UseInterceptors(FileInterceptor('file'))
     async uploadFile(
       @UploadedFile() file: Express.Multer.File,
+      @Req() req: Request,
       @Query('folder') folder?: string,
       @CurrentUser('sub') userId?: string,
-      @Headers('authorization') authorization?: string
     ): Promise<FileMetadata> {
       if (!file) {
         throw new BadRequestException('No file provided');
       }
   
       try {
+        const authorization = req.headers.authorization;
+        this.logger.debug(`Authorization header: ${authorization}`);
         return await this.fileService.uploadFile(file, {
           folder,
           token: authorization,
@@ -121,15 +123,16 @@ import { IFileService } from './interfaces/file-service.interface';
     @UseInterceptors(FilesInterceptor('files', 10))
     async uploadMultiple(
       @UploadedFiles() files: Express.Multer.File[],
+      @Req() req: Request,
       @Query('folder') folder?: string,
       @CurrentUser('sub') userId?: string,
-      @Headers('authorization') authorization?: string
     ): Promise<FileMetadata[]> {
       if (!files || files.length === 0) {
         throw new BadRequestException('No files provided');
       }
   
       try {
+        const authorization = req.headers.authorization;
         return await this.fileService.uploadFiles(files, {
           folder,
           token: authorization,
@@ -153,8 +156,9 @@ import { IFileService } from './interfaces/file-service.interface';
       type: FileMetadata
     })
     @ApiResponse({ status: 404, description: 'File not found' })
-    async getFileMetadata(@Param('key') key: string, @Headers('authorization') authorization: string): Promise<FileMetadata> {
+    async getFileMetadata(@Param('key') key: string, @Req() request: Request): Promise<FileMetadata> {
       try {
+        const authorization = request.headers.authorization;
         return await this.fileService.getFileMetadata(key, authorization);
       } catch (error) {
         throw new NotFoundException(`File not found: ${key}`);
@@ -207,6 +211,7 @@ import { IFileService } from './interfaces/file-service.interface';
     }
   
     @Get('url/:key')
+    @Authorize()
     @ApiOperation({ summary: 'Get a temporary URL for a file with user current token' })
     @ApiParam({ name: 'key', description: 'File key' })
     @ApiResponse({
@@ -221,9 +226,10 @@ import { IFileService } from './interfaces/file-service.interface';
     })
     async getFileUrl(
       @Param('key') key: string,
-      @Headers('authorization') authorization?: string
+      @Req() req: Request,
     ): Promise<{ url: string }> {
       try {
+        const authorization = req.headers.authorization;
         const url = await this.fileService.getFileUrl(key, authorization);
         return { url };
       } catch (error) {
@@ -301,6 +307,7 @@ import { IFileService } from './interfaces/file-service.interface';
         type: FileListResponseDto
     })
     async listFiles(
+        @Req() req: Request,
         @Query('prefix') prefix?: string,
         @Query('limit') limit?: number,
         @Query('marker') marker?: string,
@@ -311,8 +318,7 @@ import { IFileService } from './interfaces/file-service.interface';
         @Query('sortBy') sortBy?: 'name' | 'size' | 'createdAt' | 'lastModified' | 'mimeType',
         @Query('sortDirection') sortDirection?: 'asc' | 'desc',
         @Query('searchTerm') searchTerm?: string,
-        @Query('extensions') extensions?: string,
-        @Headers('authorization') authorization?: string
+        @Query('extensions') extensions?: string
     ): Promise<FileListResponseDto> {
         // Transform boolean strings to actual booleans
         const boolFromString = (val: any) => {
@@ -335,6 +341,7 @@ import { IFileService } from './interfaces/file-service.interface';
         };
 
         try {
+            const authorization = req.headers.authorization;
             const result = await this.fileService.listFiles(options, authorization);
             
             // If the result is already in the correct format, return it directly

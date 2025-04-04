@@ -1,7 +1,7 @@
 import dataSource from '@/database/data-source';
 import { BaseEntity } from '@/database/entities/base.entity';
 import { UsersService } from '@/modules/account-management/users/users.service';
-import { BadRequestException, ConflictException, Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
 import { DeepPartial, FindOneOptions, FindOptionsOrder, FindOptionsRelations, FindOptionsSelect, FindOptionsWhere, In, Repository, SelectQueryBuilder } from 'typeorm';
 import { PaginatedResponseDto } from '../dtos/paginated-response.dto';
 import { PaginationDto } from '../dtos/pagination.dto';
@@ -210,18 +210,6 @@ export abstract class BaseService<T extends BaseEntity<T>> {
       return await this.repository.save(entity);
     } catch (error) {
       console.log('Full error object:', JSON.stringify(error, null, 2));
-      // Check if the error is a foreign key constraint failure
-      if (
-        error && 
-        typeof error === 'object' &&
-        'message' in error &&
-        typeof error.message === 'string' && 
-        (error.message.includes('a foreign key constraint fails') || 
-         ('name' in error && error.name === 'QueryFailedError'))
-      ) {
-        throw new ConflictException(`Failed to create ${this.entityName}. It appears that the related entity does not exist or the ${this.entityName} already exists.`);
-      }
-      // Re-throw other errors
       throw error;
     }
   }

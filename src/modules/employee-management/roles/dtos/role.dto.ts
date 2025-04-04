@@ -47,13 +47,13 @@ export class RoleDto extends PartialType(BaseDto) {
   permissions?: ReferenceDto[];
 
   @ApiPropertyOptional({ 
-    description: 'Users associated with this role',
+    description: 'Employees associated with this role',
     type: [ReferenceDto]
   })
   @IsOptional()
   @ValidateNested({ each: true })
   @Type(() => ReferenceDto)
-  users?: ReferenceDto[];
+  employees?: ReferenceDto[];
 }
 
 export class UpdateRoleDto extends PartialType(RoleDto) {}
