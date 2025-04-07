@@ -17,8 +17,8 @@ export class ProfilesController extends createController<
     ProfileDto,     // DTO for creating profiles
     UpdateProfileDto, // DTO for updating profiles
 ) {
-    override async findAllAdvanced(paginationDto: PaginationDto<Profile>): Promise<PaginatedResponseDto<Profile>> {
-        return await super.findAllAdvanced(paginationDto);
+    override findAllAdvanced(paginationDto: PaginationDto<Profile>): Promise<PaginatedResponseDto<GetProfileDto>> {
+        return super.findAllAdvanced(paginationDto);
     }
 
     override async findOne(id: string): Promise<GetProfileDto> {

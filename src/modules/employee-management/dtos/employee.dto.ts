@@ -4,16 +4,15 @@ import { EmploymentCondition } from "@/common/enums/employment/employment-condit
 import { EmploymentStatus } from "@/common/enums/employment/employment-status.enum";
 import { EmploymentType } from "@/common/enums/employment/employment-type.enum";
 import { createGetDto } from "@/common/factories/create-get-dto.factory";
-import { UserDto } from "@/modules/account-management/users/dtos/user.dto";
 import { ApiProperty, ApiPropertyOptional, PartialType } from "@nestjs/swagger";
 import { Type } from "class-transformer";
-import { IsDate, IsEnum, IsNotEmpty, IsNumber, IsOptional, IsString, Min, ValidateNested } from "class-validator";
+import { IsDate, IsEnum, IsNotEmpty, IsNumber, IsOptional, IsString, IsUUID, Min, ValidateNested } from "class-validator";
 
 export class EmployeeDto extends PartialType(BaseDto) {
-    @ApiProperty({ description: 'Account information', required: true })
-    @ValidateNested()
-    @Type(() => UserDto)
-    user!: UserDto;
+    @ApiProperty({ description: 'User ID associated with the employee' })
+    @IsNotEmpty()
+    @IsUUID()
+    userId!: string;
 
     @ApiProperty({ description: 'Unique employee number' })
     @IsNotEmpty()
@@ -80,4 +79,4 @@ export class EmployeeDto extends PartialType(BaseDto) {
 
 export class UpdateEmployeeDto extends PartialType(EmployeeDto) {}
 
-export class GetEmployeeDto extends createGetDto(EmployeeDto) {}
+export class GetEmployeeDto extends createGetDto(UpdateEmployeeDto, "employee") {}

@@ -7,7 +7,7 @@ import { BaseEntity } from '../../../../database/entities/base.entity';
 import { Profile } from '../../profiles/entities/profile.entity';
 import { Session } from '../../sessions/entities/session.entity';
 
-@Entity()
+@Entity('users')
 export class User extends BaseEntity<User> {
   @Column({ unique: true })
   email?: string;

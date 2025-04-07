@@ -20,6 +20,8 @@
     "test:cov": "jest --coverage",
     "test:debug": "STAGE=dev node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
+    "test:unit": "jest --testPathPattern='\\.spec\\.ts$'",
+    "test:controllers": "jest --testPathPattern='controllers\\/.*\\.spec\\.ts$'",
     "typeorm": "typeorm-ts-node-commonjs",
     "cli": "ts-node -r tsconfig-paths/register src/cli.ts",
     "permissions:seed": "npm run cli -- permissions:seed",
@@ -47,6 +49,7 @@
     "@nestjs/throttler": "^6.4.0",
     "@nestjs/typeorm": "^10.0.2",
     "@nestjs/websockets": "^10.0.0",
+    "@scalar/nestjs-api-reference": "^0.4.6",
     "@types/bcrypt": "^5.0.2",
     "@types/bcryptjs": "^2.4.6",
     "@types/csurf": "^1.11.5",
@@ -129,6 +132,9 @@
       "**/*.(t|j)s"
     ],
     "coverageDirectory": "../coverage",
-    "testEnvironment": "node"
+    "testEnvironment": "node",
+    "moduleNameMapper": {
+      "^@/(.*)$": "<rootDir>/$1"
+    }
   }
 }

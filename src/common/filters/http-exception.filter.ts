@@ -8,6 +8,7 @@ import {
 } from '@nestjs/common';
 import * as crypto from 'crypto';
 import { Request, Response } from 'express';
+import { GeneralResponseDto } from '../dtos/generalresponse.dto';
 
 /**
  * HttpExceptionFilter is a global filter that handles all exceptions thrown in the application.
@@ -57,7 +58,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
     this.trackErrorFrequency(clientIp, status);
 
     // Prepare client response
-    const clientResponse = {
+    const clientResponse: GeneralResponseDto = {
       statusCode: status,
       timestamp,
       traceId,

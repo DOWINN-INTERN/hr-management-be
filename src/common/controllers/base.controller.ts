@@ -83,14 +83,6 @@ export abstract class BaseController<T extends BaseEntity<T>, GetDto, EntityDto 
 
     @Post()
     @Authorize({ endpointType: Action.CREATE })
-    @ApiOperation({ summary: 'Create an entity' })
-    @ApiResponse({ status: HttpStatus.BAD_REQUEST, description: 'Invalid input data.' })
-    @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized.' })
-    @ApiResponse({ status: HttpStatus.CONFLICT, description: 'Entity already exists.' })
-    @ApiResponse({ status: HttpStatus.INTERNAL_SERVER_ERROR, description: 'Internal server error.' })
-    @ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Entity not found.' })
-    @ApiResponse({ status: HttpStatus.FORBIDDEN, description: 'Forbidden.' })
-    @ApiResponse({ status: HttpStatus.CREATED, description: 'The entity has been successfully created.' })
     async create(@Body() entityDto: EntityDto, @CurrentUser('sub') createdById: string): Promise<GetDto> {
         const entity = await this.baseService.create(entityDto as DeepPartial<T>, createdById);
         return plainToInstance(this.getDtoClass, entity);
@@ -98,13 +90,6 @@ export abstract class BaseController<T extends BaseEntity<T>, GetDto, EntityDto 
 
     @Put(':id')
     @Authorize({ endpointType: Action.UPDATE })
-    @ApiOperation({ summary: 'Update an entity' })
-    @ApiResponse({ status: HttpStatus.OK, description: 'The entity has been successfully updated.' })
-    @ApiResponse({ status: HttpStatus.BAD_REQUEST, description: 'Invalid input data.' })
-    @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized.' })
-    @ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Entity not found.' })
-    @ApiResponse({ status: HttpStatus.INTERNAL_SERVER_ERROR, description: 'Internal server error.' })
-    @ApiResponse({ status: HttpStatus.FORBIDDEN, description: 'Forbidden.' })
     async update(
         @Param('id') id: string,
         @Body() entityDto: UpdateDto,
@@ -140,12 +125,20 @@ export abstract class BaseController<T extends BaseEntity<T>, GetDto, EntityDto 
         - Not in array: \`?filter={"status":{"nin":["deleted","archived"]}}\`
         - Is null: \`?filter={"deletedAt":{"isNull":true}}\`
         
+        ## Relational Filtering
+        Filter by related entity fields: \`?filter={"category.name":"Electronics"}\`
+        
+        ## Field Selection
+        Select specific fields: \`?select=["id","name","email"]\`
+        Select fields from relations: \`?select=["id","name","user.id","user.email","category.name"]\`
+        
         ## Combining Filters
         You can combine multiple filters: \`?filter={"status":"active","age":{"gte":21}}\`
         
         ## Sorting
         Sort by field: \`?sort={"createdAt":"DESC"}\`
         Multiple fields: \`?sort={"status":"ASC","createdAt":"DESC"}\`
+        Sort by relation field: \`?sort={"user.name":"ASC"}\`
         
         ## Pagination
         Page size: \`?take=10\`
@@ -153,14 +146,9 @@ export abstract class BaseController<T extends BaseEntity<T>, GetDto, EntityDto 
         
         ## Relations
         Include related entities: \`?relations=["user","category"]\`
-        
-        ## Field Selection
-        Select specific fields: \`?select=["id","name","email"]\`
-        
-        ## User Filtering
-        Filter by user: \`?userId=123e4567-e89b-12d3-a456-426614174000\`
+        Include nested relations: \`?relations={"user":true,"category":{"subcategories":true}}\`
         `,
-    })
+      })
     @ApiQuery({
         name: 'filter',
         required: false,
@@ -237,8 +225,20 @@ export abstract class BaseController<T extends BaseEntity<T>, GetDto, EntityDto 
     })
     async findAllAdvanced(
         @Query() paginationDto: PaginationDto<T>,
-    ): Promise<PaginatedResponseDto<T>> {
-        return await this.baseService.findAllComplex(paginationDto);
+    ): Promise<PaginatedResponseDto<GetDto>> {
+        const entityResult = await this.baseService.findAllComplex(paginationDto);
+        
+        // Transform using class-transformer
+        const dtoResult: PaginatedResponseDto<GetDto> = {
+            data: plainToInstance(this.getDtoClass, entityResult.data, {
+                enableCircularCheck: true,
+                exposeUnsetFields: false,
+            }),
+            totalCount: entityResult.totalCount,
+            meta: entityResult.meta
+        };
+        
+        return dtoResult;
     }
 
     @Get('find')

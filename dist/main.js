@@ -13,15 +13,16 @@ const common_1 = __webpack_require__(1);
 const config_1 = __webpack_require__(2);
 const core_1 = __webpack_require__(3);
 const swagger_1 = __webpack_require__(4);
-const compression_1 = __importDefault(__webpack_require__(5));
-const express_rate_limit_1 = __importDefault(__webpack_require__(6));
-const helmet_1 = __importDefault(__webpack_require__(7));
-const morgan_1 = __importDefault(__webpack_require__(8));
-const app_module_1 = __webpack_require__(9);
-const http_exception_filter_1 = __webpack_require__(174);
-const logging_interceptor_1 = __webpack_require__(175);
-const transform_interceptor_1 = __webpack_require__(177);
-const swagger_config_1 = __webpack_require__(178);
+const nestjs_api_reference_1 = __webpack_require__(5);
+const compression_1 = __importDefault(__webpack_require__(6));
+const express_rate_limit_1 = __importDefault(__webpack_require__(7));
+const helmet_1 = __importDefault(__webpack_require__(8));
+const morgan_1 = __importDefault(__webpack_require__(9));
+const app_module_1 = __webpack_require__(10);
+const http_exception_filter_1 = __webpack_require__(176);
+const logging_interceptor_1 = __webpack_require__(177);
+const transform_interceptor_1 = __webpack_require__(179);
+const swagger_config_1 = __webpack_require__(180);
 async function bootstrap() {
     const app = await core_1.NestFactory.create(app_module_1.AppModule);
     const configService = app.get(config_1.ConfigService);
@@ -77,6 +78,10 @@ async function bootstrap() {
     // Swagger Setup
     const document = swagger_1.SwaggerModule.createDocument(app, swagger_config_1.swaggerConfig); // Create a Swagger document
     swagger_1.SwaggerModule.setup('api', app, document, swagger_config_1.swaggerCustomOptions); // Set up the Swagger module
+    // Scalar Setup - Make sure to install @scalar/nestjs-api-reference package
+    app.use('/reference', (0, nestjs_api_reference_1.apiReference)({
+        content: document,
+    }));
     await app.listen(port, '0.0.0.0'); // Listen on all network interfaces (LAN)
     console.log(`Application is running on: ${appUrl}/api`);
 }
@@ -111,28 +116,34 @@ module.exports = require("@nestjs/swagger");
 /* 5 */
 /***/ ((module) => {
 
-module.exports = require("compression");
+module.exports = require("@scalar/nestjs-api-reference");
 
 /***/ }),
 /* 6 */
 /***/ ((module) => {
 
-module.exports = require("express-rate-limit");
+module.exports = require("compression");
 
 /***/ }),
 /* 7 */
 /***/ ((module) => {
 
-module.exports = require("helmet");
+module.exports = require("express-rate-limit");
 
 /***/ }),
 /* 8 */
 /***/ ((module) => {
 
-module.exports = require("morgan");
+module.exports = require("helmet");
 
 /***/ }),
 /* 9 */
+/***/ ((module) => {
+
+module.exports = require("morgan");
+
+/***/ }),
+/* 10 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -145,18 +156,18 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.AppModule = void 0;
 const common_1 = __webpack_require__(1);
-const common_module_1 = __webpack_require__(10);
-const config_module_1 = __webpack_require__(65);
-const database_module_1 = __webpack_require__(68);
-const account_management_module_1 = __webpack_require__(69);
-const addresses_module_1 = __webpack_require__(109);
-const documents_module_1 = __webpack_require__(111);
-const employee_management_module_1 = __webpack_require__(70);
-const files_module_1 = __webpack_require__(119);
-const logs_module_1 = __webpack_require__(136);
-const notifications_module_1 = __webpack_require__(138);
-const organization_management_module_1 = __webpack_require__(142);
-const schedules_module_1 = __webpack_require__(154);
+const common_module_1 = __webpack_require__(11);
+const config_module_1 = __webpack_require__(67);
+const database_module_1 = __webpack_require__(70);
+const account_management_module_1 = __webpack_require__(71);
+const addresses_module_1 = __webpack_require__(111);
+const documents_module_1 = __webpack_require__(113);
+const employee_management_module_1 = __webpack_require__(72);
+const files_module_1 = __webpack_require__(121);
+const logs_module_1 = __webpack_require__(138);
+const notifications_module_1 = __webpack_require__(140);
+const organization_management_module_1 = __webpack_require__(144);
+const schedules_module_1 = __webpack_require__(156);
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -183,7 +194,7 @@ exports.AppModule = AppModule = __decorate([
 
 
 /***/ }),
-/* 10 */
+/* 11 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -196,9 +207,9 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.CommonModule = void 0;
 const common_1 = __webpack_require__(1);
-const users_module_1 = __webpack_require__(11);
-const common_service_1 = __webpack_require__(64);
-const transaction_service_1 = __webpack_require__(50);
+const users_module_1 = __webpack_require__(12);
+const common_service_1 = __webpack_require__(66);
+const transaction_service_1 = __webpack_require__(51);
 let CommonModule = class CommonModule {
 };
 exports.CommonModule = CommonModule;
@@ -214,7 +225,7 @@ exports.CommonModule = CommonModule = __decorate([
 
 
 /***/ }),
-/* 11 */
+/* 12 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -228,10 +239,10 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.UsersModule = void 0;
 const common_1 = __webpack_require__(1);
 const config_1 = __webpack_require__(2);
-const typeorm_1 = __webpack_require__(12);
-const user_entity_1 = __webpack_require__(13);
-const users_controller_1 = __webpack_require__(34);
-const users_service_1 = __webpack_require__(45);
+const typeorm_1 = __webpack_require__(13);
+const user_entity_1 = __webpack_require__(14);
+const users_controller_1 = __webpack_require__(35);
+const users_service_1 = __webpack_require__(46);
 let UsersModule = class UsersModule {
 };
 exports.UsersModule = UsersModule;
@@ -246,13 +257,13 @@ exports.UsersModule = UsersModule = __decorate([
 
 
 /***/ }),
-/* 12 */
+/* 13 */
 /***/ ((module) => {
 
 module.exports = require("@nestjs/typeorm");
 
 /***/ }),
-/* 13 */
+/* 14 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -268,13 +279,13 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var _a, _b, _c, _d, _e;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.User = void 0;
-const document_entity_1 = __webpack_require__(14);
-const employee_entity_1 = __webpack_require__(18);
-const activity_logs_entity_1 = __webpack_require__(31);
-const typeorm_1 = __webpack_require__(16);
-const base_entity_1 = __webpack_require__(15);
-const profile_entity_1 = __webpack_require__(30);
-const session_entity_1 = __webpack_require__(33);
+const document_entity_1 = __webpack_require__(15);
+const employee_entity_1 = __webpack_require__(19);
+const activity_logs_entity_1 = __webpack_require__(32);
+const typeorm_1 = __webpack_require__(17);
+const base_entity_1 = __webpack_require__(16);
+const profile_entity_1 = __webpack_require__(31);
+const session_entity_1 = __webpack_require__(34);
 let User = class User extends base_entity_1.BaseEntity {
     constructor() {
         super(...arguments);
@@ -357,12 +368,12 @@ __decorate([
     __metadata("design:type", typeof (_e = typeof employee_entity_1.Employee !== "undefined" && employee_entity_1.Employee) === "function" ? _e : Object)
 ], User.prototype, "employee", void 0);
 exports.User = User = __decorate([
-    (0, typeorm_1.Entity)()
+    (0, typeorm_1.Entity)('users')
 ], User);
 
 
 /***/ }),
-/* 14 */
+/* 15 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -378,10 +389,10 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var _a, _b;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Document = void 0;
-const base_entity_1 = __webpack_require__(15);
-const user_entity_1 = __webpack_require__(13);
-const typeorm_1 = __webpack_require__(16);
-const document_type_entity_1 = __webpack_require__(17);
+const base_entity_1 = __webpack_require__(16);
+const user_entity_1 = __webpack_require__(14);
+const typeorm_1 = __webpack_require__(17);
+const document_type_entity_1 = __webpack_require__(18);
 let Document = class Document extends base_entity_1.BaseEntity {
 };
 exports.Document = Document;
@@ -421,7 +432,7 @@ exports.Document = Document = __decorate([
 
 
 /***/ }),
-/* 15 */
+/* 16 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -437,7 +448,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var _a, _b, _c;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.BaseEntity = void 0;
-const typeorm_1 = __webpack_require__(16);
+const typeorm_1 = __webpack_require__(17);
 class BaseEntity extends typeorm_1.BaseEntity {
     constructor(item) {
         super();
@@ -501,13 +512,13 @@ __decorate([
 
 
 /***/ }),
-/* 16 */
+/* 17 */
 /***/ ((module) => {
 
 module.exports = require("typeorm");
 
 /***/ }),
-/* 17 */
+/* 18 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -522,9 +533,9 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.DocumentType = void 0;
-const base_entity_1 = __webpack_require__(15);
-const typeorm_1 = __webpack_require__(16);
-const document_entity_1 = __webpack_require__(14);
+const base_entity_1 = __webpack_require__(16);
+const typeorm_1 = __webpack_require__(17);
+const document_entity_1 = __webpack_require__(15);
 let DocumentType = class DocumentType extends base_entity_1.BaseEntity {
     constructor() {
         super(...arguments);
@@ -573,7 +584,7 @@ exports.DocumentType = DocumentType = __decorate([
 
 
 /***/ }),
-/* 18 */
+/* 19 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -589,13 +600,13 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var _a, _b, _c, _d, _e;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Employee = void 0;
-const employment_condition_enum_1 = __webpack_require__(19);
-const employment_status_enum_1 = __webpack_require__(20);
-const employment_type_enum_1 = __webpack_require__(21);
-const base_entity_1 = __webpack_require__(15);
-const user_entity_1 = __webpack_require__(13);
-const role_entity_1 = __webpack_require__(22);
-const typeorm_1 = __webpack_require__(16);
+const employment_condition_enum_1 = __webpack_require__(20);
+const employment_status_enum_1 = __webpack_require__(21);
+const employment_type_enum_1 = __webpack_require__(22);
+const base_entity_1 = __webpack_require__(16);
+const user_entity_1 = __webpack_require__(14);
+const role_entity_1 = __webpack_require__(23);
+const typeorm_1 = __webpack_require__(17);
 let Employee = class Employee extends base_entity_1.BaseEntity {
     constructor() {
         super(...arguments);
@@ -642,7 +653,7 @@ __decorate([
     __metadata("design:type", Number)
 ], Employee.prototype, "leaveCredits", void 0);
 __decorate([
-    (0, typeorm_1.OneToOne)(() => user_entity_1.User, (user) => user.employee, { cascade: true }),
+    (0, typeorm_1.OneToOne)(() => user_entity_1.User, (user) => user.employee),
     (0, typeorm_1.JoinColumn)({ name: 'userId' }) // Foreign key column
     ,
     __metadata("design:type", typeof (_e = typeof user_entity_1.User !== "undefined" && user_entity_1.User) === "function" ? _e : Object)
@@ -662,7 +673,7 @@ exports.Employee = Employee = __decorate([
 
 
 /***/ }),
-/* 19 */
+/* 20 */
 /***/ ((__unused_webpack_module, exports) => {
 
 
@@ -676,7 +687,7 @@ var EmploymentCondition;
 
 
 /***/ }),
-/* 20 */
+/* 21 */
 /***/ ((__unused_webpack_module, exports) => {
 
 
@@ -697,7 +708,7 @@ var EmploymentStatus;
 
 
 /***/ }),
-/* 21 */
+/* 22 */
 /***/ ((__unused_webpack_module, exports) => {
 
 
@@ -719,7 +730,7 @@ var EmploymentType;
 
 
 /***/ }),
-/* 22 */
+/* 23 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -735,14 +746,14 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var _a;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Role = void 0;
-const role_scope_type_enum_1 = __webpack_require__(23);
-const base_entity_1 = __webpack_require__(15);
-const permission_entity_1 = __webpack_require__(24);
-const department_entity_1 = __webpack_require__(26);
-const branch_entity_1 = __webpack_require__(29);
-const organization_entity_1 = __webpack_require__(28);
-const typeorm_1 = __webpack_require__(16);
-const employee_entity_1 = __webpack_require__(18);
+const role_scope_type_enum_1 = __webpack_require__(24);
+const base_entity_1 = __webpack_require__(16);
+const permission_entity_1 = __webpack_require__(25);
+const department_entity_1 = __webpack_require__(27);
+const branch_entity_1 = __webpack_require__(30);
+const organization_entity_1 = __webpack_require__(29);
+const typeorm_1 = __webpack_require__(17);
+const employee_entity_1 = __webpack_require__(19);
 let Role = class Role extends base_entity_1.BaseEntity {
     constructor() {
         super(...arguments);
@@ -797,7 +808,7 @@ exports.Role = Role = __decorate([
 
 
 /***/ }),
-/* 23 */
+/* 24 */
 /***/ ((__unused_webpack_module, exports) => {
 
 
@@ -814,7 +825,7 @@ var RoleScopeType;
 
 
 /***/ }),
-/* 24 */
+/* 25 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -830,10 +841,10 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var _a;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Permission = void 0;
-const typeorm_1 = __webpack_require__(16);
-const action_enum_1 = __webpack_require__(25);
-const base_entity_1 = __webpack_require__(15);
-const role_entity_1 = __webpack_require__(22);
+const typeorm_1 = __webpack_require__(17);
+const action_enum_1 = __webpack_require__(26);
+const base_entity_1 = __webpack_require__(16);
+const role_entity_1 = __webpack_require__(23);
 let Permission = class Permission extends base_entity_1.BaseEntity {
 };
 exports.Permission = Permission;
@@ -866,7 +877,7 @@ exports.Permission = Permission = __decorate([
 
 
 /***/ }),
-/* 25 */
+/* 26 */
 /***/ ((__unused_webpack_module, exports) => {
 
 
@@ -883,7 +894,7 @@ var Action;
 
 
 /***/ }),
-/* 26 */
+/* 27 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -899,11 +910,11 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var _a, _b;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Department = void 0;
-const base_entity_1 = __webpack_require__(15);
-const address_entity_1 = __webpack_require__(27);
-const role_entity_1 = __webpack_require__(22);
-const typeorm_1 = __webpack_require__(16);
-const branch_entity_1 = __webpack_require__(29);
+const base_entity_1 = __webpack_require__(16);
+const address_entity_1 = __webpack_require__(28);
+const role_entity_1 = __webpack_require__(23);
+const typeorm_1 = __webpack_require__(17);
+const branch_entity_1 = __webpack_require__(30);
 let Department = class Department extends base_entity_1.BaseEntity {
 };
 exports.Department = Department;
@@ -957,7 +968,7 @@ exports.Department = Department = __decorate([
 
 
 /***/ }),
-/* 27 */
+/* 28 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -973,12 +984,12 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var _a, _b, _c, _d;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Address = void 0;
-const base_entity_1 = __webpack_require__(15);
-const department_entity_1 = __webpack_require__(26);
-const organization_entity_1 = __webpack_require__(28);
-const typeorm_1 = __webpack_require__(16);
-const profile_entity_1 = __webpack_require__(30);
-const branch_entity_1 = __webpack_require__(29);
+const base_entity_1 = __webpack_require__(16);
+const department_entity_1 = __webpack_require__(27);
+const organization_entity_1 = __webpack_require__(29);
+const typeorm_1 = __webpack_require__(17);
+const profile_entity_1 = __webpack_require__(31);
+const branch_entity_1 = __webpack_require__(30);
 let Address = class Address extends base_entity_1.BaseEntity {
 };
 exports.Address = Address;
@@ -1040,7 +1051,7 @@ exports.Address = Address = __decorate([
 
 
 /***/ }),
-/* 28 */
+/* 29 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -1056,11 +1067,11 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var _a;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Organization = void 0;
-const address_entity_1 = __webpack_require__(27);
-const role_entity_1 = __webpack_require__(22);
-const typeorm_1 = __webpack_require__(16);
-const base_entity_1 = __webpack_require__(15);
-const branch_entity_1 = __webpack_require__(29);
+const address_entity_1 = __webpack_require__(28);
+const role_entity_1 = __webpack_require__(23);
+const typeorm_1 = __webpack_require__(17);
+const base_entity_1 = __webpack_require__(16);
+const branch_entity_1 = __webpack_require__(30);
 let Organization = class Organization extends base_entity_1.BaseEntity {
 };
 exports.Organization = Organization;
@@ -1113,7 +1124,7 @@ exports.Organization = Organization = __decorate([
 
 
 /***/ }),
-/* 29 */
+/* 30 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -1129,12 +1140,12 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var _a, _b;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Branch = void 0;
-const base_entity_1 = __webpack_require__(15);
-const address_entity_1 = __webpack_require__(27);
-const role_entity_1 = __webpack_require__(22);
-const typeorm_1 = __webpack_require__(16);
-const organization_entity_1 = __webpack_require__(28);
-const department_entity_1 = __webpack_require__(26);
+const base_entity_1 = __webpack_require__(16);
+const address_entity_1 = __webpack_require__(28);
+const role_entity_1 = __webpack_require__(23);
+const typeorm_1 = __webpack_require__(17);
+const organization_entity_1 = __webpack_require__(29);
+const department_entity_1 = __webpack_require__(27);
 let Branch = class Branch extends base_entity_1.BaseEntity {
 };
 exports.Branch = Branch;
@@ -1192,7 +1203,7 @@ exports.Branch = Branch = __decorate([
 
 
 /***/ }),
-/* 30 */
+/* 31 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -1208,10 +1219,10 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var _a, _b, _c;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Profile = void 0;
-const base_entity_1 = __webpack_require__(15);
-const typeorm_1 = __webpack_require__(16);
-const address_entity_1 = __webpack_require__(27);
-const user_entity_1 = __webpack_require__(13);
+const base_entity_1 = __webpack_require__(16);
+const typeorm_1 = __webpack_require__(17);
+const address_entity_1 = __webpack_require__(28);
+const user_entity_1 = __webpack_require__(14);
 let Profile = class Profile extends base_entity_1.BaseEntity {
 };
 exports.Profile = Profile;
@@ -1284,7 +1295,7 @@ exports.Profile = Profile = __decorate([
 
 
 /***/ }),
-/* 31 */
+/* 32 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -1300,11 +1311,11 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var _a, _b, _c;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ActivityLog = void 0;
-const action_enum_1 = __webpack_require__(25);
-const log_type_enum_1 = __webpack_require__(32);
-const base_entity_1 = __webpack_require__(15);
-const user_entity_1 = __webpack_require__(13);
-const typeorm_1 = __webpack_require__(16);
+const action_enum_1 = __webpack_require__(26);
+const log_type_enum_1 = __webpack_require__(33);
+const base_entity_1 = __webpack_require__(16);
+const user_entity_1 = __webpack_require__(14);
+const typeorm_1 = __webpack_require__(17);
 let ActivityLog = class ActivityLog extends base_entity_1.BaseEntity {
 };
 exports.ActivityLog = ActivityLog;
@@ -1339,7 +1350,7 @@ exports.ActivityLog = ActivityLog = __decorate([
 
 
 /***/ }),
-/* 32 */
+/* 33 */
 /***/ ((__unused_webpack_module, exports) => {
 
 
@@ -1357,7 +1368,7 @@ var LogType;
 
 
 /***/ }),
-/* 33 */
+/* 34 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -1373,9 +1384,9 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var _a, _b, _c;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Session = void 0;
-const typeorm_1 = __webpack_require__(16);
-const base_entity_1 = __webpack_require__(15);
-const user_entity_1 = __webpack_require__(13);
+const typeorm_1 = __webpack_require__(17);
+const base_entity_1 = __webpack_require__(16);
+const user_entity_1 = __webpack_require__(14);
 let Session = class Session extends base_entity_1.BaseEntity {
 };
 exports.Session = Session;
@@ -1414,15 +1425,15 @@ exports.Session = Session = __decorate([
 
 
 /***/ }),
-/* 34 */
+/* 35 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.UsersController = void 0;
-const create_controller_factory_1 = __webpack_require__(35);
-const user_dto_1 = __webpack_require__(60);
-const users_service_1 = __webpack_require__(45);
+const create_controller_factory_1 = __webpack_require__(36);
+const user_dto_1 = __webpack_require__(62);
+const users_service_1 = __webpack_require__(46);
 class UsersController extends (0, create_controller_factory_1.createController)('Users', // Entity name for Swagger documentation
 users_service_1.UsersService, // The service handling Users-related operations
 user_dto_1.GetUserDto, // DTO for retrieving Users
@@ -1437,7 +1448,7 @@ exports.UsersController = UsersController;
 
 
 /***/ }),
-/* 35 */
+/* 36 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -1457,11 +1468,12 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.createController = createController;
 const common_1 = __webpack_require__(1);
 const swagger_1 = __webpack_require__(4);
-const pluralize_1 = __webpack_require__(36);
-const base_controller_1 = __webpack_require__(37);
-const current_user_decorator_1 = __webpack_require__(56);
-const override_decorator_1 = __webpack_require__(58);
-const base_service_1 = __webpack_require__(46);
+const pluralize_1 = __webpack_require__(37);
+const base_controller_1 = __webpack_require__(38);
+const current_user_decorator_1 = __webpack_require__(57);
+const override_decorator_1 = __webpack_require__(59);
+const generalresponse_dto_1 = __webpack_require__(61);
+const base_service_1 = __webpack_require__(47);
 function createController(entityName, ServiceClass, getDtoClass, createDtoClass, updateDtoClass) {
     var _a, _b, _c;
     let DynamicController = class DynamicController extends base_controller_1.BaseController {
@@ -1477,7 +1489,27 @@ function createController(entityName, ServiceClass, getDtoClass, createDtoClass,
     };
     __decorate([
         (0, override_decorator_1.Override)(),
-        (0, swagger_1.ApiBody)({ type: createDtoClass, description: `${(0, pluralize_1.singular)(entityName)} creation data` }),
+        (0, swagger_1.ApiOperation)({
+            summary: `Create a new ${(0, pluralize_1.singular)(entityName)}`,
+            description: `Creates a new ${(0, pluralize_1.singular)(entityName)} record in the database with the provided data.`
+        }),
+        (0, swagger_1.ApiBody)({
+            type: createDtoClass,
+            description: `${(0, pluralize_1.singular)(entityName)} creation data`,
+            required: true
+        }),
+        (0, swagger_1.ApiResponse)({
+            status: common_1.HttpStatus.CREATED,
+            description: `The ${(0, pluralize_1.singular)(entityName)} has been successfully created.`,
+            type: getDtoClass
+        }),
+        (0, swagger_1.ApiResponse)({ status: common_1.HttpStatus.BAD_REQUEST, description: 'Invalid input data.', type: generalresponse_dto_1.GeneralResponseDto }),
+        (0, swagger_1.ApiResponse)({ status: common_1.HttpStatus.UNPROCESSABLE_ENTITY, description: 'Unprocessable entity.', type: generalresponse_dto_1.GeneralResponseDto }),
+        (0, swagger_1.ApiResponse)({ status: common_1.HttpStatus.UNAUTHORIZED, description: 'Unauthorized.', type: generalresponse_dto_1.GeneralResponseDto }),
+        (0, swagger_1.ApiResponse)({ status: common_1.HttpStatus.CONFLICT, description: `${(0, pluralize_1.singular)(entityName)} already exists.`, type: generalresponse_dto_1.GeneralResponseDto }),
+        (0, swagger_1.ApiResponse)({ status: common_1.HttpStatus.INTERNAL_SERVER_ERROR, description: 'Internal server error.', type: generalresponse_dto_1.GeneralResponseDto }),
+        (0, swagger_1.ApiResponse)({ status: common_1.HttpStatus.NOT_FOUND, description: 'Related entity not found.', type: generalresponse_dto_1.GeneralResponseDto }),
+        (0, swagger_1.ApiResponse)({ status: common_1.HttpStatus.FORBIDDEN, description: 'Forbidden.', type: generalresponse_dto_1.GeneralResponseDto }),
         __param(0, (0, common_1.Body)()),
         __param(1, (0, current_user_decorator_1.CurrentUser)('sub')),
         __metadata("design:type", Function),
@@ -1486,8 +1518,32 @@ function createController(entityName, ServiceClass, getDtoClass, createDtoClass,
     ], DynamicController.prototype, "create", null);
     __decorate([
         (0, override_decorator_1.Override)(),
-        (0, swagger_1.ApiParam)({ name: 'id', description: `${(0, pluralize_1.singular)(entityName)} ID` }),
-        (0, swagger_1.ApiBody)({ type: updateDtoClass, description: `${(0, pluralize_1.singular)(entityName)} update data` }),
+        (0, swagger_1.ApiOperation)({
+            summary: `Update an existing ${(0, pluralize_1.singular)(entityName)}`,
+            description: `Updates an existing ${(0, pluralize_1.singular)(entityName)} record in the database with the provided data.`
+        }),
+        (0, swagger_1.ApiParam)({
+            name: 'id',
+            description: `The unique identifier of the ${(0, pluralize_1.singular)(entityName)} to update`,
+            required: true
+        }),
+        (0, swagger_1.ApiBody)({
+            type: updateDtoClass,
+            description: `${(0, pluralize_1.singular)(entityName)} update data`,
+            required: true
+        }),
+        (0, swagger_1.ApiResponse)({
+            status: common_1.HttpStatus.OK,
+            description: `The ${(0, pluralize_1.singular)(entityName)} has been successfully updated.`,
+            type: getDtoClass
+        }),
+        (0, swagger_1.ApiResponse)({ status: common_1.HttpStatus.BAD_REQUEST, description: 'Invalid input data.', type: generalresponse_dto_1.GeneralResponseDto }),
+        (0, swagger_1.ApiResponse)({ status: common_1.HttpStatus.UNPROCESSABLE_ENTITY, description: 'Unprocessable entity.', type: generalresponse_dto_1.GeneralResponseDto }),
+        (0, swagger_1.ApiResponse)({ status: common_1.HttpStatus.UNAUTHORIZED, description: 'Unauthorized.', type: generalresponse_dto_1.GeneralResponseDto }),
+        (0, swagger_1.ApiResponse)({ status: common_1.HttpStatus.NOT_FOUND, description: `${(0, pluralize_1.singular)(entityName)} not found.`, type: generalresponse_dto_1.GeneralResponseDto }),
+        (0, swagger_1.ApiResponse)({ status: common_1.HttpStatus.INTERNAL_SERVER_ERROR, description: 'Internal server error.', type: generalresponse_dto_1.GeneralResponseDto }),
+        (0, swagger_1.ApiResponse)({ status: common_1.HttpStatus.FORBIDDEN, description: 'Forbidden.', type: generalresponse_dto_1.GeneralResponseDto }),
+        (0, swagger_1.ApiResponse)({ status: common_1.HttpStatus.CONFLICT, description: 'Data conflict during update.', type: generalresponse_dto_1.GeneralResponseDto }),
         __param(0, (0, common_1.Param)('id')),
         __param(1, (0, common_1.Body)()),
         __param(2, (0, current_user_decorator_1.CurrentUser)('sub')),
@@ -1506,13 +1562,13 @@ function createController(entityName, ServiceClass, getDtoClass, createDtoClass,
 
 
 /***/ }),
-/* 36 */
+/* 37 */
 /***/ ((module) => {
 
 module.exports = require("pluralize");
 
 /***/ }),
-/* 37 */
+/* 38 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -1531,15 +1587,15 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 var _a, _b, _c, _d, _e, _f, _g, _h;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.BaseController = void 0;
-const pagination_dto_1 = __webpack_require__(38);
+const pagination_dto_1 = __webpack_require__(39);
 const common_1 = __webpack_require__(1);
 const swagger_1 = __webpack_require__(4);
-const class_transformer_1 = __webpack_require__(39);
-const authorize_decorator_1 = __webpack_require__(41);
-const current_user_decorator_1 = __webpack_require__(56);
-const action_enum_1 = __webpack_require__(25);
-const create_permissions_factory_1 = __webpack_require__(57);
-const utility_helper_1 = __webpack_require__(49);
+const class_transformer_1 = __webpack_require__(40);
+const authorize_decorator_1 = __webpack_require__(42);
+const current_user_decorator_1 = __webpack_require__(57);
+const action_enum_1 = __webpack_require__(26);
+const create_permissions_factory_1 = __webpack_require__(58);
+const utility_helper_1 = __webpack_require__(50);
 class BaseController {
     constructor(baseService, getDtoClass, entityName, entityNameOrPermissions) {
         this.baseService = baseService;
@@ -1579,7 +1635,14 @@ class BaseController {
         return (0, class_transformer_1.plainToInstance)(this.getDtoClass, updatedEntity);
     }
     async findAllAdvanced(paginationDto) {
-        return await this.baseService.findAllComplex(paginationDto);
+        const entityResult = await this.baseService.findAllComplex(paginationDto);
+        // Transform using class-transformer
+        const dtoResult = {
+            data: (0, class_transformer_1.plainToInstance)(this.getDtoClass, entityResult.data),
+            totalCount: entityResult.totalCount,
+            meta: entityResult.meta
+        };
+        return dtoResult;
     }
     async findOne(fieldsString, relations, select) {
         // Create options object for the service
@@ -1657,14 +1720,6 @@ BaseController.permissionsMap = {};
 __decorate([
     (0, common_1.Post)(),
     (0, authorize_decorator_1.Authorize)({ endpointType: action_enum_1.Action.CREATE }),
-    (0, swagger_1.ApiOperation)({ summary: 'Create an entity' }),
-    (0, swagger_1.ApiResponse)({ status: common_1.HttpStatus.BAD_REQUEST, description: 'Invalid input data.' }),
-    (0, swagger_1.ApiResponse)({ status: common_1.HttpStatus.UNAUTHORIZED, description: 'Unauthorized.' }),
-    (0, swagger_1.ApiResponse)({ status: common_1.HttpStatus.CONFLICT, description: 'Entity already exists.' }),
-    (0, swagger_1.ApiResponse)({ status: common_1.HttpStatus.INTERNAL_SERVER_ERROR, description: 'Internal server error.' }),
-    (0, swagger_1.ApiResponse)({ status: common_1.HttpStatus.NOT_FOUND, description: 'Entity not found.' }),
-    (0, swagger_1.ApiResponse)({ status: common_1.HttpStatus.FORBIDDEN, description: 'Forbidden.' }),
-    (0, swagger_1.ApiResponse)({ status: common_1.HttpStatus.CREATED, description: 'The entity has been successfully created.' }),
     __param(0, (0, common_1.Body)()),
     __param(1, (0, current_user_decorator_1.CurrentUser)('sub')),
     __metadata("design:type", Function),
@@ -1674,13 +1729,6 @@ __decorate([
 __decorate([
     (0, common_1.Put)(':id'),
     (0, authorize_decorator_1.Authorize)({ endpointType: action_enum_1.Action.UPDATE }),
-    (0, swagger_1.ApiOperation)({ summary: 'Update an entity' }),
-    (0, swagger_1.ApiResponse)({ status: common_1.HttpStatus.OK, description: 'The entity has been successfully updated.' }),
-    (0, swagger_1.ApiResponse)({ status: common_1.HttpStatus.BAD_REQUEST, description: 'Invalid input data.' }),
-    (0, swagger_1.ApiResponse)({ status: common_1.HttpStatus.UNAUTHORIZED, description: 'Unauthorized.' }),
-    (0, swagger_1.ApiResponse)({ status: common_1.HttpStatus.NOT_FOUND, description: 'Entity not found.' }),
-    (0, swagger_1.ApiResponse)({ status: common_1.HttpStatus.INTERNAL_SERVER_ERROR, description: 'Internal server error.' }),
-    (0, swagger_1.ApiResponse)({ status: common_1.HttpStatus.FORBIDDEN, description: 'Forbidden.' }),
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Body)()),
     __param(2, (0, current_user_decorator_1.CurrentUser)('sub')),
@@ -1715,12 +1763,20 @@ __decorate([
         - Not in array: \`?filter={"status":{"nin":["deleted","archived"]}}\`
         - Is null: \`?filter={"deletedAt":{"isNull":true}}\`
         
+        ## Relational Filtering
+        Filter by related entity fields: \`?filter={"category.name":"Electronics"}\`
+        
+        ## Field Selection
+        Select specific fields: \`?select=["id","name","email"]\`
+        Select fields from relations: \`?select=["id","name","user.id","user.email","category.name"]\`
+        
         ## Combining Filters
         You can combine multiple filters: \`?filter={"status":"active","age":{"gte":21}}\`
         
         ## Sorting
         Sort by field: \`?sort={"createdAt":"DESC"}\`
         Multiple fields: \`?sort={"status":"ASC","createdAt":"DESC"}\`
+        Sort by relation field: \`?sort={"user.name":"ASC"}\`
         
         ## Pagination
         Page size: \`?take=10\`
@@ -1728,12 +1784,7 @@ __decorate([
         
         ## Relations
         Include related entities: \`?relations=["user","category"]\`
-        
-        ## Field Selection
-        Select specific fields: \`?select=["id","name","email"]\`
-        
-        ## User Filtering
-        Filter by user: \`?userId=123e4567-e89b-12d3-a456-426614174000\`
+        Include nested relations: \`?relations={"user":true,"category":{"subcategories":true}}\`
         `,
     }),
     (0, swagger_1.ApiQuery)({
@@ -1938,7 +1989,7 @@ __decorate([
 
 
 /***/ }),
-/* 38 */
+/* 39 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -1956,9 +2007,9 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.PaginationDto = void 0;
 const common_1 = __webpack_require__(1);
 const swagger_1 = __webpack_require__(4);
-const class_transformer_1 = __webpack_require__(39);
-const class_validator_1 = __webpack_require__(40);
-const typeorm_1 = __webpack_require__(16);
+const class_transformer_1 = __webpack_require__(40);
+const class_validator_1 = __webpack_require__(41);
+const typeorm_1 = __webpack_require__(17);
 /**
  * Data Transfer Object for pagination, filtering, sorting, and relation loading in API requests.
  *
@@ -2197,32 +2248,32 @@ __decorate([
 
 
 /***/ }),
-/* 39 */
+/* 40 */
 /***/ ((module) => {
 
 module.exports = require("class-transformer");
 
 /***/ }),
-/* 40 */
+/* 41 */
 /***/ ((module) => {
 
 module.exports = require("class-validator");
 
 /***/ }),
-/* 41 */
+/* 42 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.PERMISSION_ENDPOINT_TYPE = exports.PERMISSIONS_FUNCTION_KEY = void 0;
 exports.Authorize = Authorize;
-const jwt_auth_guard_1 = __webpack_require__(42);
-const permissions_guard_1 = __webpack_require__(44);
-const roles_guard_1 = __webpack_require__(54);
+const jwt_auth_guard_1 = __webpack_require__(43);
+const permissions_guard_1 = __webpack_require__(45);
+const roles_guard_1 = __webpack_require__(55);
 const common_1 = __webpack_require__(1);
 const swagger_1 = __webpack_require__(4);
-const permissions_decorator_1 = __webpack_require__(52);
-const roles_decorator_1 = __webpack_require__(55);
+const permissions_decorator_1 = __webpack_require__(53);
+const roles_decorator_1 = __webpack_require__(56);
 exports.PERMISSIONS_FUNCTION_KEY = 'permissions_function';
 exports.PERMISSION_ENDPOINT_TYPE = 'permission_endpoint_type';
 function Authorize(options) {
@@ -2235,7 +2286,7 @@ function Authorize(options) {
 
 
 /***/ }),
-/* 42 */
+/* 43 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -2249,7 +2300,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.JwtAuthGuard = void 0;
 // jwt-auth.guard.ts
 const common_1 = __webpack_require__(1);
-const passport_1 = __webpack_require__(43);
+const passport_1 = __webpack_require__(44);
 let JwtAuthGuard = class JwtAuthGuard extends (0, passport_1.AuthGuard)('jwt') {
 };
 exports.JwtAuthGuard = JwtAuthGuard;
@@ -2259,13 +2310,13 @@ exports.JwtAuthGuard = JwtAuthGuard = __decorate([
 
 
 /***/ }),
-/* 43 */
+/* 44 */
 /***/ ((module) => {
 
 module.exports = require("@nestjs/passport");
 
 /***/ }),
-/* 44 */
+/* 45 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -2282,14 +2333,14 @@ var PermissionsGuard_1;
 var _a, _b;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.PermissionsGuard = void 0;
-const users_service_1 = __webpack_require__(45);
+const users_service_1 = __webpack_require__(46);
 const common_1 = __webpack_require__(1);
 const core_1 = __webpack_require__(3);
-const base_controller_1 = __webpack_require__(37);
-const authorize_decorator_1 = __webpack_require__(41);
-const permissions_decorator_1 = __webpack_require__(52);
-const action_enum_1 = __webpack_require__(25);
-const role_enum_1 = __webpack_require__(53);
+const base_controller_1 = __webpack_require__(38);
+const authorize_decorator_1 = __webpack_require__(42);
+const permissions_decorator_1 = __webpack_require__(53);
+const action_enum_1 = __webpack_require__(26);
+const role_enum_1 = __webpack_require__(54);
 let PermissionsGuard = PermissionsGuard_1 = class PermissionsGuard {
     constructor(reflector, usersService) {
         this.reflector = reflector;
@@ -2413,7 +2464,7 @@ exports.PermissionsGuard = PermissionsGuard = PermissionsGuard_1 = __decorate([
 
 
 /***/ }),
-/* 45 */
+/* 46 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -2465,12 +2516,12 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 var _a;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.UsersService = void 0;
-const base_service_1 = __webpack_require__(46);
+const base_service_1 = __webpack_require__(47);
 const common_1 = __webpack_require__(1);
-const typeorm_1 = __webpack_require__(12);
-const bcrypt = __importStar(__webpack_require__(51));
-const typeorm_2 = __webpack_require__(16);
-const user_entity_1 = __webpack_require__(13);
+const typeorm_1 = __webpack_require__(13);
+const bcrypt = __importStar(__webpack_require__(52));
+const typeorm_2 = __webpack_require__(17);
+const user_entity_1 = __webpack_require__(14);
 let UsersService = class UsersService extends base_service_1.BaseService {
     constructor(userRepository) {
         super(userRepository, null);
@@ -2491,7 +2542,7 @@ exports.UsersService = UsersService = __decorate([
 
 
 /***/ }),
-/* 46 */
+/* 47 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -2511,12 +2562,12 @@ var BaseService_1;
 var _a, _b;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.BaseService = void 0;
-const data_source_1 = __importDefault(__webpack_require__(47));
+const data_source_1 = __importDefault(__webpack_require__(48));
 const common_1 = __webpack_require__(1);
-const typeorm_1 = __webpack_require__(16);
-const pagination_dto_1 = __webpack_require__(38);
-const utility_helper_1 = __webpack_require__(49);
-const transaction_service_1 = __webpack_require__(50);
+const typeorm_1 = __webpack_require__(17);
+const pagination_dto_1 = __webpack_require__(39);
+const utility_helper_1 = __webpack_require__(50);
+const transaction_service_1 = __webpack_require__(51);
 let BaseService = BaseService_1 = class BaseService {
     constructor(repository, usersService) {
         this.repository = repository;
@@ -3275,18 +3326,18 @@ exports.BaseService = BaseService = BaseService_1 = __decorate([
 
 
 /***/ }),
-/* 47 */
+/* 48 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.dataSourceOptions = void 0;
-const profile_entity_1 = __webpack_require__(30);
-const address_entity_1 = __webpack_require__(27);
-const document_type_entity_1 = __webpack_require__(17);
+const profile_entity_1 = __webpack_require__(31);
+const address_entity_1 = __webpack_require__(28);
+const document_type_entity_1 = __webpack_require__(18);
 const config_1 = __webpack_require__(2);
-const dotenv_1 = __webpack_require__(48);
-const typeorm_1 = __webpack_require__(16);
+const dotenv_1 = __webpack_require__(49);
+const typeorm_1 = __webpack_require__(17);
 (0, dotenv_1.config)();
 const configService = new config_1.ConfigService();
 const isProduction = configService.get('NODE_ENV') === 'production';
@@ -3310,13 +3361,13 @@ exports["default"] = new typeorm_1.DataSource(exports.dataSourceOptions);
 
 
 /***/ }),
-/* 48 */
+/* 49 */
 /***/ ((module) => {
 
 module.exports = require("dotenv");
 
 /***/ }),
-/* 49 */
+/* 50 */
 /***/ ((__unused_webpack_module, exports) => {
 
 
@@ -3432,7 +3483,7 @@ exports.UtilityHelper = UtilityHelper;
 
 
 /***/ }),
-/* 50 */
+/* 51 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -3449,7 +3500,7 @@ var _a;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.TransactionService = void 0;
 const common_1 = __webpack_require__(1);
-const typeorm_1 = __webpack_require__(16);
+const typeorm_1 = __webpack_require__(17);
 let TransactionService = class TransactionService {
     constructor(dataSource) {
         this.dataSource = dataSource;
@@ -3480,13 +3531,13 @@ exports.TransactionService = TransactionService = __decorate([
 
 
 /***/ }),
-/* 51 */
+/* 52 */
 /***/ ((module) => {
 
 module.exports = require("bcryptjs");
 
 /***/ }),
-/* 52 */
+/* 53 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
@@ -3520,7 +3571,7 @@ exports.Permissions = Permissions;
 
 
 /***/ }),
-/* 53 */
+/* 54 */
 /***/ ((__unused_webpack_module, exports) => {
 
 
@@ -3535,7 +3586,7 @@ var Role;
 
 
 /***/ }),
-/* 54 */
+/* 55 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -3552,11 +3603,11 @@ var RolesGuard_1;
 var _a, _b;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.RolesGuard = void 0;
-const users_service_1 = __webpack_require__(45);
+const users_service_1 = __webpack_require__(46);
 const common_1 = __webpack_require__(1);
 const core_1 = __webpack_require__(3);
-const roles_decorator_1 = __webpack_require__(55);
-const role_enum_1 = __webpack_require__(53);
+const roles_decorator_1 = __webpack_require__(56);
+const role_enum_1 = __webpack_require__(54);
 let RolesGuard = RolesGuard_1 = class RolesGuard {
     constructor(reflector, usersService) {
         this.reflector = reflector;
@@ -3609,7 +3660,7 @@ exports.RolesGuard = RolesGuard = RolesGuard_1 = __decorate([
 
 
 /***/ }),
-/* 55 */
+/* 56 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
@@ -3647,7 +3698,7 @@ exports.Roles = Roles;
 
 
 /***/ }),
-/* 56 */
+/* 57 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
@@ -3691,13 +3742,13 @@ exports.CurrentUser = (0, common_1.createParamDecorator)((data, context) => {
 
 
 /***/ }),
-/* 57 */
+/* 58 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.createPermissions = void 0;
-const action_enum_1 = __webpack_require__(25);
+const action_enum_1 = __webpack_require__(26);
 /**
  * Creates standard CRUD permission objects for a given subject
  * @param subject The entity/resource to create permissions for
@@ -3716,13 +3767,13 @@ exports.createPermissions = createPermissions;
 
 
 /***/ }),
-/* 58 */
+/* 59 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Override = Override;
-__webpack_require__(59);
+__webpack_require__(60);
 /**
  * A decorator function that copies metadata from the overridden method
  * in the parent class to the overriding method in the child class.
@@ -3767,13 +3818,86 @@ function Override() {
 
 
 /***/ }),
-/* 59 */
+/* 60 */
 /***/ ((module) => {
 
 module.exports = require("reflect-metadata");
 
 /***/ }),
-/* 60 */
+/* 61 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.GeneralResponseDto = void 0;
+const swagger_1 = __webpack_require__(4);
+class GeneralResponseDto {
+}
+exports.GeneralResponseDto = GeneralResponseDto;
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'HTTP status code of the response',
+        example: 404,
+        type: Number,
+    }),
+    __metadata("design:type", Number)
+], GeneralResponseDto.prototype, "statusCode", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Timestamp when the response was generated',
+        example: '2025-04-07T02:04:20.545Z',
+        type: String,
+    }),
+    __metadata("design:type", String)
+], GeneralResponseDto.prototype, "timestamp", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Unique identifier for tracking the request',
+        example: 'dfed434d-9516-4ae3-975e-175df199dd01',
+        type: String,
+    }),
+    __metadata("design:type", String)
+], GeneralResponseDto.prototype, "traceId", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Request path that triggered this response',
+        example: '/api/modules',
+        type: String,
+    }),
+    __metadata("design:type", String)
+], GeneralResponseDto.prototype, "path", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Type of exception or error that occurred',
+        example: 'NotFoundException',
+        type: String,
+    }),
+    __metadata("design:type", String)
+], GeneralResponseDto.prototype, "detail", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Error message or messages describing the issue',
+        example: 'Cannot GET /api/modules',
+        oneOf: [
+            { type: 'string' },
+            { type: 'array', items: { type: 'string' } }
+        ]
+    }),
+    __metadata("design:type", Object)
+], GeneralResponseDto.prototype, "message", void 0);
+
+
+/***/ }),
+/* 62 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -3789,11 +3913,11 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var _a, _b, _c;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.GetUserDto = exports.UpdateUserDto = exports.UserDto = void 0;
-const create_get_dto_factory_1 = __webpack_require__(61);
+const create_get_dto_factory_1 = __webpack_require__(63);
 const swagger_1 = __webpack_require__(4);
-const class_transformer_1 = __webpack_require__(39);
-const class_validator_1 = __webpack_require__(40);
-const profile_dto_1 = __webpack_require__(62);
+const class_transformer_1 = __webpack_require__(40);
+const class_validator_1 = __webpack_require__(41);
+const profile_dto_1 = __webpack_require__(64);
 class UserDto {
 }
 exports.UserDto = UserDto;
@@ -3915,7 +4039,7 @@ exports.GetUserDto = GetUserDto;
 
 
 /***/ }),
-/* 61 */
+/* 63 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -3969,10 +4093,11 @@ const swagger_1 = __webpack_require__(4);
  * const GetUserDto = createGetDto(UserDto);
  * ```
  */
-function createGetDto(dto) {
+function createGetDto(dto, entity = "entity") {
     var _a, _b, _c;
-    class GetDto {
+    class GetDto extends dto {
         constructor(partial) {
+            super();
             Object.assign(this, partial);
         }
     }
@@ -3985,7 +4110,7 @@ function createGetDto(dto) {
     ], GetDto.prototype, "id", void 0);
     __decorate([
         (0, swagger_1.ApiProperty)({
-            description: 'Date when the entity was created',
+            description: `Date when this ${entity} was created`,
             example: '2023-01-01T00:00:00Z',
             type: Date
         }),
@@ -3993,7 +4118,7 @@ function createGetDto(dto) {
     ], GetDto.prototype, "createdAt", void 0);
     __decorate([
         (0, swagger_1.ApiProperty)({
-            description: 'Date when the entity was last updated',
+            description: `Date when this ${entity} was last updated`,
             example: '2023-01-02T00:00:00Z',
             type: Date,
             nullable: true
@@ -4002,7 +4127,7 @@ function createGetDto(dto) {
     ], GetDto.prototype, "updatedAt", void 0);
     __decorate([
         (0, swagger_1.ApiProperty)({
-            description: 'ID of the user who created this entity',
+            description: `ID of the user who created this ${entity}}`,
             example: '123e4567-e89b-12d3-a456-426614174000',
             nullable: true
         }),
@@ -4010,7 +4135,7 @@ function createGetDto(dto) {
     ], GetDto.prototype, "createdBy", void 0);
     __decorate([
         (0, swagger_1.ApiProperty)({
-            description: 'ID of the user who last updated this entity',
+            description: `ID of the user who last updated this ${entity}`,
             example: '123e4567-e89b-12d3-a456-426614174000',
             nullable: true
         }),
@@ -4018,7 +4143,7 @@ function createGetDto(dto) {
     ], GetDto.prototype, "updatedBy", void 0);
     __decorate([
         (0, swagger_1.ApiProperty)({
-            description: 'Whether this entity is marked as deleted',
+            description: `Whether this ${entity} is marked as deleted`,
             example: false,
             default: false
         }),
@@ -4026,7 +4151,7 @@ function createGetDto(dto) {
     ], GetDto.prototype, "isDeleted", void 0);
     __decorate([
         (0, swagger_1.ApiProperty)({
-            description: 'ID of the user who deleted this entity',
+            description: `ID of the user who deleted this ${entity}`,
             example: '123e4567-e89b-12d3-a456-426614174000',
             nullable: true
         }),
@@ -4034,7 +4159,7 @@ function createGetDto(dto) {
     ], GetDto.prototype, "deletedBy", void 0);
     __decorate([
         (0, swagger_1.ApiProperty)({
-            description: 'Date when the entity was deleted',
+            description: `Date when this ${entity} was deleted`,
             example: '2023-01-03T00:00:00Z',
             type: Date,
             nullable: true
@@ -4058,7 +4183,7 @@ function createGetDto(dto) {
 
 
 /***/ }),
-/* 62 */
+/* 64 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -4074,11 +4199,11 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var _a, _b;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.GetProfileDto = exports.UpdateProfileDto = exports.ProfileDto = void 0;
-const create_get_dto_factory_1 = __webpack_require__(61);
+const create_get_dto_factory_1 = __webpack_require__(63);
 const swagger_1 = __webpack_require__(4);
-const class_transformer_1 = __webpack_require__(39);
-const class_validator_1 = __webpack_require__(40);
-const address_dto_1 = __webpack_require__(63);
+const class_transformer_1 = __webpack_require__(40);
+const class_validator_1 = __webpack_require__(41);
+const address_dto_1 = __webpack_require__(65);
 class ProfileDto {
 }
 exports.ProfileDto = ProfileDto;
@@ -4177,7 +4302,7 @@ exports.GetProfileDto = GetProfileDto;
 
 
 /***/ }),
-/* 63 */
+/* 65 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -4192,9 +4317,9 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.GetAddressDto = exports.UpdateAddressDto = exports.AddressDto = void 0;
-const create_get_dto_factory_1 = __webpack_require__(61);
+const create_get_dto_factory_1 = __webpack_require__(63);
 const swagger_1 = __webpack_require__(4);
-const class_validator_1 = __webpack_require__(40);
+const class_validator_1 = __webpack_require__(41);
 class AddressDto {
 }
 exports.AddressDto = AddressDto;
@@ -4267,7 +4392,7 @@ exports.GetAddressDto = GetAddressDto;
 
 
 /***/ }),
-/* 64 */
+/* 66 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -4304,7 +4429,7 @@ exports.CommonService = CommonService = __decorate([
 
 
 /***/ }),
-/* 65 */
+/* 67 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -4318,7 +4443,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ConfigModule = void 0;
 const common_1 = __webpack_require__(1);
 const config_1 = __webpack_require__(2);
-const config_schema_1 = __webpack_require__(66);
+const config_schema_1 = __webpack_require__(68);
 let ConfigModule = class ConfigModule {
 };
 exports.ConfigModule = ConfigModule;
@@ -4337,7 +4462,7 @@ exports.ConfigModule = ConfigModule = __decorate([
 
 
 /***/ }),
-/* 66 */
+/* 68 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -4376,7 +4501,7 @@ var __importStar = (this && this.__importStar) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.configValidationSchema = void 0;
-const Joi = __importStar(__webpack_require__(67));
+const Joi = __importStar(__webpack_require__(69));
 exports.configValidationSchema = Joi.object({
     PORT: Joi.number().default(3000),
     NODE_ENV: Joi.string().default('development'),
@@ -4408,13 +4533,13 @@ exports.configValidationSchema = Joi.object({
 
 
 /***/ }),
-/* 67 */
+/* 69 */
 /***/ ((module) => {
 
 module.exports = require("joi");
 
 /***/ }),
-/* 68 */
+/* 70 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -4427,9 +4552,9 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.DatabaseModule = void 0;
 const common_1 = __webpack_require__(1);
-const typeorm_1 = __webpack_require__(12);
+const typeorm_1 = __webpack_require__(13);
 const config_1 = __webpack_require__(2);
-const data_source_1 = __webpack_require__(47);
+const data_source_1 = __webpack_require__(48);
 let DatabaseModule = class DatabaseModule {
 };
 exports.DatabaseModule = DatabaseModule;
@@ -4447,7 +4572,7 @@ exports.DatabaseModule = DatabaseModule = __decorate([
 
 
 /***/ }),
-/* 69 */
+/* 71 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -4462,13 +4587,13 @@ exports.AccountManagementModule = void 0;
 const common_1 = __webpack_require__(1);
 const config_1 = __webpack_require__(2);
 const core_1 = __webpack_require__(3);
-const employee_management_module_1 = __webpack_require__(70);
-const roles_module_1 = __webpack_require__(78);
-const auth_module_1 = __webpack_require__(87);
-const profiles_module_1 = __webpack_require__(105);
-const user_seeder_service_1 = __webpack_require__(108);
-const sessions_module_1 = __webpack_require__(89);
-const users_module_1 = __webpack_require__(11);
+const employee_management_module_1 = __webpack_require__(72);
+const roles_module_1 = __webpack_require__(80);
+const auth_module_1 = __webpack_require__(89);
+const profiles_module_1 = __webpack_require__(107);
+const user_seeder_service_1 = __webpack_require__(110);
+const sessions_module_1 = __webpack_require__(91);
+const users_module_1 = __webpack_require__(12);
 let AccountManagementModule = class AccountManagementModule {
 };
 exports.AccountManagementModule = AccountManagementModule;
@@ -4510,7 +4635,7 @@ exports.AccountManagementModule = AccountManagementModule = __decorate([
 
 
 /***/ }),
-/* 70 */
+/* 72 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -4524,13 +4649,13 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.EmployeeManagementModule = void 0;
 const common_1 = __webpack_require__(1);
 const core_1 = __webpack_require__(3);
-const typeorm_1 = __webpack_require__(12);
-const users_module_1 = __webpack_require__(11);
-const employees_controller_1 = __webpack_require__(71);
-const employees_service_1 = __webpack_require__(75);
-const employee_entity_1 = __webpack_require__(18);
-const permissions_module_1 = __webpack_require__(77);
-const roles_module_1 = __webpack_require__(78);
+const typeorm_1 = __webpack_require__(13);
+const users_module_1 = __webpack_require__(12);
+const employees_controller_1 = __webpack_require__(73);
+const employees_service_1 = __webpack_require__(77);
+const employee_entity_1 = __webpack_require__(19);
+const permissions_module_1 = __webpack_require__(79);
+const roles_module_1 = __webpack_require__(80);
 let EmployeeManagementModule = class EmployeeManagementModule {
 };
 exports.EmployeeManagementModule = EmployeeManagementModule;
@@ -4572,15 +4697,15 @@ exports.EmployeeManagementModule = EmployeeManagementModule = __decorate([
 
 
 /***/ }),
-/* 71 */
+/* 73 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.EmployeesController = void 0;
-const create_controller_factory_1 = __webpack_require__(35);
-const employee_dto_1 = __webpack_require__(72);
-const employees_service_1 = __webpack_require__(75);
+const create_controller_factory_1 = __webpack_require__(36);
+const employee_dto_1 = __webpack_require__(74);
+const employees_service_1 = __webpack_require__(77);
 class EmployeesController extends (0, create_controller_factory_1.createController)('Employees', // Entity name for Swagger documentation
 employees_service_1.EmployeesService, // The service handling Employee-related operations
 employee_dto_1.GetEmployeeDto, // DTO for retrieving Employees
@@ -4591,7 +4716,7 @@ exports.EmployeesController = EmployeesController;
 
 
 /***/ }),
-/* 72 */
+/* 74 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -4604,28 +4729,27 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
-var _a, _b, _c, _d, _e;
+var _a, _b, _c, _d;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.GetEmployeeDto = exports.UpdateEmployeeDto = exports.EmployeeDto = void 0;
-const base_dto_1 = __webpack_require__(73);
-const reference_dto_1 = __webpack_require__(74);
-const employment_condition_enum_1 = __webpack_require__(19);
-const employment_status_enum_1 = __webpack_require__(20);
-const employment_type_enum_1 = __webpack_require__(21);
-const create_get_dto_factory_1 = __webpack_require__(61);
-const user_dto_1 = __webpack_require__(60);
+const base_dto_1 = __webpack_require__(75);
+const reference_dto_1 = __webpack_require__(76);
+const employment_condition_enum_1 = __webpack_require__(20);
+const employment_status_enum_1 = __webpack_require__(21);
+const employment_type_enum_1 = __webpack_require__(22);
+const create_get_dto_factory_1 = __webpack_require__(63);
 const swagger_1 = __webpack_require__(4);
-const class_transformer_1 = __webpack_require__(39);
-const class_validator_1 = __webpack_require__(40);
+const class_transformer_1 = __webpack_require__(40);
+const class_validator_1 = __webpack_require__(41);
 class EmployeeDto extends (0, swagger_1.PartialType)(base_dto_1.BaseDto) {
 }
 exports.EmployeeDto = EmployeeDto;
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Account information', required: true }),
-    (0, class_validator_1.ValidateNested)(),
-    (0, class_transformer_1.Type)(() => user_dto_1.UserDto),
-    __metadata("design:type", typeof (_a = typeof user_dto_1.UserDto !== "undefined" && user_dto_1.UserDto) === "function" ? _a : Object)
-], EmployeeDto.prototype, "user", void 0);
+    (0, swagger_1.ApiProperty)({ description: 'User ID associated with the employee' }),
+    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsUUID)(),
+    __metadata("design:type", String)
+], EmployeeDto.prototype, "userId", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({ description: 'Unique employee number' }),
     (0, class_validator_1.IsNotEmpty)(),
@@ -4640,7 +4764,7 @@ __decorate([
     }),
     (0, class_validator_1.IsEnum)(employment_status_enum_1.EmploymentStatus),
     (0, class_validator_1.IsOptional)(),
-    __metadata("design:type", typeof (_b = typeof employment_status_enum_1.EmploymentStatus !== "undefined" && employment_status_enum_1.EmploymentStatus) === "function" ? _b : Object)
+    __metadata("design:type", typeof (_a = typeof employment_status_enum_1.EmploymentStatus !== "undefined" && employment_status_enum_1.EmploymentStatus) === "function" ? _a : Object)
 ], EmployeeDto.prototype, "employmentStatus", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({
@@ -4650,7 +4774,7 @@ __decorate([
     }),
     (0, class_validator_1.IsEnum)(employment_condition_enum_1.EmploymentCondition),
     (0, class_validator_1.IsOptional)(),
-    __metadata("design:type", typeof (_c = typeof employment_condition_enum_1.EmploymentCondition !== "undefined" && employment_condition_enum_1.EmploymentCondition) === "function" ? _c : Object)
+    __metadata("design:type", typeof (_b = typeof employment_condition_enum_1.EmploymentCondition !== "undefined" && employment_condition_enum_1.EmploymentCondition) === "function" ? _b : Object)
 ], EmployeeDto.prototype, "employmentCondition", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({
@@ -4660,7 +4784,7 @@ __decorate([
     }),
     (0, class_validator_1.IsEnum)(employment_type_enum_1.EmploymentType),
     (0, class_validator_1.IsOptional)(),
-    __metadata("design:type", typeof (_d = typeof employment_type_enum_1.EmploymentType !== "undefined" && employment_type_enum_1.EmploymentType) === "function" ? _d : Object)
+    __metadata("design:type", typeof (_c = typeof employment_type_enum_1.EmploymentType !== "undefined" && employment_type_enum_1.EmploymentType) === "function" ? _c : Object)
 ], EmployeeDto.prototype, "employmentType", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({
@@ -4671,7 +4795,7 @@ __decorate([
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsDate)(),
     (0, class_transformer_1.Type)(() => Date),
-    __metadata("design:type", typeof (_e = typeof Date !== "undefined" && Date) === "function" ? _e : Object)
+    __metadata("design:type", typeof (_d = typeof Date !== "undefined" && Date) === "function" ? _d : Object)
 ], EmployeeDto.prototype, "commencementDate", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({
@@ -4698,13 +4822,13 @@ __decorate([
 class UpdateEmployeeDto extends (0, swagger_1.PartialType)(EmployeeDto) {
 }
 exports.UpdateEmployeeDto = UpdateEmployeeDto;
-class GetEmployeeDto extends (0, create_get_dto_factory_1.createGetDto)(EmployeeDto) {
+class GetEmployeeDto extends (0, create_get_dto_factory_1.createGetDto)(UpdateEmployeeDto, "employee") {
 }
 exports.GetEmployeeDto = GetEmployeeDto;
 
 
 /***/ }),
-/* 73 */
+/* 75 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -4720,16 +4844,18 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.BaseDto = void 0;
 const swagger_1 = __webpack_require__(4);
-const class_validator_1 = __webpack_require__(40);
+const class_validator_1 = __webpack_require__(41);
 class BaseDto {
 }
 exports.BaseDto = BaseDto;
 __decorate([
     (0, swagger_1.ApiProperty)({
-        description: 'Organization ID',
+        description: 'Organization ID - Identifies the organization that owns or scopes this resource. Used for multi-tenant access control and resource partitioning.',
         required: false,
         type: String,
-        example: '123e4567-e89b-12d3-a456-426614174000'
+        format: 'uuid',
+        example: '123e4567-e89b-12d3-a456-426614174000',
+        nullable: true
     }),
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsUUID)(),
@@ -4738,10 +4864,12 @@ __decorate([
 ], BaseDto.prototype, "organizationId", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({
-        description: 'Branch ID',
+        description: 'Branch ID - Specifies the organizational branch that owns or scopes this resource. Represents a subdivision within the parent organization.',
         required: false,
         type: String,
-        example: '123e4567-e89b-12d3-a456-426614174001'
+        format: 'uuid',
+        example: '123e4567-e89b-12d3-a456-426614174001',
+        nullable: true
     }),
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsUUID)(),
@@ -4750,10 +4878,12 @@ __decorate([
 ], BaseDto.prototype, "branchId", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({
-        description: 'Department ID',
+        description: 'Department ID - Indicates the specific department that owns or scopes this resource. Used for departmental-level access control and resource organization.',
         required: false,
         type: String,
-        example: '123e4567-e89b-12d3-a456-426614174002'
+        format: 'uuid',
+        example: '123e4567-e89b-12d3-a456-426614174002',
+        nullable: true
     }),
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsUUID)(),
@@ -4762,10 +4892,12 @@ __decorate([
 ], BaseDto.prototype, "departmentId", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({
-        description: 'User ID',
+        description: 'User ID - Identifies the specific user who owns or has primary responsibility for this resource. Used for user-level permissions and audit trails.',
         required: false,
         type: String,
-        example: '123e4567-e89b-12d3-a456-426614174003'
+        format: 'uuid',
+        example: '123e4567-e89b-12d3-a456-426614174003',
+        nullable: true
     }),
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsUUID)(),
@@ -4775,7 +4907,7 @@ __decorate([
 
 
 /***/ }),
-/* 74 */
+/* 76 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -4791,7 +4923,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ReferenceDto = void 0;
 const swagger_1 = __webpack_require__(4);
-const class_validator_1 = __webpack_require__(40);
+const class_validator_1 = __webpack_require__(41);
 class ReferenceDto {
 }
 exports.ReferenceDto = ReferenceDto;
@@ -4806,7 +4938,7 @@ __decorate([
 
 
 /***/ }),
-/* 75 */
+/* 77 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -4825,14 +4957,14 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 var _a, _b, _c;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.EmployeesService = void 0;
-const role_enum_1 = __webpack_require__(53);
-const base_service_1 = __webpack_require__(46);
-const users_service_1 = __webpack_require__(45);
+const role_enum_1 = __webpack_require__(54);
+const base_service_1 = __webpack_require__(47);
+const users_service_1 = __webpack_require__(46);
 const common_1 = __webpack_require__(1);
-const typeorm_1 = __webpack_require__(12);
-const typeorm_2 = __webpack_require__(16);
-const employee_entity_1 = __webpack_require__(18);
-const roles_service_1 = __webpack_require__(76);
+const typeorm_1 = __webpack_require__(13);
+const typeorm_2 = __webpack_require__(17);
+const employee_entity_1 = __webpack_require__(19);
+const roles_service_1 = __webpack_require__(78);
 let EmployeesService = class EmployeesService extends base_service_1.BaseService {
     constructor(employeesRepository, usersService, rolesService) {
         super(employeesRepository, usersService);
@@ -4862,7 +4994,7 @@ exports.EmployeesService = EmployeesService = __decorate([
 
 
 /***/ }),
-/* 76 */
+/* 78 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -4881,12 +5013,12 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 var _a, _b;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.RolesService = void 0;
-const base_service_1 = __webpack_require__(46);
+const base_service_1 = __webpack_require__(47);
 const common_1 = __webpack_require__(1);
-const typeorm_1 = __webpack_require__(12);
-const typeorm_2 = __webpack_require__(16);
-const users_service_1 = __webpack_require__(45);
-const role_entity_1 = __webpack_require__(22);
+const typeorm_1 = __webpack_require__(13);
+const typeorm_2 = __webpack_require__(17);
+const users_service_1 = __webpack_require__(46);
+const role_entity_1 = __webpack_require__(23);
 let RolesService = class RolesService extends base_service_1.BaseService {
     constructor(rolesRepository, usersService) {
         super(rolesRepository, usersService);
@@ -4916,7 +5048,7 @@ exports.RolesService = RolesService = __decorate([
 
 
 /***/ }),
-/* 77 */
+/* 79 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -4929,13 +5061,13 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.PermissionsModule = void 0;
 const common_1 = __webpack_require__(1);
-const typeorm_1 = __webpack_require__(12);
-const users_module_1 = __webpack_require__(11);
-const roles_module_1 = __webpack_require__(78);
-const permission_entity_1 = __webpack_require__(24);
-const permissions_controller_1 = __webpack_require__(81);
-const permissions_service_1 = __webpack_require__(83);
-const permission_seeder_service_1 = __webpack_require__(84);
+const typeorm_1 = __webpack_require__(13);
+const users_module_1 = __webpack_require__(12);
+const roles_module_1 = __webpack_require__(80);
+const permission_entity_1 = __webpack_require__(25);
+const permissions_controller_1 = __webpack_require__(83);
+const permissions_service_1 = __webpack_require__(85);
+const permission_seeder_service_1 = __webpack_require__(86);
 let PermissionsModule = class PermissionsModule {
 };
 exports.PermissionsModule = PermissionsModule;
@@ -4950,7 +5082,7 @@ exports.PermissionsModule = PermissionsModule = __decorate([
 
 
 /***/ }),
-/* 78 */
+/* 80 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -4963,11 +5095,11 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.RolesModule = void 0;
 const common_1 = __webpack_require__(1);
-const typeorm_1 = __webpack_require__(12);
-const users_module_1 = __webpack_require__(11);
-const role_entity_1 = __webpack_require__(22);
-const roles_controller_1 = __webpack_require__(79);
-const roles_service_1 = __webpack_require__(76);
+const typeorm_1 = __webpack_require__(13);
+const users_module_1 = __webpack_require__(12);
+const role_entity_1 = __webpack_require__(23);
+const roles_controller_1 = __webpack_require__(81);
+const roles_service_1 = __webpack_require__(78);
 let RolesModule = class RolesModule {
 };
 exports.RolesModule = RolesModule;
@@ -4982,7 +5114,7 @@ exports.RolesModule = RolesModule = __decorate([
 
 
 /***/ }),
-/* 79 */
+/* 81 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -5001,15 +5133,15 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 var _a, _b, _c, _d, _e;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.RolesController = void 0;
-const base_controller_1 = __webpack_require__(37);
-const authorize_decorator_1 = __webpack_require__(41);
-const current_user_decorator_1 = __webpack_require__(56);
-const override_decorator_1 = __webpack_require__(58);
+const base_controller_1 = __webpack_require__(38);
+const authorize_decorator_1 = __webpack_require__(42);
+const current_user_decorator_1 = __webpack_require__(57);
+const override_decorator_1 = __webpack_require__(59);
 const common_1 = __webpack_require__(1);
 const swagger_1 = __webpack_require__(4);
-const create_permissions_factory_1 = __webpack_require__(57);
-const role_dto_1 = __webpack_require__(80);
-const roles_service_1 = __webpack_require__(76);
+const create_permissions_factory_1 = __webpack_require__(58);
+const role_dto_1 = __webpack_require__(82);
+const roles_service_1 = __webpack_require__(78);
 // Controller permissions
 const Permissions = (0, create_permissions_factory_1.createPermissions)('roles');
 let RolesController = class RolesController extends base_controller_1.BaseController {
@@ -5065,7 +5197,7 @@ exports.RolesController = RolesController = __decorate([
 
 
 /***/ }),
-/* 80 */
+/* 82 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -5081,13 +5213,13 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var _a;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.GetRoleDto = exports.UpdateRoleDto = exports.RoleDto = void 0;
-const base_dto_1 = __webpack_require__(73);
-const reference_dto_1 = __webpack_require__(74);
-const role_scope_type_enum_1 = __webpack_require__(23);
-const create_get_dto_factory_1 = __webpack_require__(61);
+const base_dto_1 = __webpack_require__(75);
+const reference_dto_1 = __webpack_require__(76);
+const role_scope_type_enum_1 = __webpack_require__(24);
+const create_get_dto_factory_1 = __webpack_require__(63);
 const swagger_1 = __webpack_require__(4);
-const class_transformer_1 = __webpack_require__(39);
-const class_validator_1 = __webpack_require__(40);
+const class_transformer_1 = __webpack_require__(40);
+const class_validator_1 = __webpack_require__(41);
 class RoleDto extends (0, swagger_1.PartialType)(base_dto_1.BaseDto) {
     constructor() {
         super(...arguments);
@@ -5157,15 +5289,15 @@ exports.GetRoleDto = GetRoleDto;
 
 
 /***/ }),
-/* 81 */
+/* 83 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.PermissionsController = void 0;
-const create_controller_factory_1 = __webpack_require__(35);
-const permission_dto_1 = __webpack_require__(82);
-const permissions_service_1 = __webpack_require__(83);
+const create_controller_factory_1 = __webpack_require__(36);
+const permission_dto_1 = __webpack_require__(84);
+const permissions_service_1 = __webpack_require__(85);
 class PermissionsController extends (0, create_controller_factory_1.createController)('Permissions', // Entity name for Swagger documentation
 permissions_service_1.PermissionsService, // The service handling Permission-related operations
 permission_dto_1.GetPermissionDto) {
@@ -5189,7 +5321,7 @@ exports.PermissionsController = PermissionsController;
 
 
 /***/ }),
-/* 82 */
+/* 84 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -5205,8 +5337,8 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var _a;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.GetPermissionDto = exports.UpdatePermissionDto = exports.PermissionDto = void 0;
-const action_enum_1 = __webpack_require__(25);
-const create_get_dto_factory_1 = __webpack_require__(61);
+const action_enum_1 = __webpack_require__(26);
+const create_get_dto_factory_1 = __webpack_require__(63);
 const swagger_1 = __webpack_require__(4);
 class PermissionDto {
 }
@@ -5240,7 +5372,7 @@ exports.GetPermissionDto = GetPermissionDto;
 
 
 /***/ }),
-/* 83 */
+/* 85 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -5259,13 +5391,13 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 var _a, _b, _c;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.PermissionsService = void 0;
-const base_service_1 = __webpack_require__(46);
+const base_service_1 = __webpack_require__(47);
 const common_1 = __webpack_require__(1);
-const typeorm_1 = __webpack_require__(12);
-const typeorm_2 = __webpack_require__(16);
-const users_service_1 = __webpack_require__(45);
-const roles_service_1 = __webpack_require__(76);
-const permission_entity_1 = __webpack_require__(24);
+const typeorm_1 = __webpack_require__(13);
+const typeorm_2 = __webpack_require__(17);
+const users_service_1 = __webpack_require__(46);
+const roles_service_1 = __webpack_require__(78);
+const permission_entity_1 = __webpack_require__(25);
 let PermissionsService = class PermissionsService extends base_service_1.BaseService {
     constructor(permissionsRepository, usersService, rolesService) {
         super(permissionsRepository, usersService);
@@ -5289,7 +5421,7 @@ exports.PermissionsService = PermissionsService = __decorate([
 
 
 /***/ }),
-/* 84 */
+/* 86 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -5342,13 +5474,13 @@ var PermissionSeederService_1;
 var _a;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.PermissionSeederService = void 0;
-const action_enum_1 = __webpack_require__(25);
+const action_enum_1 = __webpack_require__(26);
 const common_1 = __webpack_require__(1);
-const typeorm_1 = __webpack_require__(12);
-const fs = __importStar(__webpack_require__(85));
-const glob_1 = __webpack_require__(86);
-const typeorm_2 = __webpack_require__(16);
-const permission_entity_1 = __webpack_require__(24);
+const typeorm_1 = __webpack_require__(13);
+const fs = __importStar(__webpack_require__(87));
+const glob_1 = __webpack_require__(88);
+const typeorm_2 = __webpack_require__(17);
+const permission_entity_1 = __webpack_require__(25);
 let PermissionSeederService = PermissionSeederService_1 = class PermissionSeederService {
     constructor(permissionRepository) {
         this.permissionRepository = permissionRepository;
@@ -5531,19 +5663,19 @@ exports.PermissionSeederService = PermissionSeederService = PermissionSeederServ
 
 
 /***/ }),
-/* 85 */
+/* 87 */
 /***/ ((module) => {
 
 module.exports = require("fs");
 
 /***/ }),
-/* 86 */
+/* 88 */
 /***/ ((module) => {
 
 module.exports = require("glob");
 
 /***/ }),
-/* 87 */
+/* 89 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -5557,18 +5689,18 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.AuthModule = void 0;
 const common_1 = __webpack_require__(1);
 const config_1 = __webpack_require__(2);
-const jwt_1 = __webpack_require__(88);
-const passport_1 = __webpack_require__(43);
-const common_module_1 = __webpack_require__(10);
-const jwt_auth_guard_1 = __webpack_require__(42);
-const permissions_guard_1 = __webpack_require__(44);
-const roles_guard_1 = __webpack_require__(54);
-const sessions_module_1 = __webpack_require__(89);
-const users_module_1 = __webpack_require__(11);
-const auth_controller_1 = __webpack_require__(93);
-const auth_service_1 = __webpack_require__(97);
-const jwt_service_1 = __webpack_require__(99);
-const access_token_strategy_1 = __webpack_require__(103);
+const jwt_1 = __webpack_require__(90);
+const passport_1 = __webpack_require__(44);
+const common_module_1 = __webpack_require__(11);
+const jwt_auth_guard_1 = __webpack_require__(43);
+const permissions_guard_1 = __webpack_require__(45);
+const roles_guard_1 = __webpack_require__(55);
+const sessions_module_1 = __webpack_require__(91);
+const users_module_1 = __webpack_require__(12);
+const auth_controller_1 = __webpack_require__(95);
+const auth_service_1 = __webpack_require__(99);
+const jwt_service_1 = __webpack_require__(101);
+const access_token_strategy_1 = __webpack_require__(105);
 let AuthModule = class AuthModule {
 };
 exports.AuthModule = AuthModule;
@@ -5597,13 +5729,13 @@ exports.AuthModule = AuthModule = __decorate([
 
 
 /***/ }),
-/* 88 */
+/* 90 */
 /***/ ((module) => {
 
 module.exports = require("@nestjs/jwt");
 
 /***/ }),
-/* 89 */
+/* 91 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -5616,11 +5748,11 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.SessionsModule = void 0;
 const common_1 = __webpack_require__(1);
-const typeorm_1 = __webpack_require__(12);
-const users_module_1 = __webpack_require__(11);
-const session_entity_1 = __webpack_require__(33);
-const sessions_controller_1 = __webpack_require__(90);
-const sessions_service_1 = __webpack_require__(92);
+const typeorm_1 = __webpack_require__(13);
+const users_module_1 = __webpack_require__(12);
+const session_entity_1 = __webpack_require__(34);
+const sessions_controller_1 = __webpack_require__(92);
+const sessions_service_1 = __webpack_require__(94);
 let SessionsModule = class SessionsModule {
 };
 exports.SessionsModule = SessionsModule;
@@ -5635,15 +5767,15 @@ exports.SessionsModule = SessionsModule = __decorate([
 
 
 /***/ }),
-/* 90 */
+/* 92 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.SessionsController = void 0;
-const create_controller_factory_1 = __webpack_require__(35);
-const session_dto_1 = __webpack_require__(91);
-const sessions_service_1 = __webpack_require__(92);
+const create_controller_factory_1 = __webpack_require__(36);
+const session_dto_1 = __webpack_require__(93);
+const sessions_service_1 = __webpack_require__(94);
 class SessionsController extends (0, create_controller_factory_1.createController)('Sessions', // Entity name for Swagger documentation
 sessions_service_1.SessionsService, // The service handling Session-related operations
 session_dto_1.GetSessionDto, // DTO for retrieving Sessions
@@ -5658,7 +5790,7 @@ exports.SessionsController = SessionsController;
 
 
 /***/ }),
-/* 91 */
+/* 93 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -5673,10 +5805,10 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.GetSessionDto = exports.UpdateSessionDto = exports.SessionDto = void 0;
-const base_dto_1 = __webpack_require__(73);
-const create_get_dto_factory_1 = __webpack_require__(61);
+const base_dto_1 = __webpack_require__(75);
+const create_get_dto_factory_1 = __webpack_require__(63);
 const swagger_1 = __webpack_require__(4);
-const class_validator_1 = __webpack_require__(40);
+const class_validator_1 = __webpack_require__(41);
 class SessionDto extends (0, swagger_1.PartialType)(base_dto_1.BaseDto) {
 }
 exports.SessionDto = SessionDto;
@@ -5701,7 +5833,7 @@ exports.GetSessionDto = GetSessionDto;
 
 
 /***/ }),
-/* 92 */
+/* 94 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -5720,12 +5852,12 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 var _a, _b;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.SessionsService = void 0;
-const base_service_1 = __webpack_require__(46);
+const base_service_1 = __webpack_require__(47);
 const common_1 = __webpack_require__(1);
-const typeorm_1 = __webpack_require__(12);
-const typeorm_2 = __webpack_require__(16);
-const users_service_1 = __webpack_require__(45);
-const session_entity_1 = __webpack_require__(33);
+const typeorm_1 = __webpack_require__(13);
+const typeorm_2 = __webpack_require__(17);
+const users_service_1 = __webpack_require__(46);
+const session_entity_1 = __webpack_require__(34);
 let SessionsService = class SessionsService extends base_service_1.BaseService {
     constructor(sessionsRepository, usersService) {
         super(sessionsRepository, usersService);
@@ -5742,7 +5874,7 @@ exports.SessionsService = SessionsService = __decorate([
 
 
 /***/ }),
-/* 93 */
+/* 95 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -5761,18 +5893,18 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.AuthController = void 0;
-const authorize_decorator_1 = __webpack_require__(41);
-const current_user_decorator_1 = __webpack_require__(56);
-const jwt_payload_interface_1 = __webpack_require__(94);
+const authorize_decorator_1 = __webpack_require__(42);
+const current_user_decorator_1 = __webpack_require__(57);
+const jwt_payload_interface_1 = __webpack_require__(96);
 const common_1 = __webpack_require__(1);
 const swagger_1 = __webpack_require__(4);
-const class_transformer_1 = __webpack_require__(39);
-const express_1 = __webpack_require__(95);
-const google_auth_guard_1 = __webpack_require__(96);
-const user_dto_1 = __webpack_require__(60);
-const auth_service_1 = __webpack_require__(97);
-const login_user_dto_1 = __webpack_require__(101);
-const register_user_dto_1 = __webpack_require__(102);
+const class_transformer_1 = __webpack_require__(40);
+const express_1 = __webpack_require__(97);
+const google_auth_guard_1 = __webpack_require__(98);
+const user_dto_1 = __webpack_require__(62);
+const auth_service_1 = __webpack_require__(99);
+const login_user_dto_1 = __webpack_require__(103);
+const register_user_dto_1 = __webpack_require__(104);
 let AuthController = class AuthController {
     constructor(authService) {
         this.authService = authService;
@@ -5939,7 +6071,7 @@ exports.AuthController = AuthController = __decorate([
 
 
 /***/ }),
-/* 94 */
+/* 96 */
 /***/ ((__unused_webpack_module, exports) => {
 
 
@@ -5947,13 +6079,13 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 
 
 /***/ }),
-/* 95 */
+/* 97 */
 /***/ ((module) => {
 
 module.exports = require("express");
 
 /***/ }),
-/* 96 */
+/* 98 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -5966,7 +6098,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.GoogleAuthGuard = void 0;
 const common_1 = __webpack_require__(1);
-const passport_1 = __webpack_require__(43);
+const passport_1 = __webpack_require__(44);
 let GoogleAuthGuard = class GoogleAuthGuard extends (0, passport_1.AuthGuard)('google-auth') {
 };
 exports.GoogleAuthGuard = GoogleAuthGuard;
@@ -5976,7 +6108,7 @@ exports.GoogleAuthGuard = GoogleAuthGuard = __decorate([
 
 
 /***/ }),
-/* 97 */
+/* 99 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -6026,14 +6158,14 @@ var AuthService_1;
 var _a, _b, _c, _d, _e;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.AuthService = void 0;
-const utility_helper_1 = __webpack_require__(49);
-const common_service_1 = __webpack_require__(64);
+const utility_helper_1 = __webpack_require__(50);
+const common_service_1 = __webpack_require__(66);
 const common_1 = __webpack_require__(1);
 const config_1 = __webpack_require__(2);
-const bcrypt = __importStar(__webpack_require__(98));
-const sessions_service_1 = __webpack_require__(92);
-const users_service_1 = __webpack_require__(45);
-const jwt_service_1 = __webpack_require__(99);
+const bcrypt = __importStar(__webpack_require__(100));
+const sessions_service_1 = __webpack_require__(94);
+const users_service_1 = __webpack_require__(46);
+const jwt_service_1 = __webpack_require__(101);
 let AuthService = AuthService_1 = class AuthService {
     constructor(usersService, jwtService, configService, commonService, sessionsService) {
         this.usersService = usersService;
@@ -6301,13 +6433,13 @@ exports.AuthService = AuthService = AuthService_1 = __decorate([
 
 
 /***/ }),
-/* 98 */
+/* 100 */
 /***/ ((module) => {
 
 module.exports = require("bcrypt");
 
 /***/ }),
-/* 99 */
+/* 101 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -6326,8 +6458,8 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.JwtService = void 0;
 const common_1 = __webpack_require__(1);
 const config_1 = __webpack_require__(2);
-const jwt_1 = __webpack_require__(88);
-const uuid_1 = __webpack_require__(100);
+const jwt_1 = __webpack_require__(90);
+const uuid_1 = __webpack_require__(102);
 /**
  * Service responsible for JWT (JSON Web Token) operations.
  * Provides methods for creating, verifying, and decoding JWT tokens,
@@ -6487,13 +6619,13 @@ exports.JwtService = JwtService = JwtService_1 = __decorate([
 
 
 /***/ }),
-/* 100 */
+/* 102 */
 /***/ ((module) => {
 
 module.exports = require("uuid");
 
 /***/ }),
-/* 101 */
+/* 103 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -6509,8 +6641,8 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.LoginUserDto = void 0;
 const swagger_1 = __webpack_require__(4);
-const class_transformer_1 = __webpack_require__(39);
-const class_validator_1 = __webpack_require__(40);
+const class_transformer_1 = __webpack_require__(40);
+const class_validator_1 = __webpack_require__(41);
 class LoginUserDto {
 }
 exports.LoginUserDto = LoginUserDto;
@@ -6529,7 +6661,7 @@ __decorate([
 
 
 /***/ }),
-/* 102 */
+/* 104 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -6546,9 +6678,9 @@ var _a;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.RegisterUserDto = void 0;
 const swagger_1 = __webpack_require__(4);
-const class_transformer_1 = __webpack_require__(39);
-const class_validator_1 = __webpack_require__(40);
-const profile_dto_1 = __webpack_require__(62);
+const class_transformer_1 = __webpack_require__(40);
+const class_validator_1 = __webpack_require__(41);
+const profile_dto_1 = __webpack_require__(64);
 class RegisterUserDto {
 }
 exports.RegisterUserDto = RegisterUserDto;
@@ -6594,7 +6726,7 @@ __decorate([
 
 
 /***/ }),
-/* 103 */
+/* 105 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -6610,12 +6742,12 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var _a, _b, _c;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.AccessTokenStrategy = void 0;
-const users_service_1 = __webpack_require__(45);
+const users_service_1 = __webpack_require__(46);
 const common_1 = __webpack_require__(1);
 const config_1 = __webpack_require__(2);
-const passport_1 = __webpack_require__(43);
-const passport_jwt_1 = __webpack_require__(104);
-const jwt_service_1 = __webpack_require__(99);
+const passport_1 = __webpack_require__(44);
+const passport_jwt_1 = __webpack_require__(106);
+const jwt_service_1 = __webpack_require__(101);
 let AccessTokenStrategy = class AccessTokenStrategy extends (0, passport_1.PassportStrategy)(passport_jwt_1.Strategy, 'jwt') {
     constructor(configService, jwtService, userService) {
         super({
@@ -6655,13 +6787,13 @@ exports.AccessTokenStrategy = AccessTokenStrategy = __decorate([
 
 
 /***/ }),
-/* 104 */
+/* 106 */
 /***/ ((module) => {
 
 module.exports = require("passport-jwt");
 
 /***/ }),
-/* 105 */
+/* 107 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -6674,11 +6806,11 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ProfilesModule = void 0;
 const common_1 = __webpack_require__(1);
-const typeorm_1 = __webpack_require__(12);
-const users_module_1 = __webpack_require__(11);
-const profile_entity_1 = __webpack_require__(30);
-const profiles_controller_1 = __webpack_require__(106);
-const profiles_service_1 = __webpack_require__(107);
+const typeorm_1 = __webpack_require__(13);
+const users_module_1 = __webpack_require__(12);
+const profile_entity_1 = __webpack_require__(31);
+const profiles_controller_1 = __webpack_require__(108);
+const profiles_service_1 = __webpack_require__(109);
 let ProfilesModule = class ProfilesModule {
 };
 exports.ProfilesModule = ProfilesModule;
@@ -6693,22 +6825,22 @@ exports.ProfilesModule = ProfilesModule = __decorate([
 
 
 /***/ }),
-/* 106 */
+/* 108 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ProfilesController = void 0;
-const create_controller_factory_1 = __webpack_require__(35);
-const profile_dto_1 = __webpack_require__(62);
-const profiles_service_1 = __webpack_require__(107);
+const create_controller_factory_1 = __webpack_require__(36);
+const profile_dto_1 = __webpack_require__(64);
+const profiles_service_1 = __webpack_require__(109);
 class ProfilesController extends (0, create_controller_factory_1.createController)('Profiles', // Entity name for Swagger documentation
 profiles_service_1.ProfilesService, // The service handling Profile-related operations
 profile_dto_1.GetProfileDto, // DTO for retrieving profiles
 profile_dto_1.ProfileDto, // DTO for creating profiles
 profile_dto_1.UpdateProfileDto) {
-    async findAllAdvanced(paginationDto) {
-        return await super.findAllAdvanced(paginationDto);
+    findAllAdvanced(paginationDto) {
+        return super.findAllAdvanced(paginationDto);
     }
     async findOne(id) {
         return await super.findOne(id);
@@ -6724,7 +6856,7 @@ exports.ProfilesController = ProfilesController;
 
 
 /***/ }),
-/* 107 */
+/* 109 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -6743,12 +6875,12 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 var _a, _b;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ProfilesService = void 0;
-const base_service_1 = __webpack_require__(46);
+const base_service_1 = __webpack_require__(47);
 const common_1 = __webpack_require__(1);
-const typeorm_1 = __webpack_require__(12);
-const typeorm_2 = __webpack_require__(16);
-const users_service_1 = __webpack_require__(45);
-const profile_entity_1 = __webpack_require__(30);
+const typeorm_1 = __webpack_require__(13);
+const typeorm_2 = __webpack_require__(17);
+const users_service_1 = __webpack_require__(46);
+const profile_entity_1 = __webpack_require__(31);
 let ProfilesService = class ProfilesService extends base_service_1.BaseService {
     constructor(ProfilesRepository, usersService) {
         super(ProfilesRepository, usersService);
@@ -6765,7 +6897,7 @@ exports.ProfilesService = ProfilesService = __decorate([
 
 
 /***/ }),
-/* 108 */
+/* 110 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -6815,18 +6947,18 @@ var UserSeederService_1;
 var _a, _b, _c, _d, _e;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.UserSeederService = void 0;
-const employment_condition_enum_1 = __webpack_require__(19);
-const employment_status_enum_1 = __webpack_require__(20);
-const employment_type_enum_1 = __webpack_require__(21);
-const role_scope_type_enum_1 = __webpack_require__(23);
-const role_enum_1 = __webpack_require__(53);
-const auth_service_1 = __webpack_require__(97);
-const employees_service_1 = __webpack_require__(75);
-const roles_service_1 = __webpack_require__(76);
+const employment_condition_enum_1 = __webpack_require__(20);
+const employment_status_enum_1 = __webpack_require__(21);
+const employment_type_enum_1 = __webpack_require__(22);
+const role_scope_type_enum_1 = __webpack_require__(24);
+const role_enum_1 = __webpack_require__(54);
+const auth_service_1 = __webpack_require__(99);
+const employees_service_1 = __webpack_require__(77);
+const roles_service_1 = __webpack_require__(78);
 const common_1 = __webpack_require__(1);
 const config_1 = __webpack_require__(2);
-const bcrypt = __importStar(__webpack_require__(98));
-const users_service_1 = __webpack_require__(45);
+const bcrypt = __importStar(__webpack_require__(100));
+const users_service_1 = __webpack_require__(46);
 let UserSeederService = UserSeederService_1 = class UserSeederService {
     constructor(usersService, authService, rolesService, employeesService, configService) {
         this.usersService = usersService;
@@ -6985,7 +7117,7 @@ exports.UserSeederService = UserSeederService = UserSeederService_1 = __decorate
 
 
 /***/ }),
-/* 109 */
+/* 111 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -6999,10 +7131,10 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.AddressesModule = void 0;
 const common_1 = __webpack_require__(1);
 const core_1 = __webpack_require__(3);
-const typeorm_1 = __webpack_require__(12);
-const users_module_1 = __webpack_require__(11);
-const addresses_service_1 = __webpack_require__(110);
-const address_entity_1 = __webpack_require__(27);
+const typeorm_1 = __webpack_require__(13);
+const users_module_1 = __webpack_require__(12);
+const addresses_service_1 = __webpack_require__(112);
+const address_entity_1 = __webpack_require__(28);
 let AddressesModule = class AddressesModule {
 };
 exports.AddressesModule = AddressesModule;
@@ -7022,7 +7154,7 @@ exports.AddressesModule = AddressesModule = __decorate([
 
 
 /***/ }),
-/* 110 */
+/* 112 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -7041,12 +7173,12 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 var _a, _b;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.AddressesService = void 0;
-const base_service_1 = __webpack_require__(46);
+const base_service_1 = __webpack_require__(47);
 const common_1 = __webpack_require__(1);
-const typeorm_1 = __webpack_require__(12);
-const typeorm_2 = __webpack_require__(16);
-const users_service_1 = __webpack_require__(45);
-const address_entity_1 = __webpack_require__(27);
+const typeorm_1 = __webpack_require__(13);
+const typeorm_2 = __webpack_require__(17);
+const users_service_1 = __webpack_require__(46);
+const address_entity_1 = __webpack_require__(28);
 let AddressesService = class AddressesService extends base_service_1.BaseService {
     constructor(AddressesService, usersService) {
         super(AddressesService, usersService);
@@ -7063,7 +7195,7 @@ exports.AddressesService = AddressesService = __decorate([
 
 
 /***/ }),
-/* 111 */
+/* 113 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -7077,12 +7209,12 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.DocumentsModule = void 0;
 const common_1 = __webpack_require__(1);
 const core_1 = __webpack_require__(3);
-const typeorm_1 = __webpack_require__(12);
-const users_module_1 = __webpack_require__(11);
-const document_types_module_1 = __webpack_require__(112);
-const documents_controller_1 = __webpack_require__(116);
-const documents_service_1 = __webpack_require__(117);
-const document_entity_1 = __webpack_require__(14);
+const typeorm_1 = __webpack_require__(13);
+const users_module_1 = __webpack_require__(12);
+const document_types_module_1 = __webpack_require__(114);
+const documents_controller_1 = __webpack_require__(118);
+const documents_service_1 = __webpack_require__(119);
+const document_entity_1 = __webpack_require__(15);
 let DocumentsModule = class DocumentsModule {
 };
 exports.DocumentsModule = DocumentsModule;
@@ -7110,7 +7242,7 @@ exports.DocumentsModule = DocumentsModule = __decorate([
 
 
 /***/ }),
-/* 112 */
+/* 114 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -7122,12 +7254,12 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.DocumentTypesModule = void 0;
-const users_module_1 = __webpack_require__(11);
+const users_module_1 = __webpack_require__(12);
 const common_1 = __webpack_require__(1);
-const typeorm_1 = __webpack_require__(12);
-const document_types_controller_1 = __webpack_require__(113);
-const document_types_service_1 = __webpack_require__(114);
-const document_type_entity_1 = __webpack_require__(17);
+const typeorm_1 = __webpack_require__(13);
+const document_types_controller_1 = __webpack_require__(115);
+const document_types_service_1 = __webpack_require__(116);
+const document_type_entity_1 = __webpack_require__(18);
 let DocumentTypesModule = class DocumentTypesModule {
 };
 exports.DocumentTypesModule = DocumentTypesModule;
@@ -7142,15 +7274,15 @@ exports.DocumentTypesModule = DocumentTypesModule = __decorate([
 
 
 /***/ }),
-/* 113 */
+/* 115 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.DocumentTypesController = void 0;
-const create_controller_factory_1 = __webpack_require__(35);
-const document_types_service_1 = __webpack_require__(114);
-const document_type_dto_1 = __webpack_require__(115);
+const create_controller_factory_1 = __webpack_require__(36);
+const document_types_service_1 = __webpack_require__(116);
+const document_type_dto_1 = __webpack_require__(117);
 class DocumentTypesController extends (0, create_controller_factory_1.createController)('Document Types', // Entity name for Swagger documentation
 document_types_service_1.DocumentTypesService, // The service handling DocumentType-related operations
 document_type_dto_1.GetDocumentTypeDto, // DTO for retrieving DocumentTypes
@@ -7161,7 +7293,7 @@ exports.DocumentTypesController = DocumentTypesController;
 
 
 /***/ }),
-/* 114 */
+/* 116 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -7180,12 +7312,12 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 var _a, _b;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.DocumentTypesService = void 0;
-const base_service_1 = __webpack_require__(46);
-const users_service_1 = __webpack_require__(45);
+const base_service_1 = __webpack_require__(47);
+const users_service_1 = __webpack_require__(46);
 const common_1 = __webpack_require__(1);
-const typeorm_1 = __webpack_require__(12);
-const typeorm_2 = __webpack_require__(16);
-const document_type_entity_1 = __webpack_require__(17);
+const typeorm_1 = __webpack_require__(13);
+const typeorm_2 = __webpack_require__(17);
+const document_type_entity_1 = __webpack_require__(18);
 let DocumentTypesService = class DocumentTypesService extends base_service_1.BaseService {
     constructor(documentTypesRepository, usersService) {
         super(documentTypesRepository, usersService);
@@ -7202,7 +7334,7 @@ exports.DocumentTypesService = DocumentTypesService = __decorate([
 
 
 /***/ }),
-/* 115 */
+/* 117 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -7217,10 +7349,10 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.GetDocumentTypeDto = exports.UpdateDocumentTypeDto = exports.DocumentTypeDto = void 0;
-const base_dto_1 = __webpack_require__(73);
-const create_get_dto_factory_1 = __webpack_require__(61);
+const base_dto_1 = __webpack_require__(75);
+const create_get_dto_factory_1 = __webpack_require__(63);
 const swagger_1 = __webpack_require__(4);
-const class_validator_1 = __webpack_require__(40);
+const class_validator_1 = __webpack_require__(41);
 class DocumentTypeDto extends base_dto_1.BaseDto {
     constructor() {
         super(...arguments);
@@ -7272,15 +7404,15 @@ exports.GetDocumentTypeDto = GetDocumentTypeDto;
 
 
 /***/ }),
-/* 116 */
+/* 118 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.DocumentsController = void 0;
-const create_controller_factory_1 = __webpack_require__(35);
-const documents_service_1 = __webpack_require__(117);
-const document_dto_1 = __webpack_require__(118);
+const create_controller_factory_1 = __webpack_require__(36);
+const documents_service_1 = __webpack_require__(119);
+const document_dto_1 = __webpack_require__(120);
 class DocumentsController extends (0, create_controller_factory_1.createController)('Documents', // Entity name for Swagger documentation
 documents_service_1.DocumentsService, // The service handling Document-related operations
 document_dto_1.GetDocumentDto, // DTO for retrieving Documents
@@ -7292,7 +7424,7 @@ exports.DocumentsController = DocumentsController;
 
 
 /***/ }),
-/* 117 */
+/* 119 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -7311,12 +7443,12 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 var _a, _b;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.DocumentsService = void 0;
-const base_service_1 = __webpack_require__(46);
+const base_service_1 = __webpack_require__(47);
 const common_1 = __webpack_require__(1);
-const typeorm_1 = __webpack_require__(12);
-const typeorm_2 = __webpack_require__(16);
-const users_service_1 = __webpack_require__(45);
-const document_entity_1 = __webpack_require__(14);
+const typeorm_1 = __webpack_require__(13);
+const typeorm_2 = __webpack_require__(17);
+const users_service_1 = __webpack_require__(46);
+const document_entity_1 = __webpack_require__(15);
 let DocumentsService = class DocumentsService extends base_service_1.BaseService {
     constructor(documentsRepository, usersService) {
         super(documentsRepository, usersService);
@@ -7333,7 +7465,7 @@ exports.DocumentsService = DocumentsService = __decorate([
 
 
 /***/ }),
-/* 118 */
+/* 120 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -7348,10 +7480,10 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.GetDocumentDto = exports.UpdateDocumentDto = exports.DocumentDto = void 0;
-const base_dto_1 = __webpack_require__(73);
-const create_get_dto_factory_1 = __webpack_require__(61);
+const base_dto_1 = __webpack_require__(75);
+const create_get_dto_factory_1 = __webpack_require__(63);
 const swagger_1 = __webpack_require__(4);
-const class_validator_1 = __webpack_require__(40);
+const class_validator_1 = __webpack_require__(41);
 class DocumentDto extends base_dto_1.BaseDto {
 }
 exports.DocumentDto = DocumentDto;
@@ -7406,7 +7538,7 @@ exports.GetDocumentDto = GetDocumentDto;
 
 
 /***/ }),
-/* 119 */
+/* 121 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -7419,9 +7551,9 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.FilesModule = void 0;
 const common_1 = __webpack_require__(1);
-const users_module_1 = __webpack_require__(11);
-const file_provider_config_1 = __webpack_require__(120);
-const files_controller_1 = __webpack_require__(130);
+const users_module_1 = __webpack_require__(12);
+const file_provider_config_1 = __webpack_require__(122);
+const files_controller_1 = __webpack_require__(132);
 let FilesModule = class FilesModule {
 };
 exports.FilesModule = FilesModule;
@@ -7435,14 +7567,14 @@ exports.FilesModule = FilesModule = __decorate([
 
 
 /***/ }),
-/* 120 */
+/* 122 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.fileProviders = exports.fileProviderConfig = exports.FILE_SERVICE = void 0;
 const config_1 = __webpack_require__(2);
-const local_file_service_1 = __webpack_require__(121);
+const local_file_service_1 = __webpack_require__(123);
 exports.FILE_SERVICE = 'FILE_SERVICE';
 exports.fileProviderConfig = {
     provide: exports.FILE_SERVICE,
@@ -7469,7 +7601,7 @@ exports.fileProviders = [exports.fileProviderConfig, local_file_service_1.LocalF
 
 
 /***/ }),
-/* 121 */
+/* 123 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -7523,12 +7655,12 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.LocalFileService = void 0;
 const common_1 = __webpack_require__(1);
 const config_1 = __webpack_require__(2);
-const fs = __importStar(__webpack_require__(85));
-const fs_1 = __webpack_require__(85);
-const mime = __importStar(__webpack_require__(122));
-const path_1 = __importDefault(__webpack_require__(123));
-const file_list_options_dto_1 = __webpack_require__(124);
-const base_file_service_1 = __webpack_require__(125);
+const fs = __importStar(__webpack_require__(87));
+const fs_1 = __webpack_require__(87);
+const mime = __importStar(__webpack_require__(124));
+const path_1 = __importDefault(__webpack_require__(125));
+const file_list_options_dto_1 = __webpack_require__(126);
+const base_file_service_1 = __webpack_require__(127);
 let LocalFileService = class LocalFileService extends base_file_service_1.BaseFileService {
     constructor(configService) {
         const uploadDir = configService.getOrThrow('FILE_DIRECTORY');
@@ -8131,19 +8263,19 @@ exports.LocalFileService = LocalFileService = __decorate([
 
 
 /***/ }),
-/* 122 */
+/* 124 */
 /***/ ((module) => {
 
 module.exports = require("mime-types");
 
 /***/ }),
-/* 123 */
+/* 125 */
 /***/ ((module) => {
 
 module.exports = require("path");
 
 /***/ }),
-/* 124 */
+/* 126 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -8159,8 +8291,8 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.FileListOptions = exports.SizeRangeFilter = exports.DateRangeFilter = exports.SortDirection = exports.FileSortField = void 0;
 const swagger_1 = __webpack_require__(4);
-const class_transformer_1 = __webpack_require__(39);
-const class_validator_1 = __webpack_require__(40);
+const class_transformer_1 = __webpack_require__(40);
+const class_validator_1 = __webpack_require__(41);
 var FileSortField;
 (function (FileSortField) {
     FileSortField["NAME"] = "name";
@@ -8322,7 +8454,7 @@ __decorate([
 
 
 /***/ }),
-/* 125 */
+/* 127 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -8374,12 +8506,12 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.BaseFileService = void 0;
 const common_1 = __webpack_require__(1);
-const crypto = __importStar(__webpack_require__(126));
-const csv_writer_1 = __webpack_require__(127);
-const ExcelJS = __importStar(__webpack_require__(128));
-const fs = __importStar(__webpack_require__(85));
-const path = __importStar(__webpack_require__(123));
-const pdfkit_1 = __importDefault(__webpack_require__(129));
+const crypto = __importStar(__webpack_require__(128));
+const csv_writer_1 = __webpack_require__(129);
+const ExcelJS = __importStar(__webpack_require__(130));
+const fs = __importStar(__webpack_require__(87));
+const path = __importStar(__webpack_require__(125));
+const pdfkit_1 = __importDefault(__webpack_require__(131));
 let BaseFileService = class BaseFileService {
     constructor(uploadDir, baseUrl) {
         this.logger = new common_1.Logger(this.constructor.name);
@@ -8614,31 +8746,31 @@ exports.BaseFileService = BaseFileService = __decorate([
 
 
 /***/ }),
-/* 126 */
+/* 128 */
 /***/ ((module) => {
 
 module.exports = require("crypto");
 
 /***/ }),
-/* 127 */
+/* 129 */
 /***/ ((module) => {
 
 module.exports = require("csv-writer");
 
 /***/ }),
-/* 128 */
+/* 130 */
 /***/ ((module) => {
 
 module.exports = require("exceljs");
 
 /***/ }),
-/* 129 */
+/* 131 */
 /***/ ((module) => {
 
 module.exports = require("pdfkit");
 
 /***/ }),
-/* 130 */
+/* 132 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -8658,17 +8790,17 @@ var FilesController_1;
 var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r, _s, _t, _u, _v, _w, _x;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.FilesController = void 0;
-const authorize_decorator_1 = __webpack_require__(41);
-const current_user_decorator_1 = __webpack_require__(56);
+const authorize_decorator_1 = __webpack_require__(42);
+const current_user_decorator_1 = __webpack_require__(57);
 const common_1 = __webpack_require__(1);
-const platform_express_1 = __webpack_require__(131);
+const platform_express_1 = __webpack_require__(133);
 const swagger_1 = __webpack_require__(4);
-const express_1 = __webpack_require__(95);
-const file_provider_config_1 = __webpack_require__(120);
-const directory_metadata_dto_1 = __webpack_require__(132);
-const file_list_response_dto_1 = __webpack_require__(133);
-const file_meta_data_dto_1 = __webpack_require__(134);
-const file_service_interface_1 = __webpack_require__(135);
+const express_1 = __webpack_require__(97);
+const file_provider_config_1 = __webpack_require__(122);
+const directory_metadata_dto_1 = __webpack_require__(134);
+const file_list_response_dto_1 = __webpack_require__(135);
+const file_meta_data_dto_1 = __webpack_require__(136);
+const file_service_interface_1 = __webpack_require__(137);
 let FilesController = FilesController_1 = class FilesController {
     constructor(fileService) {
         this.fileService = fileService;
@@ -9210,13 +9342,13 @@ exports.FilesController = FilesController = FilesController_1 = __decorate([
 
 
 /***/ }),
-/* 131 */
+/* 133 */
 /***/ ((module) => {
 
 module.exports = require("@nestjs/platform-express");
 
 /***/ }),
-/* 132 */
+/* 134 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -9267,7 +9399,7 @@ __decorate([
 
 
 /***/ }),
-/* 133 */
+/* 135 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -9284,8 +9416,8 @@ var _a;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.FileListResponseDto = void 0;
 const swagger_1 = __webpack_require__(4);
-const directory_metadata_dto_1 = __webpack_require__(132);
-const file_meta_data_dto_1 = __webpack_require__(134);
+const directory_metadata_dto_1 = __webpack_require__(134);
+const file_meta_data_dto_1 = __webpack_require__(136);
 class FileListResponseDto {
 }
 exports.FileListResponseDto = FileListResponseDto;
@@ -9328,7 +9460,7 @@ __decorate([
 
 
 /***/ }),
-/* 134 */
+/* 136 */
 /***/ ((__unused_webpack_module, exports) => {
 
 
@@ -9340,7 +9472,7 @@ exports.FileMetadata = FileMetadata;
 
 
 /***/ }),
-/* 135 */
+/* 137 */
 /***/ ((__unused_webpack_module, exports) => {
 
 
@@ -9348,7 +9480,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 
 
 /***/ }),
-/* 136 */
+/* 138 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -9361,9 +9493,9 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.LogsModule = void 0;
 const common_1 = __webpack_require__(1);
-const typeorm_1 = __webpack_require__(12);
-const activity_logs_entity_1 = __webpack_require__(31);
-const logs_service_1 = __webpack_require__(137);
+const typeorm_1 = __webpack_require__(13);
+const activity_logs_entity_1 = __webpack_require__(32);
+const logs_service_1 = __webpack_require__(139);
 let LogsModule = class LogsModule {
 };
 exports.LogsModule = LogsModule;
@@ -9377,7 +9509,7 @@ exports.LogsModule = LogsModule = __decorate([
 
 
 /***/ }),
-/* 137 */
+/* 139 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -9397,9 +9529,9 @@ var _a;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.LogsService = void 0;
 const common_1 = __webpack_require__(1);
-const typeorm_1 = __webpack_require__(12);
-const typeorm_2 = __webpack_require__(16);
-const activity_logs_entity_1 = __webpack_require__(31);
+const typeorm_1 = __webpack_require__(13);
+const typeorm_2 = __webpack_require__(17);
+const activity_logs_entity_1 = __webpack_require__(32);
 let LogsService = class LogsService extends common_1.Logger {
     constructor(activityLogRepository) {
         super();
@@ -9449,7 +9581,7 @@ exports.LogsService = LogsService = __decorate([
 
 
 /***/ }),
-/* 138 */
+/* 140 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -9462,8 +9594,8 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.NotificationsModule = void 0;
 const common_1 = __webpack_require__(1);
-const notifications_gateway_1 = __webpack_require__(139);
-const notifications_service_1 = __webpack_require__(141);
+const notifications_gateway_1 = __webpack_require__(141);
+const notifications_service_1 = __webpack_require__(143);
 let NotificationsModule = class NotificationsModule {
 };
 exports.NotificationsModule = NotificationsModule;
@@ -9475,7 +9607,7 @@ exports.NotificationsModule = NotificationsModule = __decorate([
 
 
 /***/ }),
-/* 139 */
+/* 141 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -9490,7 +9622,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.NotificationsGateway = void 0;
-const websockets_1 = __webpack_require__(140);
+const websockets_1 = __webpack_require__(142);
 let NotificationsGateway = class NotificationsGateway {
     handleMessage(client, payload) {
         return 'Hello world!';
@@ -9509,13 +9641,13 @@ exports.NotificationsGateway = NotificationsGateway = __decorate([
 
 
 /***/ }),
-/* 140 */
+/* 142 */
 /***/ ((module) => {
 
 module.exports = require("@nestjs/websockets");
 
 /***/ }),
-/* 141 */
+/* 143 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -9537,7 +9669,7 @@ exports.NotificationsService = NotificationsService = __decorate([
 
 
 /***/ }),
-/* 142 */
+/* 144 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -9551,13 +9683,13 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.OrganizationManagementModule = void 0;
 const common_1 = __webpack_require__(1);
 const core_1 = __webpack_require__(3);
-const typeorm_1 = __webpack_require__(12);
-const users_module_1 = __webpack_require__(11);
-const branches_module_1 = __webpack_require__(143);
-const departments_module_1 = __webpack_require__(147);
-const organization_entity_1 = __webpack_require__(28);
-const organizations_controller_1 = __webpack_require__(151);
-const organizations_service_1 = __webpack_require__(153);
+const typeorm_1 = __webpack_require__(13);
+const users_module_1 = __webpack_require__(12);
+const branches_module_1 = __webpack_require__(145);
+const departments_module_1 = __webpack_require__(149);
+const organization_entity_1 = __webpack_require__(29);
+const organizations_controller_1 = __webpack_require__(153);
+const organizations_service_1 = __webpack_require__(155);
 let OrganizationManagementModule = class OrganizationManagementModule {
 };
 exports.OrganizationManagementModule = OrganizationManagementModule;
@@ -9599,7 +9731,7 @@ exports.OrganizationManagementModule = OrganizationManagementModule = __decorate
 
 
 /***/ }),
-/* 143 */
+/* 145 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -9611,13 +9743,13 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.BranchesModule = void 0;
-const users_module_1 = __webpack_require__(11);
+const users_module_1 = __webpack_require__(12);
 const common_1 = __webpack_require__(1);
-const typeorm_1 = __webpack_require__(12);
-const branches_controller_1 = __webpack_require__(144);
-const branches_service_1 = __webpack_require__(145);
-const departments_module_1 = __webpack_require__(147);
-const branch_entity_1 = __webpack_require__(29);
+const typeorm_1 = __webpack_require__(13);
+const branches_controller_1 = __webpack_require__(146);
+const branches_service_1 = __webpack_require__(147);
+const departments_module_1 = __webpack_require__(149);
+const branch_entity_1 = __webpack_require__(30);
 let BranchesModule = class BranchesModule {
 };
 exports.BranchesModule = BranchesModule;
@@ -9633,22 +9765,22 @@ exports.BranchesModule = BranchesModule = __decorate([
 
 
 /***/ }),
-/* 144 */
+/* 146 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.BranchesController = void 0;
-const create_controller_factory_1 = __webpack_require__(35);
-const branches_service_1 = __webpack_require__(145);
-const branch_dto_1 = __webpack_require__(146);
+const create_controller_factory_1 = __webpack_require__(36);
+const branches_service_1 = __webpack_require__(147);
+const branch_dto_1 = __webpack_require__(148);
 class BranchesController extends (0, create_controller_factory_1.createController)('Branches', branches_service_1.BranchesService, branch_dto_1.GetBranchDto, branch_dto_1.BranchDto, branch_dto_1.UpdateBranchDto) {
 }
 exports.BranchesController = BranchesController;
 
 
 /***/ }),
-/* 145 */
+/* 147 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -9667,12 +9799,12 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 var _a, _b;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.BranchesService = void 0;
-const base_service_1 = __webpack_require__(46);
-const users_service_1 = __webpack_require__(45);
+const base_service_1 = __webpack_require__(47);
+const users_service_1 = __webpack_require__(46);
 const common_1 = __webpack_require__(1);
-const typeorm_1 = __webpack_require__(12);
-const typeorm_2 = __webpack_require__(16);
-const branch_entity_1 = __webpack_require__(29);
+const typeorm_1 = __webpack_require__(13);
+const typeorm_2 = __webpack_require__(17);
+const branch_entity_1 = __webpack_require__(30);
 let BranchesService = class BranchesService extends base_service_1.BaseService {
     constructor(branchesRepository, usersService) {
         super(branchesRepository, usersService);
@@ -9689,7 +9821,7 @@ exports.BranchesService = BranchesService = __decorate([
 
 
 /***/ }),
-/* 146 */
+/* 148 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -9705,11 +9837,11 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var _a;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.GetBranchDto = exports.UpdateBranchDto = exports.BranchDto = void 0;
-const create_get_dto_factory_1 = __webpack_require__(61);
-const address_dto_1 = __webpack_require__(63);
+const create_get_dto_factory_1 = __webpack_require__(63);
+const address_dto_1 = __webpack_require__(65);
 const swagger_1 = __webpack_require__(4);
-const class_transformer_1 = __webpack_require__(39);
-const class_validator_1 = __webpack_require__(40);
+const class_transformer_1 = __webpack_require__(40);
+const class_validator_1 = __webpack_require__(41);
 class BranchDto {
 }
 exports.BranchDto = BranchDto;
@@ -9774,7 +9906,7 @@ exports.GetBranchDto = GetBranchDto;
 
 
 /***/ }),
-/* 147 */
+/* 149 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -9786,12 +9918,12 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.DepartmentsModule = void 0;
-const users_module_1 = __webpack_require__(11);
+const users_module_1 = __webpack_require__(12);
 const common_1 = __webpack_require__(1);
-const typeorm_1 = __webpack_require__(12);
-const departments_controller_1 = __webpack_require__(148);
-const departments_service_1 = __webpack_require__(149);
-const department_entity_1 = __webpack_require__(26);
+const typeorm_1 = __webpack_require__(13);
+const departments_controller_1 = __webpack_require__(150);
+const departments_service_1 = __webpack_require__(151);
+const department_entity_1 = __webpack_require__(27);
 let DepartmentsModule = class DepartmentsModule {
 };
 exports.DepartmentsModule = DepartmentsModule;
@@ -9809,15 +9941,15 @@ exports.DepartmentsModule = DepartmentsModule = __decorate([
 
 
 /***/ }),
-/* 148 */
+/* 150 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.DepartmentsController = void 0;
-const create_controller_factory_1 = __webpack_require__(35);
-const departments_service_1 = __webpack_require__(149);
-const department_dto_1 = __webpack_require__(150);
+const create_controller_factory_1 = __webpack_require__(36);
+const departments_service_1 = __webpack_require__(151);
+const department_dto_1 = __webpack_require__(152);
 class DepartmentsController extends (0, create_controller_factory_1.createController)('Departments', // Entity name for Swagger documentation
 departments_service_1.DepartmentsService, // The service handling Department-related operations
 department_dto_1.GetDepartmentDto, // DTO for retrieving departments
@@ -9829,7 +9961,7 @@ exports.DepartmentsController = DepartmentsController;
 
 
 /***/ }),
-/* 149 */
+/* 151 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -9848,12 +9980,12 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 var _a, _b;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.DepartmentsService = void 0;
-const base_service_1 = __webpack_require__(46);
-const users_service_1 = __webpack_require__(45);
+const base_service_1 = __webpack_require__(47);
+const users_service_1 = __webpack_require__(46);
 const common_1 = __webpack_require__(1);
-const typeorm_1 = __webpack_require__(12);
-const typeorm_2 = __webpack_require__(16);
-const department_entity_1 = __webpack_require__(26);
+const typeorm_1 = __webpack_require__(13);
+const typeorm_2 = __webpack_require__(17);
+const department_entity_1 = __webpack_require__(27);
 let DepartmentsService = class DepartmentsService extends base_service_1.BaseService {
     constructor(departmentsRepository, usersService) {
         super(departmentsRepository, usersService);
@@ -9870,7 +10002,7 @@ exports.DepartmentsService = DepartmentsService = __decorate([
 
 
 /***/ }),
-/* 150 */
+/* 152 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -9886,11 +10018,11 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var _a;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.GetDepartmentDto = exports.UpdateDepartmentDto = exports.DepartmentDto = void 0;
-const create_get_dto_factory_1 = __webpack_require__(61);
-const address_dto_1 = __webpack_require__(63);
+const create_get_dto_factory_1 = __webpack_require__(63);
+const address_dto_1 = __webpack_require__(65);
 const swagger_1 = __webpack_require__(4);
-const class_transformer_1 = __webpack_require__(39);
-const class_validator_1 = __webpack_require__(40);
+const class_transformer_1 = __webpack_require__(40);
+const class_validator_1 = __webpack_require__(41);
 class DepartmentDto {
 }
 exports.DepartmentDto = DepartmentDto;
@@ -9955,22 +10087,22 @@ exports.GetDepartmentDto = GetDepartmentDto;
 
 
 /***/ }),
-/* 151 */
+/* 153 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.OrganizationsController = void 0;
-const create_controller_factory_1 = __webpack_require__(35);
-const organization_dto_1 = __webpack_require__(152);
-const organizations_service_1 = __webpack_require__(153);
+const create_controller_factory_1 = __webpack_require__(36);
+const organization_dto_1 = __webpack_require__(154);
+const organizations_service_1 = __webpack_require__(155);
 class OrganizationsController extends (0, create_controller_factory_1.createController)('Organizations', organizations_service_1.OrganizationsService, organization_dto_1.GetOrganizationDto, organization_dto_1.OrganizationDto, organization_dto_1.UpdateOrganizationDto) {
 }
 exports.OrganizationsController = OrganizationsController;
 
 
 /***/ }),
-/* 152 */
+/* 154 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -9986,11 +10118,11 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var _a;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.GetOrganizationDto = exports.UpdateOrganizationDto = exports.OrganizationDto = void 0;
-const create_get_dto_factory_1 = __webpack_require__(61);
-const address_dto_1 = __webpack_require__(63);
+const create_get_dto_factory_1 = __webpack_require__(63);
+const address_dto_1 = __webpack_require__(65);
 const swagger_1 = __webpack_require__(4);
-const class_transformer_1 = __webpack_require__(39);
-const class_validator_1 = __webpack_require__(40);
+const class_transformer_1 = __webpack_require__(40);
+const class_validator_1 = __webpack_require__(41);
 class OrganizationDto {
 }
 exports.OrganizationDto = OrganizationDto;
@@ -10049,7 +10181,7 @@ exports.GetOrganizationDto = GetOrganizationDto;
 
 
 /***/ }),
-/* 153 */
+/* 155 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -10068,12 +10200,12 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 var _a, _b;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.OrganizationsService = void 0;
-const base_service_1 = __webpack_require__(46);
+const base_service_1 = __webpack_require__(47);
 const common_1 = __webpack_require__(1);
-const typeorm_1 = __webpack_require__(12);
-const typeorm_2 = __webpack_require__(16);
-const users_service_1 = __webpack_require__(45);
-const organization_entity_1 = __webpack_require__(28);
+const typeorm_1 = __webpack_require__(13);
+const typeorm_2 = __webpack_require__(17);
+const users_service_1 = __webpack_require__(46);
+const organization_entity_1 = __webpack_require__(29);
 let OrganizationsService = class OrganizationsService extends base_service_1.BaseService {
     constructor(organizationsRepository, usersService) {
         super(organizationsRepository, usersService);
@@ -10090,7 +10222,7 @@ exports.OrganizationsService = OrganizationsService = __decorate([
 
 
 /***/ }),
-/* 154 */
+/* 156 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -10102,16 +10234,16 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.SchedulesModule = void 0;
-const users_module_1 = __webpack_require__(11);
+const users_module_1 = __webpack_require__(12);
 const common_1 = __webpack_require__(1);
 const core_1 = __webpack_require__(3);
-const typeorm_1 = __webpack_require__(12);
-const schedule_entity_1 = __webpack_require__(155);
-const schedules_controller_1 = __webpack_require__(156);
-const schedules_service_1 = __webpack_require__(158);
-const groups_module_1 = __webpack_require__(159);
-const shifts_module_1 = __webpack_require__(164);
-const holidays_module_1 = __webpack_require__(169);
+const typeorm_1 = __webpack_require__(13);
+const schedule_entity_1 = __webpack_require__(157);
+const schedules_controller_1 = __webpack_require__(158);
+const schedules_service_1 = __webpack_require__(160);
+const groups_module_1 = __webpack_require__(161);
+const shifts_module_1 = __webpack_require__(166);
+const holidays_module_1 = __webpack_require__(171);
 let SchedulesModule = class SchedulesModule {
 };
 exports.SchedulesModule = SchedulesModule;
@@ -10157,55 +10289,6 @@ exports.SchedulesModule = SchedulesModule = __decorate([
 
 
 /***/ }),
-/* 155 */
-/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
-
-
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-var __metadata = (this && this.__metadata) || function (k, v) {
-    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.Schedule = void 0;
-const base_entity_1 = __webpack_require__(15);
-const typeorm_1 = __webpack_require__(16);
-let Schedule = class Schedule extends base_entity_1.BaseEntity {
-};
-exports.Schedule = Schedule;
-__decorate([
-    (0, typeorm_1.Column)(),
-    __metadata("design:type", String)
-], Schedule.prototype, "name", void 0);
-exports.Schedule = Schedule = __decorate([
-    (0, typeorm_1.Entity)('schedules')
-], Schedule);
-
-
-/***/ }),
-/* 156 */
-/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
-
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.SchedulesController = void 0;
-const create_controller_factory_1 = __webpack_require__(35);
-const schedule_dto_1 = __webpack_require__(157);
-const schedules_service_1 = __webpack_require__(158);
-class SchedulesController extends (0, create_controller_factory_1.createController)('Schedules', // Entity name for Swagger documentation
-schedules_service_1.SchedulesService, // The service handling Schedule-related operations
-schedule_dto_1.GetScheduleDto, // DTO for retrieving Schedules
-schedule_dto_1.ScheduleDto, // DTO for creating Schedules
-schedule_dto_1.UpdateScheduleDto) {
-}
-exports.SchedulesController = SchedulesController;
-
-
-/***/ }),
 /* 157 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
@@ -10220,11 +10303,60 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Schedule = void 0;
+const base_entity_1 = __webpack_require__(16);
+const typeorm_1 = __webpack_require__(17);
+let Schedule = class Schedule extends base_entity_1.BaseEntity {
+};
+exports.Schedule = Schedule;
+__decorate([
+    (0, typeorm_1.Column)(),
+    __metadata("design:type", String)
+], Schedule.prototype, "name", void 0);
+exports.Schedule = Schedule = __decorate([
+    (0, typeorm_1.Entity)('schedules')
+], Schedule);
+
+
+/***/ }),
+/* 158 */
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.SchedulesController = void 0;
+const create_controller_factory_1 = __webpack_require__(36);
+const schedule_dto_1 = __webpack_require__(159);
+const schedules_service_1 = __webpack_require__(160);
+class SchedulesController extends (0, create_controller_factory_1.createController)('Schedules', // Entity name for Swagger documentation
+schedules_service_1.SchedulesService, // The service handling Schedule-related operations
+schedule_dto_1.GetScheduleDto, // DTO for retrieving Schedules
+schedule_dto_1.ScheduleDto, // DTO for creating Schedules
+schedule_dto_1.UpdateScheduleDto) {
+}
+exports.SchedulesController = SchedulesController;
+
+
+/***/ }),
+/* 159 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.GetScheduleDto = exports.UpdateScheduleDto = exports.ScheduleDto = void 0;
-const base_dto_1 = __webpack_require__(73);
-const create_get_dto_factory_1 = __webpack_require__(61);
+const base_dto_1 = __webpack_require__(75);
+const create_get_dto_factory_1 = __webpack_require__(63);
 const swagger_1 = __webpack_require__(4);
-const class_validator_1 = __webpack_require__(40);
+const class_validator_1 = __webpack_require__(41);
 const swagger_2 = __webpack_require__(4);
 class ScheduleDto extends (0, swagger_2.PartialType)(base_dto_1.BaseDto) {
 }
@@ -10244,7 +10376,7 @@ exports.GetScheduleDto = GetScheduleDto;
 
 
 /***/ }),
-/* 158 */
+/* 160 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -10263,12 +10395,12 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 var _a, _b;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.SchedulesService = void 0;
-const base_service_1 = __webpack_require__(46);
-const users_service_1 = __webpack_require__(45);
+const base_service_1 = __webpack_require__(47);
+const users_service_1 = __webpack_require__(46);
 const common_1 = __webpack_require__(1);
-const typeorm_1 = __webpack_require__(12);
-const typeorm_2 = __webpack_require__(16);
-const schedule_entity_1 = __webpack_require__(155);
+const typeorm_1 = __webpack_require__(13);
+const typeorm_2 = __webpack_require__(17);
+const schedule_entity_1 = __webpack_require__(157);
 let SchedulesService = class SchedulesService extends base_service_1.BaseService {
     constructor(schedulesRepository, usersService) {
         super(schedulesRepository, usersService);
@@ -10285,7 +10417,7 @@ exports.SchedulesService = SchedulesService = __decorate([
 
 
 /***/ }),
-/* 159 */
+/* 161 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -10298,11 +10430,11 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.GroupsModule = void 0;
 const common_1 = __webpack_require__(1);
-const typeorm_1 = __webpack_require__(12);
-const users_module_1 = __webpack_require__(11);
-const groups_controller_1 = __webpack_require__(160);
-const groups_service_1 = __webpack_require__(162);
-const group_entity_1 = __webpack_require__(163);
+const typeorm_1 = __webpack_require__(13);
+const users_module_1 = __webpack_require__(12);
+const groups_controller_1 = __webpack_require__(162);
+const groups_service_1 = __webpack_require__(164);
+const group_entity_1 = __webpack_require__(165);
 let GroupsModule = class GroupsModule {
 };
 exports.GroupsModule = GroupsModule;
@@ -10320,15 +10452,15 @@ exports.GroupsModule = GroupsModule = __decorate([
 
 
 /***/ }),
-/* 160 */
+/* 162 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.GroupsController = void 0;
-const create_controller_factory_1 = __webpack_require__(35);
-const group_dto_1 = __webpack_require__(161);
-const groups_service_1 = __webpack_require__(162);
+const create_controller_factory_1 = __webpack_require__(36);
+const group_dto_1 = __webpack_require__(163);
+const groups_service_1 = __webpack_require__(164);
 class GroupsController extends (0, create_controller_factory_1.createController)('Groups', // Entity name for Swagger documentation
 groups_service_1.GroupsService, // The service handling Group-related operations
 group_dto_1.GetGroupDto, // DTO for retrieving Groups
@@ -10339,7 +10471,7 @@ exports.GroupsController = GroupsController;
 
 
 /***/ }),
-/* 161 */
+/* 163 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -10354,10 +10486,10 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.GetGroupDto = exports.UpdateGroupDto = exports.GroupDto = void 0;
-const base_dto_1 = __webpack_require__(73);
-const create_get_dto_factory_1 = __webpack_require__(61);
+const base_dto_1 = __webpack_require__(75);
+const create_get_dto_factory_1 = __webpack_require__(63);
 const swagger_1 = __webpack_require__(4);
-const class_validator_1 = __webpack_require__(40);
+const class_validator_1 = __webpack_require__(41);
 const swagger_2 = __webpack_require__(4);
 class GroupDto extends (0, swagger_2.PartialType)(base_dto_1.BaseDto) {
 }
@@ -10377,7 +10509,7 @@ exports.GetGroupDto = GetGroupDto;
 
 
 /***/ }),
-/* 162 */
+/* 164 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -10396,12 +10528,12 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 var _a, _b;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.GroupsService = void 0;
-const base_service_1 = __webpack_require__(46);
-const users_service_1 = __webpack_require__(45);
+const base_service_1 = __webpack_require__(47);
+const users_service_1 = __webpack_require__(46);
 const common_1 = __webpack_require__(1);
-const typeorm_1 = __webpack_require__(12);
-const typeorm_2 = __webpack_require__(16);
-const group_entity_1 = __webpack_require__(163);
+const typeorm_1 = __webpack_require__(13);
+const typeorm_2 = __webpack_require__(17);
+const group_entity_1 = __webpack_require__(165);
 let GroupsService = class GroupsService extends base_service_1.BaseService {
     constructor(groupsRepository, usersService) {
         super(groupsRepository, usersService);
@@ -10418,7 +10550,7 @@ exports.GroupsService = GroupsService = __decorate([
 
 
 /***/ }),
-/* 163 */
+/* 165 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -10433,8 +10565,8 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Group = void 0;
-const base_entity_1 = __webpack_require__(15);
-const typeorm_1 = __webpack_require__(16);
+const base_entity_1 = __webpack_require__(16);
+const typeorm_1 = __webpack_require__(17);
 let Group = class Group extends base_entity_1.BaseEntity {
 };
 exports.Group = Group;
@@ -10448,7 +10580,7 @@ exports.Group = Group = __decorate([
 
 
 /***/ }),
-/* 164 */
+/* 166 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -10461,11 +10593,11 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ShiftsModule = void 0;
 const common_1 = __webpack_require__(1);
-const typeorm_1 = __webpack_require__(12);
-const users_module_1 = __webpack_require__(11);
-const shifts_controller_1 = __webpack_require__(165);
-const shifts_service_1 = __webpack_require__(167);
-const shift_entity_1 = __webpack_require__(168);
+const typeorm_1 = __webpack_require__(13);
+const users_module_1 = __webpack_require__(12);
+const shifts_controller_1 = __webpack_require__(167);
+const shifts_service_1 = __webpack_require__(169);
+const shift_entity_1 = __webpack_require__(170);
 let ShiftsModule = class ShiftsModule {
 };
 exports.ShiftsModule = ShiftsModule;
@@ -10483,15 +10615,15 @@ exports.ShiftsModule = ShiftsModule = __decorate([
 
 
 /***/ }),
-/* 165 */
+/* 167 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ShiftsController = void 0;
-const create_controller_factory_1 = __webpack_require__(35);
-const shift_dto_1 = __webpack_require__(166);
-const shifts_service_1 = __webpack_require__(167);
+const create_controller_factory_1 = __webpack_require__(36);
+const shift_dto_1 = __webpack_require__(168);
+const shifts_service_1 = __webpack_require__(169);
 class ShiftsController extends (0, create_controller_factory_1.createController)('Shifts', // Entity name for Swagger documentation
 shifts_service_1.ShiftsService, // The service handling Shift-related operations
 shift_dto_1.GetShiftDto, // DTO for retrieving Shifts
@@ -10502,7 +10634,7 @@ exports.ShiftsController = ShiftsController;
 
 
 /***/ }),
-/* 166 */
+/* 168 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -10517,10 +10649,10 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.GetShiftDto = exports.UpdateShiftDto = exports.ShiftDto = void 0;
-const base_dto_1 = __webpack_require__(73);
-const create_get_dto_factory_1 = __webpack_require__(61);
+const base_dto_1 = __webpack_require__(75);
+const create_get_dto_factory_1 = __webpack_require__(63);
 const swagger_1 = __webpack_require__(4);
-const class_validator_1 = __webpack_require__(40);
+const class_validator_1 = __webpack_require__(41);
 const swagger_2 = __webpack_require__(4);
 class ShiftDto extends (0, swagger_2.PartialType)(base_dto_1.BaseDto) {
 }
@@ -10540,7 +10672,7 @@ exports.GetShiftDto = GetShiftDto;
 
 
 /***/ }),
-/* 167 */
+/* 169 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -10559,12 +10691,12 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 var _a, _b;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ShiftsService = void 0;
-const base_service_1 = __webpack_require__(46);
-const users_service_1 = __webpack_require__(45);
+const base_service_1 = __webpack_require__(47);
+const users_service_1 = __webpack_require__(46);
 const common_1 = __webpack_require__(1);
-const typeorm_1 = __webpack_require__(12);
-const typeorm_2 = __webpack_require__(16);
-const shift_entity_1 = __webpack_require__(168);
+const typeorm_1 = __webpack_require__(13);
+const typeorm_2 = __webpack_require__(17);
+const shift_entity_1 = __webpack_require__(170);
 let ShiftsService = class ShiftsService extends base_service_1.BaseService {
     constructor(shiftsRepository, usersService) {
         super(shiftsRepository, usersService);
@@ -10581,7 +10713,7 @@ exports.ShiftsService = ShiftsService = __decorate([
 
 
 /***/ }),
-/* 168 */
+/* 170 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -10596,8 +10728,8 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Shift = void 0;
-const base_entity_1 = __webpack_require__(15);
-const typeorm_1 = __webpack_require__(16);
+const base_entity_1 = __webpack_require__(16);
+const typeorm_1 = __webpack_require__(17);
 let Shift = class Shift extends base_entity_1.BaseEntity {
 };
 exports.Shift = Shift;
@@ -10611,7 +10743,7 @@ exports.Shift = Shift = __decorate([
 
 
 /***/ }),
-/* 169 */
+/* 171 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -10624,11 +10756,11 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.HolidaysModule = void 0;
 const common_1 = __webpack_require__(1);
-const typeorm_1 = __webpack_require__(12);
-const users_module_1 = __webpack_require__(11);
-const holidays_controller_1 = __webpack_require__(170);
-const holidays_service_1 = __webpack_require__(172);
-const holiday_entity_1 = __webpack_require__(173);
+const typeorm_1 = __webpack_require__(13);
+const users_module_1 = __webpack_require__(12);
+const holidays_controller_1 = __webpack_require__(172);
+const holidays_service_1 = __webpack_require__(174);
+const holiday_entity_1 = __webpack_require__(175);
 let HolidaysModule = class HolidaysModule {
 };
 exports.HolidaysModule = HolidaysModule;
@@ -10646,15 +10778,15 @@ exports.HolidaysModule = HolidaysModule = __decorate([
 
 
 /***/ }),
-/* 170 */
+/* 172 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.HolidaysController = void 0;
-const create_controller_factory_1 = __webpack_require__(35);
-const holiday_dto_1 = __webpack_require__(171);
-const holidays_service_1 = __webpack_require__(172);
+const create_controller_factory_1 = __webpack_require__(36);
+const holiday_dto_1 = __webpack_require__(173);
+const holidays_service_1 = __webpack_require__(174);
 class HolidaysController extends (0, create_controller_factory_1.createController)('Holidays', // Entity name for Swagger documentation
 holidays_service_1.HolidaysService, // The service handling Holiday-related operations
 holiday_dto_1.GetHolidayDto, // DTO for retrieving Holidays
@@ -10665,7 +10797,7 @@ exports.HolidaysController = HolidaysController;
 
 
 /***/ }),
-/* 171 */
+/* 173 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -10680,10 +10812,10 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.GetHolidayDto = exports.UpdateHolidayDto = exports.HolidayDto = void 0;
-const base_dto_1 = __webpack_require__(73);
-const create_get_dto_factory_1 = __webpack_require__(61);
+const base_dto_1 = __webpack_require__(75);
+const create_get_dto_factory_1 = __webpack_require__(63);
 const swagger_1 = __webpack_require__(4);
-const class_validator_1 = __webpack_require__(40);
+const class_validator_1 = __webpack_require__(41);
 const swagger_2 = __webpack_require__(4);
 class HolidayDto extends (0, swagger_2.PartialType)(base_dto_1.BaseDto) {
 }
@@ -10703,7 +10835,7 @@ exports.GetHolidayDto = GetHolidayDto;
 
 
 /***/ }),
-/* 172 */
+/* 174 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -10722,12 +10854,12 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 var _a, _b;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.HolidaysService = void 0;
-const base_service_1 = __webpack_require__(46);
-const users_service_1 = __webpack_require__(45);
+const base_service_1 = __webpack_require__(47);
+const users_service_1 = __webpack_require__(46);
 const common_1 = __webpack_require__(1);
-const typeorm_1 = __webpack_require__(12);
-const typeorm_2 = __webpack_require__(16);
-const holiday_entity_1 = __webpack_require__(173);
+const typeorm_1 = __webpack_require__(13);
+const typeorm_2 = __webpack_require__(17);
+const holiday_entity_1 = __webpack_require__(175);
 let HolidaysService = class HolidaysService extends base_service_1.BaseService {
     constructor(holidaysRepository, usersService) {
         super(holidaysRepository, usersService);
@@ -10744,7 +10876,7 @@ exports.HolidaysService = HolidaysService = __decorate([
 
 
 /***/ }),
-/* 173 */
+/* 175 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -10759,8 +10891,8 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Holiday = void 0;
-const base_entity_1 = __webpack_require__(15);
-const typeorm_1 = __webpack_require__(16);
+const base_entity_1 = __webpack_require__(16);
+const typeorm_1 = __webpack_require__(17);
 let Holiday = class Holiday extends base_entity_1.BaseEntity {
 };
 exports.Holiday = Holiday;
@@ -10774,7 +10906,7 @@ exports.Holiday = Holiday = __decorate([
 
 
 /***/ }),
-/* 174 */
+/* 176 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -10821,7 +10953,7 @@ var HttpExceptionFilter_1;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.HttpExceptionFilter = void 0;
 const common_1 = __webpack_require__(1);
-const crypto = __importStar(__webpack_require__(126));
+const crypto = __importStar(__webpack_require__(128));
 /**
  * HttpExceptionFilter is a global filter that handles all exceptions thrown in the application.
  * It logs the error details, sanitizes sensitive information, and sends a user-friendly response to the client.
@@ -10972,7 +11104,7 @@ exports.HttpExceptionFilter = HttpExceptionFilter = HttpExceptionFilter_1 = __de
 
 
 /***/ }),
-/* 175 */
+/* 177 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -11018,8 +11150,8 @@ var __importStar = (this && this.__importStar) || (function () {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.LoggingInterceptor = void 0;
 const common_1 = __webpack_require__(1);
-const crypto = __importStar(__webpack_require__(126));
-const operators_1 = __webpack_require__(176);
+const crypto = __importStar(__webpack_require__(128));
+const operators_1 = __webpack_require__(178);
 /**
  * LoggingInterceptor is a NestJS interceptor that logs HTTP requests and responses.
  * It also sanitizes sensitive data and adds a correlation ID to each request and response.
@@ -11156,13 +11288,13 @@ exports.LoggingInterceptor = LoggingInterceptor = __decorate([
 
 
 /***/ }),
-/* 176 */
+/* 178 */
 /***/ ((module) => {
 
 module.exports = require("rxjs/operators");
 
 /***/ }),
-/* 177 */
+/* 179 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -11175,8 +11307,8 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.TransformInterceptor = void 0;
 const common_1 = __webpack_require__(1);
-const class_transformer_1 = __webpack_require__(39);
-const operators_1 = __webpack_require__(176);
+const class_transformer_1 = __webpack_require__(40);
+const operators_1 = __webpack_require__(178);
 /**
  * A NestJS interceptor that transforms the response data.
  *
@@ -11208,15 +11340,15 @@ exports.TransformInterceptor = TransformInterceptor = __decorate([
 
 
 /***/ }),
-/* 178 */
+/* 180 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.swaggerCustomOptions = exports.swaggerConfig = void 0;
+exports.swaggerCustomOptions = exports.swaggerConfig = exports.getLocalIpAddress = void 0;
 const config_1 = __webpack_require__(2);
 const swagger_1 = __webpack_require__(4);
-const os_1 = __webpack_require__(179);
+const os_1 = __webpack_require__(181);
 // Initialize ConfigService
 const configService = new config_1.ConfigService();
 // Get local IP address
@@ -11233,10 +11365,11 @@ const getLocalIpAddress = () => {
     }
     return 'localhost'; // Fallback
 };
-const localIp = getLocalIpAddress();
+exports.getLocalIpAddress = getLocalIpAddress;
+const localIp = (0, exports.getLocalIpAddress)();
 const port = configService.get('PORT') || '3000';
 exports.swaggerConfig = new swagger_1.DocumentBuilder()
-    .setTitle('Dowinn Management System API')
+    .setTitle('Dowinn HR Management System API')
     .setDescription('API Documentation')
     .setVersion('1.0')
     .addBearerAuth({
@@ -11247,10 +11380,8 @@ exports.swaggerConfig = new swagger_1.DocumentBuilder()
     description: 'Enter JWT token',
     in: 'header',
 }, 'access-token')
-    .addServer(configService.getOrThrow('APP_URL'))
-    .addServer(`http://${localIp}:${port}`) // Use ConfigService to get server URL
-    // .addTag('Auth', 'Endpoints related to authentication') // Add tags for better organization
-    // .addTag('Users', 'Endpoints related to user management')
+    .addServer(configService.getOrThrow('APP_URL'), "Local Development Server")
+    .addServer(`http://${localIp}:${port}`, "LAN Development Server") // Use ConfigService to get server URL
     .build();
 exports.swaggerCustomOptions = {
     explorer: true,
@@ -11268,13 +11399,23 @@ exports.swaggerCustomOptions = {
         // Disable CSP
         defaultModelsExpandDepth: -1,
         defaultModelExpandDepth: 1,
-        csp: false // This disables Content Security Policy
-    },
+        csp: false, // This disables Content Security Policy
+        tagGroups: [
+            {
+                name: 'Account Management',
+                tags: ['Auth', 'Users', 'Profile', 'Sessions'],
+            },
+            {
+                name: 'Employee Management',
+                tags: ['Employees', 'Roles', 'Permissions'],
+            }
+        ]
+    }
 };
 
 
 /***/ }),
-/* 179 */
+/* 181 */
 /***/ ((module) => {
 
 module.exports = require("os");

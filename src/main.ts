@@ -2,6 +2,7 @@ import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
 import { SwaggerModule } from '@nestjs/swagger';
+import { apiReference } from '@scalar/nestjs-api-reference';
 import compression from 'compression';
 import rateLimit from 'express-rate-limit';
 import helmet from 'helmet';
@@ -81,6 +82,14 @@ async function bootstrap() {
   // Swagger Setup
   const document = SwaggerModule.createDocument(app, swaggerConfig); // Create a Swagger document
   SwaggerModule.setup('api', app, document, swaggerCustomOptions); // Set up the Swagger module
+
+  // Scalar Setup - Make sure to install @scalar/nestjs-api-reference package
+  app.use(
+    '/reference',
+    apiReference({
+      content: document,
+    }),
+  )
 
   await app.listen(port, '0.0.0.0'); // Listen on all network interfaces (LAN)
   console.log(`Application is running on: ${appUrl}/api`);

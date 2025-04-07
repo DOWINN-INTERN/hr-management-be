@@ -20,6 +20,9 @@ export interface AuthenticatedSocket extends Socket {
     connectionId?: string;
 }
 
+// Type-safe event handling
+type WsEventHandler<T = any> = (client: AuthenticatedSocket, payload: T) => Promise<void> | void;
+
 export type WsResponseData = {
     event: string;
     data: any;
@@ -37,6 +40,9 @@ export abstract class BaseGateway implements OnGatewayInit, OnGatewayConnection,
     // Rate limiting protection
     protected messageRateLimit = new Map<string, number>();
     protected readonly MAX_MESSAGES_PER_MINUTE = 60;
+    protected readonly HEARTBEAT_INTERVAL = 60000; // ms
+    protected readonly CONNECTION_TIMEOUT = 300000; // 5 minutes in ms
+    protected readonly AUTH_TOKEN_EXPIRY_BUFFER = 300; // 5 minutes in seconds
     
     // Heartbeat tracking
     protected heartbeatInterval?: NodeJS.Timeout;
@@ -49,6 +55,7 @@ export abstract class BaseGateway implements OnGatewayInit, OnGatewayConnection,
     // Gateway configuration
     protected abstract namespace: string;
     protected abstract eventHandlers: Map<string, (client: AuthenticatedSocket, payload: any) => void>;
+
 
     // Lifecycle hooks
     onModuleInit() {
@@ -135,45 +142,70 @@ export abstract class BaseGateway implements OnGatewayInit, OnGatewayConnection,
         }
     }
 
+    // A centralized error handler
+    protected handleError(context: string, error: unknown, client?: AuthenticatedSocket): void {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        const stack = error instanceof Error ? error.stack : undefined;
+        
+        this.logger.error(`${context}: ${errorMessage}`, stack);
+        
+        if (client) {
+        client.emit('error', { 
+            message: 'An error occurred', 
+            code: 'INTERNAL_ERROR',
+            context 
+        });
+        }
+    }
+
     // Authentication - override this in derived classes for specific auth logic
     protected async authenticateClient(client: AuthenticatedSocket): Promise<boolean> {
         try {
-            // Extract token from handshake auth or query parameters
-            const token = this.extractTokenFromSocket(client);
-            
-            if (!token) {
-                return false;
-            }
-
-            // Verify and decode the token
-            const payload = await this.jwtService.verifyToken(token);
-            
-            // Find the user by ID from the token payload
-            const user = await this.usersService.findOneBy({ id: payload.sub });
-            
-            if (!user) {
-                return false;
-            }
-            
-            // Attach user information to the socket
-            client.user = {
-                id: user.id,
-                email: payload.email,
-                roles: payload.roles,
-                departments: payload.departments,
-                organizations: payload.organizations,
-                branches: payload.branches,
-            };
-            
-            // Generate a unique connection ID
-            client.connectionId = `${user.id}-${Date.now()}`;
-            
-            return true;
-        } catch (error) {
-            console.error('WebSocket authentication error:', error);
+          const token = this.extractTokenFromSocket(client);
+          
+          if (!token) {
+            this.logger.debug('No token provided');
             return false;
+          }
+      
+          // Verify token hasn't expired
+          const payload = await this.jwtService.verifyToken(token);
+          
+          // Check token expiration with buffer time to avoid edge cases
+          const currentTime = Math.floor(Date.now() / 1000);
+          if (payload.exp && payload.exp - this.AUTH_TOKEN_EXPIRY_BUFFER < currentTime) {
+            this.logger.debug(`Token expiring soon: ${payload.exp - currentTime}s remaining`);
+            return false;
+          }
+          
+          // Find and verify the user exists and is active
+          const user = await this.usersService.findOneBy({ 
+            id: payload.sub
+          });
+          
+          if (!user) {
+            this.logger.debug(`User not found or inactive: ${payload.sub}`);
+            return false;
+          }
+          
+          // Store minimal user data on socket
+          client.user = {
+            id: user.id,
+            email: payload.email,
+            roles: payload.roles,
+            // Additional fields
+          };
+          
+          // Track connection with timestamp
+          client.connectionId = `${user.id}-${Date.now()}`;
+          client.handshake.auth.connectedAt = Date.now();
+          
+          return true;
+        } catch (error) {
+          this.handleError('Authentication', error);
+          return false;
         }
-    }
+      }
 
     // Helper method to extract token from socket connection
     private extractTokenFromSocket(client: AuthenticatedSocket): string | null {
@@ -330,9 +362,25 @@ export abstract class BaseGateway implements OnGatewayInit, OnGatewayConnection,
     }
     
     protected checkConnections(): void {
-        // Implement connection checking if needed
-        // For example, ping clients and disconnect those not responding
-    }
+        const now = Date.now();
+        
+        // Check each connection for activity
+        this.connectedClients.forEach((client, userId) => {
+          if (!client.connected) {
+            this.logger.debug(`Removing disconnected client: ${userId}`);
+            this.connectedClients.delete(userId);
+            return;
+          }
+          
+          // Check for timeout (no activity for X minutes)
+          const connectedAt = client.handshake.auth.connectedAt || 0;
+          if (now - connectedAt > this.CONNECTION_TIMEOUT) {
+            this.logger.debug(`Connection timeout for user: ${userId}`);
+            client.disconnect(true);
+            this.connectedClients.delete(userId);
+          }
+        });
+      }
     
     // Event handling setup
     protected setupEventHandlers(): void {

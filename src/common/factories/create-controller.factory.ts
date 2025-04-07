@@ -1,10 +1,11 @@
 import { BaseEntity } from '@/database/entities/base.entity';
-import { Body, Controller, Inject, Param, Type } from '@nestjs/common';
-import { ApiBody, ApiParam, ApiTags } from '@nestjs/swagger';
+import { Body, Controller, HttpStatus, Inject, Param, Type } from '@nestjs/common';
+import { ApiBody, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { singular } from 'pluralize';
 import { BaseController } from '../controllers/base.controller';
 import { CurrentUser } from '../decorators/current-user.decorator';
 import { Override } from '../decorators/override.decorator';
+import { GeneralResponseDto } from '../dtos/generalresponse.dto';
 import { BaseService } from '../services/base.service';
 
 export function createController<TEntity extends BaseEntity<TEntity>, GetDto, CreateDto = null, UpdateDto = null>(
@@ -22,7 +23,27 @@ export function createController<TEntity extends BaseEntity<TEntity>, GetDto, Cr
     }
 
     @Override()
-    @ApiBody({ type: createDtoClass, description: `${singular(entityName)} creation data` })
+    @ApiOperation({ 
+      summary: `Create a new ${singular(entityName)}`,
+      description: `Creates a new ${singular(entityName)} record in the database with the provided data.`
+    })
+    @ApiBody({ 
+      type: createDtoClass, 
+      description: `${singular(entityName)} creation data`,
+      required: true
+    })
+    @ApiResponse({ 
+      status: HttpStatus.CREATED, 
+      description: `The ${singular(entityName)} has been successfully created.`,
+      type: getDtoClass
+    })
+    @ApiResponse({ status: HttpStatus.BAD_REQUEST, description: 'Invalid input data.', type: GeneralResponseDto })
+    @ApiResponse({ status: HttpStatus.UNPROCESSABLE_ENTITY, description: 'Unprocessable entity.', type: GeneralResponseDto })
+    @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized.', type: GeneralResponseDto })
+    @ApiResponse({ status: HttpStatus.CONFLICT, description: `${singular(entityName)} already exists.`, type: GeneralResponseDto })
+    @ApiResponse({ status: HttpStatus.INTERNAL_SERVER_ERROR, description: 'Internal server error.', type: GeneralResponseDto })
+    @ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Related entity not found.', type: GeneralResponseDto })
+    @ApiResponse({ status: HttpStatus.FORBIDDEN, description: 'Forbidden.', type: GeneralResponseDto })
     override async create(
       @Body() entityDto: CreateDto,
       @CurrentUser('sub') createdById: string
@@ -31,8 +52,32 @@ export function createController<TEntity extends BaseEntity<TEntity>, GetDto, Cr
     }
 
     @Override()
-    @ApiParam({ name: 'id', description: `${singular(entityName)} ID` })
-    @ApiBody({ type: updateDtoClass, description: `${singular(entityName)} update data` })
+    @ApiOperation({ 
+      summary: `Update an existing ${singular(entityName)}`,
+      description: `Updates an existing ${singular(entityName)} record in the database with the provided data.`
+    })
+    @ApiParam({ 
+      name: 'id', 
+      description: `The unique identifier of the ${singular(entityName)} to update`,
+      required: true 
+    })
+    @ApiBody({ 
+      type: updateDtoClass, 
+      description: `${singular(entityName)} update data`,
+      required: true
+    })
+    @ApiResponse({ 
+      status: HttpStatus.OK, 
+      description: `The ${singular(entityName)} has been successfully updated.`,
+      type: getDtoClass
+    })
+    @ApiResponse({ status: HttpStatus.BAD_REQUEST, description: 'Invalid input data.', type: GeneralResponseDto })
+    @ApiResponse({ status: HttpStatus.UNPROCESSABLE_ENTITY, description: 'Unprocessable entity.', type: GeneralResponseDto })
+    @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized.', type: GeneralResponseDto })
+    @ApiResponse({ status: HttpStatus.NOT_FOUND, description: `${singular(entityName)} not found.`, type: GeneralResponseDto })
+    @ApiResponse({ status: HttpStatus.INTERNAL_SERVER_ERROR, description: 'Internal server error.', type: GeneralResponseDto })
+    @ApiResponse({ status: HttpStatus.FORBIDDEN, description: 'Forbidden.', type: GeneralResponseDto })
+    @ApiResponse({ status: HttpStatus.CONFLICT, description: 'Data conflict during update.', type: GeneralResponseDto })
     override async update(
         @Param('id') id: string,
         @Body() entityDto: UpdateDto,

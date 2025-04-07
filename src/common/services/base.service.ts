@@ -1,8 +1,8 @@
-import dataSource from '@/database/data-source';
-import { BaseEntity } from '@/database/entities/base.entity';
-import { UsersService } from '@/modules/account-management/users/users.service';
 import { BadRequestException, Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
-import { DeepPartial, FindOneOptions, FindOptionsOrder, FindOptionsRelations, FindOptionsSelect, FindOptionsWhere, In, Repository, SelectQueryBuilder } from 'typeorm';
+import { DeepPartial, FindOneOptions, FindOptionsOrder, FindOptionsRelationByString, FindOptionsRelations, FindOptionsSelect, FindOptionsSelectByString, FindOptionsWhere, In, Repository, SelectQueryBuilder } from 'typeorm';
+import dataSource from '../../database/data-source';
+import { BaseEntity } from '../../database/entities/base.entity';
+import { UsersService } from '../../modules/account-management/users/users.service';
 import { PaginatedResponseDto } from '../dtos/paginated-response.dto';
 import { PaginationDto } from '../dtos/pagination.dto';
 import { UtilityHelper } from '../helpers/utility.helper';
@@ -55,42 +55,114 @@ export abstract class BaseService<T extends BaseEntity<T>> {
   async findAllComplex(paginationDto: PaginationDto<T>): Promise<PaginatedResponseDto<T>> {
     try {
       const findOptions = paginationDto.toFindManyOptions();
-
-      // For complex filtering that requires JOIN operations or custom SQL
-      if (Object.keys(findOptions.where || {}).length > 3) {
+      const alias = 'entity';
+      
+      // For complex filtering that requires JOIN operations or nested relations
+      if (Object.keys(findOptions.where || {}).length > 2 || 
+          (findOptions.relations && Object.keys(findOptions.relations).length > 0)) {
+        
         // Use QueryBuilder for more complex queries
-        const queryBuilder = this.repository.createQueryBuilder('entity');
+        const queryBuilder = this.repository.createQueryBuilder(alias);
+        
+        // Track joined relations to avoid duplicates
+        const joinedRelations = new Set<string>();
         
         // Apply where conditions from findOptions
-        Object.entries(findOptions.where || {}).forEach(([key, value]) => {
-          if (typeof value === 'object' && value !== null) {
-            // Handle TypeORM operators
-            queryBuilder.andWhere(`entity.${key} = :${key}`, { [key]: value });
-          } else {
-            queryBuilder.andWhere(`entity.${key} = :${key}`, { [key]: value });
+        if (findOptions.where) {
+          Object.entries(findOptions.where).forEach(([key, value]) => {
+            // Skip isDeleted as we'll handle it separately
+            if (key === 'isDeleted') return;
+            
+            // Handle nested properties (relations.field)
+            if (key.includes('.')) {
+              const [relation, field] = key.split('.');
+              const relationAlias = `${relation}_${this.queryState.paramCounter++}`;
+              
+              // Join the relation if not already joined
+              if (!joinedRelations.has(relation)) {
+                queryBuilder.leftJoin(`${alias}.${relation}`, relationAlias);
+                joinedRelations.add(relation);
+              }
+              
+              // Apply the condition
+              if (typeof value === 'object' && value !== null && !(value instanceof Date)) {
+                // Handle TypeORM operators
+                this.applyOperatorToQueryBuilder(queryBuilder, relationAlias, field, value);
+              } else {
+                queryBuilder.andWhere(`${relationAlias}.${field} = :${key.replace('.', '_')}`, {
+                  [key.replace('.', '_')]: value
+                });
+              }
+            } else {
+              // Handle regular fields
+              if (typeof value === 'object' && value !== null && !(value instanceof Date)) {
+                // Handle TypeORM operators
+                this.applyOperatorToQueryBuilder(queryBuilder, alias, key, value);
+              } else {
+                queryBuilder.andWhere(`${alias}.${key} = :${key}`, { [key]: value });
+              }
+            }
+          });
+          
+          // Add isDeleted filter if not explicitly set
+          if (!findOptions.where.hasOwnProperty('isDeleted')) {
+            queryBuilder.andWhere(`${alias}.isDeleted = :isDeleted`, { isDeleted: false });
           }
-        });
+        }
         
         // Apply ordering
         if (findOptions.order) {
           Object.entries(findOptions.order).forEach(([key, direction]) => {
-            queryBuilder.addOrderBy(`entity.${key}`, direction);
+            // Handle nested ordering
+            if (key.includes('.')) {
+              const [relation, field] = key.split('.');
+              const relationAlias = `${relation}_order`;
+              
+              // Join the relation if not already joined
+              if (!joinedRelations.has(relation)) {
+                queryBuilder.leftJoin(`${alias}.${relation}`, relationAlias);
+                joinedRelations.add(relation);
+              }
+              
+              queryBuilder.addOrderBy(`${relationAlias}.${field}`, direction);
+            } else {
+              queryBuilder.addOrderBy(`${alias}.${key}`, direction);
+            }
           });
         }
         
-        // Apply relations
+        // Handle relations and field selection
         if (findOptions.relations) {
-          Object.keys(findOptions.relations).forEach(relation => {
-            queryBuilder.leftJoinAndSelect(`entity.${relation}`, relation);
+          this.applyRelationsWithFieldSelection(
+            queryBuilder, 
+            alias, 
+            findOptions.relations, 
+            findOptions.select, 
+            joinedRelations
+          );
+        }
+        // If no relations but we have select fields
+        else if (findOptions.select) {
+          // Add ID to selection if not already included
+          if (!Object.keys(findOptions.select).includes('id')) {
+            queryBuilder.addSelect(`${alias}.id`);
+          }
+          
+          // Add selected fields
+          Object.entries(findOptions.select).forEach(([field, included]) => {
+            if (included) {
+              queryBuilder.addSelect(`${alias}.${field}`);
+            }
           });
         }
         
         // Apply pagination
         queryBuilder.skip(findOptions.skip).take(findOptions.take);
         
+        // Execute the query with count
         const [data, totalCount] = await queryBuilder.getManyAndCount();
         
-        this.logger.debug(`Found ${totalCount} items using QueryBuilder`);
+        this.logger.debug(`Found ${totalCount} items using QueryBuilder with relations and field selection`);
         
         // Create a new pagination DTO to maintain all methods
         const updatedPaginationDto = new PaginationDto<T>();
@@ -105,10 +177,8 @@ export abstract class BaseService<T extends BaseEntity<T>> {
           meta: updatedPaginationDto,
         };
       } else {
-        // For simple queries, use findAndCount
+        // For simple queries, use repository's findAndCount
         const [data, totalCount] = await this.repository.findAndCount(findOptions);
-        
-        this.logger.debug(`Found ${totalCount} items using findAndCount`);
         
         // Create a new pagination DTO to maintain all methods
         const updatedPaginationDto = new PaginationDto<T>();
@@ -125,13 +195,163 @@ export abstract class BaseService<T extends BaseEntity<T>> {
       }
     } catch (error) {
       if (error instanceof Error) {
-        this.logger.error(`Error in findAll method: ${error.message}`, error.stack);
+        this.logger.error(`Error in findAllComplex method: ${error.message}`, error.stack);
         throw new InternalServerErrorException(`Failed to retrieve ${this.entityName} records: ${error.message}`);
       } else {
-        this.logger.error(`Error in findAll method: ${String(error)}`);
+        this.logger.error(`Error in findAllComplex method: ${String(error)}`);
         throw new InternalServerErrorException(`Failed to retrieve ${this.entityName} records: ${String(error)}`);
       }
     }
+  }
+  
+  // Helper method to apply operators to QueryBuilder
+  private applyOperatorToQueryBuilder(
+    queryBuilder: SelectQueryBuilder<T>,
+    alias: string,
+    field: string,
+    valueObj: any
+  ): void {
+    const paramName = `${alias}_${field}_${this.queryState.paramCounter++}`;
+    
+    if ('eq' in valueObj) {
+      queryBuilder.andWhere(`${alias}.${field} = :${paramName}`, { [paramName]: valueObj.eq });
+    } else if ('ne' in valueObj) {
+      queryBuilder.andWhere(`${alias}.${field} != :${paramName}`, { [paramName]: valueObj.ne });
+    } else if ('gt' in valueObj) {
+      queryBuilder.andWhere(`${alias}.${field} > :${paramName}`, { [paramName]: valueObj.gt });
+    } else if ('gte' in valueObj) {
+      queryBuilder.andWhere(`${alias}.${field} >= :${paramName}`, { [paramName]: valueObj.gte });
+    } else if ('lt' in valueObj) {
+      queryBuilder.andWhere(`${alias}.${field} < :${paramName}`, { [paramName]: valueObj.lt });
+    } else if ('lte' in valueObj) {
+      queryBuilder.andWhere(`${alias}.${field} <= :${paramName}`, { [paramName]: valueObj.lte });
+    } else if ('like' in valueObj) {
+      queryBuilder.andWhere(`${alias}.${field} LIKE :${paramName}`, { [paramName]: `%${valueObj.like}%` });
+    } else if ('ilike' in valueObj) {
+      queryBuilder.andWhere(`LOWER(${alias}.${field}) LIKE LOWER(:${paramName})`, { [paramName]: `%${valueObj.ilike}%` });
+    } else if ('in' in valueObj && Array.isArray(valueObj.in)) {
+      queryBuilder.andWhere(`${alias}.${field} IN (:...${paramName})`, { [paramName]: valueObj.in });
+    } else if ('between' in valueObj && Array.isArray(valueObj.between) && valueObj.between.length === 2) {
+      queryBuilder.andWhere(`${alias}.${field} BETWEEN :${paramName}Min AND :${paramName}Max`, {
+        [`${paramName}Min`]: valueObj.between[0],
+        [`${paramName}Max`]: valueObj.between[1]
+      });
+    } else if ('isNull' in valueObj) {
+      if (valueObj.isNull) {
+        queryBuilder.andWhere(`${alias}.${field} IS NULL`);
+      } else {
+        queryBuilder.andWhere(`${alias}.${field} IS NOT NULL`);
+      }
+    }
+  }
+  
+  // Helper method to recursively apply relations with field selection
+  private applyRelationsWithFieldSelection(
+    queryBuilder: SelectQueryBuilder<T>,
+    parentAlias: string,
+    relations: FindOptionsRelations<T> | FindOptionsRelationByString,
+    select?: FindOptionsSelect<T> | FindOptionsSelectByString<T>,
+    joinedRelations: Set<string> = new Set()
+  ): void {
+    // Handle string array format for relations
+    if (Array.isArray(relations)) {
+      relations.forEach(relationPath => {
+        const relationAlias = `${relationPath.replace(/\./g, '_')}_rel`;
+        
+        // Skip if already joined
+        if (joinedRelations.has(relationAlias)) {
+          return;
+        }
+        
+        joinedRelations.add(relationAlias);
+        queryBuilder.leftJoinAndSelect(`${parentAlias}.${relationPath}`, relationAlias);
+      });
+      return;
+    }
+    
+    // Process each relation (object format)
+    Object.entries(relations).forEach(([relationName, relationValue]) => {
+      if (!relationValue) return;
+      
+      const relationAlias = `${relationName}_rel`;
+      
+      // Skip if already joined
+      if (joinedRelations.has(relationAlias)) {
+        return;
+      }
+      
+      joinedRelations.add(relationAlias);
+      
+      // Handle nested relations
+      if (typeof relationValue === 'object') {
+        // Join the parent relation
+        queryBuilder.leftJoinAndSelect(`${parentAlias}.${relationName}`, relationAlias);
+        
+        // Apply nested relations recursively
+        this.applyRelationsWithFieldSelection(
+          queryBuilder,
+          relationAlias,
+          relationValue as any,
+          select,
+          joinedRelations
+        );
+      } else {
+        // Apply field selection for this relation if specified
+        const relationSelect = this.extractNestedSelect(relationName, select);
+        
+        if (relationSelect && Object.keys(relationSelect).length > 0) {
+          // Join without selecting all fields
+          queryBuilder.leftJoin(`${parentAlias}.${relationName}`, relationAlias);
+          
+          // Add ID field to ensure proper relation loading
+          queryBuilder.addSelect(`${relationAlias}.id`);
+          
+          // Add each selected field
+          Object.entries(relationSelect).forEach(([field, included]) => {
+            if (included) {
+              queryBuilder.addSelect(`${relationAlias}.${field}`);
+            }
+          });
+        } else {
+          // No specific field selection, select all fields
+          queryBuilder.leftJoinAndSelect(`${parentAlias}.${relationName}`, relationAlias);
+        }
+      }
+    });
+  }
+  
+  // Extract nested select fields for a specific relation
+  private extractNestedSelect(
+    relationName: string,
+    select?: FindOptionsSelect<T> | FindOptionsSelectByString<T>
+  ): Record<string, boolean> | undefined {
+    if (!select) return undefined;
+    
+    const nestedSelect: Record<string, boolean> = {};
+    let hasNestedFields = false;
+    
+    // Handle array format for select
+    if (Array.isArray(select)) {
+      // For array format, check if any items start with the relation name
+      select.forEach(fieldPath => {
+        if (typeof fieldPath === 'string' && fieldPath.startsWith(`${relationName}.`)) {
+          const nestedField = fieldPath.substring(relationName.length + 1);
+          nestedSelect[nestedField] = true;
+          hasNestedFields = true;
+        }
+      });
+    } else {
+      // Handle object format
+      Object.entries(select).forEach(([field, included]) => {
+        if (field.startsWith(`${relationName}.`)) {
+          const nestedField = field.substring(relationName.length + 1);
+          nestedSelect[nestedField] = included as boolean;
+          hasNestedFields = true;
+        }
+      });
+    }
+    
+    return hasNestedFields ? nestedSelect : undefined;
   }
 
   /**

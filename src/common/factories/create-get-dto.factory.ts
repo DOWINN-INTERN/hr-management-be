@@ -38,23 +38,23 @@ import { ApiProperty } from '@nestjs/swagger';
  * const GetUserDto = createGetDto(UserDto);
  * ```
  */
-export function createGetDto<T>(dto: new () => T): any {
-  class GetDto {
+export function createGetDto<T extends object>(dto: new () => T, entity: string = "entity"): any {
+  class GetDto extends (dto as any) {
     @ApiProperty({
         description: 'Unique identifier',
         example: '123e4567-e89b-12d3-a456-426614174000'
     })
-    id!: string;
+    id?: string;
 
     @ApiProperty({
-        description: 'Date when the entity was created',
+        description: `Date when this ${entity} was created`,
         example: '2023-01-01T00:00:00Z',
         type: Date
     })
-    createdAt!: Date;
+    createdAt?: Date;
 
     @ApiProperty({
-        description: 'Date when the entity was last updated',
+        description: `Date when this ${entity} was last updated`,
         example: '2023-01-02T00:00:00Z',
         type: Date,
         nullable: true
@@ -62,35 +62,35 @@ export function createGetDto<T>(dto: new () => T): any {
     updatedAt?: Date;
 
     @ApiProperty({
-        description: 'ID of the user who created this entity',
+        description: `ID of the user who created this ${entity}}`,
         example: '123e4567-e89b-12d3-a456-426614174000',
         nullable: true
     })
     createdBy?: string;
 
     @ApiProperty({
-        description: 'ID of the user who last updated this entity',
+        description: `ID of the user who last updated this ${entity}`,
         example: '123e4567-e89b-12d3-a456-426614174000',
         nullable: true
     })
     updatedBy?: string;
 
     @ApiProperty({
-        description: 'Whether this entity is marked as deleted',
+        description: `Whether this ${entity} is marked as deleted`,
         example: false,
         default: false
     })
-    isDeleted!: boolean;
+    isDeleted?: boolean;
 
     @ApiProperty({
-        description: 'ID of the user who deleted this entity',
+        description: `ID of the user who deleted this ${entity}`,
         example: '123e4567-e89b-12d3-a456-426614174000',
         nullable: true
     })
     deletedBy?: string;
 
     @ApiProperty({
-        description: 'Date when the entity was deleted',
+        description: `Date when this ${entity} was deleted`,
         example: '2023-01-03T00:00:00Z',
         type: Date,
         nullable: true
@@ -98,6 +98,7 @@ export function createGetDto<T>(dto: new () => T): any {
     deletedAt?: Date;
 
     constructor(partial: Partial<T & GetDto>) {
+      super();
       Object.assign(this, partial);
     }
   }

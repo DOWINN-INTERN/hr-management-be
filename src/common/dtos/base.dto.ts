@@ -3,10 +3,12 @@ import { IsOptional, IsString, IsUUID } from 'class-validator';
 
 export class BaseDto {
   @ApiProperty({
-    description: 'Organization ID',
+    description: 'Organization ID - Identifies the organization that owns or scopes this resource. Used for multi-tenant access control and resource partitioning.',
     required: false,
     type: String,
-    example: '123e4567-e89b-12d3-a456-426614174000'
+    format: 'uuid',
+    example: '123e4567-e89b-12d3-a456-426614174000',
+    nullable: true
   })
   @IsOptional()
   @IsUUID()
@@ -14,10 +16,12 @@ export class BaseDto {
   organizationId?: string;
 
   @ApiProperty({
-    description: 'Branch ID',
+    description: 'Branch ID - Specifies the organizational branch that owns or scopes this resource. Represents a subdivision within the parent organization.',
     required: false,
     type: String,
-    example: '123e4567-e89b-12d3-a456-426614174001'
+    format: 'uuid',
+    example: '123e4567-e89b-12d3-a456-426614174001',
+    nullable: true
   })
   @IsOptional()
   @IsUUID()
@@ -25,10 +29,12 @@ export class BaseDto {
   branchId?: string;
 
   @ApiProperty({
-    description: 'Department ID',
+    description: 'Department ID - Indicates the specific department that owns or scopes this resource. Used for departmental-level access control and resource organization.',
     required: false,
-    type: String,
-    example: '123e4567-e89b-12d3-a456-426614174002'
+    type: String, 
+    format: 'uuid',
+    example: '123e4567-e89b-12d3-a456-426614174002',
+    nullable: true
   })
   @IsOptional()
   @IsUUID()
@@ -36,10 +42,12 @@ export class BaseDto {
   departmentId?: string;
 
   @ApiProperty({
-    description: 'User ID',
+    description: 'User ID - Identifies the specific user who owns or has primary responsibility for this resource. Used for user-level permissions and audit trails.',
     required: false,
     type: String,
-    example: '123e4567-e89b-12d3-a456-426614174003'
+    format: 'uuid',
+    example: '123e4567-e89b-12d3-a456-426614174003',
+    nullable: true
   })
   @IsOptional()
   @IsUUID()

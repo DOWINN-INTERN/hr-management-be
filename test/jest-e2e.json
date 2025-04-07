@@ -22,5 +22,8 @@
     "!src/**/*.module.{js,ts}",
     "!src/**/*.interface.{js,ts}",
     "!src/**/*.dto.{js,ts}"
+  ],
+  "moduleNameMapper": [
+    "^@/(.*)$': '<rootDir>/src/$1"
   ]
 }

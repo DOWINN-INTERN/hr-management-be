@@ -3,11 +3,11 @@ import { Module } from '@nestjs/common';
 import { RouterModule } from '@nestjs/core';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Schedule } from './entities/schedule.entity';
+import { GroupsModule } from './groups/groups.module';
+import { HolidaysModule } from './holidays/holidays.module';
 import { SchedulesController } from './schedules.controller';
 import { SchedulesService } from './schedules.service';
-import { GroupsModule } from './groups/groups.module';
 import { ShiftsModule } from './shifts/shifts.module';
-import { HolidaysModule } from './holidays/holidays.module';
 
 @Module({
     imports: [
@@ -30,6 +30,7 @@ import { HolidaysModule } from './holidays/holidays.module';
                       path: 'holidays',
                       module: HolidaysModule
                   }
+
                   ]
               }
         ]),

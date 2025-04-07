@@ -9,5 +9,5 @@ export class PaginatedResponseDto<T> {
   totalCount: number = 0;
 
   @ApiProperty({ description: 'Pagination metadata' })
-  meta: PaginationDto<T> = new PaginationDto();
+  meta: PaginationDto<any> = new PaginationDto();
 }

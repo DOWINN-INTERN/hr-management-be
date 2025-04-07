@@ -38,7 +38,7 @@ export class Employee extends BaseEntity<Employee> {
     @Column({ type: 'float', nullable: true, default: 0 })
     leaveCredits?: number;
 
-    @OneToOne(() => User, (user) => user.employee, { cascade: true })
+    @OneToOne(() => User, (user) => user.employee)
     @JoinColumn({ name: 'userId' }) // Foreign key column
     user!: User;
 
