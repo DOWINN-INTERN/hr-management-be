@@ -15,24 +15,23 @@ import { ShiftsModule } from './shifts/shifts.module';
         UsersModule,
         RouterModule.register([
             {
-                  path: 'schedules',
-                  module: SchedulesModule,
-                  children: [
-                  {
-                      path: 'groups',
-                      module: GroupsModule
-                  },
-                {
-                      path: 'shifts',
-                      module: ShiftsModule
-                  },
-                {
-                      path: 'holidays',
-                      module: HolidaysModule
-                  }
-
-                  ]
-              }
+                path: 'schedules',
+                module: ScheduleManagementModule,
+                children: [
+                    {
+                        path: 'groups',
+                        module: GroupsModule
+                    },
+                    {
+                        path: 'shifts',
+                        module: ShiftsModule
+                    },
+                    {
+                        path: 'holidays',
+                        module: HolidaysModule
+                    }
+                ]
+            }
         ]),
         GroupsModule,
         ShiftsModule,
@@ -47,4 +46,4 @@ import { ShiftsModule } from './shifts/shifts.module';
     ],
     controllers: [SchedulesController],
 })
-export class SchedulesModule {}
+export class ScheduleManagementModule {}

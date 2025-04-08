@@ -19,10 +19,10 @@ const express_rate_limit_1 = __importDefault(__webpack_require__(7));
 const helmet_1 = __importDefault(__webpack_require__(8));
 const morgan_1 = __importDefault(__webpack_require__(9));
 const app_module_1 = __webpack_require__(10);
-const http_exception_filter_1 = __webpack_require__(176);
-const logging_interceptor_1 = __webpack_require__(177);
-const transform_interceptor_1 = __webpack_require__(179);
-const swagger_config_1 = __webpack_require__(180);
+const http_exception_filter_1 = __webpack_require__(207);
+const logging_interceptor_1 = __webpack_require__(208);
+const transform_interceptor_1 = __webpack_require__(209);
+const swagger_config_1 = __webpack_require__(210);
 async function bootstrap() {
     const app = await core_1.NestFactory.create(app_module_1.AppModule);
     const configService = app.get(config_1.ConfigService);
@@ -161,13 +161,15 @@ const config_module_1 = __webpack_require__(67);
 const database_module_1 = __webpack_require__(70);
 const account_management_module_1 = __webpack_require__(71);
 const addresses_module_1 = __webpack_require__(111);
-const documents_module_1 = __webpack_require__(113);
+const attendance_management_module_1 = __webpack_require__(113);
+const biometrics_module_1 = __webpack_require__(128);
+const documents_module_1 = __webpack_require__(144);
 const employee_management_module_1 = __webpack_require__(72);
-const files_module_1 = __webpack_require__(121);
-const logs_module_1 = __webpack_require__(138);
-const notifications_module_1 = __webpack_require__(140);
-const organization_management_module_1 = __webpack_require__(144);
-const schedules_module_1 = __webpack_require__(156);
+const files_module_1 = __webpack_require__(152);
+const logs_module_1 = __webpack_require__(169);
+const notifications_module_1 = __webpack_require__(171);
+const organization_management_module_1 = __webpack_require__(175);
+const schedule_management_module_1 = __webpack_require__(187);
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -184,9 +186,11 @@ exports.AppModule = AppModule = __decorate([
             employee_management_module_1.EmployeeManagementModule,
             account_management_module_1.AccountManagementModule,
             organization_management_module_1.OrganizationManagementModule,
+            attendance_management_module_1.AttendanceManagementModule,
+            schedule_management_module_1.ScheduleManagementModule,
             addresses_module_1.AddressesModule,
             documents_module_1.DocumentsModule,
-            schedules_module_1.SchedulesModule,
+            biometrics_module_1.BiometricsModule,
         ],
         controllers: [],
     })
@@ -636,6 +640,14 @@ __decorate([
     }),
     __metadata("design:type", typeof (_b = typeof employment_condition_enum_1.EmploymentCondition !== "undefined" && employment_condition_enum_1.EmploymentCondition) === "function" ? _b : Object)
 ], Employee.prototype, "employmentCondition", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ nullable: true }),
+    __metadata("design:type", Number)
+], Employee.prototype, "biometricsRole", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ nullable: true }),
+    __metadata("design:type", String)
+], Employee.prototype, "cardNumber", void 0);
 __decorate([
     (0, typeorm_1.Column)({
         type: 'enum',
@@ -1638,7 +1650,10 @@ class BaseController {
         const entityResult = await this.baseService.findAllComplex(paginationDto);
         // Transform using class-transformer
         const dtoResult = {
-            data: (0, class_transformer_1.plainToInstance)(this.getDtoClass, entityResult.data),
+            data: (0, class_transformer_1.plainToInstance)(this.getDtoClass, entityResult.data, {
+                enableCircularCheck: true,
+                exposeUnsetFields: false,
+            }),
             totalCount: entityResult.totalCount,
             meta: entityResult.meta
         };
@@ -2562,9 +2577,9 @@ var BaseService_1;
 var _a, _b;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.BaseService = void 0;
-const data_source_1 = __importDefault(__webpack_require__(48));
 const common_1 = __webpack_require__(1);
 const typeorm_1 = __webpack_require__(17);
+const data_source_1 = __importDefault(__webpack_require__(48));
 const pagination_dto_1 = __webpack_require__(39);
 const utility_helper_1 = __webpack_require__(50);
 const transaction_service_1 = __webpack_require__(51);
@@ -2596,36 +2611,97 @@ let BaseService = BaseService_1 = class BaseService {
     async findAllComplex(paginationDto) {
         try {
             const findOptions = paginationDto.toFindManyOptions();
-            // For complex filtering that requires JOIN operations or custom SQL
-            if (Object.keys(findOptions.where || {}).length > 3) {
+            const alias = 'entity';
+            // For complex filtering that requires JOIN operations or nested relations
+            if (Object.keys(findOptions.where || {}).length > 2 ||
+                (findOptions.relations && Object.keys(findOptions.relations).length > 0)) {
                 // Use QueryBuilder for more complex queries
-                const queryBuilder = this.repository.createQueryBuilder('entity');
+                const queryBuilder = this.repository.createQueryBuilder(alias);
+                // Track joined relations to avoid duplicates
+                const joinedRelations = new Set();
                 // Apply where conditions from findOptions
-                Object.entries(findOptions.where || {}).forEach(([key, value]) => {
-                    if (typeof value === 'object' && value !== null) {
-                        // Handle TypeORM operators
-                        queryBuilder.andWhere(`entity.${key} = :${key}`, { [key]: value });
+                if (findOptions.where) {
+                    Object.entries(findOptions.where).forEach(([key, value]) => {
+                        // Skip isDeleted as we'll handle it separately
+                        if (key === 'isDeleted')
+                            return;
+                        // Handle nested properties (relations.field)
+                        if (key.includes('.')) {
+                            const [relation, field] = key.split('.');
+                            const relationAlias = `${relation}_${this.queryState.paramCounter++}`;
+                            // Join the relation if not already joined
+                            if (!joinedRelations.has(relation)) {
+                                queryBuilder.leftJoin(`${alias}.${relation}`, relationAlias);
+                                joinedRelations.add(relation);
+                            }
+                            // Apply the condition
+                            if (typeof value === 'object' && value !== null && !(value instanceof Date)) {
+                                // Handle TypeORM operators
+                                this.applyOperatorToQueryBuilder(queryBuilder, relationAlias, field, value);
+                            }
+                            else {
+                                queryBuilder.andWhere(`${relationAlias}.${field} = :${key.replace('.', '_')}`, {
+                                    [key.replace('.', '_')]: value
+                                });
+                            }
+                        }
+                        else {
+                            // Handle regular fields
+                            if (typeof value === 'object' && value !== null && !(value instanceof Date)) {
+                                // Handle TypeORM operators
+                                this.applyOperatorToQueryBuilder(queryBuilder, alias, key, value);
+                            }
+                            else {
+                                queryBuilder.andWhere(`${alias}.${key} = :${key}`, { [key]: value });
+                            }
+                        }
+                    });
+                    // Add isDeleted filter if not explicitly set
+                    if (!findOptions.where.hasOwnProperty('isDeleted')) {
+                        queryBuilder.andWhere(`${alias}.isDeleted = :isDeleted`, { isDeleted: false });
                     }
-                    else {
-                        queryBuilder.andWhere(`entity.${key} = :${key}`, { [key]: value });
-                    }
-                });
+                }
                 // Apply ordering
                 if (findOptions.order) {
                     Object.entries(findOptions.order).forEach(([key, direction]) => {
-                        queryBuilder.addOrderBy(`entity.${key}`, direction);
+                        // Handle nested ordering
+                        if (key.includes('.')) {
+                            const [relation, field] = key.split('.');
+                            const relationAlias = `${relation}_order`;
+                            // Join the relation if not already joined
+                            if (!joinedRelations.has(relation)) {
+                                queryBuilder.leftJoin(`${alias}.${relation}`, relationAlias);
+                                joinedRelations.add(relation);
+                            }
+                            queryBuilder.addOrderBy(`${relationAlias}.${field}`, direction);
+                        }
+                        else {
+                            queryBuilder.addOrderBy(`${alias}.${key}`, direction);
+                        }
                     });
                 }
-                // Apply relations
+                // Handle relations and field selection
                 if (findOptions.relations) {
-                    Object.keys(findOptions.relations).forEach(relation => {
-                        queryBuilder.leftJoinAndSelect(`entity.${relation}`, relation);
+                    this.applyRelationsWithFieldSelection(queryBuilder, alias, findOptions.relations, findOptions.select, joinedRelations);
+                }
+                // If no relations but we have select fields
+                else if (findOptions.select) {
+                    // Add ID to selection if not already included
+                    if (!Object.keys(findOptions.select).includes('id')) {
+                        queryBuilder.addSelect(`${alias}.id`);
+                    }
+                    // Add selected fields
+                    Object.entries(findOptions.select).forEach(([field, included]) => {
+                        if (included) {
+                            queryBuilder.addSelect(`${alias}.${field}`);
+                        }
                     });
                 }
                 // Apply pagination
                 queryBuilder.skip(findOptions.skip).take(findOptions.take);
+                // Execute the query with count
                 const [data, totalCount] = await queryBuilder.getManyAndCount();
-                this.logger.debug(`Found ${totalCount} items using QueryBuilder`);
+                this.logger.debug(`Found ${totalCount} items using QueryBuilder with relations and field selection`);
                 // Create a new pagination DTO to maintain all methods
                 const updatedPaginationDto = new pagination_dto_1.PaginationDto();
                 Object.assign(updatedPaginationDto, paginationDto, {
@@ -2639,9 +2715,8 @@ let BaseService = BaseService_1 = class BaseService {
                 };
             }
             else {
-                // For simple queries, use findAndCount
+                // For simple queries, use repository's findAndCount
                 const [data, totalCount] = await this.repository.findAndCount(findOptions);
-                this.logger.debug(`Found ${totalCount} items using findAndCount`);
                 // Create a new pagination DTO to maintain all methods
                 const updatedPaginationDto = new pagination_dto_1.PaginationDto();
                 Object.assign(updatedPaginationDto, paginationDto, {
@@ -2657,14 +2732,142 @@ let BaseService = BaseService_1 = class BaseService {
         }
         catch (error) {
             if (error instanceof Error) {
-                this.logger.error(`Error in findAll method: ${error.message}`, error.stack);
+                this.logger.error(`Error in findAllComplex method: ${error.message}`, error.stack);
                 throw new common_1.InternalServerErrorException(`Failed to retrieve ${this.entityName} records: ${error.message}`);
             }
             else {
-                this.logger.error(`Error in findAll method: ${String(error)}`);
+                this.logger.error(`Error in findAllComplex method: ${String(error)}`);
                 throw new common_1.InternalServerErrorException(`Failed to retrieve ${this.entityName} records: ${String(error)}`);
             }
         }
+    }
+    // Helper method to apply operators to QueryBuilder
+    applyOperatorToQueryBuilder(queryBuilder, alias, field, valueObj) {
+        const paramName = `${alias}_${field}_${this.queryState.paramCounter++}`;
+        if ('eq' in valueObj) {
+            queryBuilder.andWhere(`${alias}.${field} = :${paramName}`, { [paramName]: valueObj.eq });
+        }
+        else if ('ne' in valueObj) {
+            queryBuilder.andWhere(`${alias}.${field} != :${paramName}`, { [paramName]: valueObj.ne });
+        }
+        else if ('gt' in valueObj) {
+            queryBuilder.andWhere(`${alias}.${field} > :${paramName}`, { [paramName]: valueObj.gt });
+        }
+        else if ('gte' in valueObj) {
+            queryBuilder.andWhere(`${alias}.${field} >= :${paramName}`, { [paramName]: valueObj.gte });
+        }
+        else if ('lt' in valueObj) {
+            queryBuilder.andWhere(`${alias}.${field} < :${paramName}`, { [paramName]: valueObj.lt });
+        }
+        else if ('lte' in valueObj) {
+            queryBuilder.andWhere(`${alias}.${field} <= :${paramName}`, { [paramName]: valueObj.lte });
+        }
+        else if ('like' in valueObj) {
+            queryBuilder.andWhere(`${alias}.${field} LIKE :${paramName}`, { [paramName]: `%${valueObj.like}%` });
+        }
+        else if ('ilike' in valueObj) {
+            queryBuilder.andWhere(`LOWER(${alias}.${field}) LIKE LOWER(:${paramName})`, { [paramName]: `%${valueObj.ilike}%` });
+        }
+        else if ('in' in valueObj && Array.isArray(valueObj.in)) {
+            queryBuilder.andWhere(`${alias}.${field} IN (:...${paramName})`, { [paramName]: valueObj.in });
+        }
+        else if ('between' in valueObj && Array.isArray(valueObj.between) && valueObj.between.length === 2) {
+            queryBuilder.andWhere(`${alias}.${field} BETWEEN :${paramName}Min AND :${paramName}Max`, {
+                [`${paramName}Min`]: valueObj.between[0],
+                [`${paramName}Max`]: valueObj.between[1]
+            });
+        }
+        else if ('isNull' in valueObj) {
+            if (valueObj.isNull) {
+                queryBuilder.andWhere(`${alias}.${field} IS NULL`);
+            }
+            else {
+                queryBuilder.andWhere(`${alias}.${field} IS NOT NULL`);
+            }
+        }
+    }
+    // Helper method to recursively apply relations with field selection
+    applyRelationsWithFieldSelection(queryBuilder, parentAlias, relations, select, joinedRelations = new Set()) {
+        // Handle string array format for relations
+        if (Array.isArray(relations)) {
+            relations.forEach(relationPath => {
+                const relationAlias = `${relationPath.replace(/\./g, '_')}_rel`;
+                // Skip if already joined
+                if (joinedRelations.has(relationAlias)) {
+                    return;
+                }
+                joinedRelations.add(relationAlias);
+                queryBuilder.leftJoinAndSelect(`${parentAlias}.${relationPath}`, relationAlias);
+            });
+            return;
+        }
+        // Process each relation (object format)
+        Object.entries(relations).forEach(([relationName, relationValue]) => {
+            if (!relationValue)
+                return;
+            const relationAlias = `${relationName}_rel`;
+            // Skip if already joined
+            if (joinedRelations.has(relationAlias)) {
+                return;
+            }
+            joinedRelations.add(relationAlias);
+            // Handle nested relations
+            if (typeof relationValue === 'object') {
+                // Join the parent relation
+                queryBuilder.leftJoinAndSelect(`${parentAlias}.${relationName}`, relationAlias);
+                // Apply nested relations recursively
+                this.applyRelationsWithFieldSelection(queryBuilder, relationAlias, relationValue, select, joinedRelations);
+            }
+            else {
+                // Apply field selection for this relation if specified
+                const relationSelect = this.extractNestedSelect(relationName, select);
+                if (relationSelect && Object.keys(relationSelect).length > 0) {
+                    // Join without selecting all fields
+                    queryBuilder.leftJoin(`${parentAlias}.${relationName}`, relationAlias);
+                    // Add ID field to ensure proper relation loading
+                    queryBuilder.addSelect(`${relationAlias}.id`);
+                    // Add each selected field
+                    Object.entries(relationSelect).forEach(([field, included]) => {
+                        if (included) {
+                            queryBuilder.addSelect(`${relationAlias}.${field}`);
+                        }
+                    });
+                }
+                else {
+                    // No specific field selection, select all fields
+                    queryBuilder.leftJoinAndSelect(`${parentAlias}.${relationName}`, relationAlias);
+                }
+            }
+        });
+    }
+    // Extract nested select fields for a specific relation
+    extractNestedSelect(relationName, select) {
+        if (!select)
+            return undefined;
+        const nestedSelect = {};
+        let hasNestedFields = false;
+        // Handle array format for select
+        if (Array.isArray(select)) {
+            // For array format, check if any items start with the relation name
+            select.forEach(fieldPath => {
+                if (typeof fieldPath === 'string' && fieldPath.startsWith(`${relationName}.`)) {
+                    const nestedField = fieldPath.substring(relationName.length + 1);
+                    nestedSelect[nestedField] = true;
+                    hasNestedFields = true;
+                }
+            });
+        }
+        else {
+            // Handle object format
+            Object.entries(select).forEach(([field, included]) => {
+                if (field.startsWith(`${relationName}.`)) {
+                    const nestedField = field.substring(relationName.length + 1);
+                    nestedSelect[nestedField] = included;
+                    hasNestedFields = true;
+                }
+            });
+        }
+        return hasNestedFields ? nestedSelect : undefined;
     }
     /**
      * Finds a single entity matching the specified criteria.
@@ -7206,14 +7409,3232 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.AttendanceManagementModule = void 0;
+const users_module_1 = __webpack_require__(12);
+const common_1 = __webpack_require__(1);
+const core_1 = __webpack_require__(3);
+const typeorm_1 = __webpack_require__(13);
+const attendances_controller_1 = __webpack_require__(114);
+const attendances_service_1 = __webpack_require__(116);
+const attendance_entity_1 = __webpack_require__(117);
+const work_hour_module_1 = __webpack_require__(118);
+const work_time_module_1 = __webpack_require__(123);
+let AttendanceManagementModule = class AttendanceManagementModule {
+};
+exports.AttendanceManagementModule = AttendanceManagementModule;
+exports.AttendanceManagementModule = AttendanceManagementModule = __decorate([
+    (0, common_1.Module)({
+        imports: [
+            typeorm_1.TypeOrmModule.forFeature([attendance_entity_1.Attendance]),
+            users_module_1.UsersModule,
+            core_1.RouterModule.register([
+                {
+                    path: 'attendances',
+                    module: AttendanceManagementModule,
+                    children: [
+                        {
+                            path: 'work-time',
+                            module: work_time_module_1.WorkTimeModule
+                        },
+                        {
+                            path: 'work-hour',
+                            module: work_hour_module_1.WorkHourModule
+                        }
+                    ]
+                }
+            ]),
+            work_time_module_1.WorkTimeModule,
+            work_hour_module_1.WorkHourModule,
+        ],
+        providers: [attendances_service_1.AttendancesService],
+        exports: [
+            attendances_service_1.AttendancesService,
+            work_time_module_1.WorkTimeModule,
+            work_hour_module_1.WorkHourModule,
+        ],
+        controllers: [attendances_controller_1.AttendancesController],
+    })
+], AttendanceManagementModule);
+
+
+/***/ }),
+/* 114 */
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.AttendancesController = void 0;
+const create_controller_factory_1 = __webpack_require__(36);
+const attendance_dto_1 = __webpack_require__(115);
+const attendances_service_1 = __webpack_require__(116);
+class AttendancesController extends (0, create_controller_factory_1.createController)('Attendances', // Entity name for Swagger documentation
+attendances_service_1.AttendancesService, // The service handling Attendance-related operations
+attendance_dto_1.GetAttendanceDto, // DTO for retrieving Attendances
+attendance_dto_1.AttendanceDto, // DTO for creating Attendances
+attendance_dto_1.UpdateAttendanceDto) {
+}
+exports.AttendancesController = AttendancesController;
+
+
+/***/ }),
+/* 115 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.GetAttendanceDto = exports.UpdateAttendanceDto = exports.AttendanceDto = void 0;
+const base_dto_1 = __webpack_require__(75);
+const create_get_dto_factory_1 = __webpack_require__(63);
+const swagger_1 = __webpack_require__(4);
+const class_validator_1 = __webpack_require__(41);
+const swagger_2 = __webpack_require__(4);
+class AttendanceDto extends (0, swagger_2.PartialType)(base_dto_1.BaseDto) {
+}
+exports.AttendanceDto = AttendanceDto;
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Name of the attendance' }),
+    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], AttendanceDto.prototype, "name", void 0);
+class UpdateAttendanceDto extends (0, swagger_2.PartialType)(AttendanceDto) {
+}
+exports.UpdateAttendanceDto = UpdateAttendanceDto;
+class GetAttendanceDto extends (0, create_get_dto_factory_1.createGetDto)(AttendanceDto) {
+}
+exports.GetAttendanceDto = GetAttendanceDto;
+
+
+/***/ }),
+/* 116 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
+var _a, _b;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.AttendancesService = void 0;
+const base_service_1 = __webpack_require__(47);
+const users_service_1 = __webpack_require__(46);
+const common_1 = __webpack_require__(1);
+const typeorm_1 = __webpack_require__(13);
+const typeorm_2 = __webpack_require__(17);
+const attendance_entity_1 = __webpack_require__(117);
+let AttendancesService = class AttendancesService extends base_service_1.BaseService {
+    constructor(attendancesRepository, usersService) {
+        super(attendancesRepository, usersService);
+        this.attendancesRepository = attendancesRepository;
+        this.usersService = usersService;
+    }
+};
+exports.AttendancesService = AttendancesService;
+exports.AttendancesService = AttendancesService = __decorate([
+    (0, common_1.Injectable)(),
+    __param(0, (0, typeorm_1.InjectRepository)(attendance_entity_1.Attendance)),
+    __metadata("design:paramtypes", [typeof (_a = typeof typeorm_2.Repository !== "undefined" && typeorm_2.Repository) === "function" ? _a : Object, typeof (_b = typeof users_service_1.UsersService !== "undefined" && users_service_1.UsersService) === "function" ? _b : Object])
+], AttendancesService);
+
+
+/***/ }),
+/* 117 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Attendance = void 0;
+const base_entity_1 = __webpack_require__(16);
+const typeorm_1 = __webpack_require__(17);
+let Attendance = class Attendance extends base_entity_1.BaseEntity {
+};
+exports.Attendance = Attendance;
+__decorate([
+    (0, typeorm_1.Column)(),
+    __metadata("design:type", String)
+], Attendance.prototype, "name", void 0);
+exports.Attendance = Attendance = __decorate([
+    (0, typeorm_1.Entity)('attendances')
+], Attendance);
+
+
+/***/ }),
+/* 118 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.WorkHourModule = void 0;
+const common_1 = __webpack_require__(1);
+const typeorm_1 = __webpack_require__(13);
+const users_module_1 = __webpack_require__(12);
+const work_hour_controller_1 = __webpack_require__(119);
+const work_hour_service_1 = __webpack_require__(121);
+const work_hour_entity_1 = __webpack_require__(122);
+let WorkHourModule = class WorkHourModule {
+};
+exports.WorkHourModule = WorkHourModule;
+exports.WorkHourModule = WorkHourModule = __decorate([
+    (0, common_1.Module)({
+        imports: [
+            typeorm_1.TypeOrmModule.forFeature([work_hour_entity_1.WorkHour]),
+            users_module_1.UsersModule,
+        ],
+        providers: [work_hour_service_1.WorkHourService],
+        exports: [work_hour_service_1.WorkHourService],
+        controllers: [work_hour_controller_1.WorkHourController],
+    })
+], WorkHourModule);
+
+
+/***/ }),
+/* 119 */
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.WorkHourController = void 0;
+const create_controller_factory_1 = __webpack_require__(36);
+const work_hour_dto_1 = __webpack_require__(120);
+const work_hour_service_1 = __webpack_require__(121);
+class WorkHourController extends (0, create_controller_factory_1.createController)('WorkHours', // Entity name for Swagger documentation
+work_hour_service_1.WorkHourService, // The service handling WorkHour-related operations
+work_hour_dto_1.GetWorkHourDto, // DTO for retrieving WorkHours
+work_hour_dto_1.WorkHourDto, // DTO for creating WorkHours
+work_hour_dto_1.UpdateWorkHourDto) {
+}
+exports.WorkHourController = WorkHourController;
+
+
+/***/ }),
+/* 120 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.GetWorkHourDto = exports.UpdateWorkHourDto = exports.WorkHourDto = void 0;
+const base_dto_1 = __webpack_require__(75);
+const create_get_dto_factory_1 = __webpack_require__(63);
+const swagger_1 = __webpack_require__(4);
+const class_validator_1 = __webpack_require__(41);
+const swagger_2 = __webpack_require__(4);
+class WorkHourDto extends (0, swagger_2.PartialType)(base_dto_1.BaseDto) {
+}
+exports.WorkHourDto = WorkHourDto;
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Name of the work-hour' }),
+    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], WorkHourDto.prototype, "name", void 0);
+class UpdateWorkHourDto extends (0, swagger_2.PartialType)(WorkHourDto) {
+}
+exports.UpdateWorkHourDto = UpdateWorkHourDto;
+class GetWorkHourDto extends (0, create_get_dto_factory_1.createGetDto)(WorkHourDto) {
+}
+exports.GetWorkHourDto = GetWorkHourDto;
+
+
+/***/ }),
+/* 121 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
+var _a, _b;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.WorkHourService = void 0;
+const base_service_1 = __webpack_require__(47);
+const users_service_1 = __webpack_require__(46);
+const common_1 = __webpack_require__(1);
+const typeorm_1 = __webpack_require__(13);
+const typeorm_2 = __webpack_require__(17);
+const work_hour_entity_1 = __webpack_require__(122);
+let WorkHourService = class WorkHourService extends base_service_1.BaseService {
+    constructor(workHourRepository, usersService) {
+        super(workHourRepository, usersService);
+        this.workHourRepository = workHourRepository;
+        this.usersService = usersService;
+    }
+};
+exports.WorkHourService = WorkHourService;
+exports.WorkHourService = WorkHourService = __decorate([
+    (0, common_1.Injectable)(),
+    __param(0, (0, typeorm_1.InjectRepository)(work_hour_entity_1.WorkHour)),
+    __metadata("design:paramtypes", [typeof (_a = typeof typeorm_2.Repository !== "undefined" && typeorm_2.Repository) === "function" ? _a : Object, typeof (_b = typeof users_service_1.UsersService !== "undefined" && users_service_1.UsersService) === "function" ? _b : Object])
+], WorkHourService);
+
+
+/***/ }),
+/* 122 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.WorkHour = void 0;
+const base_entity_1 = __webpack_require__(16);
+const typeorm_1 = __webpack_require__(17);
+let WorkHour = class WorkHour extends base_entity_1.BaseEntity {
+};
+exports.WorkHour = WorkHour;
+__decorate([
+    (0, typeorm_1.Column)(),
+    __metadata("design:type", String)
+], WorkHour.prototype, "name", void 0);
+exports.WorkHour = WorkHour = __decorate([
+    (0, typeorm_1.Entity)('work-hours')
+], WorkHour);
+
+
+/***/ }),
+/* 123 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.WorkTimeModule = void 0;
+const common_1 = __webpack_require__(1);
+const typeorm_1 = __webpack_require__(13);
+const users_module_1 = __webpack_require__(12);
+const work_time_controller_1 = __webpack_require__(124);
+const work_time_service_1 = __webpack_require__(126);
+const work_time_entity_1 = __webpack_require__(127);
+let WorkTimeModule = class WorkTimeModule {
+};
+exports.WorkTimeModule = WorkTimeModule;
+exports.WorkTimeModule = WorkTimeModule = __decorate([
+    (0, common_1.Module)({
+        imports: [
+            typeorm_1.TypeOrmModule.forFeature([work_time_entity_1.WorkTime]),
+            users_module_1.UsersModule,
+        ],
+        providers: [work_time_service_1.WorkTimeService],
+        exports: [work_time_service_1.WorkTimeService],
+        controllers: [work_time_controller_1.WorkTimeController],
+    })
+], WorkTimeModule);
+
+
+/***/ }),
+/* 124 */
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.WorkTimeController = void 0;
+const create_controller_factory_1 = __webpack_require__(36);
+const work_time_dto_1 = __webpack_require__(125);
+const work_time_service_1 = __webpack_require__(126);
+class WorkTimeController extends (0, create_controller_factory_1.createController)('WorkTimes', // Entity name for Swagger documentation
+work_time_service_1.WorkTimeService, // The service handling WorkTime-related operations
+work_time_dto_1.GetWorkTimeDto, // DTO for retrieving WorkTimes
+work_time_dto_1.WorkTimeDto, // DTO for creating WorkTimes
+work_time_dto_1.UpdateWorkTimeDto) {
+}
+exports.WorkTimeController = WorkTimeController;
+
+
+/***/ }),
+/* 125 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.GetWorkTimeDto = exports.UpdateWorkTimeDto = exports.WorkTimeDto = void 0;
+const base_dto_1 = __webpack_require__(75);
+const create_get_dto_factory_1 = __webpack_require__(63);
+const swagger_1 = __webpack_require__(4);
+const class_validator_1 = __webpack_require__(41);
+const swagger_2 = __webpack_require__(4);
+class WorkTimeDto extends (0, swagger_2.PartialType)(base_dto_1.BaseDto) {
+}
+exports.WorkTimeDto = WorkTimeDto;
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Name of the work-time' }),
+    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], WorkTimeDto.prototype, "name", void 0);
+class UpdateWorkTimeDto extends (0, swagger_2.PartialType)(WorkTimeDto) {
+}
+exports.UpdateWorkTimeDto = UpdateWorkTimeDto;
+class GetWorkTimeDto extends (0, create_get_dto_factory_1.createGetDto)(WorkTimeDto) {
+}
+exports.GetWorkTimeDto = GetWorkTimeDto;
+
+
+/***/ }),
+/* 126 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
+var _a, _b;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.WorkTimeService = void 0;
+const base_service_1 = __webpack_require__(47);
+const users_service_1 = __webpack_require__(46);
+const common_1 = __webpack_require__(1);
+const typeorm_1 = __webpack_require__(13);
+const typeorm_2 = __webpack_require__(17);
+const work_time_entity_1 = __webpack_require__(127);
+let WorkTimeService = class WorkTimeService extends base_service_1.BaseService {
+    constructor(workTimeRepository, usersService) {
+        super(workTimeRepository, usersService);
+        this.workTimeRepository = workTimeRepository;
+        this.usersService = usersService;
+    }
+};
+exports.WorkTimeService = WorkTimeService;
+exports.WorkTimeService = WorkTimeService = __decorate([
+    (0, common_1.Injectable)(),
+    __param(0, (0, typeorm_1.InjectRepository)(work_time_entity_1.WorkTime)),
+    __metadata("design:paramtypes", [typeof (_a = typeof typeorm_2.Repository !== "undefined" && typeorm_2.Repository) === "function" ? _a : Object, typeof (_b = typeof users_service_1.UsersService !== "undefined" && users_service_1.UsersService) === "function" ? _b : Object])
+], WorkTimeService);
+
+
+/***/ }),
+/* 127 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.WorkTime = void 0;
+const base_entity_1 = __webpack_require__(16);
+const typeorm_1 = __webpack_require__(17);
+let WorkTime = class WorkTime extends base_entity_1.BaseEntity {
+};
+exports.WorkTime = WorkTime;
+__decorate([
+    (0, typeorm_1.Column)(),
+    __metadata("design:type", String)
+], WorkTime.prototype, "name", void 0);
+exports.WorkTime = WorkTime = __decorate([
+    (0, typeorm_1.Entity)('work-times')
+], WorkTime);
+
+
+/***/ }),
+/* 128 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.BiometricsModule = void 0;
+const common_1 = __webpack_require__(1);
+const core_1 = __webpack_require__(3);
+const event_emitter_1 = __webpack_require__(129);
+const typeorm_1 = __webpack_require__(13);
+const biometrics_controller_1 = __webpack_require__(130);
+const biometric_device_entity_1 = __webpack_require__(138);
+const biometric_template_entity_1 = __webpack_require__(139);
+const timeout_interceptor_1 = __webpack_require__(134);
+const biometrics_polling_service_1 = __webpack_require__(140);
+const zkteco_biometrics_service_1 = __webpack_require__(141);
+let BiometricsModule = class BiometricsModule {
+};
+exports.BiometricsModule = BiometricsModule;
+exports.BiometricsModule = BiometricsModule = __decorate([
+    (0, common_1.Module)({
+        imports: [
+            typeorm_1.TypeOrmModule.forFeature([biometric_device_entity_1.BiometricDevice, biometric_template_entity_1.BiometricTemplate]),
+            event_emitter_1.EventEmitterModule.forRoot(),
+            core_1.RouterModule.register([
+                {
+                    path: 'biometrics',
+                    module: BiometricsModule,
+                },
+            ]),
+        ],
+        controllers: [biometrics_controller_1.BiometricsController],
+        providers: [
+            {
+                provide: 'BIOMETRIC_SERVICE',
+                useClass: zkteco_biometrics_service_1.ZKTecoBiometricsService,
+            },
+            // Add this provider for the interceptor
+            {
+                provide: timeout_interceptor_1.TimeoutInterceptor,
+                useFactory: () => new timeout_interceptor_1.TimeoutInterceptor(30), // specify timeout in seconds
+            },
+            biometrics_polling_service_1.BiometricsPollingService,
+        ],
+        exports: ['BIOMETRIC_SERVICE'],
+    })
+], BiometricsModule);
+
+
+/***/ }),
+/* 129 */
+/***/ ((module) => {
+
+module.exports = require("@nestjs/event-emitter");
+
+/***/ }),
+/* 130 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
+var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.BiometricsController = void 0;
+const generalresponse_dto_1 = __webpack_require__(61);
+const common_1 = __webpack_require__(1);
+const swagger_1 = __webpack_require__(4);
+const connect_device_dto_1 = __webpack_require__(131);
+const register_user_dto_1 = __webpack_require__(132);
+const set_time_dto_1 = __webpack_require__(133);
+const timeout_interceptor_1 = __webpack_require__(134);
+const biometric_interface_1 = __webpack_require__(137);
+let BiometricsController = class BiometricsController {
+    constructor(biometricService) {
+        this.biometricService = biometricService;
+    }
+    // Helper method for consistent error handling
+    handleError(error, defaultMessage, notImplementedMessage) {
+        if (error instanceof common_1.HttpException) {
+            throw error;
+        }
+        const errorMessage = this.getErrorMessage(error);
+        if (notImplementedMessage && errorMessage.includes('not implemented')) {
+            throw new common_1.HttpException(notImplementedMessage, common_1.HttpStatus.NOT_IMPLEMENTED);
+        }
+        throw new common_1.HttpException(`${defaultMessage}: ${errorMessage}`, common_1.HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+    // Helper to safely extract error messages
+    getErrorMessage(error) {
+        if (error instanceof Error) {
+            return error.message;
+        }
+        if (typeof error === 'string') {
+            return error;
+        }
+        if (error && typeof error === 'object' && 'message' in error && typeof error.message === 'string') {
+            return error.message;
+        }
+        return String(error);
+    }
+    // @ApiOperation({ summary: 'Get fingerprint template for a user' })
+    // @ApiResponse({ 
+    // status: HttpStatus.OK, 
+    // description: 'Fingerprint template retrieved successfully',
+    // schema: {
+    //     type: 'object',
+    //     properties: {
+    //     id: { type: 'string', example: '1001-0' },
+    //     userId: { type: 'string', example: '1001' },
+    //     fingerId: { type: 'number', example: 0 },
+    //     template: { type: 'string', format: 'binary', description: 'Binary template data' },
+    //     provider: { type: 'string', example: 'zkteco' }
+    //     }
+    // }
+    // })
+    // @ApiResponse({ 
+    //     status: HttpStatus.NOT_FOUND, 
+    //     description: 'Template or device not found',
+    //     type: ErrorResponseDto
+    // })
+    // @ApiResponse({ 
+    //     status: HttpStatus.BAD_REQUEST, 
+    //     description: 'Invalid request',
+    //     type: ErrorResponseDto
+    // })
+    // @Get('users/fingerprint')
+    // async getUserFingerprint(
+    //     @Query(new ValidationPipe({ transform: true })) getFingerprintDto: GetFingerprintDto
+    // ): Promise<IBiometricTemplate | null> {
+    //     try {
+    //         const { deviceId, userId, fingerId = 0 } = getFingerprintDto;
+    //         const template = await this.biometricService.getUserFingerprint(
+    //             deviceId,
+    //             userId,
+    //             fingerId
+    //         );
+    //         if (!template) {
+    //             throw new NotFoundException(`No fingerprint template found for user ${userId} (finger ${fingerId})`);
+    //         }
+    //         return template;
+    //     } catch (error: unknown) {
+    //         return this.handleError(
+    //             error,
+    //             'Failed to retrieve fingerprint template',
+    //             'Fingerprint template not found or retrieval not supported by this device type'
+    //         );
+    //     }
+    // }
+    async registerUser(registerUserDto) {
+        try {
+            return await this.biometricService.registerUser(registerUserDto.deviceId, {
+                userId: registerUserDto.userId,
+                name: registerUserDto.name,
+                password: registerUserDto.password,
+                cardNumber: registerUserDto.cardNumber,
+                role: registerUserDto.role
+            });
+        }
+        catch (error) {
+            return this.handleError(error, 'Failed to register user', 'User registration not supported by this device type');
+        }
+    }
+    // =============================================
+    // Device Management Endpoints
+    // =============================================
+    async connectDevice(connectDeviceDto) {
+        try {
+            return await this.biometricService.connect(connectDeviceDto.ipAddress, connectDeviceDto.port);
+        }
+        catch (error) {
+            if (error instanceof common_1.HttpException) {
+                throw error;
+            }
+            throw new common_1.HttpException(`Failed to connect to device: ${this.getErrorMessage(error)}`, common_1.HttpStatus.SERVICE_UNAVAILABLE);
+        }
+    }
+    async disconnectDevice(deviceId) {
+        try {
+            const result = await this.biometricService.disconnect(deviceId);
+            return {
+                success: result,
+                message: result ? 'Device disconnected successfully' : 'Device disconnection initiated'
+            };
+        }
+        catch (error) {
+            return this.handleError(error, 'Failed to disconnect device', 'Device disconnection not supported by this device type');
+        }
+    }
+    async getConnectedDevices() {
+        const devices = await this.biometricService.getConnectedDevices();
+        return {
+            devices,
+            count: devices.length
+        };
+    }
+    async getDeviceInfo(deviceId) {
+        try {
+            return await this.biometricService.getDeviceInfo(deviceId);
+        }
+        catch (error) {
+            return this.handleError(error, 'Failed to get device information', 'Device information retrieval not supported by this device type');
+        }
+    }
+    // @ApiOperation({ summary: 'Restart a biometric device' })
+    // @ApiResponse({ status: HttpStatus.OK, description: 'Device restarted successfully' })
+    // @ApiResponse({ 
+    //     status: HttpStatus.NOT_FOUND, 
+    //     description: 'Device not found',
+    //     type: ErrorResponseDto
+    // })
+    // @ApiResponse({ 
+    //     status: HttpStatus.NOT_IMPLEMENTED, 
+    //     description: 'Feature not implemented on this device',
+    //     type: ErrorResponseDto
+    // })
+    // @ApiParam({ name: 'deviceId', description: 'Device ID to restart' })
+    // @Post('devices/:deviceId/restart')
+    // async restartDevice(
+    //     @Param('deviceId') deviceId: string
+    // ): Promise<{ success: boolean; message: string }> {
+    //     try {
+    //     const result = await this.biometricService.restartDevice?.(deviceId);
+    //     return { 
+    //         success: result,
+    //         message: result ? 'Device restart initiated' : 'Device restart failed'
+    //     };
+    //     } catch (error: unknown) {
+    //     return this.handleError(
+    //         error,
+    //         'Failed to restart device',
+    //         'Device restart not supported by this device type'
+    //     );
+    //     }
+    // }
+    //   @ApiOperation({ summary: 'Unlock a device door' })
+    //   @ApiResponse({ status: HttpStatus.OK, description: 'Door unlocked successfully' })
+    //   @ApiResponse({ 
+    //     status: HttpStatus.NOT_FOUND, 
+    //     description: 'Device not found',
+    //     type: ErrorResponseDto
+    //   })
+    //   @ApiResponse({ 
+    //     status: HttpStatus.NOT_IMPLEMENTED, 
+    //     description: 'Feature not implemented on this device',
+    //     type: ErrorResponseDto
+    //   })
+    //   @ApiParam({ name: 'deviceId', description: 'Target device ID' })
+    //   @Post('devices/:deviceId/unlock')
+    //   async unlockDoor(
+    //     @Param('deviceId') deviceId: string
+    //   ): Promise<{ success: boolean; message: string }> {
+    //     try {
+    //       const result = await this.biometricService.unlockDoor?.(deviceId);
+    //       return { 
+    //         success: result,
+    //         message: result ? 'Door unlocked successfully' : 'Failed to unlock door'
+    //       };
+    //     } catch (error: unknown) {
+    //       return this.handleError(
+    //         error,
+    //         'Failed to unlock door',
+    //         'Door unlock not supported by this device type'
+    //       );
+    //     }
+    //   }
+    //   @ApiOperation({ summary: 'Execute a custom command on a device' })
+    //   @ApiResponse({ status: HttpStatus.OK, description: 'Command executed successfully' })
+    //   @ApiResponse({ 
+    //     status: HttpStatus.BAD_REQUEST, 
+    //     description: 'Invalid command',
+    //     type: ErrorResponseDto
+    //   })
+    //   @ApiResponse({ 
+    //     status: HttpStatus.NOT_FOUND, 
+    //     description: 'Device not found',
+    //     type: ErrorResponseDto
+    //   })
+    //   @ApiResponse({ 
+    //     status: HttpStatus.NOT_IMPLEMENTED, 
+    //     description: 'Feature not implemented on this device',
+    //     type: ErrorResponseDto
+    //   })
+    //   @ApiParam({ name: 'deviceId', description: 'Target device ID' })
+    //   @Post('devices/:deviceId/command')
+    //   async executeCommand(
+    //     @Param('deviceId') deviceId: string,
+    //     @Body(new ValidationPipe({ transform: true })) commandDto: CommandDto
+    //   ): Promise<{ success: boolean; result: any }> {
+    //     try {
+    //       const result = await this.biometricService.executeCommand?.(
+    //         deviceId, 
+    //         commandDto.command,
+    //         commandDto.data
+    //       );
+    //       return { 
+    //         success: true,
+    //         result
+    //       };
+    //     } catch (error: unknown) {
+    //       return this.handleError(
+    //         error,
+    //         'Failed to execute command',
+    //         'Command execution not supported by this device type'
+    //       );
+    //     }
+    //   }
+    //   @ApiOperation({ summary: 'Get device time' })
+    //   @ApiResponse({ status: HttpStatus.OK, description: 'Current device time' })
+    //   @ApiResponse({ 
+    //     status: HttpStatus.NOT_FOUND, 
+    //     description: 'Device not found',
+    //     type: ErrorResponseDto
+    //   })
+    //   @ApiResponse({ 
+    //     status: HttpStatus.NOT_IMPLEMENTED, 
+    //     description: 'Feature not implemented on this device',
+    //     type: ErrorResponseDto
+    //   })
+    //   @ApiParam({ name: 'deviceId', description: 'Target device ID' })
+    //   @Get('devices/:deviceId/time')
+    //   async getTime(
+    //     @Param('deviceId') deviceId: string
+    //   ): Promise<{ deviceId: string; time: Date }> {
+    //     try {
+    //       const time = await this.biometricService.getTime?.(deviceId);
+    //       return { deviceId, time };
+    //     } catch (error: unknown) {
+    //       return this.handleError(
+    //         error,
+    //         'Failed to get device time',
+    //         'Time retrieval not supported by this device type'
+    //       );
+    //     }
+    //   }
+    async setTime(deviceId, timeDto) {
+        var _a, _b;
+        try {
+            const time = new Date(timeDto.time);
+            const result = await ((_b = (_a = this.biometricService).setTime) === null || _b === void 0 ? void 0 : _b.call(_a, deviceId, time));
+            return {
+                success: result,
+                message: result ? 'Device time set successfully' : 'Failed to set device time'
+            };
+        }
+        catch (error) {
+            return this.handleError(error, 'Failed to set device time', 'Time setting not supported by this device type');
+        }
+    }
+    // =============================================
+    // User & Template Management Endpoints
+    // =============================================
+    //   @ApiOperation({ summary: 'Enroll a user fingerprint' })
+    //   @ApiResponse({ 
+    //     status: HttpStatus.CREATED, 
+    //     description: 'User fingerprint enrolled successfully',
+    //     type: Object
+    //   })
+    //   @ApiResponse({ 
+    //     status: HttpStatus.BAD_REQUEST, 
+    //     description: 'Invalid input data',
+    //     type: ErrorResponseDto
+    //   })
+    //   @ApiResponse({ 
+    //     status: HttpStatus.NOT_FOUND, 
+    //     description: 'Device not found',
+    //     type: ErrorResponseDto
+    //   })
+    //   @ApiResponse({ 
+    //     status: HttpStatus.NOT_IMPLEMENTED, 
+    //     description: 'Feature not implemented on this device',
+    //     type: ErrorResponseDto
+    //   })
+    //   @Post('users/enroll')
+    //   async enrollUser(
+    //     @Body(new ValidationPipe({ transform: true })) enrollUserDto: EnrollUserDto
+    //   ): Promise<IBiometricTemplate> {
+    //     try {
+    //       return await this.biometricService.enrollUser(
+    //         enrollUserDto.deviceId,
+    //         enrollUserDto.userId,
+    //         enrollUserDto.fingerId
+    //       );
+    //     } catch (error: unknown) {
+    //       return this.handleError(
+    //         error,
+    //         'Failed to enroll user',
+    //         'User enrollment not supported by this device type'
+    //       );
+    //     }
+    //   }
+    //   @ApiOperation({ summary: 'Create or update a user on a device' })
+    //   @ApiResponse({ 
+    //     status: HttpStatus.CREATED, 
+    //     description: 'User created/updated successfully',
+    //     type: Object
+    //   })
+    //   @ApiResponse({ 
+    //     status: HttpStatus.BAD_REQUEST, 
+    //     description: 'Invalid input data',
+    //     type: ErrorResponseDto
+    //   })
+    //   @ApiResponse({ 
+    //     status: HttpStatus.NOT_FOUND, 
+    //     description: 'Device not found',
+    //     type: ErrorResponseDto
+    //   })
+    //   @ApiResponse({ 
+    //     status: HttpStatus.NOT_IMPLEMENTED, 
+    //     description: 'Feature not implemented on this device',
+    //     type: ErrorResponseDto
+    //   })
+    //   @Post('devices/:deviceId/users')
+    //   async setUser(
+    //     @Param('deviceId') deviceId: string,
+    //     @Body(new ValidationPipe({ transform: true })) userDto: SetUserDto
+    //   ): Promise<{ success: boolean; message: string }> {
+    //     try {
+    //       const result = await this.biometricService.setUser?.(
+    //         deviceId,
+    //         userDto.uid,
+    //         userDto.userId,
+    //         userDto.name,
+    //         userDto.password,
+    //         userDto.role,
+    //         userDto.cardno
+    //       );
+    //       return { 
+    //         success: result,
+    //         message: result 
+    //           ? `User ${userDto.userId} created/updated successfully` 
+    //           : `Failed to create/update user ${userDto.userId}`
+    //       };
+    //     } catch (error: unknown) {
+    //       return this.handleError(
+    //         error,
+    //         'Failed to create/update user',
+    //         'User creation not supported by this device type'
+    //       );
+    //     }
+    //   }
+    async deleteUser(deviceId, userId) {
+        try {
+            const result = await this.biometricService.deleteUser(deviceId, userId);
+            return {
+                success: result,
+                message: result ? `User ${userId} successfully deleted` : `Failed to delete user ${userId}`
+            };
+        }
+        catch (error) {
+            return this.handleError(error, 'Failed to delete user', 'User deletion not supported by this device type');
+        }
+    }
+    //   @ApiOperation({ summary: 'Verify a fingerprint' })
+    //   @ApiResponse({ status: HttpStatus.OK, description: 'Verification result' })
+    //   @ApiResponse({ 
+    //     status: HttpStatus.BAD_REQUEST, 
+    //     description: 'Invalid input data',
+    //     type: ErrorResponseDto
+    //   })
+    //   @ApiResponse({ 
+    //     status: HttpStatus.NOT_FOUND, 
+    //     description: 'Device not found',
+    //     type: ErrorResponseDto
+    //   })
+    //   @ApiResponse({ 
+    //     status: HttpStatus.NOT_IMPLEMENTED, 
+    //     description: 'Feature not implemented on this device',
+    //     type: ErrorResponseDto
+    //   })
+    //   @Post('verify')
+    //   async verifyFingerprint(
+    //     @Body(new ValidationPipe({ transform: true })) verifyDto: VerifyFingerprintDto
+    //   ): Promise<{ verified: boolean; userId: string }> {
+    //     try {
+    //       const result = await this.biometricService.verifyFingerprint(
+    //         verifyDto.deviceId,
+    //         verifyDto.template
+    //       );
+    //       return { 
+    //         verified: result,
+    //         userId: verifyDto.template.userId
+    //       };
+    //     } catch (error: unknown) {
+    //       return this.handleError(
+    //         error,
+    //         'Failed to verify fingerprint',
+    //         'Fingerprint verification not supported by this device type'
+    //       );
+    //     }
+    //   }
+    //   @ApiOperation({ summary: 'Sync users between two devices' })
+    //   @ApiResponse({ status: HttpStatus.OK, description: 'Users synced successfully' })
+    //   @ApiResponse({ 
+    //     status: HttpStatus.BAD_REQUEST, 
+    //     description: 'Invalid input data',
+    //     type: ErrorResponseDto
+    //   })
+    //   @ApiResponse({ 
+    //     status: HttpStatus.NOT_FOUND, 
+    //     description: 'Device not found',
+    //     type: ErrorResponseDto
+    //   })
+    //   @ApiResponse({ 
+    //     status: HttpStatus.NOT_IMPLEMENTED, 
+    //     description: 'Feature not implemented on this device',
+    //     type: ErrorResponseDto
+    //   })
+    //   @Post('devices/sync')
+    //   async syncUsers(
+    //     @Body(new ValidationPipe({ transform: true })) syncUsersDto: SyncUsersDto
+    //   ): Promise<{ syncedCount: number; success: boolean; message: string }> {
+    //     try {
+    //       const count = await this.biometricService.syncUsers?.(
+    //         syncUsersDto.sourceDeviceId,
+    //         syncUsersDto.targetDeviceId
+    //       );
+    //       return { 
+    //         syncedCount: count,
+    //         success: count > 0,
+    //         message: count > 0 
+    //           ? `Successfully synced ${count} users` 
+    //           : 'No users were synced'
+    //       };
+    //     } catch (error: unknown) {
+    //       return this.handleError(
+    //         error,
+    //         'Failed to sync users',
+    //         'User synchronization not supported by this device type'
+    //       );
+    //     }
+    //   }
+    // =============================================
+    // Data Operation Endpoints
+    // =============================================
+    async getUsers(deviceId) {
+        try {
+            return await this.biometricService.getUsers(deviceId);
+        }
+        catch (error) {
+            return this.handleError(error, 'Failed to get users', 'User listing not supported by this device type');
+        }
+    }
+    async getUserDetails(deviceId) {
+        var _a, _b;
+        try {
+            const users = await ((_b = (_a = this.biometricService).getUserDetails) === null || _b === void 0 ? void 0 : _b.call(_a, deviceId));
+            return {
+                users,
+                count: users.length
+            };
+        }
+        catch (error) {
+            return this.handleError(error, 'Failed to get user details', 'Detailed user listing not supported by this device type');
+        }
+    }
+    async getAttendanceRecords(deviceId, startDate, endDate) {
+        try {
+            const records = await this.biometricService.getAttendanceRecords(deviceId, startDate ? new Date(startDate) : undefined, endDate ? new Date(endDate) : undefined);
+            return {
+                records,
+                count: records.length,
+                deviceId
+            };
+        }
+        catch (error) {
+            return this.handleError(error, 'Failed to get attendance records', 'Attendance record retrieval not supported by this device type');
+        }
+    }
+    async getAttendanceSize(deviceId) {
+        var _a, _b;
+        try {
+            const size = await ((_b = (_a = this.biometricService).getAttendanceSize) === null || _b === void 0 ? void 0 : _b.call(_a, deviceId));
+            return { size, deviceId };
+        }
+        catch (error) {
+            return this.handleError(error, 'Failed to get attendance size', 'Attendance size retrieval not supported by this device type');
+        }
+    }
+    async clearAttendanceRecords(deviceId) {
+        try {
+            const result = await this.biometricService.clearAttendanceRecords(deviceId);
+            return {
+                success: result,
+                message: result
+                    ? 'Attendance records cleared successfully'
+                    : 'Failed to clear attendance records'
+            };
+        }
+        catch (error) {
+            return this.handleError(error, 'Failed to clear attendance records', 'Attendance record clearing not supported by this device type');
+        }
+    }
+};
+exports.BiometricsController = BiometricsController;
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Register a new user on a biometric device' }),
+    (0, swagger_1.ApiResponse)({
+        status: common_1.HttpStatus.CREATED,
+        description: 'User registered successfully',
+        type: Object
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: common_1.HttpStatus.BAD_REQUEST,
+        description: 'Invalid input data',
+        type: generalresponse_dto_1.GeneralResponseDto
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: common_1.HttpStatus.NOT_FOUND,
+        description: 'Device not found',
+        type: generalresponse_dto_1.GeneralResponseDto
+    }),
+    (0, common_1.Post)('users/register'),
+    __param(0, (0, common_1.Body)(new common_1.ValidationPipe({ transform: true }))),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [typeof (_b = typeof register_user_dto_1.RegisterUserDto !== "undefined" && register_user_dto_1.RegisterUserDto) === "function" ? _b : Object]),
+    __metadata("design:returntype", typeof (_c = typeof Promise !== "undefined" && Promise) === "function" ? _c : Object)
+], BiometricsController.prototype, "registerUser", null);
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Connect to a biometric device' }),
+    (0, swagger_1.ApiResponse)({
+        status: common_1.HttpStatus.CREATED,
+        description: 'Device connected successfully',
+        type: Object
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: common_1.HttpStatus.BAD_REQUEST,
+        description: 'Invalid input data',
+        type: generalresponse_dto_1.GeneralResponseDto
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: common_1.HttpStatus.SERVICE_UNAVAILABLE,
+        description: 'Device connection failed',
+        type: generalresponse_dto_1.GeneralResponseDto
+    }),
+    (0, common_1.Post)('devices/connect'),
+    __param(0, (0, common_1.Body)(new common_1.ValidationPipe({ transform: true }))),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [typeof (_d = typeof connect_device_dto_1.ConnectDeviceDto !== "undefined" && connect_device_dto_1.ConnectDeviceDto) === "function" ? _d : Object]),
+    __metadata("design:returntype", typeof (_e = typeof Promise !== "undefined" && Promise) === "function" ? _e : Object)
+], BiometricsController.prototype, "connectDevice", null);
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Disconnect from a biometric device' }),
+    (0, swagger_1.ApiResponse)({ status: common_1.HttpStatus.OK, description: 'Device disconnected successfully' }),
+    (0, swagger_1.ApiResponse)({
+        status: common_1.HttpStatus.NOT_FOUND,
+        description: 'Device not found',
+        type: generalresponse_dto_1.GeneralResponseDto
+    }),
+    (0, swagger_1.ApiParam)({ name: 'deviceId', description: 'Device ID to disconnect from' }),
+    (0, common_1.Post)('devices/:deviceId/disconnect'),
+    __param(0, (0, common_1.Param)('deviceId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", typeof (_f = typeof Promise !== "undefined" && Promise) === "function" ? _f : Object)
+], BiometricsController.prototype, "disconnectDevice", null);
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Get all connected biometric devices' }),
+    (0, swagger_1.ApiResponse)({
+        status: common_1.HttpStatus.OK,
+        description: 'List of connected devices',
+        type: [Object]
+    }),
+    (0, common_1.Get)('devices'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", typeof (_g = typeof Promise !== "undefined" && Promise) === "function" ? _g : Object)
+], BiometricsController.prototype, "getConnectedDevices", null);
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Get device information' }),
+    (0, swagger_1.ApiResponse)({ status: common_1.HttpStatus.OK, description: 'Device information' }),
+    (0, swagger_1.ApiResponse)({
+        status: common_1.HttpStatus.NOT_FOUND,
+        description: 'Device not found',
+        type: generalresponse_dto_1.GeneralResponseDto
+    }),
+    (0, swagger_1.ApiParam)({ name: 'deviceId', description: 'Target device ID' }),
+    (0, common_1.Get)('devices/:deviceId/info'),
+    __param(0, (0, common_1.Param)('deviceId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", typeof (_h = typeof Promise !== "undefined" && Promise) === "function" ? _h : Object)
+], BiometricsController.prototype, "getDeviceInfo", null);
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Set device time' }),
+    (0, swagger_1.ApiResponse)({ status: common_1.HttpStatus.OK, description: 'Device time set successfully' }),
+    (0, swagger_1.ApiResponse)({
+        status: common_1.HttpStatus.BAD_REQUEST,
+        description: 'Invalid time format',
+        type: generalresponse_dto_1.GeneralResponseDto
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: common_1.HttpStatus.NOT_FOUND,
+        description: 'Device not found',
+        type: generalresponse_dto_1.GeneralResponseDto
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: common_1.HttpStatus.NOT_IMPLEMENTED,
+        description: 'Feature not implemented on this device',
+        type: generalresponse_dto_1.GeneralResponseDto
+    }),
+    (0, swagger_1.ApiParam)({ name: 'deviceId', description: 'Target device ID' }),
+    (0, common_1.Put)('devices/:deviceId/time'),
+    __param(0, (0, common_1.Param)('deviceId')),
+    __param(1, (0, common_1.Body)(new common_1.ValidationPipe({ transform: true }))),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, typeof (_j = typeof set_time_dto_1.SetTimeDto !== "undefined" && set_time_dto_1.SetTimeDto) === "function" ? _j : Object]),
+    __metadata("design:returntype", typeof (_k = typeof Promise !== "undefined" && Promise) === "function" ? _k : Object)
+], BiometricsController.prototype, "setTime", null);
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Delete a user from a device' }),
+    (0, swagger_1.ApiResponse)({ status: common_1.HttpStatus.OK, description: 'User deleted successfully' }),
+    (0, swagger_1.ApiResponse)({
+        status: common_1.HttpStatus.NOT_FOUND,
+        description: 'Device or user not found',
+        type: generalresponse_dto_1.GeneralResponseDto
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: common_1.HttpStatus.BAD_REQUEST,
+        description: 'Invalid user ID format',
+        type: generalresponse_dto_1.GeneralResponseDto
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: common_1.HttpStatus.INTERNAL_SERVER_ERROR,
+        description: 'Error deleting user',
+        type: generalresponse_dto_1.GeneralResponseDto
+    }),
+    (0, swagger_1.ApiParam)({ name: 'deviceId', description: 'Target device ID' }),
+    (0, swagger_1.ApiParam)({ name: 'userId', description: 'User ID to delete' }),
+    (0, common_1.Delete)('devices/:deviceId/users/:userId'),
+    __param(0, (0, common_1.Param)('deviceId')),
+    __param(1, (0, common_1.Param)('userId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String]),
+    __metadata("design:returntype", typeof (_l = typeof Promise !== "undefined" && Promise) === "function" ? _l : Object)
+], BiometricsController.prototype, "deleteUser", null);
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Get users registered on a device' }),
+    (0, swagger_1.ApiResponse)({
+        status: common_1.HttpStatus.OK,
+        description: 'List of user IDs',
+        type: [String]
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: common_1.HttpStatus.NOT_FOUND,
+        description: 'Device not found',
+        type: generalresponse_dto_1.GeneralResponseDto
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: common_1.HttpStatus.NOT_IMPLEMENTED,
+        description: 'Feature not implemented on this device',
+        type: generalresponse_dto_1.GeneralResponseDto
+    }),
+    (0, swagger_1.ApiParam)({ name: 'deviceId', description: 'Target device ID' }),
+    (0, common_1.Get)('devices/:deviceId/users'),
+    __param(0, (0, common_1.Param)('deviceId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", typeof (_m = typeof Promise !== "undefined" && Promise) === "function" ? _m : Object)
+], BiometricsController.prototype, "getUsers", null);
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Get detailed user information from a device' }),
+    (0, swagger_1.ApiResponse)({
+        status: common_1.HttpStatus.OK,
+        description: 'List of user details',
+        type: [Object]
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: common_1.HttpStatus.NOT_FOUND,
+        description: 'Device not found',
+        type: generalresponse_dto_1.GeneralResponseDto
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: common_1.HttpStatus.NOT_IMPLEMENTED,
+        description: 'Feature not implemented on this device',
+        type: generalresponse_dto_1.GeneralResponseDto
+    }),
+    (0, swagger_1.ApiParam)({ name: 'deviceId', description: 'Target device ID' }),
+    (0, common_1.Get)('devices/:deviceId/users/details'),
+    __param(0, (0, common_1.Param)('deviceId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", typeof (_o = typeof Promise !== "undefined" && Promise) === "function" ? _o : Object)
+], BiometricsController.prototype, "getUserDetails", null);
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Get attendance records from a device' }),
+    (0, swagger_1.ApiResponse)({
+        status: common_1.HttpStatus.OK,
+        description: 'List of attendance records',
+        type: [Object]
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: common_1.HttpStatus.NOT_FOUND,
+        description: 'Device not found',
+        type: generalresponse_dto_1.GeneralResponseDto
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: common_1.HttpStatus.NOT_IMPLEMENTED,
+        description: 'Feature not implemented on this device',
+        type: generalresponse_dto_1.GeneralResponseDto
+    }),
+    (0, swagger_1.ApiParam)({ name: 'deviceId', description: 'Target device ID' }),
+    (0, swagger_1.ApiQuery)({ name: 'startDate', required: false, description: 'Filter by start date (ISO format)' }),
+    (0, swagger_1.ApiQuery)({ name: 'endDate', required: false, description: 'Filter by end date (ISO format)' }),
+    (0, common_1.Get)('devices/:deviceId/attendance'),
+    __param(0, (0, common_1.Param)('deviceId')),
+    __param(1, (0, common_1.Query)('startDate')),
+    __param(2, (0, common_1.Query)('endDate')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String, String]),
+    __metadata("design:returntype", typeof (_p = typeof Promise !== "undefined" && Promise) === "function" ? _p : Object)
+], BiometricsController.prototype, "getAttendanceRecords", null);
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Get attendance records size' }),
+    (0, swagger_1.ApiResponse)({
+        status: common_1.HttpStatus.OK,
+        description: 'Attendance record count',
+        type: Number
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: common_1.HttpStatus.NOT_FOUND,
+        description: 'Device not found',
+        type: generalresponse_dto_1.GeneralResponseDto
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: common_1.HttpStatus.NOT_IMPLEMENTED,
+        description: 'Feature not implemented on this device',
+        type: generalresponse_dto_1.GeneralResponseDto
+    }),
+    (0, swagger_1.ApiParam)({ name: 'deviceId', description: 'Target device ID' }),
+    (0, common_1.Get)('devices/:deviceId/attendance/size'),
+    __param(0, (0, common_1.Param)('deviceId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", typeof (_q = typeof Promise !== "undefined" && Promise) === "function" ? _q : Object)
+], BiometricsController.prototype, "getAttendanceSize", null);
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Clear attendance records from a device' }),
+    (0, swagger_1.ApiResponse)({ status: common_1.HttpStatus.OK, description: 'Attendance records cleared successfully' }),
+    (0, swagger_1.ApiResponse)({
+        status: common_1.HttpStatus.NOT_FOUND,
+        description: 'Device not found',
+        type: generalresponse_dto_1.GeneralResponseDto
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: common_1.HttpStatus.NOT_IMPLEMENTED,
+        description: 'Feature not implemented on this device',
+        type: generalresponse_dto_1.GeneralResponseDto
+    }),
+    (0, swagger_1.ApiParam)({ name: 'deviceId', description: 'Target device ID' }),
+    (0, common_1.Delete)('devices/:deviceId/attendance'),
+    __param(0, (0, common_1.Param)('deviceId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", typeof (_r = typeof Promise !== "undefined" && Promise) === "function" ? _r : Object)
+], BiometricsController.prototype, "clearAttendanceRecords", null);
+exports.BiometricsController = BiometricsController = __decorate([
+    (0, swagger_1.ApiTags)('Biometrics'),
+    (0, common_1.Controller)(),
+    (0, common_1.UseInterceptors)(new timeout_interceptor_1.TimeoutInterceptor(30)),
+    __param(0, (0, common_1.Inject)('BIOMETRIC_SERVICE')),
+    __metadata("design:paramtypes", [typeof (_a = typeof biometric_interface_1.IBiometricService !== "undefined" && biometric_interface_1.IBiometricService) === "function" ? _a : Object])
+], BiometricsController);
+
+
+/***/ }),
+/* 131 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.ConnectDeviceDto = void 0;
+const swagger_1 = __webpack_require__(4);
+const class_validator_1 = __webpack_require__(41);
+class ConnectDeviceDto {
+}
+exports.ConnectDeviceDto = ConnectDeviceDto;
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'IP address of the biometric device',
+        example: '192.168.1.100'
+    }),
+    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsIP)(4, { message: 'IP address must be a valid IPv4 address' }),
+    __metadata("design:type", String)
+], ConnectDeviceDto.prototype, "ipAddress", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Port number of the biometric device',
+        example: 4370,
+        minimum: 1,
+        maximum: 65535
+    }),
+    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsInt)(),
+    (0, class_validator_1.Min)(1),
+    (0, class_validator_1.Max)(65535),
+    __metadata("design:type", Number)
+], ConnectDeviceDto.prototype, "port", void 0);
+
+
+/***/ }),
+/* 132 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.RegisterUserDto = void 0;
+const swagger_1 = __webpack_require__(4);
+const class_validator_1 = __webpack_require__(41);
+class RegisterUserDto {
+}
+exports.RegisterUserDto = RegisterUserDto;
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Target device ID' }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsNotEmpty)(),
+    __metadata("design:type", String)
+], RegisterUserDto.prototype, "deviceId", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'User ID', example: '1001' }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsNotEmpty)(),
+    __metadata("design:type", String)
+], RegisterUserDto.prototype, "userId", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'User name', example: 'John Doe' }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.Length)(1, 24, { message: 'Name must be between 1 and 24 characters' }),
+    __metadata("design:type", String)
+], RegisterUserDto.prototype, "name", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ description: 'User password (max 8 characters)', example: '1234' }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.Length)(0, 8, { message: 'Password must be less than 8 characters' }),
+    __metadata("design:type", String)
+], RegisterUserDto.prototype, "password", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ description: 'Card number', example: '7654321' }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], RegisterUserDto.prototype, "cardNumber", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'User role (0 = normal user, 14 = admin)',
+        example: 0,
+        minimum: 0,
+        maximum: 14
+    }),
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.Min)(0),
+    (0, class_validator_1.Max)(14),
+    __metadata("design:type", Number)
+], RegisterUserDto.prototype, "role", void 0);
+
+
+/***/ }),
+/* 133 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.SetTimeDto = void 0;
+const swagger_1 = __webpack_require__(4);
+const class_validator_1 = __webpack_require__(41);
+class SetTimeDto {
+}
+exports.SetTimeDto = SetTimeDto;
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Time to set on the device (ISO format)',
+        example: '2025-04-08T12:00:00.000Z'
+    }),
+    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsDateString)(),
+    __metadata("design:type", String)
+], SetTimeDto.prototype, "time", void 0);
+
+
+/***/ }),
+/* 134 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.TimeoutInterceptor = void 0;
+const common_1 = __webpack_require__(1);
+const rxjs_1 = __webpack_require__(135);
+const operators_1 = __webpack_require__(136);
+let TimeoutInterceptor = class TimeoutInterceptor {
+    constructor(timeoutSeconds = 30) {
+        this.timeoutSeconds = timeoutSeconds;
+    }
+    intercept(context, next) {
+        return next.handle().pipe((0, operators_1.timeout)(this.timeoutSeconds * 1000), (0, operators_1.catchError)(err => {
+            if (err instanceof rxjs_1.TimeoutError) {
+                return (0, rxjs_1.throwError)(() => new common_1.RequestTimeoutException('Request timed out'));
+            }
+            return (0, rxjs_1.throwError)(() => err);
+        }));
+    }
+};
+exports.TimeoutInterceptor = TimeoutInterceptor;
+exports.TimeoutInterceptor = TimeoutInterceptor = __decorate([
+    (0, common_1.Injectable)(),
+    __metadata("design:paramtypes", [Number])
+], TimeoutInterceptor);
+
+
+/***/ }),
+/* 135 */
+/***/ ((module) => {
+
+module.exports = require("rxjs");
+
+/***/ }),
+/* 136 */
+/***/ ((module) => {
+
+module.exports = require("rxjs/operators");
+
+/***/ }),
+/* 137 */
+/***/ ((__unused_webpack_module, exports) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+
+
+/***/ }),
+/* 138 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.BiometricDevice = void 0;
+const base_entity_1 = __webpack_require__(16);
+const typeorm_1 = __webpack_require__(17);
+let BiometricDevice = class BiometricDevice extends base_entity_1.BaseEntity {
+};
+exports.BiometricDevice = BiometricDevice;
+__decorate([
+    (0, typeorm_1.Column)(),
+    __metadata("design:type", String)
+], BiometricDevice.prototype, "ipAddress", void 0);
+__decorate([
+    (0, typeorm_1.Column)(),
+    __metadata("design:type", Number)
+], BiometricDevice.prototype, "port", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ nullable: true }),
+    __metadata("design:type", String)
+], BiometricDevice.prototype, "model", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ nullable: true }),
+    __metadata("design:type", String)
+], BiometricDevice.prototype, "serialNumber", void 0);
+__decorate([
+    (0, typeorm_1.Column)(),
+    __metadata("design:type", String)
+], BiometricDevice.prototype, "provider", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ nullable: true }),
+    __metadata("design:type", String)
+], BiometricDevice.prototype, "firmware", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ nullable: true }),
+    __metadata("design:type", String)
+], BiometricDevice.prototype, "platform", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ nullable: true }),
+    __metadata("design:type", String)
+], BiometricDevice.prototype, "deviceVersion", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ nullable: true }),
+    __metadata("design:type", String)
+], BiometricDevice.prototype, "os", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ default: false }),
+    __metadata("design:type", Boolean)
+], BiometricDevice.prototype, "isConnected", void 0);
+exports.BiometricDevice = BiometricDevice = __decorate([
+    (0, typeorm_1.Entity)('biometric_devices')
+], BiometricDevice);
+
+
+/***/ }),
+/* 139 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var _a;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.BiometricTemplate = void 0;
+const base_entity_1 = __webpack_require__(16);
+const typeorm_1 = __webpack_require__(17);
+let BiometricTemplate = class BiometricTemplate extends base_entity_1.BaseEntity {
+};
+exports.BiometricTemplate = BiometricTemplate;
+__decorate([
+    (0, typeorm_1.Column)(),
+    __metadata("design:type", String)
+], BiometricTemplate.prototype, "userId", void 0);
+__decorate([
+    (0, typeorm_1.Column)(),
+    __metadata("design:type", Number)
+], BiometricTemplate.prototype, "fingerId", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'longblob' }),
+    __metadata("design:type", typeof (_a = typeof Buffer !== "undefined" && Buffer) === "function" ? _a : Object)
+], BiometricTemplate.prototype, "template", void 0);
+__decorate([
+    (0, typeorm_1.Column)(),
+    __metadata("design:type", String)
+], BiometricTemplate.prototype, "provider", void 0);
+exports.BiometricTemplate = BiometricTemplate = __decorate([
+    (0, typeorm_1.Entity)('biometric_templates')
+], BiometricTemplate);
+
+
+/***/ }),
+/* 140 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var BiometricsPollingService_1;
+var _a, _b;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.BiometricsPollingService = void 0;
+const common_1 = __webpack_require__(1);
+const config_1 = __webpack_require__(2);
+const event_emitter_1 = __webpack_require__(129);
+let BiometricsPollingService = BiometricsPollingService_1 = class BiometricsPollingService {
+    constructor(configService, eventEmitter) {
+        this.configService = configService;
+        this.eventEmitter = eventEmitter;
+        this.logger = new common_1.Logger(BiometricsPollingService_1.name);
+        this.devicePollers = new Map();
+        this.connections = new Map();
+    }
+    // Lifecycle hooks
+    onModuleInit() {
+        this.logger.log('Biometric polling service initialized');
+    }
+    onModuleDestroy() {
+        this.stopAllPolling();
+    }
+    // Provide a way to register device connections
+    registerDeviceConnection(deviceId, zkDevice) {
+        this.connections.set(deviceId, zkDevice);
+        this.logger.log(`Registered device ${deviceId} for polling`);
+    }
+    // Start polling for a specific device
+    startPolling(deviceId) {
+        const zkDevice = this.connections.get(deviceId);
+        if (!zkDevice) {
+            this.logger.warn(`Cannot start polling for device ${deviceId}: Device not registered`);
+            return false;
+        }
+        // Check if already polling
+        if (this.devicePollers.has(deviceId)) {
+            this.logger.warn(`Already polling device ${deviceId}`);
+            return true;
+        }
+        const pollingInterval = this.configService.get('BIOMETRIC_DEVICE_POLLING_INTERVAL', 1000);
+        let lastAttendanceCount = 0;
+        let lastCheckedTime = new Date();
+        // Start the interval for polling
+        const intervalId = setInterval(async () => {
+            if (!this.connections.has(deviceId)) {
+                this.stopPolling(deviceId);
+                return;
+            }
+            try {
+                // Get current attendance size
+                const currentCount = await zkDevice.getAttendanceSize();
+                // If there are new records
+                if (currentCount > lastAttendanceCount) {
+                    // Get all attendance records - returns { data: records, err: error }
+                    const response = await zkDevice.getAttendances();
+                    // Extract the records array from the response
+                    const records = response.data || [];
+                    // Filter to only get records since last check
+                    const newRecords = records.filter((record) => new Date(record.record_time) > lastCheckedTime);
+                    if (newRecords.length > 0) {
+                        this.logger.log(`[${deviceId}] Processing ${newRecords.length} new attendance records`);
+                        // Process each new record
+                        newRecords.forEach((record) => {
+                            var _a;
+                            // Standardize record format
+                            const standardizedRecord = {
+                                userId: record.user_id || '',
+                                timestamp: new Date(record.record_time || Date.now()),
+                                type: (_a = record.type) !== null && _a !== void 0 ? _a : 0,
+                                deviceId: deviceId,
+                                status: record.state
+                            };
+                            this.logger.log(`User ID: ${standardizedRecord.userId}, Type: ${standardizedRecord.type}, Timestamp: ${standardizedRecord.timestamp}`);
+                            // Emit the event
+                            this.eventEmitter.emit('attendance.recorded', standardizedRecord);
+                        });
+                    }
+                    // Update counters
+                    lastAttendanceCount = currentCount;
+                }
+                // Update timestamp
+                lastCheckedTime = new Date();
+            }
+            catch (error) {
+                this.logger.error(`Polling error for ${deviceId}: ${error instanceof Error ? error.message : String(error)}`);
+            }
+        }, pollingInterval);
+        // Store interval info to clean up later
+        this.devicePollers.set(deviceId, {
+            intervalId: intervalId,
+            lastCheckedTime,
+            lastCount: lastAttendanceCount
+        });
+        this.logger.log(`Started polling for device ${deviceId} at ${pollingInterval}ms intervals`);
+        return true;
+    }
+    // Stop polling for a specific device
+    stopPolling(deviceId) {
+        const poller = this.devicePollers.get(deviceId);
+        if (!poller) {
+            return false;
+        }
+        clearInterval(poller.intervalId);
+        this.devicePollers.delete(deviceId);
+        this.logger.log(`Stopped polling for device ${deviceId}`);
+        return true;
+    }
+    // Stop all polling
+    stopAllPolling() {
+        this.logger.log(`Stopping all device polling (${this.devicePollers.size} active)`);
+        for (const [deviceId, poller] of this.devicePollers.entries()) {
+            clearInterval(poller.intervalId);
+            this.logger.log(`Stopped polling for device ${deviceId}`);
+        }
+        this.devicePollers.clear();
+    }
+};
+exports.BiometricsPollingService = BiometricsPollingService;
+exports.BiometricsPollingService = BiometricsPollingService = BiometricsPollingService_1 = __decorate([
+    (0, common_1.Injectable)(),
+    __metadata("design:paramtypes", [typeof (_a = typeof config_1.ConfigService !== "undefined" && config_1.ConfigService) === "function" ? _a : Object, typeof (_b = typeof event_emitter_1.EventEmitter2 !== "undefined" && event_emitter_1.EventEmitter2) === "function" ? _b : Object])
+], BiometricsPollingService);
+
+
+/***/ }),
+/* 141 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
+var ZKTecoBiometricsService_1;
+var _a, _b, _c, _d, _e;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.ZKTecoBiometricsService = void 0;
+const common_1 = __webpack_require__(1);
+const config_1 = __webpack_require__(2);
+const typeorm_1 = __webpack_require__(13);
+const ZKLib = __webpack_require__(142);
+const event_emitter_1 = __webpack_require__(129);
+const typeorm_2 = __webpack_require__(17);
+const biometric_device_entity_1 = __webpack_require__(138);
+const biometric_template_entity_1 = __webpack_require__(139);
+const base_biometrics_service_1 = __webpack_require__(143);
+const biometrics_polling_service_1 = __webpack_require__(140);
+/**
+ * ZKTeco implementation of the biometric service
+ * Handles communication with ZKTeco biometric devices
+ */
+let ZKTecoBiometricsService = ZKTecoBiometricsService_1 = class ZKTecoBiometricsService extends base_biometrics_service_1.BaseBiometricsService {
+    constructor(configService, deviceRepository, biometricsPollingService, templateRepository, eventEmitter) {
+        super(deviceRepository, templateRepository, eventEmitter);
+        this.configService = configService;
+        this.deviceRepository = deviceRepository;
+        this.biometricsPollingService = biometricsPollingService;
+        this.templateRepository = templateRepository;
+        this.eventEmitter = eventEmitter;
+        this.logger = new common_1.Logger(ZKTecoBiometricsService_1.name);
+        // Listen for attendance events from polling service
+        this.eventEmitter.on('attendance.recorded', (record) => {
+            this.emitAttendanceEvent(record);
+            // Call any registered callback
+            const monitorInfo = this.activeMonitoring.get(record.deviceId);
+            if (monitorInfo && typeof monitorInfo.callback === 'function') {
+                monitorInfo.callback(record);
+            }
+        });
+    }
+    /**
+     * Register a new user on the ZKTeco device without fingerprint enrollment
+     * @param deviceId Device identifier
+     * @param userData User data to register
+     * @returns Created user information
+     */
+    async registerUser(deviceId, userData) {
+        const zkDevice = this.getConnectedDevice(deviceId);
+        try {
+            this.logger.log(`Registering user ${userData.userId} on device ${deviceId}`);
+            // Convert userId to numeric ID if possible, or use a default
+            const uid = parseInt(userData.userId) || Math.floor(Math.random() * 9000) + 1000;
+            // Prepare parameters with defaults
+            const name = userData.name || `User ${userData.userId}`;
+            const password = userData.password || '';
+            const role = userData.role || 0; // 0 = normal user, 14 = admin
+            const cardno = userData.cardNumber ? parseInt(userData.cardNumber) : 0;
+            // Validate input parameters
+            if (uid <= 0 || uid > 65535) {
+                throw new Error('User ID must be a positive integer less than 65535');
+            }
+            if (name.length > 24) {
+                throw new Error('Name must be less than 24 characters');
+            }
+            if (password.length > 8) {
+                throw new Error('Password must be less than 8 characters');
+            }
+            // Create/update the user on the device
+            await zkDevice.setUser(uid, userData.userId, name, password, role, cardno);
+            // Create a standardized user object to return
+            const createdUser = {
+                userId: userData.userId,
+                name: name,
+                password: password,
+                cardNumber: cardno.toString(),
+                role: role
+            };
+            this.logger.log(`Successfully registered user ${userData.userId} on device ${deviceId}`);
+            return createdUser;
+        }
+        catch (error) {
+            // log error object as json
+            this.logger.error(`Error registering user on device ${deviceId}: ${JSON.stringify(error)}`);
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            this.logger.error(`Error registering user on device ${deviceId}: ${errorMessage}`);
+            throw new base_biometrics_service_1.BiometricException(`Failed to register user: ${errorMessage}`, common_1.HttpStatus.BAD_REQUEST);
+        }
+    }
+    /**
+     * Get fingerprint template for a specific user and finger
+     * @param deviceId Device identifier
+     * @param userId User ID
+     * @param fingerId Finger ID (0-9)
+     * @returns Fingerprint template data
+     */
+    async getUserFingerprint(deviceId, userId, fingerId = 0) {
+        const zkDevice = this.getConnectedDevice(deviceId);
+        try {
+            this.logger.log(`Retrieving fingerprint template for user ${userId} (finger ${fingerId}) from device ${deviceId}`);
+            // First check database for existing template
+            try {
+                const existingTemplate = await this.templateRepository.findOne({
+                    where: {
+                        userId,
+                        fingerId,
+                        provider: 'zkteco'
+                    }
+                });
+                if (existingTemplate && existingTemplate.template) {
+                    this.logger.log(`Found existing template in database for user ${userId} (finger ${fingerId})`);
+                    return {
+                        id: `${userId}-${fingerId}`,
+                        userId,
+                        fingerId,
+                        template: existingTemplate.template,
+                        provider: 'zkteco'
+                    };
+                }
+            }
+            catch (dbError) {
+                this.logger.warn(`Database lookup failed: ${dbError instanceof Error ? dbError.message : String(dbError)}`);
+            }
+            // Convert userId to numeric ID if it's a number
+            const uid = parseInt(userId) || Number(userId);
+            if (isNaN(uid)) {
+                throw new Error(`Invalid user ID format: ${userId}`);
+            }
+            // Create data buffer for the command
+            const cmdData = Buffer.alloc(8);
+            cmdData.writeUInt32LE(uid, 0); // User ID in little-endian format
+            cmdData.writeUInt32LE(fingerId, 4); // Finger ID in little-endian format
+            // Check if executeCmd is available
+            if (typeof zkDevice.executeCmd !== 'function') {
+                throw new Error('Device does not support the required commands');
+            }
+            // Clear any pending data
+            try {
+                await zkDevice.freeData();
+            }
+            catch (err) {
+                this.logger.warn(`Could not free data buffer: ${err instanceof Error ? err.message : String(err)}`);
+            }
+            // Proper device state management
+            await zkDevice.disableDevice();
+            await zkDevice.enableDevice();
+            // Add a small delay to ensure device is ready
+            await new Promise(resolve => setTimeout(resolve, 200));
+            // Execute the command to get the fingerprint template
+            // CMD_USERTEMP_RRQ = 9 (0x0009)
+            const result = await zkDevice.executeCmd('CMD_USERTEMP_RRQ', cmdData);
+            // Log raw result for debugging
+            this.logger.debug(`Raw result from device: length=${(result === null || result === void 0 ? void 0 : result.length) || 0}, first bytes: ${result ? result.slice(0, 20).toString('hex') : 'null'}`);
+            // Check if we got a valid response
+            if (!result || result.length < 12) {
+                this.logger.warn(`No fingerprint template found for user ${userId} (finger ${fingerId})`);
+                return null;
+            }
+            // Parse the result according to ZKTeco protocol
+            const templateData = result.subarray(12);
+            if (templateData.length === 0) {
+                this.logger.warn(`Empty template data for user ${userId} (finger ${fingerId})`);
+                return null;
+            }
+            this.logger.debug(`Retrieved fingerprint template for user ${userId} (finger ${fingerId}): ${templateData.length} bytes`);
+            // Create a standardized template object
+            const template = {
+                id: `${userId}-${fingerId}`,
+                userId,
+                fingerId,
+                template: templateData,
+                provider: 'zkteco'
+            };
+            // Optionally save the template to database
+            try {
+                await this.templateRepository.save({
+                    userId,
+                    fingerId,
+                    template: templateData,
+                    provider: 'zkteco'
+                });
+                this.logger.debug(`Saved fingerprint template for user ${userId} (finger ${fingerId}) to database`);
+            }
+            catch (dbError) {
+                this.logger.warn(`Could not save template to database: ${dbError instanceof Error ? dbError.message : String(dbError)}`);
+                // Continue even if database save fails
+            }
+            return template;
+        }
+        catch (error) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            this.logger.error(`Error retrieving fingerprint template from device ${deviceId}: ${errorMessage}`);
+            // Check if it's a "template not exist" error, which should return null instead of throwing
+            if (errorMessage.includes('not exist') || errorMessage.includes('No Record')) {
+                this.logger.warn(`No fingerprint template exists for user ${userId} (finger ${fingerId})`);
+                return null;
+            }
+            throw new base_biometrics_service_1.BiometricException(`Failed to get fingerprint template: ${errorMessage}`);
+        }
+    }
+    /**
+     * Connect to a device with retry logic
+     * @param deviceId Device identifier
+     * @param ipAddress Device IP address
+     * @param port Device port
+     * @returns Connected device information
+     */
+    async connectWithRetry(deviceId, ipAddress, port) {
+        const timeout = this.configService.get('ZKTECO_TIMEOUT', 5000);
+        const retryAttempts = this.configService.get('ZKTECO_RETRY_ATTEMPTS', 3);
+        const retryDelay = this.configService.get('ZKTECO_RETRY_DELAY', 1000);
+        let attempts = 0;
+        let lastError = new Error('No connection attempts made');
+        while (attempts < retryAttempts) {
+            try {
+                attempts++;
+                this.logger.log(`Connecting to device ${deviceId} (attempt ${attempts}/${retryAttempts})`);
+                // Create ZK instance with parameters, not options object
+                // According to the example: new ZKLib(host, port, timeout, retry)
+                const zk = new ZKLib(ipAddress, port, timeout, retryDelay);
+                // Create socket connection first (as per example)
+                await zk.createSocket();
+                // Collect comprehensive device information
+                let deviceInfo = await zk.getInfo();
+                // Try to get additional device information
+                try {
+                    const serialNumber = await zk.getSerialNumber();
+                    const firmware = await zk.getFirmware();
+                    const platform = await zk.getPlatform();
+                    const deviceName = await zk.getDeviceName();
+                    const deviceVersion = await zk.getDeviceVersion();
+                    const os = await zk.getOS();
+                    // Enhance device info with additional details
+                    deviceInfo = Object.assign(Object.assign({}, deviceInfo), { serialNumber: serialNumber || (deviceInfo === null || deviceInfo === void 0 ? void 0 : deviceInfo.serialNumber), firmware: firmware || (deviceInfo === null || deviceInfo === void 0 ? void 0 : deviceInfo.firmware), platform: platform || (deviceInfo === null || deviceInfo === void 0 ? void 0 : deviceInfo.platform), deviceName: deviceName, deviceVersion: deviceVersion, os: os });
+                }
+                catch (infoError) {
+                    this.logger.warn(`Could not retrieve comprehensive device info: ${infoError instanceof Error ? infoError.message : String(infoError)}`);
+                }
+                // Store connection
+                this.connections.set(deviceId, zk);
+                // Create device object with enhanced info
+                const device = {
+                    id: deviceId,
+                    ipAddress,
+                    port,
+                    model: (deviceInfo === null || deviceInfo === void 0 ? void 0 : deviceInfo.deviceName) || (deviceInfo === null || deviceInfo === void 0 ? void 0 : deviceInfo.model) || 'Unknown',
+                    serialNumber: (deviceInfo === null || deviceInfo === void 0 ? void 0 : deviceInfo.serialNumber) || 'Unknown',
+                    firmware: deviceInfo === null || deviceInfo === void 0 ? void 0 : deviceInfo.firmware,
+                    platform: deviceInfo === null || deviceInfo === void 0 ? void 0 : deviceInfo.platform,
+                    deviceVersion: deviceInfo === null || deviceInfo === void 0 ? void 0 : deviceInfo.deviceVersion,
+                    os: deviceInfo === null || deviceInfo === void 0 ? void 0 : deviceInfo.os,
+                    isConnected: true,
+                };
+                // Store device in memory
+                this.devices.set(deviceId, device);
+                // Store in database
+                await this.deviceRepository.save({
+                    id: deviceId,
+                    ipAddress,
+                    port,
+                    model: device.model,
+                    serialNumber: device.serialNumber,
+                    provider: 'zkteco',
+                    firmware: device.firmware,
+                    platform: device.platform,
+                    deviceVersion: device.deviceVersion,
+                    os: device.os,
+                    isConnected: true,
+                });
+                // Register the connection with the polling service
+                this.biometricsPollingService.registerDeviceConnection(deviceId, zk);
+                // Start polling instead of direct setup
+                this.biometricsPollingService.startPolling(deviceId);
+                this.logger.log(`Successfully connected to ZKTeco device at ${ipAddress}:${port}`);
+                return device;
+            }
+            catch (error) {
+                // Ensure error is properly typed
+                lastError = error instanceof Error ? error : new Error(String(error));
+                this.logger.warn(`Connection attempt ${attempts} to device ${deviceId} failed: ${lastError.message}`);
+                // If we have retries left, wait before trying again
+                if (attempts < retryAttempts) {
+                    await new Promise(resolve => setTimeout(resolve, retryDelay));
+                }
+            }
+        }
+        // If we get here, all connection attempts failed
+        this.logger.error(`Failed to connect to ZKTeco device after ${attempts} attempts: ${lastError.message}`);
+        throw new base_biometrics_service_1.BiometricException(`Failed to connect to device: ${lastError.message}`, common_1.HttpStatus.SERVICE_UNAVAILABLE);
+    }
+    /**
+     * Set up default real-time monitoring for a device
+     * @param deviceId Device identifier
+     * @param zkDevice ZK device instance
+     */
+    async setupDefaultRealTimeMonitoring(deviceId, zkDevice) {
+        this.logger.log(`Setting up default real-time monitoring for device ${deviceId}`);
+        // Before attempting to get real-time logs, ensure connection is active
+        if (!zkDevice._socket || !zkDevice._socket.writable) {
+            await zkDevice.createSocket();
+            this.logger.debug(`Refreshed socket connection for device ${deviceId}`);
+        }
+        // Enable device first to ensure it's ready to receive commands
+        await zkDevice.enableDevice();
+        // Register for real-time logs
+        zkDevice.getRealTimeLogs((record) => {
+            var _a;
+            if (!record)
+                return;
+            this.logger.debug(`Received real-time log: ${JSON.stringify(record)}`);
+            // Convert to standard format
+            const standardizedRecord = {
+                userId: record.userId || '',
+                timestamp: new Date(record.timestamp || Date.now()),
+                type: (_a = record.type) !== null && _a !== void 0 ? _a : 0,
+                deviceId: deviceId,
+                verificationMode: record.verificationMode,
+                status: record.status,
+                workcode: record.workcode,
+                isSynced: false,
+                retrievedAt: new Date(),
+                data: record.data
+            };
+            // Emit event for this record
+            this.emitAttendanceEvent(standardizedRecord);
+            // Call any custom callback if registered
+            const monitorInfo = this.activeMonitoring.get(deviceId);
+            if (monitorInfo && typeof monitorInfo.callback === 'function') {
+                monitorInfo.callback(standardizedRecord);
+            }
+        });
+        // Store in active monitoring with empty callback
+        this.activeMonitoring.set(deviceId, { deviceId, callback: undefined });
+        this.logger.log(`Default real-time monitoring established for device ${deviceId}`);
+    }
+    /**
+     * Setup monitoring for device connection status
+     * @param deviceId Device identifier
+     * @param zkDevice ZK device instance
+     */
+    setupDeviceMonitoring(deviceId, zkDevice) {
+        const pingInterval = this.configService.get('DEVICE_PING_INTERVAL', 3000);
+        const interval = setInterval(async () => {
+            if (!this.connections.has(deviceId)) {
+                clearInterval(interval);
+                return;
+            }
+            try {
+                // Try to get device info as a ping
+                await zkDevice.getInfo();
+                // If monitoring was set up but is no longer active, try to restart it
+                if (this.activeMonitoring.has(deviceId) && !this.isMonitoringActive(deviceId)) {
+                    this.logger.warn(`Real-time monitoring appears to have stopped for device ${deviceId}. Attempting to restart...`);
+                    try {
+                        await this.setupDefaultRealTimeMonitoring(deviceId, zkDevice);
+                        this.logger.log(`Successfully restarted real-time monitoring for device ${deviceId}`);
+                    }
+                    catch (monitoringError) {
+                        this.logger.error(`Failed to restart monitoring: ${monitoringError instanceof Error ? monitoringError.message : String(monitoringError)}`);
+                    }
+                }
+            }
+            catch (error) {
+                // Your existing error handling code
+            }
+        }, pingInterval);
+    }
+    /**
+     * Disconnect from a ZKTeco device
+     * @param deviceId Device identifier
+     * @returns True if disconnected successfully
+     */
+    async disconnect(deviceId) {
+        // Stop the polling first
+        this.biometricsPollingService.stopPolling(deviceId);
+        const zkDevice = this.connections.get(deviceId);
+        if (!zkDevice) {
+            this.logger.warn(`Attempted to disconnect from device ${deviceId} but no connection found`);
+            return false;
+        }
+        try {
+            // Clear monitoring first
+            this.activeMonitoring.delete(deviceId);
+            // Use disconnect method
+            await zkDevice.disconnect();
+            this.connections.delete(deviceId);
+            const device = this.devices.get(deviceId);
+            if (device) {
+                device.isConnected = false;
+                this.devices.set(deviceId, device);
+            }
+            await this.deviceRepository.update({ id: deviceId }, { isConnected: false });
+            this.logger.log(`Successfully disconnected from ZKTeco device ${deviceId}`);
+            return true;
+        }
+        catch (error) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            this.logger.error(`Error disconnecting from device ${deviceId}: ${errorMessage}`);
+            return false;
+        }
+    }
+    /**
+     * Get connected device by ID, throwing an exception if not found
+     * @param deviceId Device identifier
+     * @returns ZK device instance
+     */
+    getConnectedDevice(deviceId) {
+        const zkDevice = this.connections.get(deviceId);
+        if (!zkDevice) {
+            throw new base_biometrics_service_1.BiometricException(`Device ${deviceId} not connected or not found`, common_1.HttpStatus.NOT_FOUND);
+        }
+        return zkDevice;
+    }
+    /**
+     * Get device information
+     * @param deviceId Device identifier
+     * @returns Device information
+     */
+    async getDeviceInfo(deviceId) {
+        const zkDevice = this.getConnectedDevice(deviceId);
+        try {
+            const info = await zkDevice.getInfo();
+            this.logger.debug(`Retrieved device info for ${deviceId}: ${JSON.stringify(info)}`);
+            return info;
+        }
+        catch (error) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            this.logger.error(`Error getting device info from ${deviceId}: ${errorMessage}`);
+            throw new base_biometrics_service_1.BiometricException(`Failed to get device info: ${errorMessage}`);
+        }
+    }
+    /**
+     * Get device serial number
+     * @param deviceId Device identifier
+     * @returns Device serial number
+     */
+    async getSerialNumber(deviceId) {
+        const zkDevice = this.getConnectedDevice(deviceId);
+        try {
+            const serialNumber = await zkDevice.getSerialNumber();
+            this.logger.debug(`Retrieved serial number for ${deviceId}: ${serialNumber}`);
+            return serialNumber;
+        }
+        catch (error) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            this.logger.error(`Error getting serial number from ${deviceId}: ${errorMessage}`);
+            throw new base_biometrics_service_1.BiometricException(`Failed to get serial number: ${errorMessage}`);
+        }
+    }
+    /**
+     * Get firmware version
+     * @param deviceId Device identifier
+     * @returns Firmware version
+     */
+    async getFirmwareVersion(deviceId) {
+        const zkDevice = this.getConnectedDevice(deviceId);
+        try {
+            const firmware = await zkDevice.getFaceOn();
+            this.logger.debug(`Retrieved firmware version for ${deviceId}: ${firmware}`);
+            return firmware;
+        }
+        catch (error) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            this.logger.error(`Error getting firmware version from ${deviceId}: ${errorMessage}`);
+            throw new base_biometrics_service_1.BiometricException(`Failed to get firmware version: ${errorMessage}`);
+        }
+    }
+    /**
+     * Get device platform
+     * @param deviceId Device identifier
+     * @returns Platform information
+     */
+    async getPlatform(deviceId) {
+        const zkDevice = this.getConnectedDevice(deviceId);
+        try {
+            const platform = await zkDevice.getPlatform();
+            this.logger.debug(`Retrieved platform info for ${deviceId}: ${platform}`);
+            return platform;
+        }
+        catch (error) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            this.logger.error(`Error getting platform info from ${deviceId}: ${errorMessage}`);
+            throw new base_biometrics_service_1.BiometricException(`Failed to get platform info: ${errorMessage}`);
+        }
+    }
+    /**
+     * Get device name
+     * @param deviceId Device identifier
+     * @returns Device name
+     */
+    async getDeviceName(deviceId) {
+        const zkDevice = this.getConnectedDevice(deviceId);
+        try {
+            const name = await zkDevice.getDeviceName();
+            this.logger.debug(`Retrieved device name for ${deviceId}: ${name}`);
+            return name;
+        }
+        catch (error) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            this.logger.error(`Error getting device name from ${deviceId}: ${errorMessage}`);
+            throw new base_biometrics_service_1.BiometricException(`Failed to get device name: ${errorMessage}`);
+        }
+    }
+    /**
+     * Get device OS version
+     * @param deviceId Device identifier
+     * @returns OS version
+     */
+    async getOS(deviceId) {
+        const zkDevice = this.getConnectedDevice(deviceId);
+        try {
+            const os = await zkDevice.getOS();
+            this.logger.debug(`Retrieved OS info for ${deviceId}: ${os}`);
+            return os;
+        }
+        catch (error) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            this.logger.error(`Error getting OS info from ${deviceId}: ${errorMessage}`);
+            throw new base_biometrics_service_1.BiometricException(`Failed to get OS info: ${errorMessage}`);
+        }
+    }
+    /**
+     * Get device version
+     * @param deviceId Device identifier
+     * @returns Device version
+     */
+    async getDeviceVersion(deviceId) {
+        const zkDevice = this.getConnectedDevice(deviceId);
+        try {
+            const version = await zkDevice.getDeviceVersion();
+            this.logger.debug(`Retrieved device version for ${deviceId}: ${version}`);
+            return version;
+        }
+        catch (error) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            this.logger.error(`Error getting device version from ${deviceId}: ${errorMessage}`);
+            throw new base_biometrics_service_1.BiometricException(`Failed to get device version: ${errorMessage}`);
+        }
+    }
+    /**
+     * Get device PIN
+     * @param deviceId Device identifier
+     * @returns Device PIN
+     */
+    async getPIN(deviceId) {
+        const zkDevice = this.getConnectedDevice(deviceId);
+        try {
+            const pin = await zkDevice.getPIN();
+            this.logger.debug(`Retrieved PIN for ${deviceId}: ${pin}`);
+            return pin;
+        }
+        catch (error) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            this.logger.error(`Error getting PIN from ${deviceId}: ${errorMessage}`);
+            throw new base_biometrics_service_1.BiometricException(`Failed to get PIN: ${errorMessage}`);
+        }
+    }
+    /**
+     * Check if face recognition is enabled
+     * @param deviceId Device identifier
+     * @returns True if face recognition is enabled
+     */
+    async getFaceOn(deviceId) {
+        const zkDevice = this.getConnectedDevice(deviceId);
+        try {
+            const faceOn = await zkDevice.getFaceOn();
+            this.logger.debug(`Retrieved face recognition status for ${deviceId}: ${faceOn}`);
+            return faceOn;
+        }
+        catch (error) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            this.logger.error(`Error getting face recognition status from ${deviceId}: ${errorMessage}`);
+            throw new base_biometrics_service_1.BiometricException(`Failed to get face recognition status: ${errorMessage}`);
+        }
+    }
+    /**
+     * Get Self-Service-Recorder status
+     * @param deviceId Device identifier
+     * @returns SSR status
+     */
+    async getSSR(deviceId) {
+        const zkDevice = this.getConnectedDevice(deviceId);
+        try {
+            const ssr = await zkDevice.getSSR();
+            this.logger.debug(`Retrieved SSR status for ${deviceId}: ${JSON.stringify(ssr)}`);
+            return ssr;
+        }
+        catch (error) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            this.logger.error(`Error getting SSR status from ${deviceId}: ${errorMessage}`);
+            throw new base_biometrics_service_1.BiometricException(`Failed to get SSR status: ${errorMessage}`);
+        }
+    }
+    /**
+     * Get device time
+     * @param deviceId Device identifier
+     * @returns Current device time
+     */
+    async getTime(deviceId) {
+        const zkDevice = this.getConnectedDevice(deviceId);
+        try {
+            const time = await zkDevice.getTime();
+            this.logger.debug(`Retrieved time for ${deviceId}: ${time}`);
+            return time;
+        }
+        catch (error) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            this.logger.error(`Error getting time from ${deviceId}: ${errorMessage}`);
+            throw new base_biometrics_service_1.BiometricException(`Failed to get time: ${errorMessage}`);
+        }
+    }
+    /**
+     * Set device time
+     * @param deviceId Device identifier
+     * @param time Date to set
+     * @returns Success indicator
+     */
+    async setTime(deviceId, time) {
+        const zkDevice = this.getConnectedDevice(deviceId);
+        try {
+            await zkDevice.setTime(time);
+            this.logger.debug(`Set time for ${deviceId} to ${time}`);
+            return true;
+        }
+        catch (error) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            this.logger.error(`Error setting time for ${deviceId}: ${errorMessage}`);
+            throw new base_biometrics_service_1.BiometricException(`Failed to set time: ${errorMessage}`);
+        }
+    }
+    /**
+     * Get work code from device
+     * @param deviceId Device identifier
+     * @returns Work code
+     */
+    async getWorkCode(deviceId) {
+        const zkDevice = this.getConnectedDevice(deviceId);
+        try {
+            const workCode = await zkDevice.getWorkCode();
+            this.logger.debug(`Retrieved work code for ${deviceId}: ${workCode}`);
+            return workCode;
+        }
+        catch (error) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            this.logger.error(`Error getting work code from ${deviceId}: ${errorMessage}`);
+            throw new base_biometrics_service_1.BiometricException(`Failed to get work code: ${errorMessage}`);
+        }
+    }
+    /**
+     * Get attendance log size
+     * @param deviceId Device identifier
+     * @returns Attendance log size
+     */
+    async getAttendanceSize(deviceId) {
+        const zkDevice = this.getConnectedDevice(deviceId);
+        try {
+            const size = await zkDevice.getAttendanceSize();
+            this.logger.debug(`Retrieved attendance size for ${deviceId}: ${size}`);
+            return size;
+        }
+        catch (error) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            this.logger.error(`Error getting attendance size from ${deviceId}: ${errorMessage}`);
+            throw new base_biometrics_service_1.BiometricException(`Failed to get attendance size: ${errorMessage}`);
+        }
+    }
+    /**
+     * Get users from a device
+     * @param deviceId Device identifier
+     * @returns Array of user IDs
+     */
+    async getUsers(deviceId) {
+        const zkDevice = this.getConnectedDevice(deviceId);
+        try {
+            this.logger.log(`Getting users from device ${deviceId}`);
+            const response = await zkDevice.getUsers();
+            this.logger.debug(`Raw user data: ${JSON.stringify(response)}`);
+            // Extract the data array from the response object
+            const users = response && response.data && Array.isArray(response.data)
+                ? response.data
+                : [];
+            if (users.length === 0) {
+                return [];
+            }
+            // Extract essential information for each user
+            const userInfo = users.map((user) => {
+                var _a;
+                return ({
+                    userId: user.userId || user.id || '',
+                    name: user.name || '',
+                    password: user.password || '',
+                    role: user.role || 0,
+                    uid: user.uid || parseInt(user.userId) || 0,
+                    cardNumber: ((_a = user.cardno) === null || _a === void 0 ? void 0 : _a.toString()) || ''
+                });
+            }).filter((user) => user.userId && user.role <= 14);
+            this.logger.log(`Found ${userInfo.length} users on device ${deviceId}`);
+            return userInfo;
+        }
+        catch (error) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            this.logger.error(`Error getting users from device ${deviceId}: ${errorMessage}`);
+            throw new base_biometrics_service_1.BiometricException(`Failed to get users: ${errorMessage}`);
+        }
+    }
+    /**
+     * Get detailed user information from a device
+     * @param deviceId Device identifier
+     * @returns Array of user objects
+     */
+    async getUserDetails(deviceId) {
+        const zkDevice = this.getConnectedDevice(deviceId);
+        try {
+            this.logger.log(`Getting detailed user information from device ${deviceId}`);
+            const users = await zkDevice.getUsers();
+            if (!users || !Array.isArray(users)) {
+                return [];
+            }
+            // Convert to standardized format
+            const standardizedUsers = users.map(user => ({
+                userId: user.userId || user.id || '',
+                name: user.name || '',
+                password: user.password || '',
+                cardNumber: user.cardno || user.cardNumber || '',
+                role: user.role || 0
+            }));
+            this.logger.log(`Found ${standardizedUsers.length} users on device ${deviceId}`);
+            return standardizedUsers;
+        }
+        catch (error) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            this.logger.error(`Error getting user details from device ${deviceId}: ${errorMessage}`);
+            throw new base_biometrics_service_1.BiometricException(`Failed to get user details: ${errorMessage}`);
+        }
+    }
+    /**
+     * Delete a user from the device with specific ZKTeco protocol implementation
+     * @param deviceId Device identifier
+     * @param userId User ID to delete
+     * @returns True if deleted successfully
+     */
+    async deleteUser(deviceId, userId) {
+        const zkDevice = this.getConnectedDevice(deviceId);
+        try {
+            this.logger.log(`Deleting user ${userId} from device ${deviceId}`);
+            // Convert userId to numeric ID
+            const uid = parseInt(userId);
+            // Validate input parameter
+            if (isNaN(uid) || uid <= 0 || uid > 65535) {
+                throw new Error('Invalid user ID: must be a positive number less than 65535');
+            }
+            // Clear any pending data
+            try {
+                await zkDevice.freeData();
+            }
+            catch (err) {
+                this.logger.warn(`Could not free data buffer: ${err instanceof Error ? err.message : String(err)}`);
+            }
+            if (typeof zkDevice.deleteUser === 'function') {
+                const response = await zkDevice.deleteUser(uid);
+                // Check the response for success
+                const success = response && response.length > 0;
+                // After successful deletion from device, also remove templates from database
+                if (success) {
+                    try {
+                        const deleteResult = await this.templateRepository.delete({
+                            userId: userId,
+                            provider: 'zkteco'
+                        });
+                        this.logger.debug(`Deleted ${deleteResult.affected || 0} templates from database for user ${userId}`);
+                    }
+                    catch (dbError) {
+                        this.logger.warn(`Failed to delete templates from database: ${dbError instanceof Error ? dbError.message : String(dbError)}`);
+                        // Continue even if database deletion fails
+                    }
+                }
+                this.logger.log(`User ${userId} deletion ${success ? 'successful' : 'failed'}`);
+                return success;
+            }
+            else {
+                throw new Error('Device does not support direct user deletion through this library');
+            }
+        }
+        catch (error) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            this.logger.error(`Error deleting user ${userId} from device ${deviceId}: ${errorMessage}`);
+            // If the user doesn't exist, consider it a success
+            if (errorMessage.includes('not found') || errorMessage.includes('does not exist')) {
+                this.logger.warn(`User ${userId} not found on device ${deviceId}, considering deletion successful`);
+                return true;
+            }
+            throw new base_biometrics_service_1.BiometricException(`Failed to delete user: ${errorMessage}`);
+        }
+    }
+    /**
+     * Enroll a user's fingerprint
+     * @param deviceId Device identifier
+     * @param userId User ID
+     * @param fingerId Finger ID (0-9)
+     * @returns Biometric template
+     */
+    async enrollUser(deviceId, userId, fingerId) {
+        const zkDevice = this.getConnectedDevice(deviceId);
+        try {
+            this.logger.log(`Enrolling fingerprint for user ${userId} (finger ${fingerId}) on device ${deviceId}`);
+            // First create or ensure the user exists
+            // Convert userId to numeric if possible, or use a default
+            const uid = parseInt(userId) || 1;
+            const name = `User ${userId}`; // Default name if not provided
+            // Create/update the user first
+            await this.setUser(deviceId, uid, userId, name);
+            // Start enrollment mode using executeCmd
+            // According to ZKTeco protocol, CMD_STARTENROLL (61 or 0x3d) initiates enrollment
+            const enrollData = Buffer.alloc(24);
+            enrollData.writeUInt32LE(uid, 0); // User ID
+            enrollData.writeUInt32LE(fingerId, 4); // Finger index (0-9)
+            enrollData.writeUInt32LE(1, 8); // Flag (1 = valid)
+            this.logger.log(`Starting enrollment process for user ${userId} (finger ${fingerId})`);
+            // Use executeCmd to start enrollment if available
+            let templateData;
+            if (typeof zkDevice.executeCmd === 'function') {
+                const result = await zkDevice.executeCmd('CMD_STARTENROLL', enrollData);
+                // This is where we would typically wait for the enrollment result
+                // But since the library doesn't have a direct method for this,
+                // we'll need to implement a custom approach
+                // For now, we'll create a placeholder template
+                // In a real implementation, you would need to:
+                // 1. Prompt the user to place their finger on the device
+                // 2. Wait for the device to capture the fingerprint
+                // 3. Retrieve the template data from the device
+                // Mock template data (should be replaced with actual implementation)
+                templateData = Buffer.from(`template-${userId}-${fingerId}-${Date.now()}`);
+                this.logger.warn(`Note: This is a placeholder implementation. The ZKTeco-js library doesn't directly support fingerprint enrollment. Please check the device manual for specific enrollment procedures.`);
+            }
+            else {
+                throw new Error('Device does not support direct fingerprint enrollment through this library. Consider using the device\'s physical interface for enrollment.');
+            }
+            // Create a template object
+            const template = {
+                id: `${userId}-${fingerId}`,
+                userId,
+                fingerId,
+                template: Buffer.isBuffer(templateData) ? templateData : Buffer.from(templateData),
+                provider: 'zkteco'
+            };
+            // Save template to database
+            await this.templateRepository.save({
+                userId,
+                fingerId,
+                template: Buffer.isBuffer(template.template)
+                    ? template.template
+                    : Buffer.from(template.template.toString()),
+                provider: 'zkteco'
+            });
+            this.logger.log(`Successfully enrolled fingerprint for user ${userId} (finger ${fingerId})`);
+            return template;
+        }
+        catch (error) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            this.logger.error(`Error enrolling user on device ${deviceId}: ${errorMessage}`);
+            throw new base_biometrics_service_1.BiometricException(`Failed to enroll user: ${errorMessage}`);
+        }
+    }
+    /**
+     * Verify a fingerprint template
+     * @param deviceId Device identifier
+     * @param template Template to verify
+     * @returns True if verified
+     */
+    async verifyFingerprint(deviceId, template) {
+        const zkDevice = this.getConnectedDevice(deviceId);
+        try {
+            this.logger.log(`Verifying fingerprint for user ${template.userId} on device ${deviceId}`);
+            // The method name depends on the library implementation
+            let result;
+            if (typeof zkDevice.verifyFingerprint === 'function') {
+                result = await zkDevice.verifyFingerprint(template.userId, template.fingerId, template.template);
+            }
+            else if (typeof zkDevice.verify === 'function') {
+                result = await zkDevice.verify(template.userId, template.fingerId, template.template);
+            }
+            else {
+                throw new Error('Device does not support fingerprint verification');
+            }
+            this.logger.log(`Verification result for user ${template.userId}: ${result}`);
+            return result === true;
+        }
+        catch (error) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            this.logger.error(`Error verifying fingerprint on device ${deviceId}: ${errorMessage}`);
+            throw new base_biometrics_service_1.BiometricException(`Failed to verify fingerprint: ${errorMessage}`);
+        }
+    }
+    /**
+     * Get attendance records from a device
+     * @param deviceId Device identifier
+     * @param startDate Optional start date for filtering
+     * @param endDate Optional end date for filtering
+     * @returns Array of attendance records
+     */
+    async getAttendanceRecords(deviceId, startDate, endDate) {
+        const zkDevice = this.getConnectedDevice(deviceId);
+        try {
+            this.logger.log(`Getting attendance records from device ${deviceId}`);
+            // Use the getAttendances method
+            const records = await zkDevice.getAttendances();
+            if (!records || !Array.isArray(records)) {
+                return [];
+            }
+            // Convert records to a standard format
+            const standardizedRecords = records.map(record => {
+                var _a;
+                return ({
+                    userId: record.userId || '',
+                    timestamp: new Date(record.timestamp),
+                    type: (_a = record.type) !== null && _a !== void 0 ? _a : 0, // Required field with fallback
+                    deviceId: deviceId, // Required field - use the current device ID
+                    verificationMode: record.verificationMode,
+                    status: record.status,
+                    workcode: record.workcode,
+                    isSynced: false, // Default value for new records
+                    retrievedAt: new Date(), // Set current time as retrieval time
+                    data: record.data
+                });
+            });
+            // Filter by date if provided
+            let filteredRecords = standardizedRecords;
+            if (startDate || endDate) {
+                filteredRecords = standardizedRecords.filter(record => {
+                    if (startDate && record.timestamp < startDate)
+                        return false;
+                    if (endDate && record.timestamp > endDate)
+                        return false;
+                    return true;
+                });
+            }
+            this.logger.log(`Found ${filteredRecords.length} attendance records on device ${deviceId}`);
+            return filteredRecords;
+        }
+        catch (error) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            this.logger.error(`Error getting attendance records from device ${deviceId}: ${errorMessage}`);
+            throw new base_biometrics_service_1.BiometricException(`Failed to get attendance records: ${errorMessage}`);
+        }
+    }
+    /**
+     * Set up real-time attendance log monitoring
+     * @param deviceId Device identifier
+     * @param callback Function to call when attendance logs are received
+     * @returns Monitoring ID that can be used to stop monitoring
+     */
+    startRealTimeMonitoring(deviceId, callback) {
+        const zkDevice = this.getConnectedDevice(deviceId);
+        const monitoringId = `monitoring-${deviceId}-${Date.now()}`;
+        try {
+            this.logger.log(`Registering custom callback for real-time monitoring on device ${deviceId}`);
+            // Update or create monitoring info
+            this.activeMonitoring.set(deviceId, {
+                deviceId,
+                callback: callback // Store the callback
+            });
+            // If monitoring isn't already active, set it up
+            if (!this.isMonitoringActive(deviceId)) {
+                this.setupDefaultRealTimeMonitoring(deviceId, zkDevice)
+                    .catch(err => {
+                    const errMsg = err instanceof Error ? err.message : String(err);
+                    this.logger.error(`Failed to set up monitoring for device ${deviceId}: ${errMsg}`);
+                });
+            }
+            this.logger.log(`Real-time monitoring callback registered for device ${deviceId} with ID ${monitoringId}`);
+            return monitoringId;
+        }
+        catch (error) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            this.logger.error(`Error registering monitoring callback for device ${deviceId}: ${errorMessage}`);
+            throw new base_biometrics_service_1.BiometricException(`Failed to start real-time monitoring: ${errorMessage}`);
+        }
+    }
+    /**
+     * Check if monitoring is active for a device
+     */
+    isMonitoringActive(deviceId) {
+        return this.activeMonitoring.has(deviceId);
+    }
+    /**
+     * Stop real-time monitoring
+     * @param monitoringId Monitoring ID returned from startRealTimeMonitoring
+     * @returns True if stopped successfully
+     */
+    stopRealTimeMonitoring(monitoringId) {
+        // This would need to be implemented based on how the library handles stopping monitoring
+        // This is a placeholder implementation
+        this.logger.log(`Stopping real-time monitoring for ID ${monitoringId}`);
+        // In a real implementation, you would:
+        // 1. Look up the deviceId and monitoring info using the monitoringId
+        // 2. Call the appropriate method to stop monitoring on the device
+        // 3. Clean up any resources
+        return true;
+    }
+    /**
+     * Clear all attendance records from a device
+     * @param deviceId Device identifier
+     * @returns True if cleared successfully
+     */
+    async clearAttendanceRecords(deviceId) {
+        const zkDevice = this.getConnectedDevice(deviceId);
+        try {
+            this.logger.log(`Clearing attendance records from device ${deviceId}`);
+            // Use the clearAttendanceLog method
+            await zkDevice.clearAttendanceLog();
+            this.logger.log(`Successfully cleared attendance records from device ${deviceId}`);
+            return true;
+        }
+        catch (error) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            this.logger.error(`Error clearing attendance records from device ${deviceId}: ${errorMessage}`);
+            throw new base_biometrics_service_1.BiometricException(`Failed to clear attendance records: ${errorMessage}`);
+        }
+    }
+    /**
+     * Restart a device
+     * @param deviceId Device identifier
+     * @returns True if restart initiated successfully
+     */
+    async restartDevice(deviceId) {
+        const zkDevice = this.getConnectedDevice(deviceId);
+        try {
+            this.logger.log(`Restarting device ${deviceId}`);
+            // The method name depends on the library implementation
+            if (typeof zkDevice.restart === 'function') {
+                await zkDevice.restart();
+            }
+            else if (typeof zkDevice.restartDevice === 'function') {
+                await zkDevice.restartDevice();
+            }
+            else {
+                throw new Error('Device does not support restart');
+            }
+            this.logger.log(`Successfully initiated restart for device ${deviceId}`);
+            return true;
+        }
+        catch (error) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            this.logger.error(`Error restarting device ${deviceId}: ${errorMessage}`);
+            throw new base_biometrics_service_1.BiometricException(`Failed to restart device: ${errorMessage}`);
+        }
+    }
+    /**
+     * Unlock the device door
+     * @param deviceId Device identifier
+     * @returns True if unlock command sent successfully
+     */
+    async unlockDoor(deviceId) {
+        const zkDevice = this.getConnectedDevice(deviceId);
+        try {
+            this.logger.log(`Unlocking door for device ${deviceId}`);
+            // The method name depends on the library implementation
+            if (typeof zkDevice.executeCmd === 'function') {
+                // Execute the unlock command
+                // Note: CMD.CMD_UNLOCK would need to be defined or imported
+                await zkDevice.executeCmd('CMD_UNLOCK', '');
+            }
+            else if (typeof zkDevice.unlockDoor === 'function') {
+                await zkDevice.unlockDoor();
+            }
+            else {
+                throw new Error('Device does not support door unlock');
+            }
+            this.logger.log(`Successfully unlocked door for device ${deviceId}`);
+            return true;
+        }
+        catch (error) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            this.logger.error(`Error unlocking door for device ${deviceId}: ${errorMessage}`);
+            throw new base_biometrics_service_1.BiometricException(`Failed to unlock door: ${errorMessage}`);
+        }
+    }
+    /**
+     * Execute a custom command on the device
+     * @param deviceId Device identifier
+     * @param command Command to execute
+     * @param data Optional data for the command
+     * @returns Command result
+     */
+    async executeCommand(deviceId, command, data = '') {
+        const zkDevice = this.getConnectedDevice(deviceId);
+        try {
+            this.logger.log(`Executing command ${command} on device ${deviceId}`);
+            if (typeof zkDevice.executeCmd !== 'function') {
+                throw new Error('Device does not support custom commands');
+            }
+            const result = await zkDevice.executeCmd(command, data);
+            this.logger.log(`Successfully executed command ${command} on device ${deviceId}`);
+            return result;
+        }
+        catch (error) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            this.logger.error(`Error executing command on device ${deviceId}: ${errorMessage}`);
+            throw new base_biometrics_service_1.BiometricException(`Failed to execute command: ${errorMessage}`);
+        }
+    }
+    /**
+     * Sync users between two devices
+     * @param sourceDeviceId Source device ID
+     * @param targetDeviceId Target device ID
+     * @returns Number of users synced
+     */
+    async syncUsers(sourceDeviceId, targetDeviceId) {
+        try {
+            this.logger.log(`Syncing users from device ${sourceDeviceId} to ${targetDeviceId}`);
+            // Get users from source device
+            const users = await this.getUserDetails(sourceDeviceId);
+            if (!users || users.length === 0) {
+                this.logger.warn(`No users found on source device ${sourceDeviceId}`);
+                return 0;
+            }
+            // Get target device
+            const targetDevice = this.getConnectedDevice(targetDeviceId);
+            // Transfer each user to target device
+            let syncedCount = 0;
+            for (const user of users) {
+                try {
+                    await this.setUser(targetDeviceId, parseInt(user.userId) || 0, // Use numeric ID if possible
+                    user.userId, user.name, user.password, user.role, parseInt(user.cardNumber || '0') || 0);
+                    syncedCount++;
+                }
+                catch (userError) {
+                    const errorMessage = userError instanceof Error ? userError.message : String(userError);
+                    this.logger.warn(`Failed to sync user ${user.userId}: ${errorMessage}`);
+                }
+            }
+            this.logger.log(`Successfully synced ${syncedCount} users from ${sourceDeviceId} to ${targetDeviceId}`);
+            return syncedCount;
+        }
+        catch (error) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            this.logger.error(`Error syncing users: ${errorMessage}`);
+            throw new base_biometrics_service_1.BiometricException(`Failed to sync users: ${errorMessage}`);
+        }
+    }
+};
+exports.ZKTecoBiometricsService = ZKTecoBiometricsService;
+exports.ZKTecoBiometricsService = ZKTecoBiometricsService = ZKTecoBiometricsService_1 = __decorate([
+    (0, common_1.Injectable)(),
+    __param(1, (0, typeorm_1.InjectRepository)(biometric_device_entity_1.BiometricDevice)),
+    __param(3, (0, typeorm_1.InjectRepository)(biometric_template_entity_1.BiometricTemplate)),
+    __metadata("design:paramtypes", [typeof (_a = typeof config_1.ConfigService !== "undefined" && config_1.ConfigService) === "function" ? _a : Object, typeof (_b = typeof typeorm_2.Repository !== "undefined" && typeorm_2.Repository) === "function" ? _b : Object, typeof (_c = typeof biometrics_polling_service_1.BiometricsPollingService !== "undefined" && biometrics_polling_service_1.BiometricsPollingService) === "function" ? _c : Object, typeof (_d = typeof typeorm_2.Repository !== "undefined" && typeorm_2.Repository) === "function" ? _d : Object, typeof (_e = typeof event_emitter_1.EventEmitter2 !== "undefined" && event_emitter_1.EventEmitter2) === "function" ? _e : Object])
+], ZKTecoBiometricsService);
+
+
+/***/ }),
+/* 142 */
+/***/ ((module) => {
+
+module.exports = require("zkteco-js");
+
+/***/ }),
+/* 143 */
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.BaseBiometricsService = exports.BiometricException = void 0;
+const common_1 = __webpack_require__(1);
+/**
+ * Base exception class for biometric-related errors
+ */
+class BiometricException extends common_1.HttpException {
+    constructor(message, statusCode = common_1.HttpStatus.INTERNAL_SERVER_ERROR) {
+        super(message, statusCode);
+    }
+}
+exports.BiometricException = BiometricException;
+/**
+ * Abstract base class for all biometric service implementations
+ * Provides common functionality and defines the interface that all biometric services must implement
+ */
+class BaseBiometricsService {
+    constructor(deviceRepository, templateRepository, eventEmitter) {
+        this.deviceRepository = deviceRepository;
+        this.templateRepository = templateRepository;
+        this.eventEmitter = eventEmitter;
+        // Make logger protected so it can be inherited by derived classes
+        this.logger = new common_1.Logger(this.constructor.name);
+        this.connections = new Map();
+        this.activeMonitoring = new Map();
+        this.devices = new Map();
+        this.initializeFromDatabase();
+    }
+    /**
+     * Load previously connected devices from database on service startup
+     */
+    async initializeFromDatabase() {
+        try {
+            const savedDevices = await this.deviceRepository.find();
+            if (savedDevices.length > 0) {
+                this.logger.log(`Found ${savedDevices.length} previously connected devices. Attempting to reconnect...`);
+                // Try to reconnect to devices in parallel
+                await Promise.allSettled(savedDevices.map(device => this.connect(device.ipAddress, device.port)
+                    .catch(err => {
+                    const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+                    this.logger.warn(`Failed to reconnect to device ${device.id}: ${errorMessage}`);
+                })));
+            }
+        }
+        catch (error) {
+            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+            this.logger.error(`Error initializing devices from database: ${errorMessage}`);
+        }
+    }
+    /**
+     * Clean up resources when module is destroyed
+     */
+    async onModuleDestroy() {
+        this.logger.log('Module destroying, disconnecting from all devices...');
+        // Close all connections when service is destroyed
+        const disconnectPromises = Array.from(this.connections.entries()).map(([deviceId]) => this.disconnect(deviceId));
+        await Promise.allSettled(disconnectPromises);
+        this.logger.log('All device connections closed');
+    }
+    emitAttendanceEvent(record) {
+        try {
+            this.eventEmitter.emit('biometric.attendance', record);
+        }
+        catch (error) {
+            this.logger.error(`Error emitting attendance event: ${error instanceof Error ? error.message : String(error)}`);
+        }
+    }
+    /**
+     * Connect to a Biometric device
+     * @param ipAddress Device IP address
+     * @param port Device port
+     * @returns Connected device information
+     */
+    async connect(ipAddress, port) {
+        var _a;
+        if (!ipAddress || !port) {
+            throw new BiometricException('IP address and port are required', common_1.HttpStatus.BAD_REQUEST);
+        }
+        const deviceId = this.generateDeviceId(ipAddress, port);
+        // Check if already connected
+        if (this.connections.has(deviceId)) {
+            this.logger.warn(`Device ${deviceId} is already connected`);
+            return (_a = this.devices.get(deviceId)) !== null && _a !== void 0 ? _a : null;
+        }
+        // Create new connection with retry logic
+        return this.connectWithRetry(deviceId, ipAddress, port);
+    }
+    // Device information methods (optional with default implementation)
+    async getDeviceInfo(deviceId) {
+        throw new BiometricException('Method not implemented', common_1.HttpStatus.NOT_IMPLEMENTED);
+    }
+    async getSerialNumber(deviceId) {
+        throw new BiometricException('Method not implemented', common_1.HttpStatus.NOT_IMPLEMENTED);
+    }
+    async getFirmwareVersion(deviceId) {
+        throw new BiometricException('Method not implemented', common_1.HttpStatus.NOT_IMPLEMENTED);
+    }
+    async getDeviceName(deviceId) {
+        throw new BiometricException('Method not implemented', common_1.HttpStatus.NOT_IMPLEMENTED);
+    }
+    async restartDevice(deviceId) {
+        throw new BiometricException('Method not implemented', common_1.HttpStatus.NOT_IMPLEMENTED);
+    }
+    // Time management methods (optional)
+    async getTime(deviceId) {
+        throw new BiometricException('Method not implemented', common_1.HttpStatus.NOT_IMPLEMENTED);
+    }
+    async setTime(deviceId, time) {
+        throw new BiometricException('Method not implemented', common_1.HttpStatus.NOT_IMPLEMENTED);
+    }
+    // User management methods (optional)
+    async enrollUser(deviceId, userId, fingerId) {
+        throw new BiometricException('Method not implemented', common_1.HttpStatus.NOT_IMPLEMENTED);
+    }
+    async deleteUser(deviceId, userId) {
+        throw new BiometricException('Method not implemented', common_1.HttpStatus.NOT_IMPLEMENTED);
+    }
+    async verifyFingerprint(deviceId, template) {
+        throw new BiometricException('Method not implemented', common_1.HttpStatus.NOT_IMPLEMENTED);
+    }
+    async getUsers(deviceId) {
+        throw new BiometricException('Method not implemented', common_1.HttpStatus.NOT_IMPLEMENTED);
+    }
+    async getUserDetails(deviceId) {
+        throw new BiometricException('Method not implemented', common_1.HttpStatus.NOT_IMPLEMENTED);
+    }
+    async setUser(deviceId, uid, userId, name, password, role, cardno) {
+        throw new BiometricException('Method not implemented', common_1.HttpStatus.NOT_IMPLEMENTED);
+    }
+    async syncUsers(sourceDeviceId, targetDeviceId) {
+        throw new BiometricException('Method not implemented', common_1.HttpStatus.NOT_IMPLEMENTED);
+    }
+    // Attendance management methods (optional)
+    async getAttendanceRecords(deviceId, startDate, endDate) {
+        throw new BiometricException('Method not implemented', common_1.HttpStatus.NOT_IMPLEMENTED);
+    }
+    async clearAttendanceRecords(deviceId) {
+        throw new BiometricException('Method not implemented', common_1.HttpStatus.NOT_IMPLEMENTED);
+    }
+    async getAttendanceSize(deviceId) {
+        throw new BiometricException('Method not implemented', common_1.HttpStatus.NOT_IMPLEMENTED);
+    }
+    // Real-time monitoring methods (optional)
+    startRealTimeMonitoring(deviceId, callback) {
+        throw new BiometricException('Method not implemented', common_1.HttpStatus.NOT_IMPLEMENTED);
+    }
+    stopRealTimeMonitoring(monitoringId) {
+        throw new BiometricException('Method not implemented', common_1.HttpStatus.NOT_IMPLEMENTED);
+    }
+    // Door control (optional)
+    async unlockDoor(deviceId) {
+        throw new BiometricException('Method not implemented', common_1.HttpStatus.NOT_IMPLEMENTED);
+    }
+    // Command execution (optional)
+    async executeCommand(deviceId, command, data) {
+        throw new BiometricException('Method not implemented', common_1.HttpStatus.NOT_IMPLEMENTED);
+    }
+    /**
+     * Get all connected devices
+     * @returns Array of connected biometric devices
+     */
+    getConnectedDevices() {
+        return Promise.resolve(Array.from(this.devices.values()));
+    }
+    /**
+     * Get a device by ID, throwing an exception if not found
+     * @param deviceId Device identifier
+     * @returns Device information
+     */
+    getDevice(deviceId) {
+        const device = this.devices.get(deviceId);
+        if (!device) {
+            throw new BiometricException(`Device with ID ${deviceId} not found or not connected`, common_1.HttpStatus.NOT_FOUND);
+        }
+        return device;
+    }
+    /**
+     * Generate a unique device ID from IP address and port
+     * @param ipAddress Device IP address
+     * @param port Device port
+     * @returns Unique device identifier
+     */
+    generateDeviceId(ipAddress, port) {
+        return `${ipAddress}:${port}`;
+    }
+    /**
+     * Safely handle errors by ensuring proper type conversion
+     * @param error The error to process
+     * @returns Standardized error message string
+     */
+    formatErrorMessage(error) {
+        return error instanceof Error ? error.message : String(error);
+    }
+}
+exports.BaseBiometricsService = BaseBiometricsService;
+
+
+/***/ }),
+/* 144 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.DocumentsModule = void 0;
 const common_1 = __webpack_require__(1);
 const core_1 = __webpack_require__(3);
 const typeorm_1 = __webpack_require__(13);
 const users_module_1 = __webpack_require__(12);
-const document_types_module_1 = __webpack_require__(114);
-const documents_controller_1 = __webpack_require__(118);
-const documents_service_1 = __webpack_require__(119);
+const document_types_module_1 = __webpack_require__(145);
+const documents_controller_1 = __webpack_require__(149);
+const documents_service_1 = __webpack_require__(150);
 const document_entity_1 = __webpack_require__(15);
 let DocumentsModule = class DocumentsModule {
 };
@@ -7242,7 +10663,7 @@ exports.DocumentsModule = DocumentsModule = __decorate([
 
 
 /***/ }),
-/* 114 */
+/* 145 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -7257,8 +10678,8 @@ exports.DocumentTypesModule = void 0;
 const users_module_1 = __webpack_require__(12);
 const common_1 = __webpack_require__(1);
 const typeorm_1 = __webpack_require__(13);
-const document_types_controller_1 = __webpack_require__(115);
-const document_types_service_1 = __webpack_require__(116);
+const document_types_controller_1 = __webpack_require__(146);
+const document_types_service_1 = __webpack_require__(147);
 const document_type_entity_1 = __webpack_require__(18);
 let DocumentTypesModule = class DocumentTypesModule {
 };
@@ -7274,15 +10695,15 @@ exports.DocumentTypesModule = DocumentTypesModule = __decorate([
 
 
 /***/ }),
-/* 115 */
+/* 146 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.DocumentTypesController = void 0;
 const create_controller_factory_1 = __webpack_require__(36);
-const document_types_service_1 = __webpack_require__(116);
-const document_type_dto_1 = __webpack_require__(117);
+const document_types_service_1 = __webpack_require__(147);
+const document_type_dto_1 = __webpack_require__(148);
 class DocumentTypesController extends (0, create_controller_factory_1.createController)('Document Types', // Entity name for Swagger documentation
 document_types_service_1.DocumentTypesService, // The service handling DocumentType-related operations
 document_type_dto_1.GetDocumentTypeDto, // DTO for retrieving DocumentTypes
@@ -7293,7 +10714,7 @@ exports.DocumentTypesController = DocumentTypesController;
 
 
 /***/ }),
-/* 116 */
+/* 147 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -7334,7 +10755,7 @@ exports.DocumentTypesService = DocumentTypesService = __decorate([
 
 
 /***/ }),
-/* 117 */
+/* 148 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -7404,15 +10825,15 @@ exports.GetDocumentTypeDto = GetDocumentTypeDto;
 
 
 /***/ }),
-/* 118 */
+/* 149 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.DocumentsController = void 0;
 const create_controller_factory_1 = __webpack_require__(36);
-const documents_service_1 = __webpack_require__(119);
-const document_dto_1 = __webpack_require__(120);
+const documents_service_1 = __webpack_require__(150);
+const document_dto_1 = __webpack_require__(151);
 class DocumentsController extends (0, create_controller_factory_1.createController)('Documents', // Entity name for Swagger documentation
 documents_service_1.DocumentsService, // The service handling Document-related operations
 document_dto_1.GetDocumentDto, // DTO for retrieving Documents
@@ -7424,7 +10845,7 @@ exports.DocumentsController = DocumentsController;
 
 
 /***/ }),
-/* 119 */
+/* 150 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -7465,7 +10886,7 @@ exports.DocumentsService = DocumentsService = __decorate([
 
 
 /***/ }),
-/* 120 */
+/* 151 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -7538,7 +10959,7 @@ exports.GetDocumentDto = GetDocumentDto;
 
 
 /***/ }),
-/* 121 */
+/* 152 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -7552,8 +10973,8 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.FilesModule = void 0;
 const common_1 = __webpack_require__(1);
 const users_module_1 = __webpack_require__(12);
-const file_provider_config_1 = __webpack_require__(122);
-const files_controller_1 = __webpack_require__(132);
+const file_provider_config_1 = __webpack_require__(153);
+const files_controller_1 = __webpack_require__(163);
 let FilesModule = class FilesModule {
 };
 exports.FilesModule = FilesModule;
@@ -7567,14 +10988,14 @@ exports.FilesModule = FilesModule = __decorate([
 
 
 /***/ }),
-/* 122 */
+/* 153 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.fileProviders = exports.fileProviderConfig = exports.FILE_SERVICE = void 0;
 const config_1 = __webpack_require__(2);
-const local_file_service_1 = __webpack_require__(123);
+const local_file_service_1 = __webpack_require__(154);
 exports.FILE_SERVICE = 'FILE_SERVICE';
 exports.fileProviderConfig = {
     provide: exports.FILE_SERVICE,
@@ -7601,7 +11022,7 @@ exports.fileProviders = [exports.fileProviderConfig, local_file_service_1.LocalF
 
 
 /***/ }),
-/* 123 */
+/* 154 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -7657,10 +11078,10 @@ const common_1 = __webpack_require__(1);
 const config_1 = __webpack_require__(2);
 const fs = __importStar(__webpack_require__(87));
 const fs_1 = __webpack_require__(87);
-const mime = __importStar(__webpack_require__(124));
-const path_1 = __importDefault(__webpack_require__(125));
-const file_list_options_dto_1 = __webpack_require__(126);
-const base_file_service_1 = __webpack_require__(127);
+const mime = __importStar(__webpack_require__(155));
+const path_1 = __importDefault(__webpack_require__(156));
+const file_list_options_dto_1 = __webpack_require__(157);
+const base_file_service_1 = __webpack_require__(158);
 let LocalFileService = class LocalFileService extends base_file_service_1.BaseFileService {
     constructor(configService) {
         const uploadDir = configService.getOrThrow('FILE_DIRECTORY');
@@ -8263,19 +11684,19 @@ exports.LocalFileService = LocalFileService = __decorate([
 
 
 /***/ }),
-/* 124 */
+/* 155 */
 /***/ ((module) => {
 
 module.exports = require("mime-types");
 
 /***/ }),
-/* 125 */
+/* 156 */
 /***/ ((module) => {
 
 module.exports = require("path");
 
 /***/ }),
-/* 126 */
+/* 157 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -8454,7 +11875,7 @@ __decorate([
 
 
 /***/ }),
-/* 127 */
+/* 158 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -8506,12 +11927,12 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.BaseFileService = void 0;
 const common_1 = __webpack_require__(1);
-const crypto = __importStar(__webpack_require__(128));
-const csv_writer_1 = __webpack_require__(129);
-const ExcelJS = __importStar(__webpack_require__(130));
+const crypto = __importStar(__webpack_require__(159));
+const csv_writer_1 = __webpack_require__(160);
+const ExcelJS = __importStar(__webpack_require__(161));
 const fs = __importStar(__webpack_require__(87));
-const path = __importStar(__webpack_require__(125));
-const pdfkit_1 = __importDefault(__webpack_require__(131));
+const path = __importStar(__webpack_require__(156));
+const pdfkit_1 = __importDefault(__webpack_require__(162));
 let BaseFileService = class BaseFileService {
     constructor(uploadDir, baseUrl) {
         this.logger = new common_1.Logger(this.constructor.name);
@@ -8746,31 +12167,31 @@ exports.BaseFileService = BaseFileService = __decorate([
 
 
 /***/ }),
-/* 128 */
+/* 159 */
 /***/ ((module) => {
 
 module.exports = require("crypto");
 
 /***/ }),
-/* 129 */
+/* 160 */
 /***/ ((module) => {
 
 module.exports = require("csv-writer");
 
 /***/ }),
-/* 130 */
+/* 161 */
 /***/ ((module) => {
 
 module.exports = require("exceljs");
 
 /***/ }),
-/* 131 */
+/* 162 */
 /***/ ((module) => {
 
 module.exports = require("pdfkit");
 
 /***/ }),
-/* 132 */
+/* 163 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -8793,14 +12214,14 @@ exports.FilesController = void 0;
 const authorize_decorator_1 = __webpack_require__(42);
 const current_user_decorator_1 = __webpack_require__(57);
 const common_1 = __webpack_require__(1);
-const platform_express_1 = __webpack_require__(133);
+const platform_express_1 = __webpack_require__(164);
 const swagger_1 = __webpack_require__(4);
 const express_1 = __webpack_require__(97);
-const file_provider_config_1 = __webpack_require__(122);
-const directory_metadata_dto_1 = __webpack_require__(134);
-const file_list_response_dto_1 = __webpack_require__(135);
-const file_meta_data_dto_1 = __webpack_require__(136);
-const file_service_interface_1 = __webpack_require__(137);
+const file_provider_config_1 = __webpack_require__(153);
+const directory_metadata_dto_1 = __webpack_require__(165);
+const file_list_response_dto_1 = __webpack_require__(166);
+const file_meta_data_dto_1 = __webpack_require__(167);
+const file_service_interface_1 = __webpack_require__(168);
 let FilesController = FilesController_1 = class FilesController {
     constructor(fileService) {
         this.fileService = fileService;
@@ -9342,13 +12763,13 @@ exports.FilesController = FilesController = FilesController_1 = __decorate([
 
 
 /***/ }),
-/* 133 */
+/* 164 */
 /***/ ((module) => {
 
 module.exports = require("@nestjs/platform-express");
 
 /***/ }),
-/* 134 */
+/* 165 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -9399,7 +12820,7 @@ __decorate([
 
 
 /***/ }),
-/* 135 */
+/* 166 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -9416,8 +12837,8 @@ var _a;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.FileListResponseDto = void 0;
 const swagger_1 = __webpack_require__(4);
-const directory_metadata_dto_1 = __webpack_require__(134);
-const file_meta_data_dto_1 = __webpack_require__(136);
+const directory_metadata_dto_1 = __webpack_require__(165);
+const file_meta_data_dto_1 = __webpack_require__(167);
 class FileListResponseDto {
 }
 exports.FileListResponseDto = FileListResponseDto;
@@ -9460,7 +12881,7 @@ __decorate([
 
 
 /***/ }),
-/* 136 */
+/* 167 */
 /***/ ((__unused_webpack_module, exports) => {
 
 
@@ -9472,7 +12893,7 @@ exports.FileMetadata = FileMetadata;
 
 
 /***/ }),
-/* 137 */
+/* 168 */
 /***/ ((__unused_webpack_module, exports) => {
 
 
@@ -9480,7 +12901,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 
 
 /***/ }),
-/* 138 */
+/* 169 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -9495,7 +12916,7 @@ exports.LogsModule = void 0;
 const common_1 = __webpack_require__(1);
 const typeorm_1 = __webpack_require__(13);
 const activity_logs_entity_1 = __webpack_require__(32);
-const logs_service_1 = __webpack_require__(139);
+const logs_service_1 = __webpack_require__(170);
 let LogsModule = class LogsModule {
 };
 exports.LogsModule = LogsModule;
@@ -9509,7 +12930,7 @@ exports.LogsModule = LogsModule = __decorate([
 
 
 /***/ }),
-/* 139 */
+/* 170 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -9581,7 +13002,7 @@ exports.LogsService = LogsService = __decorate([
 
 
 /***/ }),
-/* 140 */
+/* 171 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -9594,8 +13015,8 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.NotificationsModule = void 0;
 const common_1 = __webpack_require__(1);
-const notifications_gateway_1 = __webpack_require__(141);
-const notifications_service_1 = __webpack_require__(143);
+const notifications_gateway_1 = __webpack_require__(172);
+const notifications_service_1 = __webpack_require__(174);
 let NotificationsModule = class NotificationsModule {
 };
 exports.NotificationsModule = NotificationsModule;
@@ -9607,7 +13028,7 @@ exports.NotificationsModule = NotificationsModule = __decorate([
 
 
 /***/ }),
-/* 141 */
+/* 172 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -9622,7 +13043,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.NotificationsGateway = void 0;
-const websockets_1 = __webpack_require__(142);
+const websockets_1 = __webpack_require__(173);
 let NotificationsGateway = class NotificationsGateway {
     handleMessage(client, payload) {
         return 'Hello world!';
@@ -9641,13 +13062,13 @@ exports.NotificationsGateway = NotificationsGateway = __decorate([
 
 
 /***/ }),
-/* 142 */
+/* 173 */
 /***/ ((module) => {
 
 module.exports = require("@nestjs/websockets");
 
 /***/ }),
-/* 143 */
+/* 174 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -9669,7 +13090,7 @@ exports.NotificationsService = NotificationsService = __decorate([
 
 
 /***/ }),
-/* 144 */
+/* 175 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -9685,11 +13106,11 @@ const common_1 = __webpack_require__(1);
 const core_1 = __webpack_require__(3);
 const typeorm_1 = __webpack_require__(13);
 const users_module_1 = __webpack_require__(12);
-const branches_module_1 = __webpack_require__(145);
-const departments_module_1 = __webpack_require__(149);
+const branches_module_1 = __webpack_require__(176);
+const departments_module_1 = __webpack_require__(180);
 const organization_entity_1 = __webpack_require__(29);
-const organizations_controller_1 = __webpack_require__(153);
-const organizations_service_1 = __webpack_require__(155);
+const organizations_controller_1 = __webpack_require__(184);
+const organizations_service_1 = __webpack_require__(186);
 let OrganizationManagementModule = class OrganizationManagementModule {
 };
 exports.OrganizationManagementModule = OrganizationManagementModule;
@@ -9731,7 +13152,7 @@ exports.OrganizationManagementModule = OrganizationManagementModule = __decorate
 
 
 /***/ }),
-/* 145 */
+/* 176 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -9746,9 +13167,9 @@ exports.BranchesModule = void 0;
 const users_module_1 = __webpack_require__(12);
 const common_1 = __webpack_require__(1);
 const typeorm_1 = __webpack_require__(13);
-const branches_controller_1 = __webpack_require__(146);
-const branches_service_1 = __webpack_require__(147);
-const departments_module_1 = __webpack_require__(149);
+const branches_controller_1 = __webpack_require__(177);
+const branches_service_1 = __webpack_require__(178);
+const departments_module_1 = __webpack_require__(180);
 const branch_entity_1 = __webpack_require__(30);
 let BranchesModule = class BranchesModule {
 };
@@ -9765,22 +13186,22 @@ exports.BranchesModule = BranchesModule = __decorate([
 
 
 /***/ }),
-/* 146 */
+/* 177 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.BranchesController = void 0;
 const create_controller_factory_1 = __webpack_require__(36);
-const branches_service_1 = __webpack_require__(147);
-const branch_dto_1 = __webpack_require__(148);
+const branches_service_1 = __webpack_require__(178);
+const branch_dto_1 = __webpack_require__(179);
 class BranchesController extends (0, create_controller_factory_1.createController)('Branches', branches_service_1.BranchesService, branch_dto_1.GetBranchDto, branch_dto_1.BranchDto, branch_dto_1.UpdateBranchDto) {
 }
 exports.BranchesController = BranchesController;
 
 
 /***/ }),
-/* 147 */
+/* 178 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -9821,7 +13242,7 @@ exports.BranchesService = BranchesService = __decorate([
 
 
 /***/ }),
-/* 148 */
+/* 179 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -9906,7 +13327,7 @@ exports.GetBranchDto = GetBranchDto;
 
 
 /***/ }),
-/* 149 */
+/* 180 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -9921,8 +13342,8 @@ exports.DepartmentsModule = void 0;
 const users_module_1 = __webpack_require__(12);
 const common_1 = __webpack_require__(1);
 const typeorm_1 = __webpack_require__(13);
-const departments_controller_1 = __webpack_require__(150);
-const departments_service_1 = __webpack_require__(151);
+const departments_controller_1 = __webpack_require__(181);
+const departments_service_1 = __webpack_require__(182);
 const department_entity_1 = __webpack_require__(27);
 let DepartmentsModule = class DepartmentsModule {
 };
@@ -9941,15 +13362,15 @@ exports.DepartmentsModule = DepartmentsModule = __decorate([
 
 
 /***/ }),
-/* 150 */
+/* 181 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.DepartmentsController = void 0;
 const create_controller_factory_1 = __webpack_require__(36);
-const departments_service_1 = __webpack_require__(151);
-const department_dto_1 = __webpack_require__(152);
+const departments_service_1 = __webpack_require__(182);
+const department_dto_1 = __webpack_require__(183);
 class DepartmentsController extends (0, create_controller_factory_1.createController)('Departments', // Entity name for Swagger documentation
 departments_service_1.DepartmentsService, // The service handling Department-related operations
 department_dto_1.GetDepartmentDto, // DTO for retrieving departments
@@ -9961,7 +13382,7 @@ exports.DepartmentsController = DepartmentsController;
 
 
 /***/ }),
-/* 151 */
+/* 182 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -10002,7 +13423,7 @@ exports.DepartmentsService = DepartmentsService = __decorate([
 
 
 /***/ }),
-/* 152 */
+/* 183 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -10087,22 +13508,22 @@ exports.GetDepartmentDto = GetDepartmentDto;
 
 
 /***/ }),
-/* 153 */
+/* 184 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.OrganizationsController = void 0;
 const create_controller_factory_1 = __webpack_require__(36);
-const organization_dto_1 = __webpack_require__(154);
-const organizations_service_1 = __webpack_require__(155);
+const organization_dto_1 = __webpack_require__(185);
+const organizations_service_1 = __webpack_require__(186);
 class OrganizationsController extends (0, create_controller_factory_1.createController)('Organizations', organizations_service_1.OrganizationsService, organization_dto_1.GetOrganizationDto, organization_dto_1.OrganizationDto, organization_dto_1.UpdateOrganizationDto) {
 }
 exports.OrganizationsController = OrganizationsController;
 
 
 /***/ }),
-/* 154 */
+/* 185 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -10181,7 +13602,7 @@ exports.GetOrganizationDto = GetOrganizationDto;
 
 
 /***/ }),
-/* 155 */
+/* 186 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -10222,7 +13643,7 @@ exports.OrganizationsService = OrganizationsService = __decorate([
 
 
 /***/ }),
-/* 156 */
+/* 187 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -10233,21 +13654,21 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.SchedulesModule = void 0;
+exports.ScheduleManagementModule = void 0;
 const users_module_1 = __webpack_require__(12);
 const common_1 = __webpack_require__(1);
 const core_1 = __webpack_require__(3);
 const typeorm_1 = __webpack_require__(13);
-const schedule_entity_1 = __webpack_require__(157);
-const schedules_controller_1 = __webpack_require__(158);
-const schedules_service_1 = __webpack_require__(160);
-const groups_module_1 = __webpack_require__(161);
-const shifts_module_1 = __webpack_require__(166);
-const holidays_module_1 = __webpack_require__(171);
-let SchedulesModule = class SchedulesModule {
+const schedule_entity_1 = __webpack_require__(188);
+const groups_module_1 = __webpack_require__(189);
+const holidays_module_1 = __webpack_require__(194);
+const schedules_controller_1 = __webpack_require__(199);
+const schedules_service_1 = __webpack_require__(201);
+const shifts_module_1 = __webpack_require__(202);
+let ScheduleManagementModule = class ScheduleManagementModule {
 };
-exports.SchedulesModule = SchedulesModule;
-exports.SchedulesModule = SchedulesModule = __decorate([
+exports.ScheduleManagementModule = ScheduleManagementModule;
+exports.ScheduleManagementModule = ScheduleManagementModule = __decorate([
     (0, common_1.Module)({
         imports: [
             typeorm_1.TypeOrmModule.forFeature([schedule_entity_1.Schedule]),
@@ -10255,7 +13676,7 @@ exports.SchedulesModule = SchedulesModule = __decorate([
             core_1.RouterModule.register([
                 {
                     path: 'schedules',
-                    module: SchedulesModule,
+                    module: ScheduleManagementModule,
                     children: [
                         {
                             path: 'groups',
@@ -10285,11 +13706,11 @@ exports.SchedulesModule = SchedulesModule = __decorate([
         ],
         controllers: [schedules_controller_1.SchedulesController],
     })
-], SchedulesModule);
+], ScheduleManagementModule);
 
 
 /***/ }),
-/* 157 */
+/* 188 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -10319,105 +13740,7 @@ exports.Schedule = Schedule = __decorate([
 
 
 /***/ }),
-/* 158 */
-/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
-
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.SchedulesController = void 0;
-const create_controller_factory_1 = __webpack_require__(36);
-const schedule_dto_1 = __webpack_require__(159);
-const schedules_service_1 = __webpack_require__(160);
-class SchedulesController extends (0, create_controller_factory_1.createController)('Schedules', // Entity name for Swagger documentation
-schedules_service_1.SchedulesService, // The service handling Schedule-related operations
-schedule_dto_1.GetScheduleDto, // DTO for retrieving Schedules
-schedule_dto_1.ScheduleDto, // DTO for creating Schedules
-schedule_dto_1.UpdateScheduleDto) {
-}
-exports.SchedulesController = SchedulesController;
-
-
-/***/ }),
-/* 159 */
-/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
-
-
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-var __metadata = (this && this.__metadata) || function (k, v) {
-    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.GetScheduleDto = exports.UpdateScheduleDto = exports.ScheduleDto = void 0;
-const base_dto_1 = __webpack_require__(75);
-const create_get_dto_factory_1 = __webpack_require__(63);
-const swagger_1 = __webpack_require__(4);
-const class_validator_1 = __webpack_require__(41);
-const swagger_2 = __webpack_require__(4);
-class ScheduleDto extends (0, swagger_2.PartialType)(base_dto_1.BaseDto) {
-}
-exports.ScheduleDto = ScheduleDto;
-__decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Name of the schedule' }),
-    (0, class_validator_1.IsNotEmpty)(),
-    (0, class_validator_1.IsString)(),
-    __metadata("design:type", String)
-], ScheduleDto.prototype, "name", void 0);
-class UpdateScheduleDto extends (0, swagger_2.PartialType)(ScheduleDto) {
-}
-exports.UpdateScheduleDto = UpdateScheduleDto;
-class GetScheduleDto extends (0, create_get_dto_factory_1.createGetDto)(ScheduleDto) {
-}
-exports.GetScheduleDto = GetScheduleDto;
-
-
-/***/ }),
-/* 160 */
-/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
-
-
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-var __metadata = (this && this.__metadata) || function (k, v) {
-    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
-};
-var __param = (this && this.__param) || function (paramIndex, decorator) {
-    return function (target, key) { decorator(target, key, paramIndex); }
-};
-var _a, _b;
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.SchedulesService = void 0;
-const base_service_1 = __webpack_require__(47);
-const users_service_1 = __webpack_require__(46);
-const common_1 = __webpack_require__(1);
-const typeorm_1 = __webpack_require__(13);
-const typeorm_2 = __webpack_require__(17);
-const schedule_entity_1 = __webpack_require__(157);
-let SchedulesService = class SchedulesService extends base_service_1.BaseService {
-    constructor(schedulesRepository, usersService) {
-        super(schedulesRepository, usersService);
-        this.schedulesRepository = schedulesRepository;
-        this.usersService = usersService;
-    }
-};
-exports.SchedulesService = SchedulesService;
-exports.SchedulesService = SchedulesService = __decorate([
-    (0, common_1.Injectable)(),
-    __param(0, (0, typeorm_1.InjectRepository)(schedule_entity_1.Schedule)),
-    __metadata("design:paramtypes", [typeof (_a = typeof typeorm_2.Repository !== "undefined" && typeorm_2.Repository) === "function" ? _a : Object, typeof (_b = typeof users_service_1.UsersService !== "undefined" && users_service_1.UsersService) === "function" ? _b : Object])
-], SchedulesService);
-
-
-/***/ }),
-/* 161 */
+/* 189 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -10432,9 +13755,9 @@ exports.GroupsModule = void 0;
 const common_1 = __webpack_require__(1);
 const typeorm_1 = __webpack_require__(13);
 const users_module_1 = __webpack_require__(12);
-const groups_controller_1 = __webpack_require__(162);
-const groups_service_1 = __webpack_require__(164);
-const group_entity_1 = __webpack_require__(165);
+const groups_controller_1 = __webpack_require__(190);
+const groups_service_1 = __webpack_require__(192);
+const group_entity_1 = __webpack_require__(193);
 let GroupsModule = class GroupsModule {
 };
 exports.GroupsModule = GroupsModule;
@@ -10452,15 +13775,15 @@ exports.GroupsModule = GroupsModule = __decorate([
 
 
 /***/ }),
-/* 162 */
+/* 190 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.GroupsController = void 0;
 const create_controller_factory_1 = __webpack_require__(36);
-const group_dto_1 = __webpack_require__(163);
-const groups_service_1 = __webpack_require__(164);
+const group_dto_1 = __webpack_require__(191);
+const groups_service_1 = __webpack_require__(192);
 class GroupsController extends (0, create_controller_factory_1.createController)('Groups', // Entity name for Swagger documentation
 groups_service_1.GroupsService, // The service handling Group-related operations
 group_dto_1.GetGroupDto, // DTO for retrieving Groups
@@ -10471,7 +13794,7 @@ exports.GroupsController = GroupsController;
 
 
 /***/ }),
-/* 163 */
+/* 191 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -10509,7 +13832,7 @@ exports.GetGroupDto = GetGroupDto;
 
 
 /***/ }),
-/* 164 */
+/* 192 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -10533,7 +13856,7 @@ const users_service_1 = __webpack_require__(46);
 const common_1 = __webpack_require__(1);
 const typeorm_1 = __webpack_require__(13);
 const typeorm_2 = __webpack_require__(17);
-const group_entity_1 = __webpack_require__(165);
+const group_entity_1 = __webpack_require__(193);
 let GroupsService = class GroupsService extends base_service_1.BaseService {
     constructor(groupsRepository, usersService) {
         super(groupsRepository, usersService);
@@ -10550,7 +13873,7 @@ exports.GroupsService = GroupsService = __decorate([
 
 
 /***/ }),
-/* 165 */
+/* 193 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -10580,170 +13903,7 @@ exports.Group = Group = __decorate([
 
 
 /***/ }),
-/* 166 */
-/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
-
-
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.ShiftsModule = void 0;
-const common_1 = __webpack_require__(1);
-const typeorm_1 = __webpack_require__(13);
-const users_module_1 = __webpack_require__(12);
-const shifts_controller_1 = __webpack_require__(167);
-const shifts_service_1 = __webpack_require__(169);
-const shift_entity_1 = __webpack_require__(170);
-let ShiftsModule = class ShiftsModule {
-};
-exports.ShiftsModule = ShiftsModule;
-exports.ShiftsModule = ShiftsModule = __decorate([
-    (0, common_1.Module)({
-        imports: [
-            typeorm_1.TypeOrmModule.forFeature([shift_entity_1.Shift]),
-            users_module_1.UsersModule,
-        ],
-        providers: [shifts_service_1.ShiftsService],
-        exports: [shifts_service_1.ShiftsService],
-        controllers: [shifts_controller_1.ShiftsController],
-    })
-], ShiftsModule);
-
-
-/***/ }),
-/* 167 */
-/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
-
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.ShiftsController = void 0;
-const create_controller_factory_1 = __webpack_require__(36);
-const shift_dto_1 = __webpack_require__(168);
-const shifts_service_1 = __webpack_require__(169);
-class ShiftsController extends (0, create_controller_factory_1.createController)('Shifts', // Entity name for Swagger documentation
-shifts_service_1.ShiftsService, // The service handling Shift-related operations
-shift_dto_1.GetShiftDto, // DTO for retrieving Shifts
-shift_dto_1.ShiftDto, // DTO for creating Shifts
-shift_dto_1.UpdateShiftDto) {
-}
-exports.ShiftsController = ShiftsController;
-
-
-/***/ }),
-/* 168 */
-/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
-
-
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-var __metadata = (this && this.__metadata) || function (k, v) {
-    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.GetShiftDto = exports.UpdateShiftDto = exports.ShiftDto = void 0;
-const base_dto_1 = __webpack_require__(75);
-const create_get_dto_factory_1 = __webpack_require__(63);
-const swagger_1 = __webpack_require__(4);
-const class_validator_1 = __webpack_require__(41);
-const swagger_2 = __webpack_require__(4);
-class ShiftDto extends (0, swagger_2.PartialType)(base_dto_1.BaseDto) {
-}
-exports.ShiftDto = ShiftDto;
-__decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Name of the shift' }),
-    (0, class_validator_1.IsNotEmpty)(),
-    (0, class_validator_1.IsString)(),
-    __metadata("design:type", String)
-], ShiftDto.prototype, "name", void 0);
-class UpdateShiftDto extends (0, swagger_2.PartialType)(ShiftDto) {
-}
-exports.UpdateShiftDto = UpdateShiftDto;
-class GetShiftDto extends (0, create_get_dto_factory_1.createGetDto)(ShiftDto) {
-}
-exports.GetShiftDto = GetShiftDto;
-
-
-/***/ }),
-/* 169 */
-/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
-
-
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-var __metadata = (this && this.__metadata) || function (k, v) {
-    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
-};
-var __param = (this && this.__param) || function (paramIndex, decorator) {
-    return function (target, key) { decorator(target, key, paramIndex); }
-};
-var _a, _b;
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.ShiftsService = void 0;
-const base_service_1 = __webpack_require__(47);
-const users_service_1 = __webpack_require__(46);
-const common_1 = __webpack_require__(1);
-const typeorm_1 = __webpack_require__(13);
-const typeorm_2 = __webpack_require__(17);
-const shift_entity_1 = __webpack_require__(170);
-let ShiftsService = class ShiftsService extends base_service_1.BaseService {
-    constructor(shiftsRepository, usersService) {
-        super(shiftsRepository, usersService);
-        this.shiftsRepository = shiftsRepository;
-        this.usersService = usersService;
-    }
-};
-exports.ShiftsService = ShiftsService;
-exports.ShiftsService = ShiftsService = __decorate([
-    (0, common_1.Injectable)(),
-    __param(0, (0, typeorm_1.InjectRepository)(shift_entity_1.Shift)),
-    __metadata("design:paramtypes", [typeof (_a = typeof typeorm_2.Repository !== "undefined" && typeorm_2.Repository) === "function" ? _a : Object, typeof (_b = typeof users_service_1.UsersService !== "undefined" && users_service_1.UsersService) === "function" ? _b : Object])
-], ShiftsService);
-
-
-/***/ }),
-/* 170 */
-/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
-
-
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-var __metadata = (this && this.__metadata) || function (k, v) {
-    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.Shift = void 0;
-const base_entity_1 = __webpack_require__(16);
-const typeorm_1 = __webpack_require__(17);
-let Shift = class Shift extends base_entity_1.BaseEntity {
-};
-exports.Shift = Shift;
-__decorate([
-    (0, typeorm_1.Column)(),
-    __metadata("design:type", String)
-], Shift.prototype, "name", void 0);
-exports.Shift = Shift = __decorate([
-    (0, typeorm_1.Entity)('shifts')
-], Shift);
-
-
-/***/ }),
-/* 171 */
+/* 194 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -10758,9 +13918,9 @@ exports.HolidaysModule = void 0;
 const common_1 = __webpack_require__(1);
 const typeorm_1 = __webpack_require__(13);
 const users_module_1 = __webpack_require__(12);
-const holidays_controller_1 = __webpack_require__(172);
-const holidays_service_1 = __webpack_require__(174);
-const holiday_entity_1 = __webpack_require__(175);
+const holidays_controller_1 = __webpack_require__(195);
+const holidays_service_1 = __webpack_require__(197);
+const holiday_entity_1 = __webpack_require__(198);
 let HolidaysModule = class HolidaysModule {
 };
 exports.HolidaysModule = HolidaysModule;
@@ -10778,15 +13938,15 @@ exports.HolidaysModule = HolidaysModule = __decorate([
 
 
 /***/ }),
-/* 172 */
+/* 195 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.HolidaysController = void 0;
 const create_controller_factory_1 = __webpack_require__(36);
-const holiday_dto_1 = __webpack_require__(173);
-const holidays_service_1 = __webpack_require__(174);
+const holiday_dto_1 = __webpack_require__(196);
+const holidays_service_1 = __webpack_require__(197);
 class HolidaysController extends (0, create_controller_factory_1.createController)('Holidays', // Entity name for Swagger documentation
 holidays_service_1.HolidaysService, // The service handling Holiday-related operations
 holiday_dto_1.GetHolidayDto, // DTO for retrieving Holidays
@@ -10797,7 +13957,7 @@ exports.HolidaysController = HolidaysController;
 
 
 /***/ }),
-/* 173 */
+/* 196 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -10835,7 +13995,7 @@ exports.GetHolidayDto = GetHolidayDto;
 
 
 /***/ }),
-/* 174 */
+/* 197 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -10859,7 +14019,7 @@ const users_service_1 = __webpack_require__(46);
 const common_1 = __webpack_require__(1);
 const typeorm_1 = __webpack_require__(13);
 const typeorm_2 = __webpack_require__(17);
-const holiday_entity_1 = __webpack_require__(175);
+const holiday_entity_1 = __webpack_require__(198);
 let HolidaysService = class HolidaysService extends base_service_1.BaseService {
     constructor(holidaysRepository, usersService) {
         super(holidaysRepository, usersService);
@@ -10876,7 +14036,7 @@ exports.HolidaysService = HolidaysService = __decorate([
 
 
 /***/ }),
-/* 175 */
+/* 198 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -10906,7 +14066,268 @@ exports.Holiday = Holiday = __decorate([
 
 
 /***/ }),
-/* 176 */
+/* 199 */
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.SchedulesController = void 0;
+const create_controller_factory_1 = __webpack_require__(36);
+const schedule_dto_1 = __webpack_require__(200);
+const schedules_service_1 = __webpack_require__(201);
+class SchedulesController extends (0, create_controller_factory_1.createController)('Schedules', // Entity name for Swagger documentation
+schedules_service_1.SchedulesService, // The service handling Schedule-related operations
+schedule_dto_1.GetScheduleDto, // DTO for retrieving Schedules
+schedule_dto_1.ScheduleDto, // DTO for creating Schedules
+schedule_dto_1.UpdateScheduleDto) {
+}
+exports.SchedulesController = SchedulesController;
+
+
+/***/ }),
+/* 200 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.GetScheduleDto = exports.UpdateScheduleDto = exports.ScheduleDto = void 0;
+const base_dto_1 = __webpack_require__(75);
+const create_get_dto_factory_1 = __webpack_require__(63);
+const swagger_1 = __webpack_require__(4);
+const class_validator_1 = __webpack_require__(41);
+const swagger_2 = __webpack_require__(4);
+class ScheduleDto extends (0, swagger_2.PartialType)(base_dto_1.BaseDto) {
+}
+exports.ScheduleDto = ScheduleDto;
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Name of the schedule' }),
+    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], ScheduleDto.prototype, "name", void 0);
+class UpdateScheduleDto extends (0, swagger_2.PartialType)(ScheduleDto) {
+}
+exports.UpdateScheduleDto = UpdateScheduleDto;
+class GetScheduleDto extends (0, create_get_dto_factory_1.createGetDto)(ScheduleDto) {
+}
+exports.GetScheduleDto = GetScheduleDto;
+
+
+/***/ }),
+/* 201 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
+var _a, _b;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.SchedulesService = void 0;
+const base_service_1 = __webpack_require__(47);
+const users_service_1 = __webpack_require__(46);
+const common_1 = __webpack_require__(1);
+const typeorm_1 = __webpack_require__(13);
+const typeorm_2 = __webpack_require__(17);
+const schedule_entity_1 = __webpack_require__(188);
+let SchedulesService = class SchedulesService extends base_service_1.BaseService {
+    constructor(schedulesRepository, usersService) {
+        super(schedulesRepository, usersService);
+        this.schedulesRepository = schedulesRepository;
+        this.usersService = usersService;
+    }
+};
+exports.SchedulesService = SchedulesService;
+exports.SchedulesService = SchedulesService = __decorate([
+    (0, common_1.Injectable)(),
+    __param(0, (0, typeorm_1.InjectRepository)(schedule_entity_1.Schedule)),
+    __metadata("design:paramtypes", [typeof (_a = typeof typeorm_2.Repository !== "undefined" && typeorm_2.Repository) === "function" ? _a : Object, typeof (_b = typeof users_service_1.UsersService !== "undefined" && users_service_1.UsersService) === "function" ? _b : Object])
+], SchedulesService);
+
+
+/***/ }),
+/* 202 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.ShiftsModule = void 0;
+const common_1 = __webpack_require__(1);
+const typeorm_1 = __webpack_require__(13);
+const users_module_1 = __webpack_require__(12);
+const shifts_controller_1 = __webpack_require__(203);
+const shifts_service_1 = __webpack_require__(205);
+const shift_entity_1 = __webpack_require__(206);
+let ShiftsModule = class ShiftsModule {
+};
+exports.ShiftsModule = ShiftsModule;
+exports.ShiftsModule = ShiftsModule = __decorate([
+    (0, common_1.Module)({
+        imports: [
+            typeorm_1.TypeOrmModule.forFeature([shift_entity_1.Shift]),
+            users_module_1.UsersModule,
+        ],
+        providers: [shifts_service_1.ShiftsService],
+        exports: [shifts_service_1.ShiftsService],
+        controllers: [shifts_controller_1.ShiftsController],
+    })
+], ShiftsModule);
+
+
+/***/ }),
+/* 203 */
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.ShiftsController = void 0;
+const create_controller_factory_1 = __webpack_require__(36);
+const shift_dto_1 = __webpack_require__(204);
+const shifts_service_1 = __webpack_require__(205);
+class ShiftsController extends (0, create_controller_factory_1.createController)('Shifts', // Entity name for Swagger documentation
+shifts_service_1.ShiftsService, // The service handling Shift-related operations
+shift_dto_1.GetShiftDto, // DTO for retrieving Shifts
+shift_dto_1.ShiftDto, // DTO for creating Shifts
+shift_dto_1.UpdateShiftDto) {
+}
+exports.ShiftsController = ShiftsController;
+
+
+/***/ }),
+/* 204 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.GetShiftDto = exports.UpdateShiftDto = exports.ShiftDto = void 0;
+const base_dto_1 = __webpack_require__(75);
+const create_get_dto_factory_1 = __webpack_require__(63);
+const swagger_1 = __webpack_require__(4);
+const class_validator_1 = __webpack_require__(41);
+const swagger_2 = __webpack_require__(4);
+class ShiftDto extends (0, swagger_2.PartialType)(base_dto_1.BaseDto) {
+}
+exports.ShiftDto = ShiftDto;
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Name of the shift' }),
+    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], ShiftDto.prototype, "name", void 0);
+class UpdateShiftDto extends (0, swagger_2.PartialType)(ShiftDto) {
+}
+exports.UpdateShiftDto = UpdateShiftDto;
+class GetShiftDto extends (0, create_get_dto_factory_1.createGetDto)(ShiftDto) {
+}
+exports.GetShiftDto = GetShiftDto;
+
+
+/***/ }),
+/* 205 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
+var _a, _b;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.ShiftsService = void 0;
+const base_service_1 = __webpack_require__(47);
+const users_service_1 = __webpack_require__(46);
+const common_1 = __webpack_require__(1);
+const typeorm_1 = __webpack_require__(13);
+const typeorm_2 = __webpack_require__(17);
+const shift_entity_1 = __webpack_require__(206);
+let ShiftsService = class ShiftsService extends base_service_1.BaseService {
+    constructor(shiftsRepository, usersService) {
+        super(shiftsRepository, usersService);
+        this.shiftsRepository = shiftsRepository;
+        this.usersService = usersService;
+    }
+};
+exports.ShiftsService = ShiftsService;
+exports.ShiftsService = ShiftsService = __decorate([
+    (0, common_1.Injectable)(),
+    __param(0, (0, typeorm_1.InjectRepository)(shift_entity_1.Shift)),
+    __metadata("design:paramtypes", [typeof (_a = typeof typeorm_2.Repository !== "undefined" && typeorm_2.Repository) === "function" ? _a : Object, typeof (_b = typeof users_service_1.UsersService !== "undefined" && users_service_1.UsersService) === "function" ? _b : Object])
+], ShiftsService);
+
+
+/***/ }),
+/* 206 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Shift = void 0;
+const base_entity_1 = __webpack_require__(16);
+const typeorm_1 = __webpack_require__(17);
+let Shift = class Shift extends base_entity_1.BaseEntity {
+};
+exports.Shift = Shift;
+__decorate([
+    (0, typeorm_1.Column)(),
+    __metadata("design:type", String)
+], Shift.prototype, "name", void 0);
+exports.Shift = Shift = __decorate([
+    (0, typeorm_1.Entity)('shifts')
+], Shift);
+
+
+/***/ }),
+/* 207 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -10953,7 +14374,7 @@ var HttpExceptionFilter_1;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.HttpExceptionFilter = void 0;
 const common_1 = __webpack_require__(1);
-const crypto = __importStar(__webpack_require__(128));
+const crypto = __importStar(__webpack_require__(159));
 /**
  * HttpExceptionFilter is a global filter that handles all exceptions thrown in the application.
  * It logs the error details, sanitizes sensitive information, and sends a user-friendly response to the client.
@@ -11104,7 +14525,7 @@ exports.HttpExceptionFilter = HttpExceptionFilter = HttpExceptionFilter_1 = __de
 
 
 /***/ }),
-/* 177 */
+/* 208 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -11150,8 +14571,8 @@ var __importStar = (this && this.__importStar) || (function () {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.LoggingInterceptor = void 0;
 const common_1 = __webpack_require__(1);
-const crypto = __importStar(__webpack_require__(128));
-const operators_1 = __webpack_require__(178);
+const crypto = __importStar(__webpack_require__(159));
+const operators_1 = __webpack_require__(136);
 /**
  * LoggingInterceptor is a NestJS interceptor that logs HTTP requests and responses.
  * It also sanitizes sensitive data and adds a correlation ID to each request and response.
@@ -11288,13 +14709,7 @@ exports.LoggingInterceptor = LoggingInterceptor = __decorate([
 
 
 /***/ }),
-/* 178 */
-/***/ ((module) => {
-
-module.exports = require("rxjs/operators");
-
-/***/ }),
-/* 179 */
+/* 209 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -11308,7 +14723,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.TransformInterceptor = void 0;
 const common_1 = __webpack_require__(1);
 const class_transformer_1 = __webpack_require__(40);
-const operators_1 = __webpack_require__(178);
+const operators_1 = __webpack_require__(136);
 /**
  * A NestJS interceptor that transforms the response data.
  *
@@ -11340,7 +14755,7 @@ exports.TransformInterceptor = TransformInterceptor = __decorate([
 
 
 /***/ }),
-/* 180 */
+/* 210 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
@@ -11348,7 +14763,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.swaggerCustomOptions = exports.swaggerConfig = exports.getLocalIpAddress = void 0;
 const config_1 = __webpack_require__(2);
 const swagger_1 = __webpack_require__(4);
-const os_1 = __webpack_require__(181);
+const os_1 = __webpack_require__(211);
 // Initialize ConfigService
 const configService = new config_1.ConfigService();
 // Get local IP address
@@ -11415,7 +14830,7 @@ exports.swaggerCustomOptions = {
 
 
 /***/ }),
-/* 181 */
+/* 211 */
 /***/ ((module) => {
 
 module.exports = require("os");

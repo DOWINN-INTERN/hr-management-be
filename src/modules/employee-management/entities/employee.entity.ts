@@ -25,6 +25,14 @@ export class Employee extends BaseEntity<Employee> {
     })
     employmentCondition?: EmploymentCondition = EmploymentCondition.PROBATIONARY;
 
+
+    @Column({ nullable: true })
+    biometricsRole?: number;
+
+    @Column({ nullable: true })
+    cardNumber?: string;
+
+
     @Column({
         type: 'enum',
         enum: EmploymentType,

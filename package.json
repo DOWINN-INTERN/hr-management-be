@@ -41,6 +41,7 @@
     "@nestjs/common": "^10.0.0",
     "@nestjs/config": "^4.0.0",
     "@nestjs/core": "^10.4.15",
+    "@nestjs/event-emitter": "^3.0.1",
     "@nestjs/jwt": "^11.0.0",
     "@nestjs/passport": "^11.0.3",
     "@nestjs/platform-express": "^10.0.0",
@@ -81,7 +82,8 @@
     "reflect-metadata": "^0.2.0",
     "rxjs": "^7.8.1",
     "swagger-ui-express": "^5.0.1",
-    "typeorm": "^0.3.20"
+    "typeorm": "^0.3.20",
+    "zkteco-js": "^1.7.1"
   },
   "devDependencies": {
     "@nestjs/cli": "^10.0.0",
