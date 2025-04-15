@@ -1,7 +1,9 @@
+import { CutoffType } from '@/common/enums/cutoff-type.enum';
 import { PayrollItemCategory } from '@/common/enums/payroll-item-category.enum';
+import { UtilityHelper } from '@/common/helpers/utility.helper';
 import { BaseService } from '@/common/services/base.service';
 import { UsersService } from '@/modules/account-management/users/users.service';
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { evaluate } from 'mathjs';
 import { Repository } from 'typeorm';
@@ -11,13 +13,35 @@ import { PayrollItem } from './payroll-items/entities/payroll-item.entity';
 
 @Injectable()
 export class PayrollsService extends BaseService<Payroll> {
-    constructor(
-        @InjectRepository(Payroll)
-        private readonly payrollsRepository: Repository<Payroll>,
-        protected readonly usersService: UsersService
-    ) {
-        super(payrollsRepository, usersService);
+  constructor(
+    @InjectRepository(Payroll)
+    private readonly payrollsRepository: Repository<Payroll>,
+    protected readonly usersService: UsersService
+  ) {
+    super(payrollsRepository, usersService);
+  }
+
+  calculateDailyRate(monthlySalary: number, startDate: Date, endDate: Date, cutoffType: CutoffType): number {
+    if (endDate < startDate) {
+      throw new BadRequestException('End date must be after start date');
     }
+
+    const totalBusinessDays = UtilityHelper.getBusinessDays(startDate, endDate);
+    const salaryMap = {
+      [CutoffType.DAILY]: monthlySalary / UtilityHelper.getBusinessDaysInMonth(startDate),
+      [CutoffType.WEEKLY]: (monthlySalary * 12) / 52,
+      [CutoffType.BI_WEEKLY]: (monthlySalary * 12) / 26,
+      [CutoffType.MONTHLY]: monthlySalary,
+      [CutoffType.QUARTERLY]: monthlySalary * 3,
+      [CutoffType.SEMI_ANNUAL]: monthlySalary * 6,
+      [CutoffType.ANNUAL]: monthlySalary * 12,
+      [CutoffType.BI_ANNUAL]: monthlySalary * 24
+    };
+    
+    const periodSalary = salaryMap[cutoffType] || monthlySalary;
+    return periodSalary / totalBusinessDays;
+  }
+  
 
     async evaluateFormula(
         employee: Employee,
@@ -28,7 +52,6 @@ export class PayrollsService extends BaseService<Payroll> {
     
         const scope: Record<string, number> = {
           'Employee.MonthlyRate': Number(employee.monthlyRate),
-          'Employee.DailyRate': employee.dailyRate,
         };
     
         if (item.parameters) {

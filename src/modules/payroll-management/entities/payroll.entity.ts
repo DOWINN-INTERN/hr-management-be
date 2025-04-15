@@ -1,10 +1,12 @@
 import { BaseEntity } from '@/database/entities/base.entity';
-import { Column, Entity } from 'typeorm';
+import { Entity, JoinColumn, ManyToOne } from 'typeorm';
+import { Cutoff } from '../cutoffs/entities/cutoff.entity';
 
 @Entity('payrolls')
 export class Payroll extends BaseEntity<Payroll> {
-    @Column()
-    name?: string;
     
-    // Add your entity fields here
+
+    @ManyToOne(() => Cutoff, (cutoff: Cutoff) => cutoff.payrolls)
+    @JoinColumn({ name: 'cutoffId' })
+    cutoff!: Cutoff;
 }

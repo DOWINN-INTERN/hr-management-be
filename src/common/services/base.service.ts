@@ -59,10 +59,10 @@ export abstract class BaseService<T extends BaseEntity<T>> {
       const alias = this.entityName.toLowerCase();
       
       // Debug the incoming filter
-      console.log('Raw filter from client:', JSON.stringify(paginationDto.filter));
-      console.log('Converted findOptions where:', JSON.stringify(findOptions.where));
+      // console.log('Raw filter from client:', JSON.stringify(paginationDto.filter));
+      // console.log('Converted findOptions where:', JSON.stringify(findOptions.where));
       
-      this.logger.debug(`Processing query with filters: ${JSON.stringify(findOptions.where)}`);
+      // this.logger.debug(`Processing query with filters: ${JSON.stringify(findOptions.where)}`);
       
       // For complex filtering that requires JOIN operations or nested relations
       if (Object.keys(findOptions.where || {}).length > 0 || 
@@ -286,7 +286,7 @@ export abstract class BaseService<T extends BaseEntity<T>> {
               // Apply all OR conditions to the main query
               if (orClauses.length > 0) {
                 queryBuilder.andWhere(`(${orClauses.join(' OR ')})`, orParams);
-                this.logger.debug(`Applied OR conditions: ${orClauses.join(' OR ')}`);
+                // this.logger.debug(`Applied OR conditions: ${orClauses.join(' OR ')}`);
               }
               
               // Remove OR from where to prevent double processing
@@ -427,7 +427,7 @@ export abstract class BaseService<T extends BaseEntity<T>> {
             findOptions.select, 
             joinedRelations
           );
-          this.logger.debug(`Applied relations: ${JSON.stringify(findOptions.relations)}`);
+          // this.logger.debug(`Applied relations: ${JSON.stringify(findOptions.relations)}`);
           
           // ADDED: Apply field selection to the main entity when relations are present
           if (findOptions.select) {
@@ -486,7 +486,7 @@ export abstract class BaseService<T extends BaseEntity<T>> {
           //   console.log('Query parameters:', queryBuilder.getParameters());
           // }
           
-          this.logger.debug(`Found ${totalCount} items using QueryBuilder with relations and field selection`);
+          // this.logger.debug(`Found ${totalCount} items using QueryBuilder with relations and field selection`);
           
           // Create a new pagination DTO to maintain all methods
           const updatedPaginationDto = new PaginationDto<T>();
@@ -967,13 +967,13 @@ export abstract class BaseService<T extends BaseEntity<T>> {
 
   // DONE
   async update(id: string, updateDto: DeepPartial<T>, updatedBy?: string): Promise<T> {
-      const entity = await this.findOneByOrFail({ id } as Partial<T>);
-      const updatedEntity = await this.repository.save({
-          ...entity,
-          ...updateDto,
-          updatedBy
-      });
-      return updatedEntity;
+    const entity = await this.findOneByOrFail({ id } as Partial<T>);
+    const updatedEntity = await this.repository.save({
+        ...entity,
+        ...updateDto,
+        updatedBy
+    });
+    return updatedEntity;
   }
   
   // DONE

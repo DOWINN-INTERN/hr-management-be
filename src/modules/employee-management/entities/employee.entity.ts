@@ -5,6 +5,7 @@ import { BaseEntity } from '@/database/entities/base.entity';
 import { User } from '@/modules/account-management/users/entities/user.entity';
 import { Role } from '@/modules/employee-management/roles/entities/role.entity';
 import { PayrollItem } from '@/modules/payroll-management/payroll-items/entities/payroll-item.entity';
+import { Schedule } from '@/modules/schedule-management/entities/schedule.entity';
 import { Group } from '@/modules/schedule-management/groups/entities/group.entity';
 import { Column, Entity, JoinColumn, JoinTable, ManyToMany, ManyToOne, OneToMany, OneToOne } from 'typeorm';
 
@@ -42,8 +43,8 @@ export class Employee extends BaseEntity<Employee> {
     })
     employmentType!: EmploymentType;
 
-    @Column({ type: 'date', nullable: true })
-    commencementDate?: Date;
+    @Column({ type: 'date' })
+    commencementDate!: Date;
 
     @Column({ type: 'float', nullable: true, default: 0 })
     leaveCredits?: number;
@@ -70,7 +71,6 @@ export class Employee extends BaseEntity<Employee> {
     @Column('decimal', { precision: 10, scale: 2, default: 0 })
     monthlyRate!: number;
 
-    get dailyRate(): number {
-        return Number(this.monthlyRate) / 20;
-    }
+    @OneToMany(() => Schedule, (schedule: Schedule) => schedule.employee)
+    schedules?: Schedule[];
 }

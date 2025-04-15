@@ -34,6 +34,11 @@ export class ScheduleDto extends PartialType(BaseDto) {
     @IsOptional()
     @IsUUID()
     holidayId?: string;
+    
+    @ApiProperty({ description: 'ID of the associated employee', required: true, example: '123e4567-e89b-12d3-a456-426614174000' })
+    @IsUUID()
+    @IsNotEmpty()
+    employeeId!: string;
 }
 
 export class UpdateScheduleDto extends PartialType(ScheduleDto) {}

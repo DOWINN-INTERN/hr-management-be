@@ -35,6 +35,31 @@ export class UtilityHelper {
             .join(', ');
     }
 
+    // Helper method to calculate business days in a month
+    static getBusinessDaysInMonth(date: Date): number {
+        const year = date.getFullYear();
+        const month = date.getMonth();
+        const firstDay = new Date(year, month, 1);
+        const lastDay = new Date(year, month + 1, 0);
+        
+        return this.getBusinessDays(firstDay, lastDay);
+    }
+
+    static getBusinessDays(start: Date, end: Date): number {
+        let count = 0;
+        const current = new Date(start.getTime());
+        
+        while (current.getTime() <= end.getTime()) {
+            const dayOfWeek = current.getDay();
+            if (dayOfWeek !== 0 && dayOfWeek !== 6) { // Exclude Sundays (0) and Saturdays (6)
+                count++;
+            }
+            current.setDate(current.getDate() + 1);
+        }
+        
+        return count;
+    }
+
     // Helper method to parse relations string into TypeORM relations object
     static parseRelations(relations: string): FindOptionsRelations<any> {
         const relationsObj: FindOptionsRelations<any> = {};

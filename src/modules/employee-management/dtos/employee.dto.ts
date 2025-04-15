@@ -48,13 +48,12 @@ export class EmployeeDto extends PartialType(BaseDto) {
 
     @ApiProperty({
         description: 'Date when employee commenced work',
-        required: false,
         type: Date,
     })
-    @IsOptional()
+    @IsNotEmpty()
     @IsDate()
     @Type(() => Date)
-    commencementDate?: Date;
+    commencementDate!: Date;
 
     @ApiProperty({
         description: 'Available leave credits',

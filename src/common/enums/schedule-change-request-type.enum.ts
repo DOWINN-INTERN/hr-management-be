@@ -49,6 +49,9 @@ export enum ScheduleChangeRequestType {
     
     // Request for scheduled time off for vacation purposes
     VACATION = 'VACATION',
+
+    // Request for schedule swap to a rest day
+    REST_DAY_SWAP = 'REST_DAY_SWAP',
     
     // Request for time allocation for training or development activities
     TRAINING = 'TRAINING',

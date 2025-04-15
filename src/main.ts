@@ -1,3 +1,7 @@
+import { createBullBoard } from '@bull-board/api';
+import { BullAdapter } from '@bull-board/api/bullAdapter'; // Correct import
+import { ExpressAdapter } from '@bull-board/express'; // Correct import
+import { getQueueToken } from '@nestjs/bull';
 import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
@@ -16,6 +20,19 @@ import { swaggerConfig, swaggerCustomOptions } from './config/swagger.config';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const configService = app.get(ConfigService);
+
+  // Get your Bull queue from the Nest.js container
+  const scheduleQueue = app.get(getQueueToken('schedule-generation'));
+  
+  // Set up Bull Board
+  const serverAdapter = new ExpressAdapter();
+  createBullBoard({
+    queues: [new BullAdapter(scheduleQueue)],
+    serverAdapter,
+  });
+
+  // Define the base path for Bull Board UI
+  serverAdapter.setBasePath('/api/admin/queues');
   
   const port = configService.getOrThrow<number>('PORT');
   const appUrl = configService.getOrThrow<string>('APP_URL');
@@ -27,6 +44,9 @@ async function bootstrap() {
   
   // Set global prefix for all routes in the application
   app.setGlobalPrefix('/api');
+
+  // Add Bull Board UI routes - place this AFTER helmet and BEFORE other routes
+  app.use('/api/admin/queues', serverAdapter.getRouter());
 
   // Global validation pipe
   app.useGlobalPipes(new ValidationPipe({
@@ -83,7 +103,7 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, swaggerConfig); // Create a Swagger document
   SwaggerModule.setup('api', app, document, swaggerCustomOptions); // Set up the Swagger module
 
-  // Scalar Setup - Make sure to install @scalar/nestjs-api-reference package
+  // Scalar Setup
   app.use(
     '/reference',
     apiReference({
@@ -93,5 +113,7 @@ async function bootstrap() {
 
   await app.listen(port, '0.0.0.0'); // Listen on all network interfaces (LAN)
   console.log(`Application is running on: ${appUrl}/api`);
+  console.log(`API Reference available at: ${appUrl}/reference`);
+  console.log(`Queue monitoring available at: ${appUrl}/api/admin/queues`);
 }
 bootstrap();

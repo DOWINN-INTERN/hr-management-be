@@ -1,7 +1,10 @@
 import { UsersModule } from '@/modules/account-management/users/users.module';
+import { BullModule } from '@nestjs/bull';
 import { Module } from '@nestjs/common';
 import { RouterModule } from '@nestjs/core';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { EmployeeManagementModule } from '../employee-management/employee-management.module';
+import { CutoffsModule } from '../payroll-management/cutoffs/cutoffs.module';
 import { Schedule } from './entities/schedule.entity';
 import { GroupsModule } from './groups/groups.module';
 import { HolidaysModule } from './holidays/holidays.module';
@@ -10,11 +13,15 @@ import { ScheduleChangeResponsesModule } from './schedule-change-requests/schedu
 import { SchedulesController } from './schedules.controller';
 import { SchedulesService } from './schedules.service';
 import { DefaultShiftsSeeder } from './services/default-shift-seeder.service';
+import { ScheduleGenerationProcessor, ScheduleGenerationService } from './services/schedule-generation.service';
 import { ShiftsModule } from './shifts/shifts.module';
 
 @Module({
     imports: [
         TypeOrmModule.forFeature([Schedule]),
+        BullModule.registerQueue({
+            name: 'schedule-generation',
+        }),
         UsersModule,
         RouterModule.register([
             {
@@ -51,10 +58,13 @@ import { ShiftsModule } from './shifts/shifts.module';
         HolidaysModule,
         ScheduleChangeRequestsModule,
         ScheduleChangeResponsesModule,
+        EmployeeManagementModule,
+        CutoffsModule
     ],
-    providers: [SchedulesService, DefaultShiftsSeeder],
+    providers: [SchedulesService, DefaultShiftsSeeder, ScheduleGenerationProcessor, ScheduleGenerationService],
     exports: [
         SchedulesService,
+        ScheduleGenerationService,
         GroupsModule,
         ShiftsModule,
         HolidaysModule,

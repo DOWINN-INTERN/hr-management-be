@@ -1,0 +1,30 @@
+import { CutoffStatus } from '@/common/enums/cutoff-status.enum';
+import { CutoffType } from '@/common/enums/cutoff-type.enum';
+import { BaseEntity } from '@/database/entities/base.entity';
+import { Schedule } from '@/modules/schedule-management/entities/schedule.entity';
+import { Column, Entity, OneToMany } from 'typeorm';
+import { Payroll } from '../../entities/payroll.entity';
+
+@Entity('cutoffs')
+export class Cutoff extends BaseEntity<Cutoff> {
+    @Column({ nullable: true })
+    description?: string;
+
+    @Column({ type: 'date' })
+    startDate!: Date;
+
+    @Column({ type: 'date' })
+    endDate!: Date;
+
+    @Column({ type: 'enum', enum: CutoffStatus, default: CutoffStatus.ACTIVE })
+    status!: CutoffStatus;
+    
+    @Column({ type: 'enum', enum: CutoffType, default: CutoffType.BI_WEEKLY })
+    cutoffType!: CutoffType;
+
+    @OneToMany(() => Payroll, (payroll: Payroll) => payroll.cutoff)
+    payrolls?: Payroll[];
+
+    @OneToMany(() => Schedule, (schedule: Schedule) => schedule.cutoff)
+    schedules?: Schedule[];
+}

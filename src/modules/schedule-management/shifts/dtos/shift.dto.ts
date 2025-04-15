@@ -18,7 +18,7 @@ export class ShiftDto extends PartialType(BaseDto) {
     
     @ApiProperty({ 
         description: 'End time of the shift',
-        example: '17:00:00',
+        example: '18:00:00',
         type: String
     })
     @IsNotEmpty()

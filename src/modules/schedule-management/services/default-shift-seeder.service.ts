@@ -25,7 +25,7 @@ export class DefaultShiftsSeeder implements OnModuleInit {
       // Create default shift
       const defaultShift = await this.shiftsService.create({
         startTime: '09:00:00',
-        endTime: '17:00:00',
+        endTime: '18:00:00',
         breakTime: 60, // 1 hour lunch break
         duration: 8,   // 8 hour shift
         days: [Day.MONDAY, Day.TUESDAY, Day.WEDNESDAY, Day.THURSDAY, Day.FRIDAY],
