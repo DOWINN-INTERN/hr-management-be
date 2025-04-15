@@ -2,8 +2,8 @@ import { GeneralResponseDto as ErrorResponseDto } from '@/common/dtos/generalres
 import { Body, Controller, Delete, Get, HttpException, HttpStatus, Inject, Param, Post, Put, Query, UseInterceptors, ValidationPipe } from '@nestjs/common';
 import { ApiOperation, ApiParam, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { ConnectDeviceDto } from './dtos/connect-device.dto';
-import { RegisterUserDto } from './dtos/register-user.dto';
 import { SetTimeDto } from './dtos/set-time.dto';
+import { SetUserDto } from './dtos/set-user.dto';
 import { TimeoutInterceptor } from './interceptors/timeout.interceptor';
 import { AttendanceRecord, IBiometricDevice, IBiometricService, IBiometricUser } from './interfaces/biometric.interface';
 
@@ -121,17 +121,17 @@ export class BiometricsController {
     })
     @Post('users/register')
     async registerUser(
-        @Body(new ValidationPipe({ transform: true })) registerUserDto: RegisterUserDto
+        @Body() setUserDto: SetUserDto
     ): Promise<IBiometricUser> {
         try {
             return await this.biometricService.registerUser(
-                registerUserDto.deviceId,
+                setUserDto.deviceId,
                 {
-                    userId: registerUserDto.userId,
-                    name: registerUserDto.name,
-                    password: registerUserDto.password,
-                    cardNumber: registerUserDto.cardNumber,
-                    role: registerUserDto.role
+                    userId: setUserDto.userId,
+                    name: setUserDto.name,
+                    password: setUserDto.password,
+                    cardNumber: setUserDto.cardNumber,
+                    role: setUserDto.role
                 }
             );
         } catch (error: unknown) {

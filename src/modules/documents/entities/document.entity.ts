@@ -1,5 +1,6 @@
 import { BaseEntity } from "@/database/entities/base.entity";
 import { User } from "@/modules/account-management/users/entities/user.entity";
+import { ScheduleChangeRequest } from "@/modules/schedule-management/schedule-change-requests/entities/schedule-change-request.entity";
 import { Column, Entity, JoinColumn, ManyToOne } from "typeorm";
 import { DocumentType } from "../document-types/entities/document-type.entity";
 
@@ -27,4 +28,8 @@ export class Document extends BaseEntity<Document> {
     @ManyToOne(() => DocumentType, (doctype: DocumentType) => doctype.documents)
     @JoinColumn({ name: 'documentTypeId' })
     documentType!: DocumentType;
+
+    @ManyToOne(() => ScheduleChangeRequest, (scheduleChangeRequest: ScheduleChangeRequest) => scheduleChangeRequest.documents)
+    @JoinColumn({ name: 'scheduleChangeRequestId' })
+    scheduleChangeRequest?: ScheduleChangeRequest;
 }

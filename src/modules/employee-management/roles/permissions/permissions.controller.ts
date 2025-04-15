@@ -1,3 +1,4 @@
+import { GeneralResponseDto } from '@/common/dtos/generalresponse.dto';
 import { createController } from '@/common/factories/create-controller.factory';
 import { GetPermissionDto } from './dtos/permission.dto';
 import { Permission } from './entities/permission.entity';
@@ -15,7 +16,7 @@ export class PermissionsController extends createController<
         return await super.findOne(id, relations, select);
     }
 
-    override async delete(id: string): Promise<void> {
+    override async delete(id: string): Promise<GeneralResponseDto> {
         return await super.delete(id);
     }
 

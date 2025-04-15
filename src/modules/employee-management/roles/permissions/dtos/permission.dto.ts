@@ -22,4 +22,4 @@ export class PermissionDto {
 
 export class UpdatePermissionDto extends PartialType(PermissionDto) {}
 
-export class GetPermissionDto extends createGetDto(UpdatePermissionDto){}
+export class GetPermissionDto extends createGetDto(UpdatePermissionDto, 'permission'){}

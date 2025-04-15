@@ -35,14 +35,7 @@ export class WsAuthGuard implements CanActivate {
       }
       
       // Attach user information to socket for later use
-      client.user = {
-        id: user.id,
-        email: payload.email,
-        roles: payload.roles,
-        departments: payload.departments,
-        organizations: payload.organizations,
-        branches: payload.branches,
-      };
+      client.user = payload;
       
       // Generate connection ID
       client.connectionId = `${user.id}-${Date.now()}`;

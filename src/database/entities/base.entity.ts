@@ -30,7 +30,7 @@ export abstract class BaseEntity<T> extends TypeOrmBaseEntity {
     updatedBy?: string;
 
     @Column({ default: false })
-    isDeleted: boolean = false;
+    isDeleted!: boolean;
 
     @Column({ nullable: true })
     deletedBy?: string;

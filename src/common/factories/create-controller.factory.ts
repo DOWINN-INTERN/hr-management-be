@@ -18,7 +18,9 @@ export function createController<TEntity extends BaseEntity<TEntity>, GetDto, Cr
   @ApiTags(entityName)
   @Controller()
   class DynamicController extends BaseController<TEntity, GetDto, CreateDto, UpdateDto> {
-    constructor(@Inject(ServiceClass) baseService: BaseService<TEntity> ) {
+    constructor(
+      @Inject(ServiceClass) baseService: BaseService<TEntity>,
+    ) {
       super(baseService, getDtoClass, entityName);
     }
 
@@ -85,7 +87,33 @@ export function createController<TEntity extends BaseEntity<TEntity>, GetDto, Cr
     ): Promise<GetDto> {
       return await super.update(id, entityDto, updatedById);
     }
+
+    @Override()
+    @ApiOperation({ 
+      summary: `Delete a ${singular(entityName)}`,
+      description: `Removes a ${singular(entityName)} record from the database by its unique identifier.`
+    })
+    @ApiParam({ 
+      name: 'id', 
+      description: `The unique identifier of the ${singular(entityName)} to delete`,
+      required: true 
+    })
+    @ApiResponse({ 
+      status: HttpStatus.NO_CONTENT, 
+      description: `The ${singular(entityName)} has been successfully deleted.`,
+      type: GeneralResponseDto
+    })
+    @ApiResponse({ status: HttpStatus.BAD_REQUEST, description: 'Invalid ID format.', type: GeneralResponseDto })
+    @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized.', type: GeneralResponseDto })
+    @ApiResponse({ status: HttpStatus.NOT_FOUND, description: `${singular(entityName)} not found.`, type: GeneralResponseDto })
+    @ApiResponse({ status: HttpStatus.INTERNAL_SERVER_ERROR, description: 'Internal server error.', type: GeneralResponseDto })
+    @ApiResponse({ status: HttpStatus.FORBIDDEN, description: 'Forbidden.', type: GeneralResponseDto })
+    @ApiResponse({ status: HttpStatus.CONFLICT, description: 'Cannot delete due to existing references.', type: GeneralResponseDto })
+    override async delete(@Param('id') id: string): Promise<GeneralResponseDto> {
+      return await super.delete(id);
+    }
   }
+    
 
   return DynamicController;
 }

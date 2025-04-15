@@ -1,58 +1,43 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsInt, IsNotEmpty, IsOptional, IsString, Min } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { IsNotEmpty, IsNumber, IsOptional, IsString, Length, Max, Min } from 'class-validator';
 
 export class SetUserDto {
-  @ApiProperty({
-    description: 'Unique numeric ID for the user',
-    example: 1
-  })
-  @IsNotEmpty()
-  @IsInt()
-  @Min(0)
-  uid!: number;
-
-  @ApiProperty({
-    description: 'User ID string',
-    example: 'user123'
-  })
-  @IsNotEmpty()
+  @ApiProperty({ description: 'Target device ID' })
   @IsString()
+  @IsNotEmpty()
+  deviceId!: string;
+
+  @ApiProperty({ description: 'User ID', example: '1001' })
+  @IsString()
+  @IsNotEmpty()
   userId!: string;
 
-  @ApiProperty({
-    description: 'User name',
-    example: 'John Doe'
-  })
-  @IsNotEmpty()
+  @ApiProperty({ description: 'User name', example: 'John Doe' })
   @IsString()
+  @IsNotEmpty()
+  @Length(1, 24, { message: 'Name must be between 1 and 24 characters' })
   name!: string;
 
-  @ApiProperty({
-    description: 'User password (optional)',
-    example: 'password123',
-    required: false
-  })
-  @IsOptional()
+  @ApiPropertyOptional({ description: 'User password (max 8 characters)', example: '1234' })
   @IsString()
+  @IsOptional()
+  @Length(0, 8, { message: 'Password must be less than 8 characters' })
   password?: string;
 
-  @ApiProperty({
-    description: 'User role (0=normal, 14=admin)',
-    example: 0,
-    required: false
-  })
+  @ApiPropertyOptional({ description: 'Card number', example: '7654321' })
+  @IsString()
   @IsOptional()
-  @IsInt()
-  @Min(0)
-  role?: number;
+  cardNumber?: string;
 
-  @ApiProperty({
-    description: 'Card number (optional)',
-    example: 12345,
-    required: false
+  @ApiPropertyOptional({ 
+    description: 'User role (0 = normal user, 14 = admin)', 
+    example: 0,
+    minimum: 0,
+    maximum: 14
   })
+  @IsNumber()
   @IsOptional()
-  @IsInt()
   @Min(0)
-  cardno?: number;
+  @Max(14)
+  role?: number;
 }

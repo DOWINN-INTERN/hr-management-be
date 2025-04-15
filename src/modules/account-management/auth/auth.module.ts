@@ -31,6 +31,6 @@ import { AccessTokenStrategy } from './strategies/access-token.strategy';
   ],
   providers: [AuthService, JwtService, AccessTokenStrategy, JwtAuthGuard, PermissionsGuard, RolesGuard],
   controllers: [AuthController],
-  exports: [AuthService],
+  exports: [AuthService, JwtService],
 })
 export class AuthModule {}

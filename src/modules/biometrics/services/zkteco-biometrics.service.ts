@@ -346,12 +346,11 @@ export class ZKTecoBiometricsService extends BaseBiometricsService implements On
                 return device;
             } catch (error) {
                 // Ensure error is properly typed
-                lastError = error instanceof Error ? error : new Error(String(error));
-                this.logger.warn(`Connection attempt ${attempts} to device ${deviceId} failed: ${lastError.message}`);
+                this.logger.warn(`Connection attempt ${attempts} to device ${deviceId}`);
                 
                 // If we have retries left, wait before trying again
                 if (attempts < retryAttempts) {
-                await new Promise(resolve => setTimeout(resolve, retryDelay));
+                    await new Promise(resolve => setTimeout(resolve, retryDelay));
                 }
             }
         }

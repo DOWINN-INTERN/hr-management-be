@@ -49,4 +49,4 @@ export class DocumentDto extends BaseDto {
 
 export class UpdateDocumentDto extends PartialType(DocumentDto) {}
 
-export class GetDocumentDto extends createGetDto(UpdateDocumentDto) { }
+export class GetDocumentDto extends createGetDto(UpdateDocumentDto, 'document') { }

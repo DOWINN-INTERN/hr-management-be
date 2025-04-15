@@ -1,3 +1,4 @@
+import { GeneralResponseDto } from '@/common/dtos/generalresponse.dto';
 import { PaginatedResponseDto } from '@/common/dtos/paginated-response.dto';
 import { PaginationDto } from '@/common/dtos/pagination.dto';
 import { createController } from '@/common/factories/create-controller.factory';
@@ -25,10 +26,10 @@ export class ProfilesController extends createController<
         return await super.findOne(id);
     }
 
-    override async delete(id: string): Promise<void> {
-        return await super.delete(id);
+    override delete(id: string): Promise<GeneralResponseDto> {
+        return super.delete(id);
     }
-
+    
     override deleteMany(ids: string[], hardDelete?: boolean): Promise<void> {
         return super.deleteMany(ids, hardDelete);
     }

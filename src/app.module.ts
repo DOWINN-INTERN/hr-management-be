@@ -12,6 +12,7 @@ import { FilesModule } from './modules/files/files.module';
 import { LogsModule } from './modules/logs/logs.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { OrganizationManagementModule } from './modules/organization-management/organization-management.module';
+import { PayrollManagementModule } from './modules/payroll-management/payroll-management.module';
 import { ScheduleManagementModule } from './modules/schedule-management/schedule-management.module';
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { ScheduleManagementModule } from './modules/schedule-management/schedule
     AddressesModule,
     DocumentsModule,
     BiometricsModule,
+    PayrollManagementModule
   ],
   controllers: [],
 })

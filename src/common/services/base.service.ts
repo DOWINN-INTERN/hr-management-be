@@ -1,8 +1,9 @@
-import { BadRequestException, Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
+import { BadRequestException, HttpStatus, Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
 import { DeepPartial, FindOneOptions, FindOptionsOrder, FindOptionsRelationByString, FindOptionsRelations, FindOptionsSelect, FindOptionsSelectByString, FindOptionsWhere, In, Repository, SelectQueryBuilder } from 'typeorm';
 import dataSource from '../../database/data-source';
 import { BaseEntity } from '../../database/entities/base.entity';
 import { UsersService } from '../../modules/account-management/users/users.service';
+import { GeneralResponseDto } from '../dtos/generalresponse.dto';
 import { PaginatedResponseDto } from '../dtos/paginated-response.dto';
 import { PaginationDto } from '../dtos/pagination.dto';
 import { UtilityHelper } from '../helpers/utility.helper';
@@ -55,59 +56,317 @@ export abstract class BaseService<T extends BaseEntity<T>> {
   async findAllComplex(paginationDto: PaginationDto<T>): Promise<PaginatedResponseDto<T>> {
     try {
       const findOptions = paginationDto.toFindManyOptions();
-      const alias = 'entity';
+      const alias = this.entityName.toLowerCase();
+      
+      // Debug the incoming filter
+      console.log('Raw filter from client:', JSON.stringify(paginationDto.filter));
+      console.log('Converted findOptions where:', JSON.stringify(findOptions.where));
+      
+      this.logger.debug(`Processing query with filters: ${JSON.stringify(findOptions.where)}`);
       
       // For complex filtering that requires JOIN operations or nested relations
-      if (Object.keys(findOptions.where || {}).length > 2 || 
-          (findOptions.relations && Object.keys(findOptions.relations).length > 0)) {
-        
+      if (Object.keys(findOptions.where || {}).length > 0 || 
+        (findOptions.relations && Object.keys(findOptions.relations).length > 0)) {
+      
         // Use QueryBuilder for more complex queries
         const queryBuilder = this.repository.createQueryBuilder(alias);
+        
+        // Add soft delete condition - using proper parameter binding
+        queryBuilder.where(`${alias}.deletedAt IS NULL`);
         
         // Track joined relations to avoid duplicates
         const joinedRelations = new Set<string>();
         
         // Apply where conditions from findOptions
         if (findOptions.where) {
+          // Initialize arrays/objects for OR conditions
+          const orClauses: string[] = [];
+          const orParams: Record<string, any> = {};
+          
+          // Check if OR condition exists first to avoid TypeScript errors
+          if ((findOptions.where as any)['OR'] && Array.isArray((findOptions.where as any)['OR'])) {
+            try {
+              // Process each condition in the OR array
+              ((findOptions.where as any)['OR'] as any[]).forEach((condition, index) => {
+                // Create condition clauses for this OR branch
+                const conditionClauses: string[] = [];
+                const conditionParams: Record<string, any> = {};
+                
+                // Process each field in this condition
+                Object.entries(condition).forEach(([key, value]) => {
+                  // Handle nested properties (relations.field)
+                  if (key.includes('.')) {
+                    const parts = key.split('.');
+                    const field = parts.pop()!; 
+                    
+                    // Join each relation path to the main query builder
+                    let currentAlias = alias;
+                    let fullPath = '';
+                    
+                    // Process each part of the path for joins
+                    for (let i = 0; i < parts.length; i++) {
+                      const relationName = parts[i];
+                      const prevPath = fullPath;
+                      
+                      // Build the cumulative path
+                      fullPath = prevPath ? `${prevPath}.${relationName}` : relationName;
+                      const joinAlias = `${fullPath.replace(/\./g, '_')}_or_${index}_filter_${this.queryState.paramCounter++}`;
+                      const joinPath = `${currentAlias}.${relationName}`;
+                      
+                      // Only join if not already joined
+                      if (!joinedRelations.has(joinAlias)) {
+                        queryBuilder.leftJoin(joinPath, joinAlias);
+                        joinedRelations.add(joinAlias);
+                        this.logger.debug(`Joined relation for OR filter: ${joinPath} as ${joinAlias}`);
+                      }
+                      
+                      // Update the current alias for next iteration
+                      currentAlias = joinAlias;
+                    }
+                    
+                    // Apply the condition to the innermost relation
+                    if (typeof value === 'object' && value !== null && !(value instanceof Date)) {
+                      // Handle operators like ilike, gt, lt, etc.
+                      const paramBaseName = `${currentAlias}_${field}_or_${index}`;
+                      
+                      if ('ilike' in value) {
+                        const paramName = `${paramBaseName}_ilike_${this.queryState.paramCounter++}`;
+                        conditionClauses.push(`LOWER(${currentAlias}.${field}) LIKE LOWER(:${paramName})`);
+                        conditionParams[paramName] = `%${value.ilike}%`;
+                      } else if ('like' in value) {
+                        const paramName = `${paramBaseName}_like_${this.queryState.paramCounter++}`;
+                        conditionClauses.push(`${currentAlias}.${field} LIKE :${paramName}`);
+                        conditionParams[paramName] = `%${value.like}%`;
+                      } else {
+                        // Fall back to custom operator handling
+                        Object.entries(value).forEach(([op, opValue]) => {
+                          const paramName = `${paramBaseName}_${op}_${this.queryState.paramCounter++}`;
+                          
+                          switch (op) {
+                            case 'eq':
+                              conditionClauses.push(`${currentAlias}.${field} = :${paramName}`);
+                              conditionParams[paramName] = opValue;
+                              break;
+                            case 'ne':
+                              conditionClauses.push(`${currentAlias}.${field} != :${paramName}`);
+                              conditionParams[paramName] = opValue;
+                              break;
+                            case 'gt':
+                              conditionClauses.push(`${currentAlias}.${field} > :${paramName}`);
+                              conditionParams[paramName] = opValue;
+                              break;
+                            case 'gte':
+                              conditionClauses.push(`${currentAlias}.${field} >= :${paramName}`);
+                              conditionParams[paramName] = opValue;
+                              break;
+                            case 'lt':
+                              conditionClauses.push(`${currentAlias}.${field} < :${paramName}`);
+                              conditionParams[paramName] = opValue;
+                              break;
+                            case 'lte':
+                              conditionClauses.push(`${currentAlias}.${field} <= :${paramName}`);
+                              conditionParams[paramName] = opValue;
+                              break;
+                            case 'in':
+                              if (Array.isArray(opValue)) {
+                                conditionClauses.push(`${currentAlias}.${field} IN (:...${paramName})`);
+                                conditionParams[paramName] = opValue;
+                              }
+                              break;
+                            case 'between':
+                              if (Array.isArray(opValue) && opValue.length === 2) {
+                                const minParam = `${paramName}_min`;
+                                const maxParam = `${paramName}_max`;
+                                conditionClauses.push(`${currentAlias}.${field} BETWEEN :${minParam} AND :${maxParam}`);
+                                conditionParams[minParam] = opValue[0];
+                                conditionParams[maxParam] = opValue[1];
+                              }
+                              break;
+                            case 'isNull':
+                              if (opValue === true) {
+                                conditionClauses.push(`${currentAlias}.${field} IS NULL`);
+                              } else {
+                                conditionClauses.push(`${currentAlias}.${field} IS NOT NULL`);
+                              }
+                              break;
+                          }
+                        });
+                      }
+                    } else {
+                      // Simple equality for non-object values
+                      const paramName = `${currentAlias}_${field}_or_${index}_${this.queryState.paramCounter++}`;
+                      conditionClauses.push(`${currentAlias}.${field} = :${paramName}`);
+                      conditionParams[paramName] = value;
+                    }
+                  } else {
+                    // Handle direct properties (non-relational)
+                    if (typeof value === 'object' && value !== null && !(value instanceof Date)) {
+                      // Handle operators like ilike, gt, lt, etc.
+                      const paramBaseName = `${alias}_${key}_or_${index}`;
+                      
+                      if ('ilike' in value) {
+                        const paramName = `${paramBaseName}_ilike_${this.queryState.paramCounter++}`;
+                        conditionClauses.push(`LOWER(${alias}.${key}) LIKE LOWER(:${paramName})`);
+                        conditionParams[paramName] = `%${value.ilike}%`;
+                      } else if ('like' in value) {
+                        const paramName = `${paramBaseName}_like_${this.queryState.paramCounter++}`;
+                        conditionClauses.push(`${alias}.${key} LIKE :${paramName}`);
+                        conditionParams[paramName] = `%${value.like}%`;
+                      } else {
+                        // Fall back to other operators
+                        Object.entries(value).forEach(([op, opValue]) => {
+                          const paramName = `${paramBaseName}_${op}_${this.queryState.paramCounter++}`;
+                          
+                          switch (op) {
+                            case 'eq':
+                              conditionClauses.push(`${alias}.${key} = :${paramName}`);
+                              conditionParams[paramName] = opValue;
+                              break;
+                            case 'ne':
+                              conditionClauses.push(`${alias}.${key} != :${paramName}`);
+                              conditionParams[paramName] = opValue;
+                              break;
+                            case 'gt':
+                              conditionClauses.push(`${alias}.${key} > :${paramName}`);
+                              conditionParams[paramName] = opValue;
+                              break;
+                            case 'gte':
+                              conditionClauses.push(`${alias}.${key} >= :${paramName}`);
+                              conditionParams[paramName] = opValue;
+                              break;
+                            case 'lt':
+                              conditionClauses.push(`${alias}.${key} < :${paramName}`);
+                              conditionParams[paramName] = opValue;
+                              break;
+                            case 'lte':
+                              conditionClauses.push(`${alias}.${key} <= :${paramName}`);
+                              conditionParams[paramName] = opValue;
+                              break;
+                            case 'in':
+                              if (Array.isArray(opValue)) {
+                                conditionClauses.push(`${alias}.${key} IN (:...${paramName})`);
+                                conditionParams[paramName] = opValue;
+                              }
+                              break;
+                            case 'between':
+                              if (Array.isArray(opValue) && opValue.length === 2) {
+                                const minParam = `${paramName}_min`;
+                                const maxParam = `${paramName}_max`;
+                                conditionClauses.push(`${alias}.${key} BETWEEN :${minParam} AND :${maxParam}`);
+                                conditionParams[minParam] = opValue[0];
+                                conditionParams[maxParam] = opValue[1];
+                              }
+                              break;
+                            case 'isNull':
+                              if (opValue === true) {
+                                conditionClauses.push(`${alias}.${key} IS NULL`);
+                              } else {
+                                conditionClauses.push(`${alias}.${key} IS NOT NULL`);
+                              }
+                              break;
+                          }
+                        });
+                      }
+                    } else {
+                      // Simple equality for non-object values
+                      const paramName = `${alias}_${key}_or_${index}_${this.queryState.paramCounter++}`;
+                      conditionClauses.push(`${alias}.${key} = :${paramName}`);
+                      conditionParams[paramName] = value;
+                    }
+                  }
+                });
+                
+                // Add this branch to the OR clauses if any conditions were added
+                if (conditionClauses.length > 0) {
+                  orClauses.push(`(${conditionClauses.join(' AND ')})`);
+                  Object.assign(orParams, conditionParams);
+                }
+              });
+              
+              // Apply all OR conditions to the main query
+              if (orClauses.length > 0) {
+                queryBuilder.andWhere(`(${orClauses.join(' OR ')})`, orParams);
+                this.logger.debug(`Applied OR conditions: ${orClauses.join(' OR ')}`);
+              }
+              
+              // Remove OR from where to prevent double processing
+              delete (findOptions.where as any)['OR'];
+            } catch (error) {
+              if (error instanceof Error) {
+                this.logger.error(`Error processing OR conditions: ${error.message}`, error.stack);
+              } else {
+                this.logger.error(`Error processing OR conditions: ${String(error)}`);
+              }
+            }
+          }
+
           Object.entries(findOptions.where).forEach(([key, value]) => {
             // Skip isDeleted as we'll handle it separately
             if (key === 'isDeleted') return;
             
             // Handle nested properties (relations.field)
             if (key.includes('.')) {
-              const [relation, field] = key.split('.');
-              const relationAlias = `${relation}_${this.queryState.paramCounter++}`;
+              const pathParts = key.split('.');
               
-              // Join the relation if not already joined
-              if (!joinedRelations.has(relation)) {
-                queryBuilder.leftJoin(`${alias}.${relation}`, relationAlias);
-                joinedRelations.add(relation);
+              // Check if path is valid before proceeding
+              if (pathParts.length === 0) {
+                this.logger.warn(`Invalid path format: ${key}`);
+                return; // Skip this iteration of the forEach
               }
               
-              // Apply the condition
+              const fieldName = pathParts.pop()!; // Use non-null assertion since we checked length
+              let currentAlias = alias;
+              let fullPath = '';
+              
+              // Process each part of the path for joins
+              for (let i = 0; i < pathParts.length; i++) {
+                const relationName = pathParts[i];
+                const prevPath = fullPath;
+                
+                // Build the cumulative path
+                fullPath = prevPath ? `${prevPath}.${relationName}` : relationName;
+                const joinAlias = `${fullPath.replace(/\./g, '_')}_filter_${this.queryState.paramCounter++}`;
+                const joinPath = `${currentAlias}.${relationName}`;
+                
+                // Only join if not already joined
+                if (!joinedRelations.has(joinAlias)) {
+                  // FIX: Actually perform the join operation!
+                  queryBuilder.innerJoin(joinPath, joinAlias);
+                  joinedRelations.add(joinAlias);
+                  this.logger.debug(`Joined relation for filter: ${joinPath} as ${joinAlias}`);
+                }
+                
+                // Update the current alias for next iteration
+                currentAlias = joinAlias;
+              }
+              
+              // Apply condition to final field
               if (typeof value === 'object' && value !== null && !(value instanceof Date)) {
-                // Handle TypeORM operators
-                this.applyOperatorToQueryBuilder(queryBuilder, relationAlias, field, value);
+                this.applyOperatorToQueryBuilder(queryBuilder, currentAlias, fieldName, value);
+                this.logger.debug(`Applied operator filter to ${currentAlias}.${fieldName}: ${JSON.stringify(value)}`);
               } else {
-                queryBuilder.andWhere(`${relationAlias}.${field} = :${key.replace('.', '_')}`, {
-                  [key.replace('.', '_')]: value
+                // Generate a truly unique parameter name
+                const paramName = `${currentAlias}_${fieldName}_${this.queryState.paramCounter++}`;
+                queryBuilder.andWhere(`${currentAlias}.${fieldName} = :${paramName}`, { 
+                  [paramName]: value 
                 });
+                this.logger.debug(`Applied equality filter to ${currentAlias}.${fieldName} = ${value}`);
               }
             } else {
-              // Handle regular fields
+              // Handle regular fields on main entity
               if (typeof value === 'object' && value !== null && !(value instanceof Date)) {
-                // Handle TypeORM operators
                 this.applyOperatorToQueryBuilder(queryBuilder, alias, key, value);
+                this.logger.debug(`Applied operator filter to ${alias}.${key}: ${JSON.stringify(value)}`);
               } else {
-                queryBuilder.andWhere(`${alias}.${key} = :${key}`, { [key]: value });
+                // Generate a truly unique parameter name
+                const paramName = `${alias}_${key}_${this.queryState.paramCounter++}`;
+                queryBuilder.andWhere(`${alias}.${key} = :${paramName}`, { 
+                  [paramName]: value 
+                });
+                this.logger.debug(`Applied equality filter to ${alias}.${key} = ${value}`);
               }
             }
           });
-          
-          // Add isDeleted filter if not explicitly set
-          if (!findOptions.where.hasOwnProperty('isDeleted')) {
-            queryBuilder.andWhere(`${alias}.isDeleted = :isDeleted`, { isDeleted: false });
-          }
         }
         
         // Apply ordering
@@ -115,24 +374,52 @@ export abstract class BaseService<T extends BaseEntity<T>> {
           Object.entries(findOptions.order).forEach(([key, direction]) => {
             // Handle nested ordering
             if (key.includes('.')) {
-              const [relation, field] = key.split('.');
+              const pathParts = key.split('.');
+              if (pathParts.length !== 2) {
+                this.logger.warn(`Complex nested ordering with more than one level is not supported: ${key}`);
+                return;
+              }
+              
+              const [relation, field] = pathParts;
               const relationAlias = `${relation}_order`;
               
               // Join the relation if not already joined
-              if (!joinedRelations.has(relation)) {
+              if (!joinedRelations.has(relationAlias)) {
                 queryBuilder.leftJoin(`${alias}.${relation}`, relationAlias);
-                joinedRelations.add(relation);
+                joinedRelations.add(relationAlias);
+                this.logger.debug(`Joined relation for ordering: ${relation} as ${relationAlias}`);
               }
               
               queryBuilder.addOrderBy(`${relationAlias}.${field}`, direction);
+              this.logger.debug(`Added order by ${relationAlias}.${field} ${direction}`);
             } else {
               queryBuilder.addOrderBy(`${alias}.${key}`, direction);
+              this.logger.debug(`Added order by ${alias}.${key} ${direction}`);
             }
           });
+        }
+
+        // Handle field selection with relations
+        if (findOptions.select && Array.isArray(findOptions.select) && findOptions.select.length > 0) {
+          // Clear any previous automatic selections
+          queryBuilder.select([]);
+          
+          // Always include primary key for relational integrity
+          queryBuilder.addSelect(`${alias}.id`);
+          
+          // Add requested fields for the main entity
+          findOptions.select.forEach(field => {
+            if (typeof field === 'string' && !field.includes('.')) {
+              queryBuilder.addSelect(`${alias}.${field}`);
+            }
+          });
+          
+          this.logger.debug(`Applied field selection: ${JSON.stringify(findOptions.select)}`);
         }
         
         // Handle relations and field selection
         if (findOptions.relations) {
+          // Apply relations with any nested field selection
           this.applyRelationsWithFieldSelection(
             queryBuilder, 
             alias, 
@@ -140,7 +427,36 @@ export abstract class BaseService<T extends BaseEntity<T>> {
             findOptions.select, 
             joinedRelations
           );
+          this.logger.debug(`Applied relations: ${JSON.stringify(findOptions.relations)}`);
+          
+          // ADDED: Apply field selection to the main entity when relations are present
+          if (findOptions.select) {
+            // Clear any previous selection to avoid selecting all fields
+            queryBuilder.select([]);
+            
+            // Make sure we always select the ID field for relational integrity
+            queryBuilder.addSelect(`${alias}.id`);
+            
+            // Handle array format
+            if (Array.isArray(findOptions.select)) {
+              findOptions.select.forEach(fieldName => {
+                if (typeof fieldName === 'string' && !fieldName.includes('.')) {
+                  queryBuilder.addSelect(`${alias}.${fieldName}`);
+                }
+              });
+            } 
+            // Handle object format
+            else {
+              Object.entries(findOptions.select).forEach(([field, included]) => {
+                if (included && !field.includes('.')) {
+                  queryBuilder.addSelect(`${alias}.${field}`);
+                }
+              });
+            }
+            this.logger.debug(`Applied field selection to main entity: ${JSON.stringify(findOptions.select)}`);
+          }
         }
+
         // If no relations but we have select fields
         else if (findOptions.select) {
           // Add ID to selection if not already included
@@ -154,30 +470,53 @@ export abstract class BaseService<T extends BaseEntity<T>> {
               queryBuilder.addSelect(`${alias}.${field}`);
             }
           });
+          this.logger.debug(`Applied field selection: ${JSON.stringify(findOptions.select)}`);
         }
         
         // Apply pagination
         queryBuilder.skip(findOptions.skip).take(findOptions.take);
         
-        // Execute the query with count
-        const [data, totalCount] = await queryBuilder.getManyAndCount();
-        
-        this.logger.debug(`Found ${totalCount} items using QueryBuilder with relations and field selection`);
-        
-        // Create a new pagination DTO to maintain all methods
-        const updatedPaginationDto = new PaginationDto<T>();
-        Object.assign(updatedPaginationDto, paginationDto, {
-          skip: findOptions.skip,
-          take: findOptions.take
-        });
-        
-        return {
-          data,
-          totalCount,
-          meta: updatedPaginationDto,
-        };
+        try {
+          // Execute the query with count
+          const [data, totalCount] = await queryBuilder.getManyAndCount();
+          
+          // // Log the SQL for debugging purposes in development
+          // if (process.env.NODE_ENV !== 'production') {
+          //   console.log('Generated SQL:', queryBuilder.getSql());
+          //   console.log('Query parameters:', queryBuilder.getParameters());
+          // }
+          
+          this.logger.debug(`Found ${totalCount} items using QueryBuilder with relations and field selection`);
+          
+          // Create a new pagination DTO to maintain all methods
+          const updatedPaginationDto = new PaginationDto<T>();
+          Object.assign(updatedPaginationDto, paginationDto, {
+            skip: findOptions.skip,
+            take: findOptions.take
+          });
+          
+          return {
+            data,
+            totalCount,
+            meta: updatedPaginationDto,
+          };
+        } catch (queryError) {
+          // Log and rethrow specific query errors with more context
+          if (queryError instanceof Error) {
+            this.logger.error(`Query execution error: ${queryError.message}`, queryError.stack);
+            this.logger.error(`Failed SQL: ${queryBuilder.getSql()}`);
+            this.logger.error(`Query parameters: ${JSON.stringify(queryBuilder.getParameters())}`);
+            throw new InternalServerErrorException(`Database query failed: ${queryError.message}`);
+          } else {
+            this.logger.error(`Query execution error: ${String(queryError)}`);
+            this.logger.error(`Failed SQL: ${queryBuilder.getSql()}`);
+            this.logger.error(`Query parameters: ${JSON.stringify(queryBuilder.getParameters())}`);
+            throw new InternalServerErrorException(`Database query failed: ${String(queryError)}`);
+          }
+        }
       } else {
         // For simple queries, use repository's findAndCount
+        this.logger.debug('Using simple findAndCount for basic query');
         const [data, totalCount] = await this.repository.findAndCount(findOptions);
         
         // Create a new pagination DTO to maintain all methods
@@ -211,52 +550,261 @@ export abstract class BaseService<T extends BaseEntity<T>> {
     field: string,
     valueObj: any
   ): void {
-    const paramName = `${alias}_${field}_${this.queryState.paramCounter++}`;
+    // Create unique parameter name base
+    const paramBaseName = `${alias}_${field}_${this.queryState.paramCounter++}`;
     
-    if ('eq' in valueObj) {
-      queryBuilder.andWhere(`${alias}.${field} = :${paramName}`, { [paramName]: valueObj.eq });
-    } else if ('ne' in valueObj) {
-      queryBuilder.andWhere(`${alias}.${field} != :${paramName}`, { [paramName]: valueObj.ne });
-    } else if ('gt' in valueObj) {
-      queryBuilder.andWhere(`${alias}.${field} > :${paramName}`, { [paramName]: valueObj.gt });
-    } else if ('gte' in valueObj) {
-      queryBuilder.andWhere(`${alias}.${field} >= :${paramName}`, { [paramName]: valueObj.gte });
-    } else if ('lt' in valueObj) {
-      queryBuilder.andWhere(`${alias}.${field} < :${paramName}`, { [paramName]: valueObj.lt });
-    } else if ('lte' in valueObj) {
-      queryBuilder.andWhere(`${alias}.${field} <= :${paramName}`, { [paramName]: valueObj.lte });
-    } else if ('like' in valueObj) {
-      queryBuilder.andWhere(`${alias}.${field} LIKE :${paramName}`, { [paramName]: `%${valueObj.like}%` });
-    } else if ('ilike' in valueObj) {
-      queryBuilder.andWhere(`LOWER(${alias}.${field}) LIKE LOWER(:${paramName})`, { [paramName]: `%${valueObj.ilike}%` });
-    } else if ('in' in valueObj && Array.isArray(valueObj.in)) {
-      queryBuilder.andWhere(`${alias}.${field} IN (:...${paramName})`, { [paramName]: valueObj.in });
-    } else if ('between' in valueObj && Array.isArray(valueObj.between) && valueObj.between.length === 2) {
-      queryBuilder.andWhere(`${alias}.${field} BETWEEN :${paramName}Min AND :${paramName}Max`, {
-        [`${paramName}Min`]: valueObj.between[0],
-        [`${paramName}Max`]: valueObj.between[1]
-      });
-    } else if ('isNull' in valueObj) {
-      if (valueObj.isNull) {
-        queryBuilder.andWhere(`${alias}.${field} IS NULL`);
+    // Debug the incoming value object
+    console.log(`Applying operator to ${alias}.${field}:`, JSON.stringify(valueObj, null, 2));
+    
+    // Handle TypeORM's internal operator objects (ILike, etc.)
+    if (valueObj && valueObj._type && valueObj._value !== undefined) {
+      console.log(`Detected TypeORM operator: ${valueObj._type}`);
+      const paramName = `${paramBaseName}_typeorm`;
+      
+      switch(valueObj._type) {
+        case 'ilike':
+          // For ilike, TypeORM may have already added wildcards, so check the value
+          const ilikeValue = valueObj._value.includes('%') ? valueObj._value : `%${valueObj._value}%`;
+          queryBuilder.andWhere(`LOWER(${alias}.${field}) LIKE LOWER(:${paramName})`, { 
+            [paramName]: ilikeValue 
+          });
+          console.log(`Applied TypeORM ILIKE: ${alias}.${field} LIKE '${ilikeValue}'`);
+          break;
+        case 'like':
+          const likeValue = valueObj._value.includes('%') ? valueObj._value : `%${valueObj._value}%`;
+          queryBuilder.andWhere(`${alias}.${field} LIKE :${paramName}`, { 
+            [paramName]: likeValue 
+          });
+          console.log(`Applied TypeORM LIKE: ${alias}.${field} LIKE '${likeValue}'`);
+          break;
+        case 'equal':
+        case 'eq':
+          queryBuilder.andWhere(`${alias}.${field} = :${paramName}`, { 
+            [paramName]: valueObj._value 
+          });
+          console.log(`Applied TypeORM equals: ${alias}.${field} = '${valueObj._value}'`);
+          break;
+        case 'not':
+          queryBuilder.andWhere(`${alias}.${field} != :${paramName}`, { 
+            [paramName]: valueObj._value 
+          });
+          console.log(`Applied TypeORM not equals: ${alias}.${field} != '${valueObj._value}'`);
+          break;
+        case 'gt':
+          queryBuilder.andWhere(`${alias}.${field} > :${paramName}`, { 
+            [paramName]: valueObj._value 
+          });
+          console.log(`Applied TypeORM greater than: ${alias}.${field} > ${valueObj._value}`);
+          break;
+        case 'gte':
+          queryBuilder.andWhere(`${alias}.${field} >= :${paramName}`, { 
+            [paramName]: valueObj._value 
+          });
+          console.log(`Applied TypeORM greater than or equal: ${alias}.${field} >= ${valueObj._value}`);
+          break;
+        case 'lt':
+          queryBuilder.andWhere(`${alias}.${field} < :${paramName}`, { 
+            [paramName]: valueObj._value 
+          });
+          console.log(`Applied TypeORM less than: ${alias}.${field} < ${valueObj._value}`);
+          break;
+        case 'lte':
+          queryBuilder.andWhere(`${alias}.${field} <= :${paramName}`, { 
+            [paramName]: valueObj._value 
+          });
+          console.log(`Applied TypeORM less than or equal: ${alias}.${field} <= ${valueObj._value}`);
+          break;
+        case 'in':
+          if (Array.isArray(valueObj._value)) {
+            queryBuilder.andWhere(`${alias}.${field} IN (:...${paramName})`, { 
+              [paramName]: valueObj._value 
+            });
+            console.log(`Applied TypeORM IN: ${alias}.${field} IN (${valueObj._value.join(', ')})`);
+          }
+          break;
+        case 'any':
+          if (Array.isArray(valueObj._value)) {
+            queryBuilder.andWhere(`${alias}.${field} = ANY(:${paramName})`, { 
+              [paramName]: valueObj._value 
+            });
+            console.log(`Applied TypeORM ANY: ${alias}.${field} = ANY(${valueObj._value.join(', ')})`);
+          }
+          break;
+        case 'between':
+          if (Array.isArray(valueObj._value) && valueObj._value.length === 2) {
+            queryBuilder.andWhere(`${alias}.${field} BETWEEN :${paramName}Min AND :${paramName}Max`, {
+              [`${paramName}Min`]: valueObj._value[0],
+              [`${paramName}Max`]: valueObj._value[1]
+            });
+            console.log(`Applied TypeORM BETWEEN: ${alias}.${field} BETWEEN ${valueObj._value[0]} AND ${valueObj._value[1]}`);
+          }
+          break;
+        case 'isNull':
+          queryBuilder.andWhere(`${alias}.${field} IS NULL`);
+          console.log(`Applied TypeORM IS NULL: ${alias}.${field} IS NULL`);
+          break;
+        case 'isNotNull':
+          queryBuilder.andWhere(`${alias}.${field} IS NOT NULL`);
+          console.log(`Applied TypeORM IS NOT NULL: ${alias}.${field} IS NOT NULL`);
+          break;
+        default:
+          console.warn(`Unsupported TypeORM operator type: ${valueObj._type}`);
+          this.logger.warn(`Unsupported TypeORM operator type: ${valueObj._type}`);
+      }
+      return;
+    }
+    
+    // Handle custom operator format
+    try {
+      if ('eq' in valueObj) {
+        const paramName = `${paramBaseName}_eq`;
+        queryBuilder.andWhere(`${alias}.${field} = :${paramName}`, { [paramName]: valueObj.eq });
+        console.log(`Applied custom equals: ${alias}.${field} = '${valueObj.eq}'`);
+      } else if ('ne' in valueObj) {
+        const paramName = `${paramBaseName}_ne`;
+        queryBuilder.andWhere(`${alias}.${field} != :${paramName}`, { [paramName]: valueObj.ne });
+        console.log(`Applied custom not equals: ${alias}.${field} != '${valueObj.ne}'`);
+      } else if ('gt' in valueObj) {
+        const paramName = `${paramBaseName}_gt`;
+        queryBuilder.andWhere(`${alias}.${field} > :${paramName}`, { [paramName]: valueObj.gt });
+        console.log(`Applied custom greater than: ${alias}.${field} > ${valueObj.gt}`);
+      } else if ('gte' in valueObj) {
+        const paramName = `${paramBaseName}_gte`;
+        queryBuilder.andWhere(`${alias}.${field} >= :${paramName}`, { [paramName]: valueObj.gte });
+        console.log(`Applied custom greater than or equal: ${alias}.${field} >= ${valueObj.gte}`);
+      } else if ('lt' in valueObj) {
+        const paramName = `${paramBaseName}_lt`;
+        queryBuilder.andWhere(`${alias}.${field} < :${paramName}`, { [paramName]: valueObj.lt });
+        console.log(`Applied custom less than: ${alias}.${field} < ${valueObj.lt}`);
+      } else if ('lte' in valueObj) {
+        const paramName = `${paramBaseName}_lte`;
+        queryBuilder.andWhere(`${alias}.${field} <= :${paramName}`, { [paramName]: valueObj.lte });
+        console.log(`Applied custom less than or equal: ${alias}.${field} <= ${valueObj.lte}`);
+      } else if ('like' in valueObj) {
+        const paramName = `${paramBaseName}_like`;
+        queryBuilder.andWhere(`${alias}.${field} LIKE :${paramName}`, { 
+          [paramName]: `%${valueObj.like}%` 
+        });
+        console.log(`Applied custom LIKE: ${alias}.${field} LIKE '%${valueObj.like}%'`);
+      } else if ('ilike' in valueObj) {
+        const paramName = `${paramBaseName}_ilike`;
+        queryBuilder.andWhere(`LOWER(${alias}.${field}) LIKE LOWER(:${paramName})`, { 
+          [paramName]: `%${valueObj.ilike}%` 
+        });
+        console.log(`Applied custom ILIKE: ${alias}.${field} ILIKE '%${valueObj.ilike}%'`);
+      } else if ('in' in valueObj && Array.isArray(valueObj.in)) {
+        const paramName = `${paramBaseName}_in`;
+        queryBuilder.andWhere(`${alias}.${field} IN (:...${paramName})`, { [paramName]: valueObj.in });
+        console.log(`Applied custom IN: ${alias}.${field} IN (${valueObj.in.join(', ')})`);
+      } else if ('between' in valueObj && Array.isArray(valueObj.between) && valueObj.between.length === 2) {
+        const paramMinName = `${paramBaseName}_between_min`;
+        const paramMaxName = `${paramBaseName}_between_max`;
+        queryBuilder.andWhere(`${alias}.${field} BETWEEN :${paramMinName} AND :${paramMaxName}`, {
+          [paramMinName]: valueObj.between[0],
+          [paramMaxName]: valueObj.between[1]
+        });
+        console.log(`Applied custom BETWEEN: ${alias}.${field} BETWEEN ${valueObj.between[0]} AND ${valueObj.between[1]}`);
+      } else if ('isNull' in valueObj) {
+        if (valueObj.isNull) {
+          queryBuilder.andWhere(`${alias}.${field} IS NULL`);
+          console.log(`Applied custom IS NULL: ${alias}.${field} IS NULL`);
+        } else {
+          queryBuilder.andWhere(`${alias}.${field} IS NOT NULL`);
+          console.log(`Applied custom IS NOT NULL: ${alias}.${field} IS NOT NULL`);
+        }
       } else {
-        queryBuilder.andWhere(`${alias}.${field} IS NOT NULL`);
+        console.warn(`Unknown operator in filter object: ${JSON.stringify(valueObj)}`);
+        this.logger.warn(`Unknown operator in filter object: ${JSON.stringify(valueObj)}`);
+      }
+    } catch (error) {
+      console.error(`Error applying operator for ${alias}.${field}:`, error);
+      if (error instanceof Error) {
+        this.logger.error(`Error applying operator for ${alias}.${field}: ${error.message}`, error.stack);
+      } else {
+        this.logger.error(`Error applying operator for ${alias}.${field}: ${String(error)}`);
       }
     }
+    
+    // After applying any operator, log query parameters for debugging
+    console.log('Current query parameters:', queryBuilder.getParameters());
   }
   
-  // Helper method to recursively apply relations with field selection
-  private applyRelationsWithFieldSelection(
-    queryBuilder: SelectQueryBuilder<T>,
-    parentAlias: string,
-    relations: FindOptionsRelations<T> | FindOptionsRelationByString,
-    select?: FindOptionsSelect<T> | FindOptionsSelectByString<T>,
-    joinedRelations: Set<string> = new Set()
-  ): void {
-    // Handle string array format for relations
-    if (Array.isArray(relations)) {
-      relations.forEach(relationPath => {
-        const relationAlias = `${relationPath.replace(/\./g, '_')}_rel`;
+    // Helper method to recursively apply relations with field selection
+    private applyRelationsWithFieldSelection(
+      queryBuilder: SelectQueryBuilder<T>,
+      parentAlias: string,
+      relations: FindOptionsRelations<T> | FindOptionsRelationByString,
+      select?: FindOptionsSelect<T> | FindOptionsSelectByString<T>,
+      joinedRelations: Set<string> = new Set()
+    ): void {
+      // Handle string array format for relations
+      if (Array.isArray(relations)) {
+        // Sort relations to ensure parent relations are joined before their children
+        const sortedRelations = [...relations].sort((a, b) => {
+          // Put non-nested relations first, then sort by nesting depth
+          const aNestCount = (a.match(/\./g) || []).length;
+          const bNestCount = (b.match(/\./g) || []).length;
+          return aNestCount - bNestCount;
+        });
+  
+        // Process each relation path
+        sortedRelations.forEach(relationPath => {
+          // Handle nested paths (e.g., "user.profile")
+          if (relationPath.includes('.')) {
+            const relationParts = relationPath.split('.');
+            let currentAlias = parentAlias;
+            let currentPath = '';
+            
+            // Process each part of the path
+            relationParts.forEach((part, index) => {
+              const isLastPart = index === relationParts.length - 1;
+              const prevPath = currentPath;
+              
+              // Build the cumulative path
+              currentPath = prevPath ? `${prevPath}.${part}` : part;
+              const fullRelationPath = `${currentAlias}.${part}`;
+              const newAlias = `${currentPath.replace(/\./g, '_')}_rel`;
+              
+              // Skip if this relation segment is already joined
+              if (joinedRelations.has(newAlias)) {
+                currentAlias = newAlias;
+                return;
+              }
+              
+              joinedRelations.add(newAlias);
+              
+              // Join with or without selecting all fields
+              if (isLastPart) {
+                queryBuilder.leftJoinAndSelect(fullRelationPath, newAlias);
+              } else {
+                // For intermediate relations, just join without selecting fields
+                queryBuilder.leftJoin(fullRelationPath, newAlias);
+              }
+              
+              // Update current alias for the next iteration
+              currentAlias = newAlias;
+            });
+          } else {
+            // Handle simple non-nested relations
+            const relationAlias = `${relationPath}_rel`;
+            
+            // Skip if already joined
+            if (joinedRelations.has(relationAlias)) {
+              return;
+            }
+            
+            joinedRelations.add(relationAlias);
+            queryBuilder.leftJoinAndSelect(`${parentAlias}.${relationPath}`, relationAlias);
+          }
+        });
+        return;
+      }
+      
+      // Rest of the method for object-format relations stays the same
+      Object.entries(relations).forEach(([relationName, relationValue]) => {
+        if (!relationValue) return;
+        
+        const relationAlias = `${relationName}_rel`;
         
         // Skip if already joined
         if (joinedRelations.has(relationAlias)) {
@@ -264,61 +812,44 @@ export abstract class BaseService<T extends BaseEntity<T>> {
         }
         
         joinedRelations.add(relationAlias);
-        queryBuilder.leftJoinAndSelect(`${parentAlias}.${relationPath}`, relationAlias);
-      });
-      return;
-    }
-    
-    // Process each relation (object format)
-    Object.entries(relations).forEach(([relationName, relationValue]) => {
-      if (!relationValue) return;
-      
-      const relationAlias = `${relationName}_rel`;
-      
-      // Skip if already joined
-      if (joinedRelations.has(relationAlias)) {
-        return;
-      }
-      
-      joinedRelations.add(relationAlias);
-      
-      // Handle nested relations
-      if (typeof relationValue === 'object') {
-        // Join the parent relation
-        queryBuilder.leftJoinAndSelect(`${parentAlias}.${relationName}`, relationAlias);
         
-        // Apply nested relations recursively
-        this.applyRelationsWithFieldSelection(
-          queryBuilder,
-          relationAlias,
-          relationValue as any,
-          select,
-          joinedRelations
-        );
-      } else {
-        // Apply field selection for this relation if specified
-        const relationSelect = this.extractNestedSelect(relationName, select);
-        
-        if (relationSelect && Object.keys(relationSelect).length > 0) {
-          // Join without selecting all fields
-          queryBuilder.leftJoin(`${parentAlias}.${relationName}`, relationAlias);
-          
-          // Add ID field to ensure proper relation loading
-          queryBuilder.addSelect(`${relationAlias}.id`);
-          
-          // Add each selected field
-          Object.entries(relationSelect).forEach(([field, included]) => {
-            if (included) {
-              queryBuilder.addSelect(`${relationAlias}.${field}`);
-            }
-          });
-        } else {
-          // No specific field selection, select all fields
+        // Handle nested relations
+        if (typeof relationValue === 'object') {
+          // Join the parent relation
           queryBuilder.leftJoinAndSelect(`${parentAlias}.${relationName}`, relationAlias);
+          
+          // Apply nested relations recursively
+          this.applyRelationsWithFieldSelection(
+            queryBuilder,
+            relationAlias,
+            relationValue as any,
+            select,
+            joinedRelations
+          );
+        } else {
+          // Apply field selection for this relation if specified
+          const relationSelect = this.extractNestedSelect(relationName, select);
+          
+          if (relationSelect && Object.keys(relationSelect).length > 0) {
+            // Join without selecting all fields
+            queryBuilder.leftJoin(`${parentAlias}.${relationName}`, relationAlias);
+            
+            // Add ID field to ensure proper relation loading
+            queryBuilder.addSelect(`${relationAlias}.id`);
+            
+            // Add each selected field
+            Object.entries(relationSelect).forEach(([field, included]) => {
+              if (included) {
+                queryBuilder.addSelect(`${relationAlias}.${field}`);
+              }
+            });
+          } else {
+            // No specific field selection, select all fields
+            queryBuilder.leftJoinAndSelect(`${parentAlias}.${relationName}`, relationAlias);
+          }
         }
-      }
-    });
-  }
+      });
+    }
   
   // Extract nested select fields for a specific relation
   private extractNestedSelect(
@@ -461,12 +992,19 @@ export abstract class BaseService<T extends BaseEntity<T>> {
   }
     
   // DONE
-  async delete(id: string): Promise<void> {
+  async delete(id: string): Promise<GeneralResponseDto> {
     const result = await this.repository.delete(id);
     
     if (result.affected === 0) {
       throw new NotFoundException(`${this.entityName} with id ${id} not found`);
     }
+
+    const response = new GeneralResponseDto();
+    response.statusCode = HttpStatus.NO_CONTENT;
+    response.timestamp = new Date().toISOString();
+    response.detail = 'Deletion Successful';
+    response.message = `${this.entityName} with id ${id} was deleted successfully`;
+    return response;
   }
 
   // DONE

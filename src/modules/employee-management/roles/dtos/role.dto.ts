@@ -58,4 +58,4 @@ export class RoleDto extends PartialType(BaseDto) {
 
 export class UpdateRoleDto extends PartialType(RoleDto) {}
 
-export class GetRoleDto extends createGetDto(UpdateRoleDto) {}
+export class GetRoleDto extends createGetDto(UpdateRoleDto, 'role') {}

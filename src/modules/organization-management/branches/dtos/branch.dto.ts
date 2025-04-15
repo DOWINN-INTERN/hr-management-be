@@ -54,4 +54,4 @@ export class BranchDto {
 
 export class UpdateBranchDto extends PartialType(BranchDto) {}
 
-export class GetBranchDto extends createGetDto(UpdateBranchDto) {}
+export class GetBranchDto extends createGetDto(UpdateBranchDto, 'branch') {}

@@ -15,6 +15,17 @@ import { Between, FindManyOptions, FindOptionsSelect, FindOptionsWhere, ILike, I
  */
 export type FilterOperators = {
   /**
+   * Logical OR between conditions
+   * Example: { "or": [{"status": "active"}, {"priority": {"gt": 5}}] }
+   */
+  or?: Record<string, any>[];
+  
+  /**
+   * Logical AND between conditions
+   * Example: { "and": [{"status": "active"}, {"priority": {"gt": 5}}] }
+   */
+  and?: Record<string, any>[];
+  /**
    * Equal to - exact match (case-sensitive)
    * Example: { "status": { "eq": "active" } }
    */
@@ -258,6 +269,23 @@ export class PaginationDto<T> {
     Object.entries(filterObj).forEach(([key, value]) => {
       // Skip null/undefined values
       if (value === null || value === undefined) return;
+
+      // Handle special logical operators
+      if (key === 'or' && Array.isArray(value)) {
+        // For OR, TypeORM accepts an array of conditions
+        return value.map(condition => this.applyFilterOperators(condition));
+      }
+      
+      if (key === 'and' && Array.isArray(value)) {
+        // Process each condition in the AND array and merge them
+        const andConditions = value.reduce((acc, condition) => {
+          return { ...acc, ...this.applyFilterOperators(condition) };
+        }, {});
+        
+        // Merge with the current result
+        Object.assign(result, andConditions);
+        return;
+      }
 
       // Handle nested objects (potential operators)
       if (typeof value === 'object' && !Array.isArray(value)) {

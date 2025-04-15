@@ -49,4 +49,4 @@ export class OrganizationDto {
 
 export class UpdateOrganizationDto extends PartialType(OrganizationDto) {}
 
-export class GetOrganizationDto extends createGetDto(UpdateOrganizationDto) {}
+export class GetOrganizationDto extends createGetDto(UpdateOrganizationDto, 'organization') {}

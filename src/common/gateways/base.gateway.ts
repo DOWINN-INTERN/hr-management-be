@@ -1,6 +1,7 @@
 import { JwtService } from '@/modules/account-management/auth/services/jwt.service';
 import { UsersService } from '@/modules/account-management/users/users.service';
 import { Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import {
     OnGatewayConnection,
     OnGatewayDisconnect,
@@ -8,20 +9,25 @@ import {
     WebSocketServer,
     WsException
 } from '@nestjs/websockets';
+import { ClassConstructor, plainToClass } from 'class-transformer';
 import { Server, Socket } from 'socket.io';
 import { v4 as uuidv4 } from 'uuid';
+import { IJwtPayload } from '../interfaces/jwt-payload.interface';
 
 // Types to improve type safety and readability
 export interface AuthenticatedSocket extends Socket {
-    user?: {
-        id: string;
-        [key: string]: any;
-    };
+    user?: IJwtPayload;
     connectionId?: string;
 }
 
 // Type-safe event handling
 type WsEventHandler<T = any> = (client: AuthenticatedSocket, payload: T) => Promise<void> | void;
+
+// Add middleware type definition here
+export type SocketMiddleware = (
+  client: AuthenticatedSocket,
+  next: (err?: Error) => void
+) => void;
 
 export type WsResponseData = {
     event: string;
@@ -37,6 +43,9 @@ export abstract class BaseGateway implements OnGatewayInit, OnGatewayConnection,
     protected connectedClients = new Map<string, AuthenticatedSocket>();
     protected userRooms = new Map<string, Set<string>>();
     
+    // Add middleware support
+    protected middlewares: SocketMiddleware[] = [];
+    
     // Rate limiting protection
     protected messageRateLimit = new Map<string, number>();
     protected readonly MAX_MESSAGES_PER_MINUTE = 60;
@@ -50,12 +59,33 @@ export abstract class BaseGateway implements OnGatewayInit, OnGatewayConnection,
     constructor(
         protected readonly jwtService: JwtService,
         protected readonly usersService: UsersService,
-    ) {}
+        protected readonly configService: ConfigService, // Add this
+    ) {
+        this.MAX_MESSAGES_PER_MINUTE = this.configService.get('websocket.rateLimit', 60);
+        this.HEARTBEAT_INTERVAL = this.configService.get('websocket.heartbeatInterval', 60000);
+        this.CONNECTION_TIMEOUT = this.configService.get('websocket.connectionTimeout', 300000);
+        this.AUTH_TOKEN_EXPIRY_BUFFER = this.configService.get('websocket.tokenExpiryBuffer', 300);
+    
+        // Configure compression
+        const compressionThreshold = this.configService.get<number>('websocket.compressionThreshold', 1024);
+        this.server?.engine?.on('connection', (socket) => {
+            socket.compress = (data: any) => {
+                return data.length > compressionThreshold;
+            };
+        });
+    }
     
     // Gateway configuration
     protected abstract namespace: string;
     protected abstract eventHandlers: Map<string, (client: AuthenticatedSocket, payload: any) => void>;
 
+    protected metrics = {
+        totalConnections: 0,
+        activeConnections: 0,
+        messagesProcessed: 0,
+        authFailures: 0,
+        rateLimitHits: 0
+    };
 
     // Lifecycle hooks
     onModuleInit() {
@@ -77,29 +107,43 @@ export abstract class BaseGateway implements OnGatewayInit, OnGatewayConnection,
 
     handleConnection(client: AuthenticatedSocket) {
         try {
+            this.metrics.totalConnections++;
+            this.metrics.activeConnections++;
             // Generate a unique connection ID for this socket
             client.connectionId = uuidv4();
             
-            // Authenticate the client
-            if (!this.authenticateClient(client)) {
-                this.logger.warn(`Authentication failed for connection ${client.id}`);
-                client.disconnect();
-                return;
-            }
-            
-            // Check if user exists after authentication
-            if (!client.user) {
-                this.logger.warn(`User not defined after authentication for connection ${client.id}`);
-                client.disconnect();
-                return;
-            }
-            
-            const userId = client.user.id;
-            this.connectedClients.set(userId, client);
-            this.messageRateLimit.set(userId, 0);
-            
-            this.logger.log(`Client connected: ${userId} (${client.connectionId})`);
-            this.afterConnect(client);
+            // Apply middlewares before proceeding with connection
+            this.applyMiddlewares(client, async (err) => {
+                if (err) {
+                    this.logger.error(`Middleware error: ${err.message}`);
+                    client.disconnect();
+                    return;
+                }
+                
+                // Continue with existing connection logic
+                const isAuthenticated = await this.authenticateClient(client);
+                if (!isAuthenticated) {
+                    this.logger.warn(`Authentication failed for connection ${client.id}`);
+                    client.disconnect();
+                    return;
+                }
+                
+                // Rest of your existing connection logic...
+                if (!client.user) {
+                    this.logger.warn(`User not defined after authentication for connection ${client.id}`);
+                    client.disconnect();
+                    return;
+                }
+                
+                const user = client.user.email || client.user.sub;
+                this.connectedClients.set(user, client);
+                this.messageRateLimit.set(user, 0);
+                
+                this.logger.log(`Client connected: ${user} (${client.connectionId})`);
+                this.logger.log(`Total active connections: ${this.metrics.activeConnections}`);
+
+                this.afterConnect(client);
+            });
         } catch (error: unknown) {
             if (error instanceof Error) {
                 this.logger.error(`Connection error: ${error.message}`, error.stack);
@@ -110,28 +154,88 @@ export abstract class BaseGateway implements OnGatewayInit, OnGatewayConnection,
         }
     }
 
+    // Add to BaseGateway class
+    async handleShutdown() {
+        this.logger.log(`Gateway ${this.constructor.name} shutting down gracefully`);
+        
+        // Send disconnect warning to all clients
+        this.broadcast('server_shutdown', { 
+            message: 'Server is shutting down for maintenance', 
+            reconnectIn: 10000 // ms
+        });
+        
+        // Wait to allow clients to process the message
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        // Close all connections
+        this.connectedClients.forEach((client) => {
+            client.disconnect(true);
+        });
+        
+        // Clear data structures
+        this.connectedClients.clear();
+        this.userRooms.clear();
+        this.messageRateLimit.clear();
+        
+        if (this.heartbeatInterval) {
+            clearInterval(this.heartbeatInterval);
+        }
+    }
+
+    protected validatePayload<T>(payload: any, schema: ClassConstructor<T>): T {
+        try {
+            return plainToClass(schema, payload, { excludeExtraneousValues: true });
+        } catch (error) {
+            throw new WsException('Invalid payload format');
+        }
+    }
+    
+    protected addMiddleware(middleware: SocketMiddleware): void {
+        this.middlewares.push(middleware);
+    }
+
+    private applyMiddlewares(client: AuthenticatedSocket, callback: (err?: Error) => void): void {
+        let index = 0;
+        
+        const next = (err?: Error) => {
+            if (err) return callback(err);
+            if (index >= this.middlewares.length) return callback();
+            
+            const middleware = this.middlewares[index++];
+            try {
+                middleware(client, next);
+            } catch (error) {
+                next(error instanceof Error ? error : new Error('Middleware error'));
+            }
+        };
+        
+        next();
+    }
+
     handleDisconnect(client: AuthenticatedSocket) {
         try {
-            if (!client.user || !client.user.id) {
+            this.metrics.activeConnections--;
+            if (!client.user || !client.user.sub || !client.user.email) {
                 return;
             }
             
-            const userId = client.user.id;
+            const user = client.user.email || client.user.sub;
             
             // Clean up resources
-            this.connectedClients.delete(userId);
-            this.messageRateLimit.delete(userId);
+            this.connectedClients.delete(user);
+            this.messageRateLimit.delete(user);
             
             // Leave all rooms
-            const rooms = this.userRooms.get(userId);
+            const rooms = this.userRooms.get(user);
             if (rooms) {
                 rooms.forEach(room => {
                     client.leave(room);
                 });
-                this.userRooms.delete(userId);
+                this.userRooms.delete(user);
             }
             
-            this.logger.log(`Client disconnected: ${userId} (${client.connectionId})`);
+            this.logger.log(`Client disconnected: ${user} (${client.connectionId})`);
+            this.logger.log(`Total active connections: ${this.metrics.activeConnections}`);
             this.afterDisconnect(client);
         } catch (error: unknown) {
             if (error instanceof Error) {
@@ -175,7 +279,6 @@ export abstract class BaseGateway implements OnGatewayInit, OnGatewayConnection,
           const currentTime = Math.floor(Date.now() / 1000);
           if (payload.exp && payload.exp - this.AUTH_TOKEN_EXPIRY_BUFFER < currentTime) {
             this.logger.debug(`Token expiring soon: ${payload.exp - currentTime}s remaining`);
-            return false;
           }
           
           // Find and verify the user exists and is active
@@ -189,12 +292,7 @@ export abstract class BaseGateway implements OnGatewayInit, OnGatewayConnection,
           }
           
           // Store minimal user data on socket
-          client.user = {
-            id: user.id,
-            email: payload.email,
-            roles: payload.roles,
-            // Additional fields
-          };
+          client.user = payload;
           
           // Track connection with timestamp
           client.connectionId = `${user.id}-${Date.now()}`;
@@ -205,10 +303,18 @@ export abstract class BaseGateway implements OnGatewayInit, OnGatewayConnection,
           this.handleError('Authentication', error);
           return false;
         }
-      }
+    }
 
     // Helper method to extract token from socket connection
     private extractTokenFromSocket(client: AuthenticatedSocket): string | null {
+        const origin = client.handshake.headers.origin;
+        // log origin
+        // const allowedOrigins = this.configService.get<string[]>('cors.origins', []);
+        // if (!origin || !allowedOrigins.includes(origin)) {
+        //     this.logger.warn(`Connection attempt from unauthorized origin: ${origin}`);
+        //     return null;
+        // }
+        
         // Try to get from handshake auth
         const authHeader = client.handshake.headers.authorization;
         if (authHeader && authHeader.startsWith('Bearer ')) {
@@ -232,14 +338,14 @@ export abstract class BaseGateway implements OnGatewayInit, OnGatewayConnection,
                 throw new WsException('User not authenticated');
             }
             
-            const userId = client.user.id;
-            if (!this.userRooms.has(userId)) {
-                this.userRooms.set(userId, new Set<string>());
+            const user = client.user.email || client.user.sub;
+            if (!this.userRooms.has(user)) {
+                this.userRooms.set(user, new Set<string>());
             }
             
-            const userRoomSet = this.userRooms.get(userId)!;
+            const userRoomSet = this.userRooms.get(user)!;
             userRoomSet.add(room);
-            this.logger.debug(`User ${userId} joined room: ${room}`);
+            this.logger.debug(`${user} joined room: ${room}`);
         } catch (error) {
             if (error instanceof Error) {
                 this.logger.error(`Error joining room: ${error.message}`, error.stack);
@@ -259,13 +365,13 @@ export abstract class BaseGateway implements OnGatewayInit, OnGatewayConnection,
                 throw new WsException('User not authenticated');
             }
 
-            const userId = client.user.id;
-            const rooms = this.userRooms.get(userId);
+            const user = client.user.email || client.user.sub;
+            const rooms = this.userRooms.get(user);
             if (rooms) {
                 rooms.delete(room);
             }
             
-            this.logger.debug(`User ${userId} left room: ${room}`);
+            this.logger.debug(`User ${user} left room: ${room}`);
         } catch (error) {
             if (error instanceof Error) {
                 this.logger.error(`Error leaving room: ${error.message}`, error.stack);
@@ -313,26 +419,24 @@ export abstract class BaseGateway implements OnGatewayInit, OnGatewayConnection,
         }
     }
     
-    protected broadcast(event: string, data: any, exceptUserId?: string): void {
+    protected broadcast(event: string, data: any, exceptUser?: string): void {
         try {
-            if (exceptUserId) {
-                const exceptClient = this.connectedClients.get(exceptUserId);
-                if (exceptClient) {
-                    exceptClient.broadcast.emit(event, data);
-                } else {
-                    this.server.emit(event, data);
+            if (exceptUser) {
+                // Send to all clients except the one with exceptUserId
+                for (const [userId, client] of this.connectedClients.entries()) {
+                    if (userId !== exceptUser) {
+                        client.emit(event, data);
+                    }
                 }
             } else {
+                // Send to all clients
                 this.server.emit(event, data);
             }
         } catch (error: unknown) {
-            if (error instanceof Error)
-            {
+            if (error instanceof Error) {
                 this.logger.error(`Error broadcasting: ${error.message}`, error.stack);
                 throw new WsException(`Failed to broadcast: ${error.message}`);
-            }
-            else
-            {
+            } else {
                 this.logger.error('Error broadcasting: Unknown error');
                 throw new WsException('Failed to broadcast: Unknown error');
             }
@@ -365,19 +469,19 @@ export abstract class BaseGateway implements OnGatewayInit, OnGatewayConnection,
         const now = Date.now();
         
         // Check each connection for activity
-        this.connectedClients.forEach((client, userId) => {
+        this.connectedClients.forEach((client, user) => {
           if (!client.connected) {
-            this.logger.debug(`Removing disconnected client: ${userId}`);
-            this.connectedClients.delete(userId);
+            this.logger.debug(`Removing disconnected client: ${user}`);
+            this.connectedClients.delete(user);
             return;
           }
           
           // Check for timeout (no activity for X minutes)
           const connectedAt = client.handshake.auth.connectedAt || 0;
           if (now - connectedAt > this.CONNECTION_TIMEOUT) {
-            this.logger.debug(`Connection timeout for user: ${userId}`);
+            this.logger.debug(`Connection timeout for user: ${user}`);
             client.disconnect(true);
-            this.connectedClients.delete(userId);
+            this.connectedClients.delete(user);
           }
         });
       }
@@ -391,13 +495,13 @@ export abstract class BaseGateway implements OnGatewayInit, OnGatewayConnection,
                     socket.on(event, (payload) => {
                         try {
                             // Validate user is authenticated
-                            if (!socket.user || !socket.user.id) {
+                            if (!socket.user || !socket.user.sub) {
                                 socket.emit('error', { message: 'Not authenticated' });
                                 return;
                             }
                             
                             // Check rate limiting
-                            if (this.isRateLimited(socket.user.id)) {
+                            if (this.isRateLimited(socket.user.sub)) {
                                 socket.emit('error', { message: 'Rate limit exceeded' });
                                 return;
                             }

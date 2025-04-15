@@ -54,4 +54,4 @@ export class DepartmentDto {
 
 export class UpdateDepartmentDto extends PartialType(DepartmentDto) {}
 
-export class GetDepartmentDto extends createGetDto(UpdateDepartmentDto) {}
+export class GetDepartmentDto extends createGetDto(UpdateDepartmentDto, 'department') {}

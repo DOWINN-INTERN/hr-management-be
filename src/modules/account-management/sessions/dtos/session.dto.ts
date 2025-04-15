@@ -18,4 +18,4 @@ export class SessionDto extends PartialType(BaseDto)
 
 export class UpdateSessionDto extends PartialType(SessionDto) {}
 
-export class GetSessionDto extends createGetDto(UpdateSessionDto) {}
+export class GetSessionDto extends createGetDto(UpdateSessionDto, 'session') {}

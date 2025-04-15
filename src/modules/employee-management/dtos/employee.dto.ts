@@ -67,6 +67,18 @@ export class EmployeeDto extends PartialType(BaseDto) {
     @Min(0)
     leaveCredits?: number;
 
+    @ApiProperty({
+        description: 'Monthly rate of the employee',
+        required: false,
+        default: 0,
+        type: Number,
+        minimum: 0
+    })
+    @IsOptional()
+    @IsNumber({ maxDecimalPlaces: 2 })
+    @Min(0)
+    monthlyRate?: number;
+
     @ApiPropertyOptional({ 
         description: 'Roles associated with this employee',
         type: [ReferenceDto]

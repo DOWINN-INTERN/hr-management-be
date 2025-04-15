@@ -103,8 +103,6 @@ export class UserDto {
     profile?: ProfileDto;
 }
 
-export class UpdateUserDto extends PartialType(UserDto) {
+export class UpdateUserDto extends PartialType(UserDto) {}
 
-}
-
-export class GetUserDto extends createGetDto(UpdateUserDto) {}
+export class GetUserDto extends createGetDto(UpdateUserDto, 'user') {}

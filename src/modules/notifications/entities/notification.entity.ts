@@ -1,3 +1,4 @@
+import { NotificationTargetType } from '@/common/enums/notification-target-type.enum';
 import { NotificationType } from '@/common/enums/notification-type.enum';
 import { BaseEntity } from '@/database/entities/base.entity';
 import { User } from '@/modules/account-management/users/entities/user.entity';
@@ -33,22 +34,23 @@ export class Notification extends BaseEntity<Notification> {
   @Column()
   readAt?: Date;
 
-  @Column()
-  targetType!: string;
+  @Column({
+    type: 'enum',
+    enum: NotificationTargetType,
+    default: NotificationTargetType.USER
+  })
+  targetType!: NotificationTargetType;
 
   @Column()
   category!: string;
 
   @Column({ nullable: true })
-  targetId!: string;
+  targetId?: string;
 
   @Column('json', { nullable: true })
   metadata?: Record<string, any>;
 
-  @Column()
-  userId?: string;
-
-  @ManyToOne(() => User)
-  @JoinColumn({ name: 'user_Id' })
+  @ManyToOne(() => User, (user: User) => user.notifications)
+  @JoinColumn({ name: 'userId' })
   user!: User;
 }
