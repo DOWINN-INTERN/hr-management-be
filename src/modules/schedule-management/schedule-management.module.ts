@@ -9,6 +9,7 @@ import { ScheduleChangeRequestsModule } from './schedule-change-requests/schedul
 import { ScheduleChangeResponsesModule } from './schedule-change-requests/schedule-change-responses/schedule-change-responses.module';
 import { SchedulesController } from './schedules.controller';
 import { SchedulesService } from './schedules.service';
+import { DefaultShiftsSeeder } from './services/default-shift-seeder.service';
 import { ShiftsModule } from './shifts/shifts.module';
 
 @Module({
@@ -51,7 +52,7 @@ import { ShiftsModule } from './shifts/shifts.module';
         ScheduleChangeRequestsModule,
         ScheduleChangeResponsesModule,
     ],
-    providers: [SchedulesService],
+    providers: [SchedulesService, DefaultShiftsSeeder],
     exports: [
         SchedulesService,
         GroupsModule,
