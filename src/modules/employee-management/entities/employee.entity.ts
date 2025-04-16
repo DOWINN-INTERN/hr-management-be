@@ -3,6 +3,7 @@ import { EmploymentStatus } from '@/common/enums/employment/employment-status.en
 import { EmploymentType } from '@/common/enums/employment/employment-type.enum';
 import { BaseEntity } from '@/database/entities/base.entity';
 import { User } from '@/modules/account-management/users/entities/user.entity';
+import { Attendance } from '@/modules/attendance-management/entities/attendance.entity';
 import { Role } from '@/modules/employee-management/roles/entities/role.entity';
 import { PayrollItem } from '@/modules/payroll-management/payroll-items/entities/payroll-item.entity';
 import { Schedule } from '@/modules/schedule-management/entities/schedule.entity';
@@ -12,8 +13,8 @@ import { Column, Entity, JoinColumn, JoinTable, ManyToMany, ManyToOne, OneToMany
 @Entity('employees')
 export class Employee extends BaseEntity<Employee> {
     @Column({ unique: true })
-    employeeNumber?: string;
-
+    employeeNumber!: number;
+    
     @Column({
         type: 'enum',
         enum: EmploymentStatus,
@@ -28,6 +29,8 @@ export class Employee extends BaseEntity<Employee> {
     })
     employmentCondition!: EmploymentCondition;
 
+    @Column({ nullable: true })
+    biometricsPassword?: string;
 
     @Column({ nullable: true })
     biometricsRole?: number;
@@ -61,7 +64,7 @@ export class Employee extends BaseEntity<Employee> {
     })
     roles?: Role[];
 
-    @OneToMany(() => PayrollItem, (payrollItem: PayrollItem) => payrollItem.employee)
+    @OneToMany(() => PayrollItem, (payrollItem: PayrollItem) => payrollItem.employee, { nullable: true })
     payrollItems?: PayrollItem[];
 
     @ManyToOne(() => Group, (group: Group) => group.employees, { nullable: true })
@@ -71,6 +74,9 @@ export class Employee extends BaseEntity<Employee> {
     @Column('decimal', { precision: 10, scale: 2, default: 0 })
     monthlyRate!: number;
 
-    @OneToMany(() => Schedule, (schedule: Schedule) => schedule.employee)
+    @OneToMany(() => Schedule, (schedule: Schedule) => schedule.employee, { nullable: true })
     schedules?: Schedule[];
+
+    @OneToMany(() => Attendance, (attendance: Attendance) => attendance.employee, { nullable: true })
+    attendances?: Attendance[];
 }

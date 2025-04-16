@@ -4,7 +4,7 @@ import { DayUtils } from '@/common/utils/day.util';
 import { UsersService } from '@/modules/account-management/users/users.service';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { addDays, isBefore, isSameDay, parseISO } from 'date-fns';
+import { addDays, format, isBefore, isSameDay, parseISO } from 'date-fns';
 import { Between, DeepPartial, In, Repository } from 'typeorm';
 import { EmployeesService } from '../employee-management/employees.service';
 import { Employee } from '../employee-management/entities/employee.entity';
@@ -27,6 +27,17 @@ export class SchedulesService extends BaseService<Schedule> {
         private readonly employeesService: EmployeesService
     ) {
         super(schedulesRepository, usersService);
+    }
+
+    async getEmployeeScheduleToday(employeeId: string)
+    {
+      return await this.schedulesRepository.findOne({
+        where: {
+          employee: { id: employeeId },
+          date: parseISO(format(new Date(), 'yyyy-MM-dd'))
+        },
+        relations: { shift: true, holiday: true, employee: true }
+      });
     }
 
     async generateSchedulesForEmployees(

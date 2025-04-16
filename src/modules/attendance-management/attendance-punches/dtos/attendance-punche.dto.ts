@@ -4,8 +4,8 @@ import { ApiProperty } from "@nestjs/swagger";
 import { IsNotEmpty, IsOptional, IsString } from "class-validator";
 import { PartialType } from "@nestjs/swagger";
 
-export class WorkTimeDto extends PartialType(BaseDto) {
-    @ApiProperty({ description: 'Name of the work-time' })
+export class AttendancePuncheDto extends PartialType(BaseDto) {
+    @ApiProperty({ description: 'Name of the attendance-punche' })
     @IsNotEmpty()
     @IsString()
     name!: string;
@@ -13,6 +13,6 @@ export class WorkTimeDto extends PartialType(BaseDto) {
     // Add your DTO fields here
 }
 
-export class UpdateWorkTimeDto extends PartialType(WorkTimeDto) {}
+export class UpdateAttendancePuncheDto extends PartialType(AttendancePuncheDto) {}
 
-export class GetWorkTimeDto extends createGetDto(WorkTimeDto) {}
+export class GetAttendancePuncheDto extends createGetDto(AttendancePuncheDto) {}

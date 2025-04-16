@@ -1,10 +1,31 @@
+import { AttendanceStatus } from '@/common/enums/attendance-status.enum';
 import { BaseEntity } from '@/database/entities/base.entity';
-import { Column, Entity } from 'typeorm';
+import { Employee } from '@/modules/employee-management/entities/employee.entity';
+import { Schedule } from '@/modules/schedule-management/entities/schedule.entity';
+import { Column, Entity, JoinColumn, ManyToOne, OneToMany, OneToOne } from 'typeorm';
+import { AttendancePunches } from '../attendance-punches/entities/attendance-punches.entity';
 
 @Entity('attendances')
 export class Attendance extends BaseEntity<Attendance> {
-    @Column()
-    name?: string;
-    
-    // Add your entity fields here
+    @ManyToOne(() => Employee, (employee: Employee) => employee.attendances, { eager: true })
+    @JoinColumn({ name: 'employeeId' })
+    employee!: Employee;
+
+    @Column({ 
+        type: 'simple-array',
+    })
+    statuses!: AttendanceStatus[];
+
+    @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
+    timeIn!: Date;
+
+    @Column({ type: 'timestamp', nullable: true })
+    timeOut?: Date;
+
+    @OneToOne(() => Schedule, (schedule: Schedule) => schedule.attendance, { eager: true })
+    @JoinColumn({ name: 'scheduleId' })
+    schedule!: Schedule;
+
+    @OneToMany(() => AttendancePunches, (attendancePunches: AttendancePunches) => attendancePunches.attendance, { cascade: true })
+    attendancePunches!: AttendancePunches[];
 }

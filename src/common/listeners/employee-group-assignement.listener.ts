@@ -21,16 +21,17 @@ export class EmployeeGroupAssignmentListener {
     this.logger.log(`Handling employee assignment event for ${event.employees.length} employees to group ${event.group.id}`);
     
     const currentDate = new Date();
-    const activeCutoff = await this.cutoffsService.getRepository().findOne({
+    // Find all future active cutoffs instead of just one
+    const activeCutoffs = await this.cutoffsService.getRepository().find({
         where: {
             status: CutoffStatus.ACTIVE,
-            startDate: MoreThan(currentDate), // TypeORM operator to get dates greater than current date
+            startDate: MoreThan(currentDate),
         },
-        order: { startDate: 'ASC' } // ASC to get the earliest date that meets criteria
+        order: { startDate: 'ASC' }
     });
     
-    if (!activeCutoff) {
-      this.logger.warn('No active cutoff found, skipping schedule generation');
+    if (activeCutoffs.length === 0) {
+      this.logger.warn('No active cutoffs found, skipping schedule generation');
       return;
     }
     
@@ -42,14 +43,18 @@ export class EmployeeGroupAssignmentListener {
     // Get employee IDs
     const employeeIds = event.employees.map((employee: Employee) => employee.id);
     
-    // Queue schedule generation
-    await this.scheduleGenerationService.addGenerationJob({
-      employeeIds,
-      groupId: event.group.id,
-      cutoffId: activeCutoff.id,
-      requestedBy: event.assignedBy,
-    });
+    // Queue schedule generation jobs for each cutoff
+    for (const cutoff of activeCutoffs) {
+      await this.scheduleGenerationService.addGenerationJob({
+        employeeIds,
+        groupId: event.group.id,
+        cutoffId: cutoff.id,
+        requestedBy: event.assignedBy,
+      });
+      
+      this.logger.log(`Schedule generation job queued for cutoff ${cutoff.id} (${new Date(cutoff.startDate).toLocaleDateString()})`);
+    }
     
-    this.logger.log(`Schedule generation job queued for ${employeeIds.length} employees`);
+    this.logger.log(`Schedule generation completed for ${employeeIds.length} employees across ${activeCutoffs.length} future cutoffs`);
   }
 }

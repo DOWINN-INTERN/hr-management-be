@@ -26,8 +26,8 @@ export class ProfilesController extends createController<
         return await super.findOne(id);
     }
 
-    override delete(id: string): Promise<GeneralResponseDto> {
-        return super.delete(id);
+    override async delete(id: string, deletedBy: string): Promise<GeneralResponseDto> {
+        return super.delete(id, deletedBy);
     }
     
     override deleteMany(ids: string[], hardDelete?: boolean): Promise<void> {

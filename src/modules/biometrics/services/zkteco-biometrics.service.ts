@@ -395,8 +395,6 @@ export class ZKTecoBiometricsService extends BaseBiometricsService implements On
                 verificationMode: record.verificationMode,
                 status: record.status,
                 workcode: record.workcode,
-                isSynced: false,
-                retrievedAt: new Date(),
                 data: record.data
             };
             
@@ -1126,14 +1124,9 @@ export class ZKTecoBiometricsService extends BaseBiometricsService implements On
      */
     async clearAttendanceRecords(deviceId: string): Promise<boolean> {
         const zkDevice = this.getConnectedDevice(deviceId);
-
         try {
-            this.logger.log(`Clearing attendance records from device ${deviceId}`);
-            
             // Use the clearAttendanceLog method
             await zkDevice.clearAttendanceLog();
-            
-            this.logger.log(`Successfully cleared attendance records from device ${deviceId}`);
             return true;
         } catch (error) {
             const errorMessage = error instanceof Error ? error.message : String(error);

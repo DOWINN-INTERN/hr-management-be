@@ -1,8 +1,9 @@
 import { ScheduleStatus } from '@/common/enums/schedule-status';
 import { BaseEntity } from '@/database/entities/base.entity';
+import { Attendance } from '@/modules/attendance-management/entities/attendance.entity';
 import { Employee } from '@/modules/employee-management/entities/employee.entity';
 import { Cutoff } from '@/modules/payroll-management/cutoffs/entities/cutoff.entity';
-import { Column, Entity, JoinColumn, ManyToOne, OneToMany } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, OneToMany, OneToOne } from 'typeorm';
 import { Holiday } from '../holidays/entities/holiday.entity';
 import { ScheduleChangeRequest } from '../schedule-change-requests/entities/schedule-change-request.entity';
 import { Shift } from '../shifts/entities/shift.entity';
@@ -18,11 +19,27 @@ export class Schedule extends BaseEntity<Schedule> {
     @Column({ type: 'enum', enum: ScheduleStatus, default: ScheduleStatus.DEFAULT })
     status?: ScheduleStatus;
 
+    @OneToOne(() => Attendance, (attendance: Attendance) => attendance.schedule, { nullable: true })
+    @JoinColumn({ name: 'attendanceId' })
+    attendance?: Attendance;
+
+    @Column({ type: 'time', nullable: true })
+    startTime?: string;
+    
+    @Column({ type: 'time', nullable: true })
+    endTime?: string;
+    
+    @Column({ type: 'int', nullable: true })
+    breakTime?: number; // in minutes
+    
+    @Column({ type: 'int', nullable: true })
+    duration?: number; // in hours
+
     @ManyToOne(() => Shift, (shift: Shift) => shift.schedules)
     @JoinColumn({ name: 'shiftId' })
     shift!: Shift;
 
-    @ManyToOne(() => Holiday, (holiday: Holiday) => holiday.schedules, { nullable: true })
+    @ManyToOne(() => Holiday, (holiday: Holiday) => holiday.schedules, { nullable: true, eager: true })
     @JoinColumn({ name: 'holidayId' })
     holiday?: Holiday;
 

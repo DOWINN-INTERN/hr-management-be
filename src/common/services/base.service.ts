@@ -977,14 +977,21 @@ export abstract class BaseService<T extends BaseEntity<T>> {
   }
   
   // DONE
-  async softDelete(id: string, deletedBy?: string): Promise<T> {
+  async softDelete(id: string, deletedBy?: string): Promise<GeneralResponseDto> {
     if (deletedBy) {
         await this.repository.update(id, { deletedBy } as any);
     }
     
     await this.repository.softDelete(id);
     
-    return this.findOneByOrFail({ id } as Partial<T>);
+    // return this.findOneByOrFail({ id } as Partial<T>);
+
+    const response = new GeneralResponseDto();
+    response.statusCode = HttpStatus.NO_CONTENT;
+    response.timestamp = new Date().toISOString();
+    response.detail = 'Deletion Successful';
+    response.message = `${this.entityName} with id ${id} was deleted successfully`;
+    return response;
   }
 
   async save(entity: T): Promise<T> {

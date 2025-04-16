@@ -258,7 +258,7 @@ export class AuthService {
     this.clearAuthCookies(response);
   }
 
-  async refreshTokens(refreshToken: string): Promise<LoginResponseDto> {
+  async refreshTokens(refreshToken: string, request?: Request): Promise<LoginResponseDto> {
     const session = await this.sessionsService.findOneBy(
       { refreshToken },
       {
@@ -288,6 +288,23 @@ export class AuthService {
     const newRefreshToken = await this.jwtService.createRefreshToken();
     const newPayload = this.jwtService.createPayload(user, newRefreshToken);
     const accessToken = await this.jwtService.createToken(newPayload);
+
+    // Calculate expiration time for refresh token
+    const refreshTokenExpirationMinutes = this.configService.getOrThrow<number>('REFRESH_TOKEN_EXPIRATION_MINUTES');
+    const expiresAt = new Date();
+    expiresAt.setMinutes(expiresAt.getMinutes() + refreshTokenExpirationMinutes * 2);
+
+    // save refresh token to database
+    await this.sessionsService.create({
+      refreshToken,
+      userId: user.id,
+      expiresAt,
+      userAgent: request?.headers['user-agent'],
+      ipAddress: request?.ip,
+      deviceId: Array.isArray(request?.headers['device-id']) 
+      ? request?.headers['device-id'][0] 
+      : request?.headers['device-id'],
+    }, user.id);
     
     return {
       accessToken,

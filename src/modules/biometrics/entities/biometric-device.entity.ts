@@ -1,5 +1,6 @@
 import { BaseEntity } from '@/database/entities/base.entity';
-import { Column, Entity } from 'typeorm';
+import { AttendancePunches } from '@/modules/attendance-management/attendance-punches/entities/attendance-punches.entity';
+import { Column, Entity, OneToMany } from 'typeorm';
 
 @Entity('biometric_devices')
 export class BiometricDevice extends BaseEntity<BiometricDevice> {
@@ -32,4 +33,7 @@ export class BiometricDevice extends BaseEntity<BiometricDevice> {
 
     @Column({ default: false })
     isConnected!: boolean;
+
+    @OneToMany(() => AttendancePunches, (attendancePunches: AttendancePunches) => attendancePunches.biometricDevice, { nullable: true })
+    attendancePunches?: AttendancePunches[];
 }

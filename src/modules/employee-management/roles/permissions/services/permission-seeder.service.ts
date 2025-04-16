@@ -34,19 +34,19 @@ export class PermissionSeederService implements OnModuleInit {
     const factoryControllerPerms = await this.scanFactoryControllers();
     this.logger.log(`Found ${factoryControllerPerms.length} permissions from factory controllers`);
     
-    // Get permissions from regular BaseController extensions
-    const baseControllerPerms = await this.scanBaseControllerExtensions();
-    this.logger.log(`Found ${baseControllerPerms.length} permissions from BaseController extensions`);
+    // // Get permissions from regular BaseController extensions
+    // const baseControllerPerms = await this.scanBaseControllerExtensions();
+    // this.logger.log(`Found ${baseControllerPerms.length} permissions from BaseController extensions`);
     
-    // Get permissions from code patterns
-    const codePatternPerms = await this.scanForPermissions();
-    this.logger.log(`Found ${codePatternPerms.length} permissions from code patterns`);
+    // // Get permissions from code patterns
+    // const codePatternPerms = await this.scanForPermissions();
+    // this.logger.log(`Found ${codePatternPerms.length} permissions from code patterns`);
     
     // Combine all permissions
-    const allPermissions = [...factoryControllerPerms, ...baseControllerPerms, ...codePatternPerms];
+    const allPermissions = [...factoryControllerPerms];
     const uniquePermissions = this.removeDuplicates(allPermissions);
     
-    this.logger.log(`Total unique permissions found: ${uniquePermissions.length}`);
+    // this.logger.log(`Total unique permissions found: ${uniquePermissions.length}`);
     
     let created = 0;
     let updated = 0;
@@ -87,7 +87,7 @@ export class PermissionSeederService implements OnModuleInit {
           const typeParams = factoryMatch[2].split(',').map(param => param.trim());
           const entityName = factoryMatch[3];
           
-          this.logger.debug(`Found factory controller: ${controllerName} for entity ${entityName}`);
+          // this.logger.debug(`Found factory controller: ${controllerName} for entity ${entityName}`);
           
           // Extract parameters passed to createController
           const paramsPattern = /createController\s*<[^>]*>\s*\(\s*['"]([^'"]+)['"]\s*,\s*[^,]+\s*,\s*([^,]+)(?:\s*,\s*([^,]+))?(?:\s*,\s*([^,)]+))?\s*\)/;

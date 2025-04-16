@@ -5,8 +5,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { AttendancesController } from './attendances.controller';
 import { AttendancesService } from './attendances.service';
 import { Attendance } from './entities/attendance.entity';
-import { WorkHourModule } from './work-hour/work-hour.module';
-import { WorkTimeModule } from './work-time/work-time.module';
+import { AttendancePunchesModule } from './attendance-punches/attendance-punches.module';
 
 @Module({
     imports: [
@@ -15,27 +14,15 @@ import { WorkTimeModule } from './work-time/work-time.module';
         RouterModule.register([
             {
                   path: 'attendances',
-                  module: AttendanceManagementModule,
-                  children: [
-                  {
-                      path: 'work-time',
-                      module: WorkTimeModule
-                  },
-                {
-                      path: 'work-hour',
-                      module: WorkHourModule
-                  }
-                  ]
+                  module: AttendanceManagementModule
               }
         ]),
-        WorkTimeModule,
-        WorkHourModule,
+        AttendancePunchesModule,
     ],
     providers: [AttendancesService],
     exports: [
         AttendancesService,
-        WorkTimeModule,
-        WorkHourModule,
+        AttendancePunchesModule,
     ],
     controllers: [AttendancesController],
 })

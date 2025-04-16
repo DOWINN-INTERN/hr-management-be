@@ -133,16 +133,6 @@ export interface AttendanceRecord {
     workcode?: number;
     
     /**
-     * Flag indicating if this record has been synchronized with central system
-     */
-    isSynced?: boolean;
-    
-    /**
-     * When the record was retrieved from the device
-     */
-    retrievedAt?: Date;
-    
-    /**
      * Additional custom data associated with the attendance record
      */
     data?: Record<string, any>;

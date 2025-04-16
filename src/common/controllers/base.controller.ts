@@ -413,11 +413,11 @@ export abstract class BaseController<T extends BaseEntity<T>, GetDto, EntityDto 
 
     @Delete('delete/:id')
     @Authorize({ endpointType: Action.DELETE })
-    async delete(@Param('id') id: string): Promise<GeneralResponseDto> {
-        return await this.baseService.delete(id);
+    async delete(@Param('id') id: string, @CurrentUser('sub') deletedBy: string): Promise<GeneralResponseDto> {
+        return await this.baseService.softDelete(id, deletedBy);
     }
 
-    @Delete()
+    // @Delete()
     @Authorize({ endpointType: Action.DELETE })
     @ApiOperation({ summary: 'Delete multiple entities' })
     @ApiBody({

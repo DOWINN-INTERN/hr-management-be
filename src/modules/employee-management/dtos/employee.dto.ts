@@ -6,18 +6,13 @@ import { EmploymentType } from "@/common/enums/employment/employment-type.enum";
 import { createGetDto } from "@/common/factories/create-get-dto.factory";
 import { ApiProperty, ApiPropertyOptional, PartialType } from "@nestjs/swagger";
 import { Type } from "class-transformer";
-import { IsDate, IsEnum, IsNotEmpty, IsNumber, IsOptional, IsString, IsUUID, Min, ValidateNested } from "class-validator";
+import { IsDate, IsEnum, IsNotEmpty, IsNumber, IsOptional, IsUUID, Min, ValidateNested } from "class-validator";
 
 export class EmployeeDto extends PartialType(BaseDto) {
     @ApiProperty({ description: 'User ID associated with the employee' })
     @IsNotEmpty()
     @IsUUID()
     userId!: string;
-
-    @ApiProperty({ description: 'Unique employee number' })
-    @IsNotEmpty()
-    @IsString()
-    employeeNumber!: string;
 
     @ApiProperty({
         description: 'Employment status of the employee',

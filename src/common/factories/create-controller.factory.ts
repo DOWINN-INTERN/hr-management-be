@@ -109,8 +109,8 @@ export function createController<TEntity extends BaseEntity<TEntity>, GetDto, Cr
     @ApiResponse({ status: HttpStatus.INTERNAL_SERVER_ERROR, description: 'Internal server error.', type: GeneralResponseDto })
     @ApiResponse({ status: HttpStatus.FORBIDDEN, description: 'Forbidden.', type: GeneralResponseDto })
     @ApiResponse({ status: HttpStatus.CONFLICT, description: 'Cannot delete due to existing references.', type: GeneralResponseDto })
-    override async delete(@Param('id') id: string): Promise<GeneralResponseDto> {
-      return await super.delete(id);
+    override async delete(@Param('id') id: string, @CurrentUser('sub') deletedBy: string): Promise<GeneralResponseDto> {
+      return await super.delete(id, deletedBy);
     }
   }
     

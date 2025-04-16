@@ -19,6 +19,21 @@ export class EmployeesService extends BaseService<Employee> {
     }
 
     override async create(createDto: DeepPartial<Employee>, createdBy?: string): Promise<Employee> {
+        
+        // Get the highest employee number
+        const highestEmpNum = await this.employeesRepository
+            .createQueryBuilder('employee')
+            .select('MAX(employee.employeeNumber)', 'max')
+            .getRawOne();
+        
+        // Increment by 1 (or start at 1000 if no employees exist)
+        const nextEmpNum = (highestEmpNum?.max || 999) + 1;
+        
+        // check if createDto has employeeNumber
+        if (!createDto.employeeNumber) {
+            createDto.employeeNumber = nextEmpNum;
+        }
+        
         // find employee role by name
         const employeeRole = await this.rolesService.findOneByOrFail({
             name: Role.EMPLOYEE,

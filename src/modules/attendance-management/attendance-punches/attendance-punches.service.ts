@@ -3,15 +3,15 @@ import { UsersService } from '@/modules/account-management/users/users.service';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { WorkTime } from './entities/work-time.entity';
+import { AttendancePunches } from './entities/attendance-punches.entity';
 
 @Injectable()
-export class WorkTimeService extends BaseService<WorkTime> {
+export class AttendancePunchesService extends BaseService<AttendancePunches> {
     constructor(
-        @InjectRepository(WorkTime)
-        private readonly workTimeRepository: Repository<WorkTime>,
+        @InjectRepository(AttendancePunches)
+        private readonly attendancePunchesRepository: Repository<AttendancePunches>,
         protected readonly usersService: UsersService
     ) {
-        super(workTimeRepository, usersService);
+        super(attendancePunchesRepository, usersService);
     }
 }
