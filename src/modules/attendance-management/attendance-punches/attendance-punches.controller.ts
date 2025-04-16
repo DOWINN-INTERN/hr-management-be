@@ -1,7 +1,7 @@
 import { createController } from "@/common/factories/create-controller.factory";
 import { AttendancePunchesService } from "./attendance-punches.service";
-import { AttendancePuncheDto, GetAttendancePuncheDto, UpdateAttendancePuncheDto } from "./dtos/attendance-punche.dto";
-import { AttendancePunches } from "./entities/attendance-punches.entity";
+import { AttendancePuncheDto, GetAttendancePuncheDto, UpdateAttendancePuncheDto } from "./dtos/attendance-punch.dto";
+import { AttendancePunches } from "./entities/attendance-punch.entity";
 
 export class AttendancePunchesController extends createController<
     AttendancePunches,

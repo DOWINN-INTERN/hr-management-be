@@ -3,7 +3,7 @@ import { BaseEntity } from '@/database/entities/base.entity';
 import { Employee } from '@/modules/employee-management/entities/employee.entity';
 import { Schedule } from '@/modules/schedule-management/entities/schedule.entity';
 import { Column, Entity, JoinColumn, ManyToOne, OneToMany, OneToOne } from 'typeorm';
-import { AttendancePunches } from '../attendance-punches/entities/attendance-punches.entity';
+import { AttendancePunches } from '../attendance-punches/entities/attendance-punch.entity';
 
 @Entity('attendances')
 export class Attendance extends BaseEntity<Attendance> {

@@ -140,9 +140,6 @@ export class BiometricsPollingService implements OnModuleInit, OnModuleDestroy {
           this.logger.error(`Polling error for ${deviceId}: ${error instanceof Error 
             ? JSON.stringify(Object.assign({}, error, { message: error.message, stack: error.stack })) 
             : JSON.stringify(error)}`);
-
-          // stop polling if error
-          this.stopPolling(deviceId);
       }
     }, pollingInterval);
   

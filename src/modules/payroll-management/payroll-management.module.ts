@@ -2,12 +2,12 @@ import { UsersModule } from '@/modules/account-management/users/users.module';
 import { Module } from '@nestjs/common';
 import { RouterModule } from '@nestjs/core';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { CutoffsModule } from './cutoffs/cutoffs.module';
 import { Payroll } from './entities/payroll.entity';
 import { PayrollItemTypesModule } from './payroll-item-types/payroll-item-types.module';
 import { PayrollItemsModule } from './payroll-items/payroll-items.module';
 import { PayrollsController } from './payrolls.controller';
 import { PayrollsService } from './payrolls.service';
-import { CutoffsModule } from './cutoffs/cutoffs.module';
 
 @Module({
     imports: [
@@ -18,14 +18,18 @@ import { CutoffsModule } from './cutoffs/cutoffs.module';
                   path: 'payrolls',
                   module: PayrollManagementModule,
                   children: [
-                  {
-                      path: 'payroll-items',
-                      module: PayrollItemsModule
-                  },
-                {
-                      path: 'payroll-item-types',
-                      module: PayrollItemTypesModule
-                  }
+                    {
+                        path: 'payroll-items',
+                        module: PayrollItemsModule
+                    },
+                    {
+                        path: 'payroll-item-types',
+                        module: PayrollItemTypesModule
+                    },
+                    {
+                        path: 'cutoffs',
+                        module: CutoffsModule
+                    }
                   ]
               }
         ]),

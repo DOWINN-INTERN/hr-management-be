@@ -1,5 +1,5 @@
 import { BaseEntity } from '@/database/entities/base.entity';
-import { AttendancePunches } from '@/modules/attendance-management/attendance-punches/entities/attendance-punches.entity';
+import { AttendancePunches } from '@/modules/attendance-management/attendance-punches/entities/attendance-punch.entity';
 import { Column, Entity, OneToMany } from 'typeorm';
 
 @Entity('biometric_devices')
