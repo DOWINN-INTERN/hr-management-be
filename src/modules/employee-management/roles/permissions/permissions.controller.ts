@@ -16,8 +16,8 @@ export class PermissionsController extends createController<
         return await super.findOne(id, relations, select);
     }
 
-    override async delete(id: string, deletedBy: string): Promise<GeneralResponseDto> {
-        return await super.delete(id, deletedBy);
+    override async delete(id: string): Promise<GeneralResponseDto> {
+        return await super.delete(id);
     }
 
     override async deleteMany(ids: string[], hardDelete?: boolean): Promise<void> {

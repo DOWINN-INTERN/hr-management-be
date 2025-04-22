@@ -15,6 +15,12 @@ import { GroupsService } from './groups/groups.service';
 import { HolidaysService } from './holidays/holidays.service';
 import { Shift } from './shifts/entities/shift.entity';
 
+export interface ScheduleDeletionParams {
+  employeeIds: string[];
+  groupId: string;
+  cutoffId: string;
+}
+
 @Injectable()
 export class SchedulesService extends BaseService<Schedule> {
     constructor(
@@ -39,6 +45,39 @@ export class SchedulesService extends BaseService<Schedule> {
         relations: { shift: true, holiday: true, employee: true }
       });
     }
+
+    /**
+   * Delete schedules for employees in a specific group and cutoff
+   * Uses hard delete to permanently remove the records
+   */
+  async deleteSchedules(params: ScheduleDeletionParams): Promise<void> {
+    const { employeeIds, groupId, cutoffId } = params;
+    
+    this.logger.log(
+      `Deleting schedules for ${employeeIds.length} employees in group ${groupId} for cutoff ${cutoffId}`
+    );
+    
+    try {
+      // Directly delete schedules matching our criteria
+      // Using hard delete as requested
+      const result = await this.schedulesRepository.delete({
+        employee: { id: In(employeeIds) },
+        cutoff: { id: cutoffId }
+      });
+      
+      this.logger.log(`Deleted ${result.affected || 0} schedules for employees from group ${groupId}`);
+    } catch (error) {
+      if (error instanceof Error) {
+        this.logger.error(
+          `Failed to delete schedules: ${error.message}`, 
+          error.stack
+        );
+      } else {
+        this.logger.error(`Failed to delete schedules: Unknown error`);
+      }
+      throw error;
+    }
+  }
 
     async generateSchedulesForEmployees(
         employeeIds: string[],

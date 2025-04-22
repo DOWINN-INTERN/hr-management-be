@@ -1,6 +1,7 @@
 import { CutoffStatus } from '@/common/enums/cutoff-status.enum';
 import { CutoffType } from '@/common/enums/cutoff-type.enum';
 import { BaseEntity } from '@/database/entities/base.entity';
+import { FinalWorkHour } from '@/modules/attendance-management/final-work-hours/entities/final-work-hour.entity';
 import { Schedule } from '@/modules/schedule-management/entities/schedule.entity';
 import { Column, Entity, OneToMany } from 'typeorm';
 import { Payroll } from '../../entities/payroll.entity';
@@ -22,9 +23,12 @@ export class Cutoff extends BaseEntity<Cutoff> {
     @Column({ type: 'enum', enum: CutoffType, default: CutoffType.BI_WEEKLY })
     cutoffType!: CutoffType;
 
-    @OneToMany(() => Payroll, (payroll: Payroll) => payroll.cutoff)
+    @OneToMany(() => Payroll, (payroll: Payroll) => payroll.cutoff, { nullable: true })
     payrolls?: Payroll[];
 
-    @OneToMany(() => Schedule, (schedule: Schedule) => schedule.cutoff)
+    @OneToMany(() => Schedule, (schedule: Schedule) => schedule.cutoff, { nullable: true })
     schedules?: Schedule[];
+
+    @OneToMany(() => FinalWorkHour, (finalWorkHour: FinalWorkHour) => finalWorkHour.cutoff, { nullable: true })
+    finalWorkHours?: FinalWorkHour[];
 }

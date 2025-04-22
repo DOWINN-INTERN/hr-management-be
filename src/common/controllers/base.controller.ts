@@ -14,7 +14,7 @@ import {
     Put,
     Query
 } from '@nestjs/common';
-import { ApiBody, ApiOperation, ApiParam, ApiQuery, ApiResponse } from '@nestjs/swagger';
+import { ApiBody, ApiOperation, ApiQuery, ApiResponse } from '@nestjs/swagger';
 import { ClassConstructor, plainToInstance } from 'class-transformer';
 import { DeepPartial, FindOptionsOrder, FindOptionsRelations, FindOptionsSelect } from 'typeorm';
 import { Authorize } from '../decorators/authorize.decorator';
@@ -102,73 +102,6 @@ export abstract class BaseController<T extends BaseEntity<T>, GetDto, EntityDto 
 
     @Get()
     @Authorize({ endpointType: Action.READ })
-    @ApiOperation({
-        summary: 'Get filtered entities with advanced filtering',
-        description: `
-        # Advanced Filtering Guide
-        
-        This endpoint supports complex filtering using JSON objects in the filter parameter.
-        
-        ## Basic Filters
-        Simple equality: \`?filter={"status":"active"}\`
-        
-        ## Advanced Operators
-        - Equal: \`?filter={"name":{"eq":"John"}}\`
-        - Not equal: \`?filter={"status":{"ne":"deleted"}}\`
-        - Greater than: \`?filter={"age":{"gt":18}}\`
-        - Greater than or equal: \`?filter={"age":{"gte":21}}\`
-        - Less than: \`?filter={"age":{"lt":65}}\`
-        - Less than or equal: \`?filter={"price":{"lte":100}}\`
-        - Like (contains): \`?filter={"name":{"like":"oh"}}\`
-        - Case-insensitive like: \`?filter={"name":{"ilike":"john"}}\`
-        - Between: \`?filter={"price":{"between":[10,50]}}\`
-        - In array: \`?filter={"status":{"in":["active","pending"]}}\`
-        - Not in array: \`?filter={"status":{"nin":["deleted","archived"]}}\`
-        - Is null: \`?filter={"deletedAt":{"isNull":true}}\`
-        
-        ## Logical Operators
-        
-        ### AND (Default)
-        Multiple conditions combined with AND logic (all must match):
-        \`?filter={"status":"active","age":{"gte":21}}\`
-        
-        ### OR
-        Any condition can match (using the special OR property):
-        \`?filter={"OR":[{"status":"active"},{"featured":true}]}\`
-        
-        ## Relational Filtering
-        
-        ### Basic relation filtering:
-        \`?filter={"user.email":"example@email.com"}\`
-        
-        ### Advanced relation filtering with operators:
-        \`?filter={"user.profile.firstName":{"ilike":"jo"}}\`
-        
-        ### Complex nested relation filtering:
-        \`?filter={"user.profile.address.city":{"eq":"New York"}}\`
-        
-        ### Combining relation filters with logical operators:
-        \`?filter={"OR":[{"user.profile.firstName":{"ilike":"jo"}},{"user.email":{"like":"gmail"}}]}\`
-        
-        ## Field Selection
-        Select specific fields: \`?select=["id","name","email"]\`
-        Select fields from relations: \`?select=["id","name","user.id","user.email","category.name"]\`
-        
-        ## Sorting
-        Sort by field: \`?sort={"createdAt":"DESC"}\`
-        Multiple fields: \`?sort={"status":"ASC","createdAt":"DESC"}\`
-        Sort by relation field: \`?sort={"user.name":"ASC"}\`
-        
-        ## Pagination
-        Page size: \`?take=10\`
-        Skip records: \`?skip=10\` (for page 2 with size 10)
-        
-        ## Relations
-        Include related entities: \`?relations=["user","category"]\`
-        Include nested relations: \`?relations=["user","user.profile","user.profile.address"]\`
-        Alternative format: \`?relations={"user":true,"category":{"subcategories":true}}\`
-        `,
-    })
     @ApiQuery({
         name: 'filter',
         required: false,
@@ -280,47 +213,6 @@ export abstract class BaseController<T extends BaseEntity<T>, GetDto, EntityDto 
 
     @Get('find')
     @Authorize({ endpointType: Action.READ })
-    @ApiOperation({ 
-        summary: 'Find an entity by any field',
-        description: 'Search for an entity using field-value pairs. Multiple criteria can be combined.'
-    })
-    @ApiQuery({ 
-        name: 'fields', 
-        required: true, 
-        type: String, 
-        description: 'Search fields in format field:value (comma-separated)',
-        example: 'id:123,name:example'
-    })
-    @ApiQuery({ 
-        name: 'relations', 
-        required: false, 
-        type: String, 
-        description: 'Relations to include in the response (comma-separated)',
-        example: 'user,category,tags'
-    })
-    @ApiQuery({ 
-        name: 'select', 
-        required: false, 
-        type: String, 
-        description: 'Fields to select in the response (comma-separated). Only these fields will be returned.',
-        example: 'id,name,createdAt'
-    })
-    @ApiResponse({ 
-        status: HttpStatus.OK, 
-        description: 'Entity found successfully',
-        schema: {
-            type: 'object',
-            example: {
-            id: 123,
-            name: 'Example Entity',
-            createdAt: '2023-01-01T00:00:00Z'
-            }
-        }
-    })
-    @ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Entity not found with the specified criteria' })
-    @ApiResponse({ status: HttpStatus.FORBIDDEN, description: 'Forbidden. User does not have permission to access this resource' })
-    @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized. Authentication is required' })
-    @ApiResponse({ status: HttpStatus.INTERNAL_SERVER_ERROR, description: 'Internal server error' })
     async findOne(
         @Query('fields') fieldsString: string,
         @Query('relations') relations?: string,
@@ -383,15 +275,6 @@ export abstract class BaseController<T extends BaseEntity<T>, GetDto, EntityDto 
     
     @Get('find/:id')
     @Authorize({ endpointType: Action.READ })
-    @ApiOperation({ summary: 'Get an entity by id' })
-    @ApiParam({ name: 'id', description: 'Entity ID' })
-    @ApiQuery({ name: 'relations', required: false, type: String, description: 'Relations to include (comma-separated)' })
-    @ApiQuery({ name: 'select', required: false, type: String, description: 'Fields to select (comma-separated)' })
-    @ApiResponse({ status: HttpStatus.FORBIDDEN, description: 'Forbidden.' })
-    @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized.' })
-    @ApiResponse({ status: HttpStatus.INTERNAL_SERVER_ERROR, description: 'Internal server error.' })
-    @ApiResponse({ status: HttpStatus.OK, description: 'Return the entity' })
-    @ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Entity not found' })
     async findById(
         @Param('id') id: string,
         @Query('relations') relations?: string,
@@ -411,10 +294,16 @@ export abstract class BaseController<T extends BaseEntity<T>, GetDto, EntityDto 
     //     return await this.baseService.findAll(paginationDto);
     // }
 
+    @Delete('delete/soft/:id')
+    @Authorize({ endpointType: Action.DELETE })
+    async softDelete(@Param('id') id: string, @CurrentUser('sub') deletedBy: string): Promise<GeneralResponseDto> {
+        return await this.baseService.softDelete(id, deletedBy);
+    }
+
     @Delete('delete/:id')
     @Authorize({ endpointType: Action.DELETE })
-    async delete(@Param('id') id: string, @CurrentUser('sub') deletedBy: string): Promise<GeneralResponseDto> {
-        return await this.baseService.softDelete(id, deletedBy);
+    async delete(@Param('id') id: string): Promise<GeneralResponseDto> {
+        return await this.baseService.delete(id);
     }
 
     // @Delete()

@@ -16,7 +16,7 @@ export class ActivityLog extends BaseEntity<ActivityLog> {
     logType!: LogType;
 
     @ManyToOne(() => User, (user: User) => user.activityLogs)
-    @JoinColumn({ name: 'userId' })
+    @JoinColumn({ name: 'userId' }) 
     actor!: User;
 
     @Column({ nullable: true })

@@ -25,11 +25,15 @@ export class ProfilesController extends createController<
     override async findOne(id: string): Promise<GetProfileDto> {
         return await super.findOne(id);
     }
-
-    override async delete(id: string, deletedBy: string): Promise<GeneralResponseDto> {
-        return super.delete(id, deletedBy);
-    }
     
+    override async softDelete(id: string, deletedBy: string): Promise<GeneralResponseDto> {
+        return super.softDelete(id, deletedBy);
+    }
+
+    override async delete(id: string): Promise<GeneralResponseDto> {
+        return super.delete(id);
+    }
+
     override deleteMany(ids: string[], hardDelete?: boolean): Promise<void> {
         return super.deleteMany(ids, hardDelete);
     }

@@ -4,7 +4,9 @@ import { EmploymentType } from '@/common/enums/employment/employment-type.enum';
 import { BaseEntity } from '@/database/entities/base.entity';
 import { User } from '@/modules/account-management/users/entities/user.entity';
 import { Attendance } from '@/modules/attendance-management/entities/attendance.entity';
+import { FinalWorkHour } from '@/modules/attendance-management/final-work-hours/entities/final-work-hour.entity';
 import { Role } from '@/modules/employee-management/roles/entities/role.entity';
+import { Payroll } from '@/modules/payroll-management/entities/payroll.entity';
 import { PayrollItem } from '@/modules/payroll-management/payroll-items/entities/payroll-item.entity';
 import { Schedule } from '@/modules/schedule-management/entities/schedule.entity';
 import { Group } from '@/modules/schedule-management/groups/entities/group.entity';
@@ -79,4 +81,10 @@ export class Employee extends BaseEntity<Employee> {
 
     @OneToMany(() => Attendance, (attendance: Attendance) => attendance.employee, { nullable: true })
     attendances?: Attendance[];
+
+    @OneToMany(() => FinalWorkHour, (finalWorkHour: FinalWorkHour) => finalWorkHour.employee, { nullable: true })
+    finalWorkHours?: FinalWorkHour[];
+
+    @OneToMany(() => Payroll, (payroll: Payroll) => payroll.employee, { nullable: true })
+    payrolls?: Payroll[];
 }

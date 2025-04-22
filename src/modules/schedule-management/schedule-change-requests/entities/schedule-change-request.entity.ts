@@ -1,4 +1,4 @@
-import { ScheduleChangeRequestStatus } from '@/common/enums/schedule-change-request-status.enum';
+import { RequestStatus } from '@/common/enums/request-status.enum';
 import { ScheduleChangeRequestType } from '@/common/enums/schedule-change-request-type.enum';
 import { BaseEntity } from '@/database/entities/base.entity';
 import { Document } from '@/modules/documents/entities/document.entity';
@@ -11,8 +11,8 @@ export class ScheduleChangeRequest extends BaseEntity<ScheduleChangeRequest> {
     @Column()
     reason!: string;
 
-    @Column({ type: 'enum', enum: ScheduleChangeRequestStatus, default: ScheduleChangeRequestStatus.PENDING })
-    status!: ScheduleChangeRequestStatus;
+    @Column({ type: 'enum', enum: RequestStatus, default: RequestStatus.PENDING })
+    status!: RequestStatus;
 
     @Column({ type: 'enum', enum: ScheduleChangeRequestType })
     type!: ScheduleChangeRequestType;
@@ -23,7 +23,7 @@ export class ScheduleChangeRequest extends BaseEntity<ScheduleChangeRequest> {
     @OneToMany(() => Document, (document: Document) => document.scheduleChangeRequest)
     documents!: Document[];
 
-    @OneToOne(() => ScheduleChangeResponse, (scheduleChangeResponse: ScheduleChangeResponse) => scheduleChangeResponse.scheduleChangeRequest)
+    @OneToOne(() => ScheduleChangeResponse, (scheduleChangeResponse: ScheduleChangeResponse) => scheduleChangeResponse.scheduleChangeRequest, { eager: true, nullable: true, cascade: true })
     @JoinColumn({ name: 'scheduleChangeResponseId' })
     scheduleChangeResponse?: ScheduleChangeResponse;
 }

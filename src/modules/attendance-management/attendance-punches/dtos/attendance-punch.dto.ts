@@ -4,7 +4,7 @@ import { ApiProperty, PartialType } from "@nestjs/swagger";
 import { Type } from "class-transformer";
 import { IsDateString, IsNotEmpty, IsNumber, IsString, IsUUID } from "class-validator";
 
-export class AttendancePuncheDto extends PartialType(BaseDto) {
+export class AttendancePunchDto extends PartialType(BaseDto) {
     @ApiProperty({ 
         description: 'Attendance associated with this punch',
         example: '123e4567-e89b-12d3-a456-426614174000'
@@ -47,6 +47,6 @@ export class AttendancePuncheDto extends PartialType(BaseDto) {
     employeeNumber!: number;
 }
 
-export class UpdateAttendancePuncheDto extends PartialType(AttendancePuncheDto) {}
+export class UpdateAttendancePunchDto extends PartialType(AttendancePunchDto) {}
 
-export class GetAttendancePuncheDto extends createGetDto(UpdateAttendancePuncheDto, 'attendance punch') {}
+export class GetAttendancePunchDto extends createGetDto(UpdateAttendancePunchDto, 'attendance punch') {}

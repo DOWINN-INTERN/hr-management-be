@@ -43,6 +43,9 @@ export class Schedule extends BaseEntity<Schedule> {
     @JoinColumn({ name: 'holidayId' })
     holiday?: Holiday;
 
+    @Column({ type: 'boolean', default: false })
+    restDay?: boolean;
+
     @ManyToOne(() => Employee, (employee: Employee) => employee.schedules)
     @JoinColumn({ name: 'employeeId' })
     employee!: Employee;

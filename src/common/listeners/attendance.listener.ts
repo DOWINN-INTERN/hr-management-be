@@ -13,8 +13,9 @@ import { ATTENDANCE_EVENTS, AttendanceRecordedEvent } from '../events/attendance
 @Injectable()
 export class AttendanceListener {
   private readonly logger = new Logger(AttendanceListener.name);
-  private readonly LATE_THRESHOLD_MINUTES = 10; // Consider late after 10 minutes
-  private readonly EARLY_LEAVE_THRESHOLD_MINUTES = 10; // Consider early leave if leaving 10+ minutes before end time
+  private readonly LATE_THRESHOLD_MINUTES = 5; // Consider late after 10 minutes
+  private readonly OVER_TIME_THRESHOLD_MINUTES = 30; // Consider overtime if more than 30 minutes
+  private readonly UNDER_TIME_THRESHOLD_MINUTES = 0; // Consider under time if less than 30 minutes
 
   constructor(
     @Inject('BIOMETRIC_SERVICE')
@@ -126,13 +127,13 @@ export class AttendanceListener {
         {
           if (isBefore(punchTime, shiftEndTime)) {
             const minutesEarly = differenceInMinutes(shiftEndTime, punchTime);
-            if (minutesEarly > this.EARLY_LEAVE_THRESHOLD_MINUTES) {
-              attendanceStatuses = [...existingAttendance.statuses, AttendanceStatus.EARLY_LEAVE];
+            if (minutesEarly > this.UNDER_TIME_THRESHOLD_MINUTES) {
+              attendanceStatuses = [...existingAttendance.statuses, AttendanceStatus.UNDER_TIME];
               this.logger.log(`Employee ${employee.id} is leaving ${minutesEarly} minutes early`);
             }
           } else if (isAfter(punchTime, shiftEndTime)) {
             const minutesOvertime = differenceInMinutes(punchTime, shiftEndTime);
-            if (minutesOvertime > 30) { // Consider overtime if more than 30 minutes
+            if (minutesOvertime > this.OVER_TIME_THRESHOLD_MINUTES) { // Consider overtime if more than 30 minutes
               attendanceStatuses = [...existingAttendance.statuses, AttendanceStatus.OVERTIME];
               this.logger.log(`Employee ${employee.id} worked ${minutesOvertime} minutes overtime`);
             }

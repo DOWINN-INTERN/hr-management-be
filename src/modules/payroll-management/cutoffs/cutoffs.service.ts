@@ -6,7 +6,7 @@ import { UsersService } from '@/modules/account-management/users/users.service';
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, LessThanOrEqual, MoreThanOrEqual, Repository } from 'typeorm';
+import { In, LessThanOrEqual, MoreThan, MoreThanOrEqual, Repository } from 'typeorm';
 import { Cutoff } from './entities/cutoff.entity';
 
 @Injectable()
@@ -132,6 +132,16 @@ export class CutoffsService extends BaseService<Cutoff> {
         }
         
         return cutoffs;
+    }
+
+    async getActiveCutoffs(): Promise<Cutoff[]> {
+        return await this.repository.find({
+            where: {
+                status: CutoffStatus.ACTIVE,
+                startDate: MoreThan(new Date()),
+            },
+            order: { startDate: 'ASC' }
+        });
     }
 
     /**

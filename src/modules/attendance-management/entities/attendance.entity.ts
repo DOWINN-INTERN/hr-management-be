@@ -4,6 +4,8 @@ import { Employee } from '@/modules/employee-management/entities/employee.entity
 import { Schedule } from '@/modules/schedule-management/entities/schedule.entity';
 import { Column, Entity, JoinColumn, ManyToOne, OneToMany, OneToOne } from 'typeorm';
 import { AttendancePunches } from '../attendance-punches/entities/attendance-punch.entity';
+import { FinalWorkHour } from '../final-work-hours/entities/final-work-hour.entity';
+import { WorkTimeRequest } from '../work-time-requests/entities/work-time-request.entity';
 
 @Entity('attendances')
 export class Attendance extends BaseEntity<Attendance> {
@@ -28,4 +30,11 @@ export class Attendance extends BaseEntity<Attendance> {
 
     @OneToMany(() => AttendancePunches, (attendancePunches: AttendancePunches) => attendancePunches.attendance, { cascade: true })
     attendancePunches!: AttendancePunches[];
+
+    @OneToMany(() => WorkTimeRequest, (workTimeRequest: WorkTimeRequest) => workTimeRequest.attendance, { cascade: true, nullable: true })
+    workTimeRequests?: WorkTimeRequest[];
+
+    @OneToOne(() => FinalWorkHour, (finalWorkHour: FinalWorkHour) => finalWorkHour.attendance, { cascade: true, nullable: true })
+    @JoinColumn({ name: 'finalWorkHourId' })
+    finalWorkHour?: FinalWorkHour;
 }
