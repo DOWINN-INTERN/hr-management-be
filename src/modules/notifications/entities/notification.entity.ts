@@ -31,7 +31,7 @@ export class Notification extends BaseEntity<Notification> {
   @Column({ default: false })
   read: boolean = false;
 
-  @Column()
+  @Column({ nullable: true })
   readAt?: Date;
 
   @Column({

@@ -8,6 +8,7 @@ import { Inject, Injectable, Logger } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { differenceInMinutes, format, isAfter, isBefore, parseISO } from 'date-fns';
 import { AttendanceStatus } from '../enums/attendance-status.enum';
+import { ScheduleStatus } from '../enums/schedule-status';
 import { ATTENDANCE_EVENTS, AttendanceRecordedEvent } from '../events/attendance-recorded.event';
 
 @Injectable()
@@ -76,6 +77,13 @@ export class AttendanceListener {
         
         if (!todaySchedule) {
           this.logger.warn(`No schedule found for employee ${employee.id} on ${punchDate}`);
+          // notify employee and higher ups
+          continue;
+        }
+
+        if (todaySchedule.status === ScheduleStatus.LEAVE) {
+          this.logger.warn(`Employee ${employee.id} is on leave today`);
+          // notify employee and higher ups
           continue;
         }
 
@@ -88,39 +96,35 @@ export class AttendanceListener {
 
         // Find attendance for today if it exists
         let existingAttendance = await this.attendancesService.getEmployeeAttendanceToday(employee.id, punchTime);
-
-        // log if attendance found
-        this.logger.log(`Existing attendance found for employee ${employee.id}: ${existingAttendance ? existingAttendance.id : 'None'}`);
-        
-        let attendanceStatuses = [AttendanceStatus.DEFAULT];
         
         // If no existing attendance means check-in, create an attendance
         if (!existingAttendance) {
-            // If it's a holiday, mark as overtime
-            if (todaySchedule.holiday) {
-              attendanceStatuses = [AttendanceStatus.OVERTIME];
-              this.logger.log(`Employee ${employee.id} checked in on a holiday (${todaySchedule.holiday.name})`);
-              // create a work time request for holiday
+          let attendanceStatuses = [AttendanceStatus.CHECKED_IN];
+          if (todaySchedule.holiday) {
+            this.logger.log(`Employee ${employee.id} checked in on a holiday (${todaySchedule.holiday.name})`);
+            // notify employee
+          }
 
-            } else {
-              // Check if late
-              if (isAfter(punchTime, shiftStartTime)) {
-                const minutesLate = differenceInMinutes(punchTime, shiftStartTime);
-                if (minutesLate > this.LATE_THRESHOLD_MINUTES) {
-                  attendanceStatuses = [AttendanceStatus.LATE];
-                  this.logger.log(`Employee ${employee.user.email} is late by ${minutesLate} minutes`);
-                }
-              }
+          // Check if late
+          if (isAfter(punchTime, shiftStartTime)) {
+            const minutesLate = differenceInMinutes(punchTime, shiftStartTime);
+            if (minutesLate > this.LATE_THRESHOLD_MINUTES) {
+              attendanceStatuses = [...attendanceStatuses, AttendanceStatus.LATE];
+              this.logger.log(`Employee ${employee.user.email} is late by ${minutesLate} minutes`);
+              // notify employee and higher ups
+              // work time request
             }
+          }
 
-            this.logger.log(`Creating new attendance record for employee ${employee.id} on ${punchDate} with status ${attendanceStatuses}`);
-            // For a new attendance record, we'll set the timeIn to this punch time
-            existingAttendance = await this.attendancesService.create({
-              employee: { id: employee.id },
-              statuses: [...attendanceStatuses],
-              timeIn: punchTime,
-              schedule: { id: todaySchedule.id },
-            });
+          this.logger.log(`Creating new attendance record for employee ${employee.id} on ${punchDate} with status ${attendanceStatuses}`);
+          // For a new attendance record, we'll set the timeIn to this punch time
+          existingAttendance = await this.attendancesService.create({
+            employee: { id: employee.id },
+            statuses: [...attendanceStatuses],
+            timeIn: punchTime,
+            schedule: { id: todaySchedule.id },
+            createdBy: employee.user.id,
+          });
         }
         // If existing attendance found, its a check-out
         else
@@ -128,24 +132,31 @@ export class AttendanceListener {
           if (isBefore(punchTime, shiftEndTime)) {
             const minutesEarly = differenceInMinutes(shiftEndTime, punchTime);
             if (minutesEarly > this.UNDER_TIME_THRESHOLD_MINUTES) {
-              attendanceStatuses = [...existingAttendance.statuses, AttendanceStatus.UNDER_TIME];
+              existingAttendance.statuses = [...existingAttendance.statuses, AttendanceStatus.UNDER_TIME];
               this.logger.log(`Employee ${employee.id} is leaving ${minutesEarly} minutes early`);
+              // notify employee and higher ups
+              // work time request
             }
-          } else if (isAfter(punchTime, shiftEndTime)) {
+          } else {
             const minutesOvertime = differenceInMinutes(punchTime, shiftEndTime);
             if (minutesOvertime > this.OVER_TIME_THRESHOLD_MINUTES) { // Consider overtime if more than 30 minutes
-              attendanceStatuses = [...existingAttendance.statuses, AttendanceStatus.OVERTIME];
+              existingAttendance.statuses = [...existingAttendance.statuses, AttendanceStatus.OVERTIME];
               this.logger.log(`Employee ${employee.id} worked ${minutesOvertime} minutes overtime`);
+              // notify employee and higher ups
+              // work time request
             }
+            existingAttendance.statuses = [...existingAttendance.statuses, AttendanceStatus.CHECKED_OUT];
           }
+          
           // Update existing attendance
           this.logger.log(`Updating attendance with timeOut for employee ${employee.employeeNumber}`);
           
           // Update time out if it does not exists
           if (!existingAttendance.timeOut) {
             existingAttendance.timeOut = punchTime;
-            existingAttendance.statuses = [...attendanceStatuses];
           }
+
+          existingAttendance.updatedBy = employee.user.id;
           
           await this.attendancesService.save(existingAttendance);
         }
@@ -156,10 +167,11 @@ export class AttendanceListener {
           time: punchTime,
           punchType: record.type.toString(),
           employeeNumber,
-          biometricDevice: { id: biometricDevice.id }
+          biometricDevice: { id: biometricDevice.id },
+          createdBy: employee.user.id,
         });
         
-        this.logger.log(`Successfully processed ${punchType} punch for employee ${employee.user.email} at ${punchTimeStr} with status ${attendanceStatuses}`);
+        this.logger.log(`Successfully processed ${punchType} punch for employee ${employee.user.email} at ${punchTimeStr} with status ${existingAttendance.statuses}`);
       } catch (error) {
         if (error instanceof Error) {
           this.logger.error(`Error processing attendance record: ${error.message}`, error.stack);

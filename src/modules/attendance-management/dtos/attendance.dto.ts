@@ -18,7 +18,7 @@ export class AttendanceDto extends PartialType(BaseDto) {
         description: 'List of attendance statuses',
         type: [String],
         enum: AttendanceStatus,
-        example: [AttendanceStatus.DEFAULT, AttendanceStatus.LATE]
+        example: [AttendanceStatus.CHECKED_IN, AttendanceStatus.LATE]
     })
     @IsArray()
     @IsEnum(AttendanceStatus, { each: true })

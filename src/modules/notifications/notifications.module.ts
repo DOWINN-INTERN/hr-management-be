@@ -5,11 +5,13 @@ import { AccountManagementModule } from '../account-management/account-managemen
 import { UsersModule } from '../account-management/users/users.module';
 import { Notification } from './entities/notification.entity';
 import { NotificationsGateway } from './gateways/notifications.gateway';
+import { NotificationsController } from './notifications.controller';
 import { NotificationsService } from './notifications.service';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Notification]), UsersModule, ConfigModule, AccountManagementModule],
   providers: [NotificationsService, NotificationsGateway],
   exports: [NotificationsService, NotificationsGateway],
+  controllers: [NotificationsController],
 })
 export class NotificationsModule {}

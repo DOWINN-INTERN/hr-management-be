@@ -1,7 +1,7 @@
 import { BaseEntity } from "@/database/entities/base.entity";
 import { Address } from "@/modules/addresses/entities/address.entity";
 import { Role } from "@/modules/employee-management/roles/entities/role.entity";
-import { Column, Entity, JoinColumn, JoinTable, ManyToMany, ManyToOne, OneToOne } from "typeorm";
+import { Column, Entity, JoinColumn, ManyToOne, OneToMany, OneToOne } from "typeorm";
 import { Branch } from "../../entities/branch.entity";
 
 @Entity('departments')
@@ -33,11 +33,6 @@ export class Department extends BaseEntity<Department> {
     @JoinColumn({ name: 'branchId' })
     branch!: Branch
 
-    @ManyToMany(() => Role, (role: Role) => role.departments, { nullable: true, cascade: true })
-    @JoinTable({
-        name: 'department_roles',
-        joinColumn: { name: 'department_id', referencedColumnName: 'id' },
-        inverseJoinColumn: { name: 'role_id', referencedColumnName: 'id' },
-    })
+    @OneToMany(() => Role, (role: Role) => role.department, { nullable: true, cascade: true })
     roles?: Role[];
 }

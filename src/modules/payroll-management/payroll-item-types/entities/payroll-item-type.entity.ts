@@ -23,7 +23,7 @@ export class PayrollItemType extends BaseEntity<PayrollItemType> {
     @Column()
     unit!: string;
 
-    @Column()
+    @Column('text')
     computationFormula!: string;
 
     @Column('decimal', { 
@@ -49,7 +49,7 @@ export class PayrollItemType extends BaseEntity<PayrollItemType> {
     @Column({ default: false })
     hasEmployerShare!: boolean;
     
-    @Column({ nullable: true })
+    @Column('text', { nullable: true })
     employerFormulaPercentage?: string;
     
     @Column({ default: false })

@@ -33,16 +33,19 @@ export class NotificationsService extends BaseService<Notification> {
     throw new NotImplementedException('Method not implemented');
   }
   
-  async createBulkNotifications(dto: NotificationDto): Promise<Notification[]> {
-    throw new NotImplementedException('Method not implemented');
+  async createBulkNotifications(dto: NotificationDto, createdBy: string): Promise<Notification[]> {
+    const notifications = dto.recipients.map(recipient => {
+      // Log a warning if recipient.id is missing
+      if (!recipient.id) {
+        this.notificationLogger.warn(`Recipient id is missing for recipient: ${JSON.stringify(recipient)}`);
+      }
+      return this.notificationRepo.create({
+        ...dto,
+        targetId: recipient.id, // this should not be null if recipient.id is provided
+        read: false,
+        createdBy,
+      });
+    });
+    return this.notificationRepo.save(notifications);
   }
-
-//   private getDefaultNotificationPreferences(): NotificationPreferenceDto {
-//     return {
-//       enabled: true,
-//       emailEnabled: true,
-//       pushEnabled: true,
-//       categories: {},
-//     };
-//   }
 }

@@ -5,7 +5,7 @@ import { NotificationType } from "@/common/enums/notification-type.enum";
 import { createGetDto } from "@/common/factories/create-get-dto.factory";
 import { ApiProperty, ApiPropertyOptional, PartialType } from "@nestjs/swagger";
 import { Type } from "class-transformer";
-import { IsBoolean, IsDate, IsEnum, IsOptional, IsString, ValidateNested } from "class-validator";
+import { IsEnum, IsOptional, IsString, ValidateNested } from "class-validator";
 
 export class NotificationDto extends BaseDto {
   @ApiProperty({
@@ -50,23 +50,6 @@ export class NotificationDto extends BaseDto {
   link?: string;
 
   @ApiProperty({
-    description: 'Whether the notification has been read',
-    default: false
-  })
-  @IsBoolean()
-  read: boolean = false;
-
-  @ApiProperty({
-    description: 'When the notification was read',
-    required: false,
-    type: Date
-  })
-  @IsOptional()
-  @IsDate()
-  @Type(() => Date)
-  readAt?: Date;
-
-  @ApiProperty({
     description: 'The category of notification',
     example: 'payment',
     required: true
@@ -101,7 +84,7 @@ export class NotificationDto extends BaseDto {
   metadata?: Record<string, any>;
 
   @ApiPropertyOptional({ 
-      description: 'Recipients of the notification',
+      description: 'Recipients of the notification. Provide a flat array of objects e.g. [{ "id": "recipient-id"}]',
       required: true,
       isArray: true,
       type: [ReferenceDto]

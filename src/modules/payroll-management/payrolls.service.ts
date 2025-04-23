@@ -2,6 +2,7 @@ import { CutoffStatus } from '@/common/enums/cutoff-status.enum';
 import { CutoffType } from '@/common/enums/cutoff-type.enum';
 import { PayrollItemCategory } from '@/common/enums/payroll-item-category.enum';
 import { PayrollStatus } from '@/common/enums/payroll-status.enum';
+import { RoleScopeType } from '@/common/enums/role-scope-type.enum';
 import { UtilityHelper } from '@/common/helpers/utility.helper';
 import { BaseService } from '@/common/services/base.service';
 import { UsersService } from '@/modules/account-management/users/users.service';
@@ -13,12 +14,162 @@ import { evaluate } from 'mathjs';
 import { DataSource, Repository } from 'typeorm';
 import { EmployeesService } from '../employee-management/employees.service';
 import { Employee } from '../employee-management/entities/employee.entity';
+import { Role } from '../employee-management/roles/entities/role.entity';
 import { CutoffsService } from './cutoffs/cutoffs.service';
 import { Cutoff } from './cutoffs/entities/cutoff.entity';
 import { Payroll } from './entities/payroll.entity';
 import { PayrollItemTypesService } from './payroll-item-types/payroll-item-types.service';
 import { PayrollItem } from './payroll-items/entities/payroll-item.entity';
 import { PayrollItemsService } from './payroll-items/payroll-items.service';
+
+const sssEmployeeContribution = {
+  name: 'SSS Employee Contribution',
+  description: 'Social Security System employee contribution',
+  category: PayrollItemCategory.GOVERNMENT,
+  defaultOccurrence: 'MONTHLY',
+  unit: 'PHP',
+  computationFormula: `
+    // 2023 SSS Contribution Table
+    const msw = Employee.MonthlyRate;
+    let contribution = 0;
+    
+    if (msw <= 3249.99) contribution = 135;
+    else if (msw <= 3749.99) contribution = 157.50;
+    else if (msw <= 4249.99) contribution = 180;
+    else if (msw <= 4749.99) contribution = 202.50;
+    // ... more brackets
+    else if (msw >= 24750) contribution = 1125;
+    
+    return contribution;
+  `,
+  isSystemGenerated: true,
+  isGovernmentMandated: true,
+  governmentContributionType: 'SSS',
+  hasEmployerShare: true,
+  employerFormulaPercentage: `
+    // 2023 SSS Employer Contribution Table
+    const msw = Employee.MonthlyRate;
+    let contribution = 0;
+    
+    if (msw <= 3249.99) contribution = 315;
+    else if (msw <= 3749.99) contribution = 367.50;
+    else if (msw <= 4249.99) contribution = 420;
+    // ... more brackets
+    else if (msw >= 24750) contribution = 2625;
+    
+    return contribution;
+  `,
+  isPartOfTaxCalculation: true,
+  isTaxable: false,
+  isTaxDeductible: true,
+  isDisplayedInPayslip: true,
+  isRequired: true,
+  calculationParameters: {
+    sssTable: '2023',
+    includingEC: true,
+    includingMPF: false
+  }
+};
+
+const philhealthContribution = {
+  name: 'PhilHealth Contribution',
+  description: 'Philippine Health Insurance Corporation contribution',
+  category: PayrollItemCategory.GOVERNMENT,
+  defaultOccurrence: 'MONTHLY',
+  unit: 'PHP',
+  computationFormula: `
+    // 2023 PhilHealth Contribution - shared equally by employer and employee
+    const msw = Employee.MonthlyRate;
+    let totalContribution = 0;
+    
+    if (msw <= 10000) totalContribution = 400;
+    else if (msw <= 59999.99) totalContribution = msw * 0.04;
+    else totalContribution = 2400;
+    
+    return totalContribution / 2; // Employee share only
+  `,
+  isSystemGenerated: true,
+  isGovernmentMandated: true,
+  governmentContributionType: 'PHILHEALTH',
+  hasEmployerShare: true,
+  employerFormulaPercentage: `return Amount;`, // Equal share: employee and employer
+  isPartOfTaxCalculation: true,
+  isTaxable: false,
+  isTaxDeductible: true,
+  isDisplayedInPayslip: true,
+  isRequired: true,
+  calculationParameters: {
+    philhealthTable: '2023',
+    premiumRate: 4 // percent
+  }
+};
+
+const pagibigContribution = {
+  name: 'Pag-IBIG Contribution',
+  description: 'Home Development Mutual Fund contribution',
+  category: PayrollItemCategory.GOVERNMENT,
+  defaultOccurrence: 'MONTHLY',
+  unit: 'PHP',
+  computationFormula: `
+    // Pag-IBIG Contribution - 2% of monthly salary
+    const msw = Math.min(Employee.MonthlyRate, 5000);
+    return msw * 0.02;
+  `,
+  isSystemGenerated: true,
+  isGovernmentMandated: true,
+  governmentContributionType: 'PAGIBIG',
+  hasEmployerShare: true,
+  employerFormulaPercentage: `
+    // Employer share is also 2% of monthly salary
+    const msw = Math.min(Employee.MonthlyRate, 5000);
+    return msw * 0.02;
+  `,
+  isPartOfTaxCalculation: true,
+  isTaxable: false,
+  isTaxDeductible: true,
+  isDisplayedInPayslip: true,
+  isRequired: true,
+  calculationParameters: {
+    pagibigTable: '2023',
+    rate: 2 // percent
+  }
+};
+
+const withholdingTax = {
+  name: 'Withholding Tax',
+  description: 'BIR withholding tax for compensation income',
+  category: PayrollItemCategory.TAX,
+  defaultOccurrence: 'MONTHLY',
+  unit: 'PHP',
+  computationFormula: `
+    // 2023 Withholding Tax Table
+    // Get taxable income (after deducting government contributions)
+    const taxableIncome = TaxableIncome;
+    let tax = 0;
+    
+    if (taxableIncome <= 20833) tax = 0;
+    else if (taxableIncome <= 33332) tax = (taxableIncome - 20833) * 0.15;
+    else if (taxableIncome <= 66666) tax = 1875 + (taxableIncome - 33333) * 0.20;
+    else if (taxableIncome <= 166666) tax = 8541.80 + (taxableIncome - 66667) * 0.25;
+    else if (taxableIncome <= 666666) tax = 33541.80 + (taxableIncome - 166667) * 0.30;
+    else tax = 183541.80 + (taxableIncome - 666667) * 0.35;
+    
+    return tax;
+  `,
+  isSystemGenerated: true,
+  isGovernmentMandated: true,
+  governmentContributionType: 'TAX',
+  hasEmployerShare: false,
+  isPartOfTaxCalculation: false, // Not part of taxable income computation
+  isTaxable: false,
+  isTaxDeductible: false,
+  isDisplayedInPayslip: true,
+  isRequired: true,
+  calculationParameters: {
+    taxTable: '2023',
+    applicableTaxExemptions: ['de_minimis', 'thirteenth_month']
+  }
+};
 
 @Injectable()
 export class PayrollsService extends BaseService<Payroll> {
@@ -27,8 +178,8 @@ export class PayrollsService extends BaseService<Payroll> {
   private readonly HolidayPayMultiplier = 2.0;
   private readonly SpecialHolidayPayMultiplier = 1.3;
   private readonly OvertimePayMultiplier = 1.25;
-  private readonly HolidayOvertimePayMultiplier = 2.6;
-  private readonly SpecialHolidayOvertimePayMultiplier = 1.69;
+  private readonly HolidayOvertimePayMultiplier = 2.3;
+  private readonly SpecialHolidayOvertimePayMultiplier = 1.3;
   private readonly RestDayOvertimePayMultiplier = 1.69;
   private readonly NightDifferentialPayMultiplier = 0.1;
 
@@ -153,7 +304,7 @@ export class PayrollsService extends BaseService<Payroll> {
     // 6. Overtime holiday pay (2.6x)
     payroll.holidayOvertimePay = payroll.totalHolidayOvertimeHours * payroll.hourlyRate * this.HolidayOvertimePayMultiplier;
 
-    // 7. Overtime special holiday pay (1.69x)
+    // 7. Overtime special holiday pay (1.3x)
     payroll.specialHolidayOvertimePay = payroll.totalSpecialHolidayOvertimeHours * payroll.hourlyRate * this.SpecialHolidayOvertimePayMultiplier;
 
     // 8. Overtime rest day pay (1.69x)
@@ -280,11 +431,11 @@ export class PayrollsService extends BaseService<Payroll> {
     });
     
     // Clear existing payroll items if reprocessing
-    // if (payroll.payrollItems?.length) {
-    //   for (const item of payroll.payrollItems) {
-    //     await this.payrollItemsService.delete(item.id);
-    //   }
-    // }
+    if (payroll.payrollItems?.length) {
+      for (const item of payroll.payrollItems) {
+        await this.payrollItemsService.delete(item.id);
+      }
+    }
     
     // Order for processing categories
     const processingOrder = [
@@ -391,7 +542,248 @@ export class PayrollsService extends BaseService<Payroll> {
     
     return newPayrollItems;
   }
+
+  /**
+ * Generate a detailed view of a payroll for an employee
+ */
+async getPayrollDetails(payrollId: string): Promise<any> {
+  const payroll = await this.findOneByOrFail({ id: payrollId }, {
+    relations: {
+      employee: {
+        user: {
+          profile: true
+        },
+        roles: {
+          department: true,
+          branch: true,
+          organization: true,
+        }
+      },
+      cutoff: true,
+      payrollItems: {
+        payrollItemType: true
+      }
+    }
+  });
+
+  // Get the employee's highest scope role
+  const highestRole = this.getHighestScopeRole(payroll.employee.roles || []);
   
+  // Determine organizational position based on roles and entity relationships
+  const position = this.determineEmployeePosition(payroll.employee);
+  
+  // Get government contributions using the entity's getter methods
+  const sssContribution = payroll.sssContribution;
+  const philHealthContribution = payroll.philHealthContribution;
+  const pagIbigContribution = payroll.pagIbigContribution;
+  const withHoldingTax = payroll.withHoldingTax;
+  
+  // Group items by category for display
+  const itemsByCategory = this.groupPayrollItemsByCategory(payroll.payrollItems || []);
+  
+  // Format dates
+  const startDate = payroll.cutoff.startDate.toLocaleDateString();
+  const endDate = payroll.cutoff.endDate.toLocaleDateString();
+  
+  return {
+    payrollId: payroll.id,
+    employee: {
+      id: payroll.employee.id,
+      name: `${payroll.employee.user.profile?.firstName} ${payroll.employee.user.profile?.lastName}`,
+      employeeNumber: payroll.employee.employeeNumber,
+      position: position,
+      department: highestRole?.department?.name || 'N/A',
+      branch: highestRole?.branch?.name || 'N/A',
+      organization: highestRole?.organization?.name || 'N/A',
+    },
+    cutoff: {
+      id: payroll.cutoff.id,
+      period: `${startDate} - ${endDate}`,
+      type: payroll.cutoff.cutoffType
+    },
+    rates: {
+      monthly: payroll.monthlyRate,
+      daily: payroll.dailyRate,
+      hourly: payroll.hourlyRate
+    },
+    workHours: {
+      regular: payroll.totalRegularHours,
+      overtime: payroll.totalOvertimeHours,
+      holiday: payroll.totalHolidayHours,
+      specialHoliday: payroll.totalSpecialHolidayHours,
+      restDay: payroll.totalRestDayHours,
+      nightDifferential: payroll.totalNightDifferentialHours,
+      holidayOvertime: payroll.totalHolidayOvertimeHours,
+      specialHolidayOvertime: payroll.totalSpecialHolidayOvertimeHours,
+      restDayOvertime: payroll.totalRestDayOvertimeHours,
+      total: (
+        payroll.totalRegularHours + 
+        payroll.totalOvertimeHours + 
+        payroll.totalHolidayHours +
+        payroll.totalSpecialHolidayHours +
+        payroll.totalRestDayHours +
+        payroll.totalHolidayOvertimeHours +
+        payroll.totalSpecialHolidayOvertimeHours +
+        payroll.totalRestDayOvertimeHours
+      )
+    },
+    earnings: {
+      basicPay: payroll.basicPay,
+      overtimePay: payroll.overtimePay,
+      holidayPay: payroll.holidayPay,
+      holidayOvertimePay: payroll.holidayOvertimePay,
+      specialHolidayPay: payroll.specialHolidayPay,
+      specialHolidayOvertimePay: payroll.specialHolidayOvertimePay,
+      restDayPay: payroll.restDayPay,
+      restDayOvertimePay: payroll.restDayOvertimePay,
+      nightDifferentialPay: payroll.nightDifferentialPay,
+      allowances: itemsByCategory[PayrollItemCategory.ALLOWANCE] || [],
+      bonuses: itemsByCategory[PayrollItemCategory.BONUS] || [],
+      commissions: itemsByCategory[PayrollItemCategory.COMMISSION] || [],
+      tips: itemsByCategory[PayrollItemCategory.TIP] || [],
+    },
+    deductions: {
+      governmentContributions: {
+        sss: {
+          employee: sssContribution.employee,
+          employer: sssContribution.employer,
+          total: sssContribution.total
+        },
+        philhealth: {
+          employee: philHealthContribution.employee,
+          employer: philHealthContribution.employer,
+          total: philHealthContribution.total
+        },
+        pagibig: {
+          employee: pagIbigContribution.employee,
+          employer: pagIbigContribution.employer,
+          total: pagIbigContribution.total
+        },
+        tax: withHoldingTax
+      },
+      otherDeductions: itemsByCategory[PayrollItemCategory.DEDUCTION] || []
+    },
+    totals: {
+      grossPay: payroll.grossPay,
+      taxableIncome: payroll.taxableIncome,
+      totalDeductions: (
+        payroll.totalDeductions + 
+        payroll.totalGovernmentContributions + 
+        payroll.totalTaxes
+      ),
+      netPay: payroll.netPay
+    },
+    benefits: itemsByCategory[PayrollItemCategory.BENEFIT] || [],
+    reimbursements: itemsByCategory[PayrollItemCategory.REIMBURSEMENT] || [],
+    status: payroll.status,
+    paymentDetails: {
+      method: payroll.paymentMethod,
+      bankAccount: payroll.bankAccount,
+      checkNumber: payroll.checkNumber,
+      referenceNumber: payroll.bankReferenceNumber,
+      paymentDate: payroll.paymentDate?.toLocaleDateString(),
+    },
+    processing: {
+      processedAt: payroll.processedAt?.toLocaleDateString(),
+      processedBy: payroll.processedBy,
+      approvedAt: payroll.approvedAt?.toLocaleDateString(),
+      approvedBy: payroll.approvedBy,
+      releasedAt: payroll.releasedAt?.toLocaleDateString(),
+      releasedBy: payroll.releasedBy,
+    },
+    notes: payroll.notes,
+  };
+}
+
+/**
+ * Get the highest scope role from the employee's roles
+ */
+private getHighestScopeRole(roles: Role[]): Role | undefined {
+  if (!roles.length) return undefined;
+  
+  // Define scope priority (higher number = higher priority)
+  const scopePriority: Record<RoleScopeType, number> = {
+    [RoleScopeType.GLOBAL]: 5,
+    [RoleScopeType.ORGANIZATION]: 4,
+    [RoleScopeType.BRANCH]: 3,
+    [RoleScopeType.DEPARTMENT]: 2,
+    [RoleScopeType.OWNED]: 1
+  };
+  
+  // Sort roles by scope priority (highest first)
+  const sortedRoles = [...roles].sort((a, b) => 
+    scopePriority[b.scope] - scopePriority[a.scope]
+  );
+  
+  return sortedRoles[0];
+}
+
+/**
+ * Determine the employee's position based on roles and organizational relationships
+ */
+private determineEmployeePosition(employee: Employee): string {
+  if (!employee.roles || employee.roles.length === 0) {
+    return 'Staff';
+  }
+  
+  const highestRole = this.getHighestScopeRole(employee.roles);
+  
+  if (!highestRole) return 'Staff';
+  
+  // Construct position based on role scope and name
+  let positionPrefix = '';
+  
+  switch (highestRole.scope) {
+    case RoleScopeType.GLOBAL:
+      positionPrefix = 'Executive';
+      break;
+    case RoleScopeType.ORGANIZATION:
+      positionPrefix = highestRole.organization?.name || 'Organizational';
+      break;
+    case RoleScopeType.BRANCH:
+      positionPrefix = highestRole.branch?.name || 'Branch';
+      break;
+    case RoleScopeType.DEPARTMENT:
+      positionPrefix = highestRole.department?.name || 'Department';
+      break;
+    case RoleScopeType.OWNED:
+      positionPrefix = 'Team';
+      break;
+  }
+  
+  return `${positionPrefix} ${highestRole.name}`;
+}
+  /**
+   * Helper method to group payroll items by category
+   */
+  private groupPayrollItemsByCategory(
+    payrollItems: PayrollItem[]
+  ): Record<PayrollItemCategory, any[]> {
+    const result: Record<string, any[]> = {};
+    
+    payrollItems.forEach(item => {
+      const category = item.payrollItemType.category;
+      
+      if (!result[category]) {
+        result[category] = [];
+      }
+      
+      result[category].push({
+        id: item.id,
+        name: item.payrollItemType.name,
+        amount: item.amount,
+        employerAmount: item.employerAmount || 0,
+        total: item.amount + (item.employerAmount || 0),
+        isGovernmentMandated: item.payrollItemType.isGovernmentMandated,
+        isTaxable: item.isTaxable,
+        govType: item.payrollItemType.governmentContributionType,
+        description: item.payrollItemType.description
+      });
+    });
+    
+    return result;
+  }
+    
   /**
    * Update payroll totals based on a single payroll item
    */

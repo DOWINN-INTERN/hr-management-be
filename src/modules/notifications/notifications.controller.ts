@@ -1,14 +1,7 @@
 import { CurrentUser } from '@/common/decorators/current-user.decorator';
+import { Override } from '@/common/decorators/override.decorator';
 import { createController } from '@/common/factories/create-controller.factory';
-import {
-    Body,
-    HttpStatus,
-    Param,
-    ParseUUIDPipe,
-    Patch,
-    Post,
-    Query
-} from '@nestjs/common';
+import { Body, Controller, HttpStatus, Param, ParseUUIDPipe, Patch, Query } from '@nestjs/common';
 import {
     ApiOperation,
     ApiParam,
@@ -20,8 +13,8 @@ import { Notification } from './entities/notification.entity';
 import { NotificationsGateway } from './gateways/notifications.gateway';
 import { NotificationsService } from './notifications.service';
 
-
-// Create the base controller for standard CRUD operations
+// Add the @Controller decorator to ensure proper DI metadata.
+@Controller('notifications')
 export class NotificationsController extends createController<
     Notification, 
     GetNotificationDto,
@@ -42,7 +35,6 @@ export class NotificationsController extends createController<
     }
 
 
-    @Post()
     @ApiOperation({ summary: 'Create and send new notifications' })
     @ApiResponse({ 
         status: HttpStatus.CREATED, 
@@ -50,16 +42,18 @@ export class NotificationsController extends createController<
         type: GetNotificationDto,
         isArray: true
     })
+    @Override()
     override async create(
         @Body() createNotificationDto: NotificationDto,
         @CurrentUser('sub') createdById: string
     ) {
         // Call the specialized method for bulk notifications
-        const notifications = await this.notificationsService.createBulkNotifications(createNotificationDto);
+        const notifications = await this.notificationsService.createBulkNotifications(createNotificationDto, createdById);
         
-        // Send real-time notifications
+        // Send real-time notifications if gateway is defined
         for (const notification of notifications) {
-            await this.notificationsGateway.sendNotification(notification);
+            // Remove optional chaining so gateway.sendNotification always gets called
+            await this.notificationsGateway.emitToUser(notification, notification.targetId);
         }
         
         return notifications;

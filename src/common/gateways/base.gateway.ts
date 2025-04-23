@@ -1,6 +1,6 @@
 import { JwtService } from '@/modules/account-management/auth/services/jwt.service';
 import { UsersService } from '@/modules/account-management/users/users.service';
-import { Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
+import { Logger, NotFoundException, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import {
     OnGatewayConnection,
@@ -345,7 +345,6 @@ export abstract class BaseGateway implements OnGatewayInit, OnGatewayConnection,
             
             const userRoomSet = this.userRooms.get(user)!;
             userRoomSet.add(room);
-            this.logger.debug(`${user} joined room: ${room}`);
         } catch (error) {
             if (error instanceof Error) {
                 this.logger.error(`Error joining room: ${error.message}`, error.stack);
@@ -371,7 +370,6 @@ export abstract class BaseGateway implements OnGatewayInit, OnGatewayConnection,
                 rooms.delete(room);
             }
             
-            this.logger.debug(`User ${user} left room: ${room}`);
         } catch (error) {
             if (error instanceof Error) {
                 this.logger.error(`Error leaving room: ${error.message}`, error.stack);
@@ -383,27 +381,18 @@ export abstract class BaseGateway implements OnGatewayInit, OnGatewayConnection,
         }
     }
     
-    // Messaging methods
-    protected emitToUser(userId: string, event: string, data: any): boolean {
-        try {
-            const client = this.connectedClients.get(userId);
-            if (!client) {
-                return false;
-            }
-            
-            client.emit(event, data);
-            return true;
-        } catch (error: unknown) {
-            if (error instanceof Error) {
-                this.logger.error(`Error emitting to user: ${error.message}`, error.stack);
-            } else {
-                this.logger.error('Error emitting to user: Unknown error');
-            }
-            return false;
+    // Messaging Methods
+    public emitToUser(data: any, userId?: string): void {
+        if (!userId || !this.connectedClients.has(userId)) {
+            this.logger.warn(`User ${userId} not connected`);
+            throw new NotFoundException(`User ${userId} not connected`);
         }
+
+        const userRoom = `user:${userId}:${this.namespace}`;
+        this.emitToRoom(userRoom, this.namespace, data);
     }
-    
-    protected emitToRoom(room: string, event: string, data: any): void {
+
+    public emitToRoom(room: string, event: string, data: any): void {
         try {
             this.server.to(room).emit(event, data);
         } catch (error: unknown) {
@@ -419,7 +408,7 @@ export abstract class BaseGateway implements OnGatewayInit, OnGatewayConnection,
         }
     }
     
-    protected broadcast(event: string, data: any, exceptUser?: string): void {
+    public broadcast(event: string, data: any, exceptUser?: string): void {
         try {
             if (exceptUser) {
                 // Send to all clients except the one with exceptUserId
@@ -470,21 +459,21 @@ export abstract class BaseGateway implements OnGatewayInit, OnGatewayConnection,
         
         // Check each connection for activity
         this.connectedClients.forEach((client, user) => {
-          if (!client.connected) {
+            if (!client.connected) {
             this.logger.debug(`Removing disconnected client: ${user}`);
             this.connectedClients.delete(user);
             return;
-          }
-          
-          // Check for timeout (no activity for X minutes)
-          const connectedAt = client.handshake.auth.connectedAt || 0;
-          if (now - connectedAt > this.CONNECTION_TIMEOUT) {
+            }
+            
+            // Check for timeout (no activity for X minutes)
+            const connectedAt = client.handshake.auth.connectedAt || 0;
+            if (now - connectedAt > this.CONNECTION_TIMEOUT) {
             this.logger.debug(`Connection timeout for user: ${user}`);
             client.disconnect(true);
             this.connectedClients.delete(user);
-          }
+            }
         });
-      }
+    }
     
     // Event handling setup
     protected setupEventHandlers(): void {
@@ -524,6 +513,13 @@ export abstract class BaseGateway implements OnGatewayInit, OnGatewayConnection,
     }
     
     // Hooks for derived classes
-    protected afterConnect(client: AuthenticatedSocket): void {}
+    protected afterConnect(client: AuthenticatedSocket): void {
+        if (client.user) {
+            const userRoom = `user:${client.user.sub}:${this.namespace}`;
+            this.joinRoom(client, userRoom);
+            
+            this.logger.log(`${client.user.email} subscribed to ${this.namespace}`);
+        }
+    }
     protected afterDisconnect(client: AuthenticatedSocket): void {}
 }

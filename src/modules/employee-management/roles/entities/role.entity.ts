@@ -4,7 +4,7 @@ import { Permission } from '@/modules/employee-management/roles/permissions/enti
 import { Department } from '@/modules/organization-management/branches/departments/entities/department.entity';
 import { Branch } from '@/modules/organization-management/branches/entities/branch.entity';
 import { Organization } from '@/modules/organization-management/entities/organization.entity';
-import { Column, Entity, JoinTable, ManyToMany } from 'typeorm';
+import { Column, Entity, JoinColumn, JoinTable, ManyToMany, ManyToOne } from 'typeorm';
 import { Employee } from '../../entities/employee.entity';
 
 @Entity('roles')
@@ -30,15 +30,18 @@ export class Role extends BaseEntity<Role> {
     })
     permissions?: Permission[];
 
-    @ManyToMany(() => Employee, (employee: Employee) => employee.roles)
+    @ManyToMany(() => Employee, (employee: Employee) => employee.roles, { nullable: true})
     employees?: Employee[];
 
-    @ManyToMany(() => Organization, (organization: Organization) => organization.roles)
-    organizations?: Organization[];
+    @ManyToOne(() => Organization, (organization: Organization) => organization.roles, { nullable: true })
+    @JoinColumn({ name: 'organizationId' })
+    organization?: Organization;
 
-    @ManyToMany(() => Branch, (branch: Branch) => branch.roles)
-    branches?: Branch[];
+    @ManyToOne(() => Branch, (branch: Branch) => branch.roles, { nullable: true })
+    @JoinColumn({ name: 'branchId' })
+    branch?: Branch;
 
-    @ManyToMany(() => Department, (department: Department) => department.roles)
-    departments?: Department[];
+    @ManyToOne(() => Department, (department: Department) => department.roles, { nullable: true })
+    @JoinColumn({ name: 'departmentId' })
+    department?: Department;
 }

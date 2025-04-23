@@ -1,6 +1,6 @@
 import { Address } from "@/modules/addresses/entities/address.entity";
 import { Role } from "@/modules/employee-management/roles/entities/role.entity";
-import { Column, Entity, JoinTable, ManyToMany, OneToMany, OneToOne } from "typeorm";
+import { Column, Entity, OneToMany, OneToOne } from "typeorm";
 import { BaseEntity } from "../../../database/entities/base.entity";
 import { Branch } from "../branches/entities/branch.entity";
 
@@ -32,11 +32,6 @@ export class Organization extends BaseEntity<Organization> {
     @OneToMany(() => Branch, (branch: Branch) => branch.organization, { cascade: true })
     branches?: Branch[];
 
-    @ManyToMany(() => Role, (role: Role) => role.organizations, { nullable: true, cascade: true })
-    @JoinTable({
-        name: 'organization_roles',
-        joinColumn: { name: 'organization_id', referencedColumnName: 'id' },
-        inverseJoinColumn: { name: 'role_id', referencedColumnName: 'id' },
-    })
+    @OneToMany(() => Role, (role: Role) => role.organization, { nullable: true, cascade: true })
     roles?: Role[];
 }

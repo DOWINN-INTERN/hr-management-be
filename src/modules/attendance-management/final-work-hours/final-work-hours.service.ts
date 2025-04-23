@@ -73,9 +73,9 @@ export class FinalWorkHoursService extends BaseService<FinalWorkHour> {
         const holidayType = schedule.holiday?.type;
         
         // Calculate regular and overtime hours
-        const regularHours = this.calculateHours(finalWorkHour.timeIn, finalWorkHour.timeOut);
+        const regularHours = this.calculateHours(finalWorkHour.timeIn, finalWorkHour.timeOut, schedule.shift.breakTime);
         const overtimeHours = finalWorkHour.overTimeOut ? 
-            this.calculateHours(finalWorkHour.timeOut, finalWorkHour.overTimeOut) : 0;
+            this.calculateHours(finalWorkHour.timeOut, finalWorkHour.overTimeOut, schedule.shift.breakTime) : 0;
         
         // Calculate night differential hours
         const nightDiffHours = this.calculateNightDifferentialHours(
@@ -160,7 +160,7 @@ export class FinalWorkHoursService extends BaseService<FinalWorkHour> {
             nextHour.setHours(nextHour.getHours() + 1);
             
             const hourEnd = new Date(Math.min(nextHour.getTime(), finalTimeOut.getTime()));
-            const hourDiff = this.calculateHours(currentHour, hourEnd);
+            const hourDiff = this.calculateHours(currentHour, hourEnd, 6);
             
             // Check if this hour falls within night differential period
             const hour = currentHour.getHours();
@@ -175,12 +175,25 @@ export class FinalWorkHoursService extends BaseService<FinalWorkHour> {
     }
     
     /**
-     * Calculate hours between two time points
+     * Calculate hours between two time points, subtracting break time
+     * @param start Start date and time
+     * @param end End date and time
+     * @param breakTimeDuration Break time in minutes
+     * @returns Number of hours worked, rounded to 2 decimal places
      */
-    private calculateHours(start: Date, end: Date): number {
+    private calculateHours(start: Date, end: Date, breakTimeDuration: number): number {
+        // Calculate the time difference in milliseconds
         const diffMs = end.getTime() - start.getTime();
+        
+        // Convert to hours
         const diffHours = diffMs / (1000 * 60 * 60);
-        return Math.round(diffHours * 100) / 100; // Round to 2 decimal places
+        
+        // Convert break time from minutes to hours and subtract
+        const breakTimeHours = breakTimeDuration / 60;
+        const totalHours = diffHours - breakTimeHours;
+        
+        // Round to 2 decimal places
+        return Math.round(totalHours * 100) / 100;
     }
     
     /**
