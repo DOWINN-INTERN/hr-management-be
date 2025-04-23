@@ -1,15 +1,13 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AccountManagementModule } from '../account-management/account-management.module';
-import { UsersModule } from '../account-management/users/users.module';
 import { Notification } from './entities/notification.entity';
 import { NotificationsGateway } from './gateways/notifications.gateway';
 import { NotificationsController } from './notifications.controller';
 import { NotificationsService } from './notifications.service';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Notification]), UsersModule, ConfigModule, AccountManagementModule],
+  imports: [TypeOrmModule.forFeature([Notification]), AccountManagementModule],
   providers: [NotificationsService, NotificationsGateway],
   exports: [NotificationsService, NotificationsGateway],
   controllers: [NotificationsController],

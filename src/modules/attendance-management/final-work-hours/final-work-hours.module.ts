@@ -1,4 +1,3 @@
-import { UsersModule } from '@/modules/account-management/users/users.module';
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { FinalWorkHour } from './entities/final-work-hour.entity';
@@ -7,8 +6,7 @@ import { FinalWorkHoursService } from './final-work-hours.service';
 
 @Module({
     imports: [
-        TypeOrmModule.forFeature([FinalWorkHour]),
-        UsersModule,
+        TypeOrmModule.forFeature([FinalWorkHour])
     ],
     providers: [FinalWorkHoursService],
     exports: [FinalWorkHoursService],

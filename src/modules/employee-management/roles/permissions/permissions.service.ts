@@ -2,7 +2,7 @@ import { Action } from '@/common/enums/action.enum';
 import { BaseService } from '@/common/services/base.service';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { ILike, Repository } from 'typeorm';
 import { UsersService } from '../../../account-management/users/users.service';
 import { RolesService } from '../roles.service';
 import { Permission } from './entities/permission.entity';
@@ -174,6 +174,36 @@ export class PermissionsService extends BaseService<Permission> {
             this.cachedPermissions.set(key, permission);
         }
         
+        return permissions;
+    }
+
+    async getPermissionsByControllerName(controllerName: string): Promise<Permission[]> {
+        // Fetch permissions from the database based on controller name
+        // Extract base name by removing "Controller" suffix if present
+        const baseName = controllerName.replace(/controller$/i, '');
+        // log the base name
+        this.logger.log(`Fetching permissions for controller: ${baseName}`);
+
+        // Try to get from cache first
+        const cachedPermissions = Array.from(this.cachedPermissions.values())
+            .filter(permission => permission.subject.includes(baseName));
+
+        if (cachedPermissions.length > 0) {
+            return cachedPermissions;
+        }
+        
+        const permissions = await this.permissionsRepository.find({
+            where: {
+            subject: ILike(`%${baseName}%`)
+            }
+        });
+
+        // Update cache
+        for (const permission of permissions) {
+            const key = this.getPermissionKey(permission.action, permission.subject);
+            this.cachedPermissions.set(key, permission);
+        }
+
         return permissions;
     }
 

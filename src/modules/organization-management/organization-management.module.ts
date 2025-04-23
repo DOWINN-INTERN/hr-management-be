@@ -1,7 +1,6 @@
 import { Module } from '@nestjs/common';
 import { RouterModule } from '@nestjs/core';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { UsersModule } from '../account-management/users/users.module';
 import { BranchesModule } from './branches/branches.module';
 import { DepartmentsModule } from './branches/departments/departments.module';
 import { Organization } from './entities/organization.entity';
@@ -11,7 +10,6 @@ import { OrganizationsService } from './organizations.service';
 @Module({
   imports: [
     TypeOrmModule.forFeature([Organization]),
-    UsersModule,
     BranchesModule,
     DepartmentsModule,
     RouterModule.register([

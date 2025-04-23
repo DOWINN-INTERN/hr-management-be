@@ -1,4 +1,3 @@
-import { UsersModule } from '@/modules/account-management/users/users.module';
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ScheduleChangeResponse } from './entities/schedule-change-response.entity';
@@ -8,7 +7,6 @@ import { ScheduleChangeResponsesService } from './schedule-change-responses.serv
 @Module({
     imports: [
         TypeOrmModule.forFeature([ScheduleChangeResponse]),
-        UsersModule,
     ],
     providers: [ScheduleChangeResponsesService],
     exports: [ScheduleChangeResponsesService],

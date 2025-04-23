@@ -2,7 +2,6 @@ import { Module } from '@nestjs/common';
 import { RouterModule } from '@nestjs/core';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { UsersModule } from '../account-management/users/users.module';
 import { BiometricsController } from './biometrics.controller';
 import { BiometricDevice } from './entities/biometric-device.entity';
 import { BiometricTemplate } from './entities/biometric-template.entity';
@@ -21,7 +20,6 @@ import { ZKTecoBiometricsService } from './services/zkteco-biometrics.service';
                 module: BiometricsModule,
             },
         ]),
-        UsersModule,
     ],
     controllers: [BiometricsController],
     providers: [

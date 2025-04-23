@@ -1,4 +1,3 @@
-import { UsersModule } from '@/modules/account-management/users/users.module';
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { BranchesController } from './branches.controller';
@@ -8,7 +7,7 @@ import { Branch } from './entities/branch.entity';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Branch]),
-    DepartmentsModule, UsersModule],
+    DepartmentsModule],
   controllers: [BranchesController],
   providers: [BranchesService],
   exports: [BranchesService, DepartmentsModule],

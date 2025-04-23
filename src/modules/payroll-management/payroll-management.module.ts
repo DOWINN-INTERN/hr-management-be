@@ -1,4 +1,3 @@
-import { UsersModule } from '@/modules/account-management/users/users.module';
 import { Module } from '@nestjs/common';
 import { RouterModule } from '@nestjs/core';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -14,7 +13,6 @@ import { PayrollsService } from './payrolls.service';
 @Module({
     imports: [
         TypeOrmModule.forFeature([Payroll]),
-        UsersModule,
         RouterModule.register([
             {
                   path: 'payrolls',

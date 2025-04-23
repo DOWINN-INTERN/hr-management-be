@@ -1,5 +1,4 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
 import { RouterModule } from '@nestjs/core';
 import { EmployeeManagementModule } from '../employee-management/employee-management.module';
 import { RolesModule } from '../employee-management/roles/roles.module';
@@ -11,9 +10,7 @@ import { UsersModule } from './users/users.module';
 
 @Module({
 imports: [
-        ConfigModule,
         RolesModule,
-        UsersModule,
         AuthModule,
         SessionsModule,
         ProfilesModule,
@@ -36,7 +33,6 @@ imports: [
     ],
     providers: [UserSeederService],
     exports: [
-        UsersModule,
         AuthModule,
         SessionsModule,
         ProfilesModule

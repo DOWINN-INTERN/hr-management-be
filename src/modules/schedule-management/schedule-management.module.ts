@@ -1,4 +1,3 @@
-import { UsersModule } from '@/modules/account-management/users/users.module';
 import { BullModule } from '@nestjs/bull';
 import { Module } from '@nestjs/common';
 import { RouterModule } from '@nestjs/core';
@@ -22,7 +21,6 @@ import { ShiftsModule } from './shifts/shifts.module';
         BullModule.registerQueue({
             name: 'schedule-generation',
         }),
-        UsersModule,
         RouterModule.register([
             {
                   path: 'schedules',

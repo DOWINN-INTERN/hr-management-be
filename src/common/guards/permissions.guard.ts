@@ -1,7 +1,7 @@
 import { UsersService } from "@/modules/account-management/users/users.service";
+import { PermissionsService } from "@/modules/employee-management/roles/permissions/permissions.service";
 import { CanActivate, ExecutionContext, ForbiddenException, Injectable, Logger } from "@nestjs/common";
 import { Reflector } from "@nestjs/core";
-import { BaseController } from "../controllers/base.controller";
 import { PERMISSION_ENDPOINT_TYPE } from "../decorators/authorize.decorator";
 import { PERMISSIONS_KEY } from "../decorators/permissions.decorator";
 import { Action } from "../enums/action.enum";
@@ -16,6 +16,7 @@ export class PermissionsGuard implements CanActivate {
   constructor(
     private reflector: Reflector,
     private usersService: UsersService,
+    private permissionsService: PermissionsService,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -31,32 +32,32 @@ export class PermissionsGuard implements CanActivate {
       if (endpointType) {
         const controllerClass = context.getClass();
         const controllerName = controllerClass.name;
+
+        // get the permissions for the controller in the database
+        const permissions = await this.permissionsService.getPermissionsByControllerName(controllerName);
         
-        // Access the static permissions map
-        if (BaseController.permissionsMap && BaseController.permissionsMap[controllerName]) {
-          const permissions = BaseController.permissionsMap[controllerName];
-          
-          // Map endpoint type to permission type
-          switch (endpointType) {
-            case Action.CREATE:
-              requiredPermissions = [
-                ...(permissions.Create || [])
-              ];
-              break;
-            case Action.READ:
-              requiredPermissions = [...(permissions.Read || [])];
-              break;
-            case Action.UPDATE:
-              requiredPermissions = [
-                ...(permissions.Update || [])
-              ];
-              break;
-            case Action.DELETE:
-              requiredPermissions = [
-                ...(permissions.Delete || [])
-              ];
-              break;
-          }
+        // Filter permissions based on the endpoint type action
+        if (permissions && permissions.length > 0) {
+          // Filter permissions that match the endpoint type action
+          requiredPermissions = permissions.filter(permission => {
+            // For CREATE endpoints, match against CREATE or MANAGE actions
+            if (endpointType === Action.CREATE) {
+              return permission.action === Action.CREATE || permission.action === Action.MANAGE;
+            }
+            // For READ endpoints, match against READ or MANAGE actions
+            else if (endpointType === Action.READ) {
+              return permission.action === Action.READ || permission.action === Action.MANAGE;
+            }
+            // For UPDATE endpoints, match against UPDATE or MANAGE actions
+            else if (endpointType === Action.UPDATE) {
+              return permission.action === Action.UPDATE || permission.action === Action.MANAGE;
+            }
+            // For DELETE endpoints, match against DELETE or MANAGE actions
+            else if (endpointType === Action.DELETE) {
+              return permission.action === Action.DELETE || permission.action === Action.MANAGE;
+            }
+            return false;
+          });
         }
       } else {
         // Fall back to standard permissions check
@@ -65,8 +66,6 @@ export class PermissionsGuard implements CanActivate {
           [context.getHandler(), context.getClass()],
         ) || [];
       }
-      // log permissiosn object
-      this.logger.debug(`Permissions object: ${JSON.stringify(BaseController.permissionsMap)}`);
       
       // If no permissions are required, allow access
       if (!requiredPermissions || requiredPermissions.length === 0) {
@@ -105,15 +104,15 @@ export class PermissionsGuard implements CanActivate {
         return true;
       }
         
-        // Check if the user has every required permissions for some role
-        const userPermissions = [
-          ...new Set(
-            user.employee?.roles?.flatMap(role => role.permissions).filter(Boolean) || []
-          )
-        ];
-        
-        this.logger.debug(`Required permissions: ${JSON.stringify(requiredPermissions)}`);
-        const hasRequiredPermissions = requiredPermissions.every(requiredPermission => {
+      // Check if the user has every required permissions for some role
+      const userPermissions = [
+        ...new Set(
+          user.employee?.roles?.flatMap(role => role.permissions).filter(Boolean) || []
+        )
+      ];
+      
+      this.logger.debug(`Required permissions: ${JSON.stringify(requiredPermissions)}`);
+      const hasRequiredPermissions = requiredPermissions.every(requiredPermission => {
         return userPermissions?.some(userPermission => {
           // Direct permission match
           const exactMatch = 

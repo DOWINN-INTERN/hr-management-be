@@ -1,4 +1,3 @@
-import { UsersModule } from '@/modules/account-management/users/users.module';
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ScheduleChangeRequest } from './entities/schedule-change-request.entity';
@@ -8,7 +7,6 @@ import { ScheduleChangeRequestsService } from './schedule-change-requests.servic
 @Module({
     imports: [
         TypeOrmModule.forFeature([ScheduleChangeRequest]),
-        UsersModule,
     ],
     providers: [ScheduleChangeRequestsService],
     exports: [

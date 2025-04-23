@@ -21,7 +21,6 @@ import { Authorize } from '../decorators/authorize.decorator';
 import { CurrentUser } from '../decorators/current-user.decorator';
 import { GeneralResponseDto } from '../dtos/generalresponse.dto';
 import { Action } from '../enums/action.enum';
-import { createPermissions } from '../factories/create-permissions.factory';
 import { UtilityHelper } from '../helpers/utility.helper';
 import { IPermission } from '../interfaces/permission.interface';
 
@@ -46,40 +45,14 @@ interface FindEntityOptions<T> {
 
 export abstract class BaseController<T extends BaseEntity<T>, GetDto, EntityDto = null, UpdateDto = null> {
     // Static permissions map that all instances share
-    public static permissionsMap: Record<string, ControllerPermissions> = {};
     protected permissions: ControllerPermissions = { Create: [], Read: [], Update: [], Delete: [] };
     
     constructor(
         protected readonly baseService: BaseService<T>,
         protected readonly getDtoClass: ClassConstructor<GetDto>,
         public readonly entityName: string,
-        entityNameOrPermissions?: string | ControllerPermissions
     ) { 
-        // Initialize static map if not exists
-        if (!BaseController.permissionsMap) {
-            BaseController.permissionsMap = {};
-        }
-        
-        // If string is passed, it's the entity name - generate permissions
-        if (typeof entityNameOrPermissions === 'string') {
-            entityName = entityNameOrPermissions;
-            const generatedPermissions = createPermissions(entityNameOrPermissions);
-            // Populate permissions with generated ones
-            this.permissions = {
-                Create: [generatedPermissions.Create],
-                Read: [generatedPermissions.Read],
-                Update: [generatedPermissions.Update],
-                Delete: [generatedPermissions.Delete],
-                Manage: [generatedPermissions.Manage],
-            };
-            
-            // Store in static map
-            BaseController.permissionsMap[this.constructor.name] = this.permissions;
-        } 
-        else if (entityNameOrPermissions) {
-            this.permissions = entityNameOrPermissions;
-            BaseController.permissionsMap[this.constructor.name] = this.permissions;
-        }
+
     }
 
     @Post()

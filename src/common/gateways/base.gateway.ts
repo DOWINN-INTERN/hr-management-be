@@ -38,7 +38,7 @@ export type WsResponseData = {
 export abstract class BaseGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect, OnModuleInit, OnModuleDestroy {
     @WebSocketServer() server!: Server;
     protected logger = new Logger(this.constructor.name);
-
+    private readonly connections = new Map<string, { count: number, lastConnect: Date }>();
     // Organized client tracking
     protected connectedClients = new Map<string, AuthenticatedSocket>();
     protected userRooms = new Map<string, Set<string>>();
@@ -61,11 +61,6 @@ export abstract class BaseGateway implements OnGatewayInit, OnGatewayConnection,
         protected readonly usersService: UsersService,
         protected readonly configService: ConfigService, // Add this
     ) {
-        this.MAX_MESSAGES_PER_MINUTE = this.configService.get('websocket.rateLimit', 60);
-        this.HEARTBEAT_INTERVAL = this.configService.get('websocket.heartbeatInterval', 60000);
-        this.CONNECTION_TIMEOUT = this.configService.get('websocket.connectionTimeout', 300000);
-        this.AUTH_TOKEN_EXPIRY_BUFFER = this.configService.get('websocket.tokenExpiryBuffer', 300);
-    
         // Configure compression
         const compressionThreshold = this.configService.get<number>('websocket.compressionThreshold', 1024);
         this.server?.engine?.on('connection', (socket) => {
@@ -77,7 +72,7 @@ export abstract class BaseGateway implements OnGatewayInit, OnGatewayConnection,
     
     // Gateway configuration
     protected abstract namespace: string;
-    protected abstract eventHandlers: Map<string, (client: AuthenticatedSocket, payload: any) => void>;
+    protected eventHandlers: Map<string, (client: AuthenticatedSocket, payload: any) => void> = new Map();
 
     protected metrics = {
         totalConnections: 0,
@@ -102,11 +97,60 @@ export abstract class BaseGateway implements OnGatewayInit, OnGatewayConnection,
     }
 
     afterInit(server: Server) {
-        this.logger.log(`WebSocket Gateway ${this.constructor.name} initialized`);
+        if (!server || !server.engine) {
+            this.logger.warn('Server or server.engine not available in afterInit');
+            return; // Exit early if server or server.engine is not available
+        }
+        const corsConfig = {
+            origin: this.configService.get<string[]>('cors.origins', []),
+            credentials: true,
+            methods: '*' as string | string[],
+            allowedHeaders: 'Content-Type, Accept, Authorization',
+            maxAge: 86400 // 24 hours
+        };
+        
+        // Apply CORS configuration to the server
+        server.engine.on('headers', (headers: any, req: any) => {
+            const origin = req.headers.origin;
+            if (corsConfig.origin.includes(origin) || corsConfig.origin.includes('*')) {
+                headers['Access-Control-Allow-Origin'] = origin;
+                headers['Access-Control-Allow-Credentials'] = corsConfig.credentials;
+                headers['Access-Control-Allow-Methods'] = typeof corsConfig.methods === 'string' ? 
+                    corsConfig.methods : (corsConfig.methods as string[]).join(', ');
+                headers['Access-Control-Allow-Headers'] = corsConfig.allowedHeaders;
+                headers['Access-Control-Max-Age'] = corsConfig.maxAge;
+                
+                // Security headers
+                headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains';
+                headers['X-Content-Type-Options'] = 'nosniff';
+                headers['X-XSS-Protection'] = '1; mode=block';
+                headers['X-Frame-Options'] = 'SAMEORIGIN'; // Prevents clickjacking
+                headers['Content-Security-Policy'] = "default-src 'self'"; // Restrictive CSP
+            }
+        });
     }
 
     handleConnection(client: AuthenticatedSocket) {
         try {
+            const ip = client.handshake.address;
+            const current = this.connections.get(ip) || { count: 0, lastConnect: new Date() };
+            
+            // Rate limiting logic
+            const now = new Date();
+            const timeDiff = now.getTime() - current.lastConnect.getTime();
+            if (timeDiff < 1000 && current.count > 5) {
+                client.disconnect();
+                this.logger.warn(`Rate limit exceeded for IP: ${ip}`);
+                return;
+            }
+            
+            // Update connection tracking
+            this.connections.set(ip, { 
+                count: timeDiff < 10000 ? current.count + 1 : 1, 
+                lastConnect: now 
+            });
+
+
             this.metrics.totalConnections++;
             this.metrics.activeConnections++;
             // Generate a unique connection ID for this socket
@@ -135,7 +179,7 @@ export abstract class BaseGateway implements OnGatewayInit, OnGatewayConnection,
                     return;
                 }
                 
-                const user = client.user.email || client.user.sub;
+                const user = client.user.sub;
                 this.connectedClients.set(user, client);
                 this.messageRateLimit.set(user, 0);
                 
@@ -309,11 +353,11 @@ export abstract class BaseGateway implements OnGatewayInit, OnGatewayConnection,
     private extractTokenFromSocket(client: AuthenticatedSocket): string | null {
         const origin = client.handshake.headers.origin;
         // log origin
-        // const allowedOrigins = this.configService.get<string[]>('cors.origins', []);
-        // if (!origin || !allowedOrigins.includes(origin)) {
-        //     this.logger.warn(`Connection attempt from unauthorized origin: ${origin}`);
-        //     return null;
-        // }
+        const allowedOrigins = this.configService.get<string[]>('cors.origins', []);
+        if (!origin || !allowedOrigins.includes(origin)) {
+            this.logger.warn(`Connection attempt from unauthorized origin: ${origin}`);
+            return null;
+        }
         
         // Try to get from handshake auth
         const authHeader = client.handshake.headers.authorization;
