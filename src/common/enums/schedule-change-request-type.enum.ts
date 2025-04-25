@@ -2,12 +2,6 @@ export enum ScheduleChangeRequestType {
     // Request for general time off from scheduled work
     TIME_OFF = 'TIME_OFF',
     
-    // Request to modify the timing or duration of an existing shift
-    SHIFT_CHANGE = 'SHIFT_CHANGE',
-    
-    // Request to work beyond regular scheduled hours
-    OVERTIME = 'OVERTIME',
-    
     // Request for time off due to illness or medical reasons
     SICK_LEAVE = 'SICK_LEAVE',
 

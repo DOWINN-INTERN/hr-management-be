@@ -6,6 +6,7 @@
   "schematics": "./collection.json",
   "scripts": {
     "build": "tsc -p tsconfig.json && node copy-assets.js",
+    "watch": "tsc -p tsconfig.json --watch",
     "prepublish": "npm run build"
   },
   "keywords": [

@@ -1,0 +1,16 @@
+export enum EmailStatus {
+    SENT = 'SENT',
+    FAILED = 'FAILED',
+    PENDING = 'PENDING',
+    QUEUED = 'QUEUED',
+    DELIVERED = 'DELIVERED',
+    OPENED = 'OPENED',
+    CLICKED = 'CLICKED',
+    UNSUBSCRIBED = 'UNSUBSCRIBED',
+    SPAM = 'SPAM',
+    BOUNCED = 'BOUNCED',
+    COMPLAINED = 'COMPLAINED',
+    DELAYED = 'DELAYED',
+    REJECTED = 'REJECTED',
+    INVALID = 'INVALID',
+}

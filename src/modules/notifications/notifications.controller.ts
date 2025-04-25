@@ -1,7 +1,7 @@
 import { CurrentUser } from '@/common/decorators/current-user.decorator';
 import { Override } from '@/common/decorators/override.decorator';
 import { createController } from '@/common/factories/create-controller.factory';
-import { Body, Controller, HttpStatus, Param, ParseUUIDPipe, Patch, Query } from '@nestjs/common';
+import { Body, HttpStatus, Param, ParseUUIDPipe, Patch, Query } from '@nestjs/common';
 import {
     ApiOperation,
     ApiParam,
@@ -13,19 +13,8 @@ import { Notification } from './entities/notification.entity';
 import { NotificationsGateway } from './gateways/notifications.gateway';
 import { NotificationsService } from './notifications.service';
 
-// Add the @Controller decorator to ensure proper DI metadata.
-@Controller('notifications')
-export class NotificationsController extends createController<
-    Notification, 
-    GetNotificationDto,
-    NotificationDto,
-    UpdateNotificationDto
->(
-    'Notifications',
-    NotificationsService,
-    GetNotificationDto,
-    NotificationDto,
-) {
+export class NotificationsController extends createController(Notification, NotificationsService, GetNotificationDto, NotificationDto, UpdateNotificationDto)
+{
 
     constructor(
         protected readonly notificationsService: NotificationsService,
@@ -35,10 +24,10 @@ export class NotificationsController extends createController<
     }
 
 
-    @ApiOperation({ summary: 'Create and send new notifications' })
+    @ApiOperation({ summary: 'Create and send a new notification' })
     @ApiResponse({ 
         status: HttpStatus.CREATED, 
-        description: 'Returns created notifications',
+        description: 'Returns created notification',
         type: GetNotificationDto,
         isArray: true
     })
@@ -53,7 +42,7 @@ export class NotificationsController extends createController<
         // Send real-time notifications if gateway is defined
         for (const notification of notifications) {
             // Remove optional chaining so gateway.sendNotification always gets called
-            await this.notificationsGateway.emitToUser(notification, notification.targetId);
+            this.notificationsGateway.emitToUser(notification, notification.user.id);
         }
         
         return notifications;
@@ -77,11 +66,7 @@ export class NotificationsController extends createController<
         @Param('id', ParseUUIDPipe) id: string,
         @CurrentUser('sub') userId: string
     ) {
-        await this.notificationsService.markAsRead(id, userId);
-        
-        const unreadCount = await this.notificationsService.countUnreadByUser(userId);
-        
-        return { success: true, unreadCount };
+        throw new Error('Method not implemented.');
     }
 
     @Patch('mark-all-read')
@@ -106,8 +91,6 @@ export class NotificationsController extends createController<
         @Query('category') category: string,
         @CurrentUser('sub') userId: string
     ) {
-        await this.notificationsService.markAllAsRead(userId);
-        
-        return { success: true, unreadCount: 0 };
+        throw new Error('Method not implemented.');
     }
 }

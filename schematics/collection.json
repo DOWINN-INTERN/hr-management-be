@@ -5,6 +5,11 @@
       "description": "Generate a general controller with standard CRUD operations",
       "factory": "./dist/general-controller/index#main",
       "schema": "./dist/general-controller/schema.json"
+    },
+    "gateway": {
+      "description": "Generate a gateway.",
+      "factory": "./dist/gateway/index#main",
+      "schema": "./src/gateway/schema.json"
     }
   }
 }

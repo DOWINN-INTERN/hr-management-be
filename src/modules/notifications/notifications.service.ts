@@ -1,10 +1,11 @@
 import { BaseService } from '@/common/services/base.service';
 import { UsersService } from '@/modules/account-management/users/users.service';
-import { Injectable, Logger, NotImplementedException } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DeepPartial, Repository } from 'typeorm';
 import { NotificationDto } from './dtos/notification.dto';
 import { Notification } from './entities/notification.entity';
+import { NotificationsGateway } from './gateways/notifications.gateway';
 
 @Injectable()
 export class NotificationsService extends BaseService<Notification> {
@@ -14,23 +15,21 @@ export class NotificationsService extends BaseService<Notification> {
     @InjectRepository(Notification)
     private notificationRepo: Repository<Notification>,
     protected readonly usersService: UsersService,
+    private readonly notificationsGateway: NotificationsGateway
   ) {
     super(notificationRepo, usersService);
   }
 
-  async countUnreadByUser(userId: string): Promise<number> {
-    throw new NotImplementedException('Method not implemented');
+  override async create(createDto: DeepPartial<Notification>, createdBy?: string): Promise<Notification> {
+    const notification = await super.create(createDto, createdBy);
+    this.notificationsGateway.emitToUser(notification, notification.user.id);
+    return notification;
   }
 
-  async markAsRead(notificationId: string, userId: string): Promise<void> {
-    await this.update(notificationId, {
-      read: true,
-      readAt: new Date()
-    } as DeepPartial<Notification>, userId);
-  }
-
-  async markAllAsRead(userId: string): Promise<void> {
-    throw new NotImplementedException('Method not implemented');
+  override async update(id: string, updateDto: DeepPartial<Notification>, updatedBy?: string): Promise<Notification> {
+    const notification = await super.update(id, updateDto, updatedBy);
+    this.notificationsGateway.emitToUser(notification, notification.user.id);
+    return notification;
   }
   
   async createBulkNotifications(dto: NotificationDto, createdBy: string): Promise<Notification[]> {
@@ -41,7 +40,7 @@ export class NotificationsService extends BaseService<Notification> {
       }
       return this.notificationRepo.create({
         ...dto,
-        targetId: recipient.id, // this should not be null if recipient.id is provided
+        user: { id: recipient.id }, // this should not be null if recipient.id is provided
         read: false,
         createdBy,
       });

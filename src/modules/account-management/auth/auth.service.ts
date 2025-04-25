@@ -1,9 +1,11 @@
 import { UtilityHelper } from '@/common/helpers/utility.helper';
 import { CommonService } from '@/common/services/common.service';
+import { EmailsService } from '@/modules/emails/emails.service';
 import { ConflictException, Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcrypt';
 import { CookieOptions, Request, Response } from 'express';
+import { v4 as uuidv4 } from 'uuid';
 import { SessionsService } from '../sessions/sessions.service';
 import { User } from '../users/entities/user.entity';
 import { UsersService } from '../users/users.service';
@@ -15,6 +17,7 @@ import { JwtService } from './services/jwt.service';
 @Injectable()
 export class AuthService {
   private readonly logger = new Logger(AuthService.name);
+  private readonly VERIFICATION_TOKEN_EXPIRATION_HOURS = 24; // 24 hours
 
   constructor(
     private readonly usersService: UsersService,
@@ -22,6 +25,7 @@ export class AuthService {
     private readonly configService: ConfigService,
     private readonly commonService: CommonService,
     private readonly sessionsService: SessionsService,
+    private readonly emailsService: EmailsService,
   ) {}
 
   private readonly commonCookieOptions: CookieOptions = {
@@ -30,6 +34,33 @@ export class AuthService {
     // sameSite: 'lax',
     maxAge: this.configService.getOrThrow<number>('ACCESS_TOKEN_EXPIRATION_MINUTES') * 60 * 1000,
   };
+
+  // Add this method for sending verification emails
+  async sendVerificationEmail(user: User): Promise<boolean> {
+    // Generate verification token (you may want to store this in the user record)
+    const verificationToken = uuidv4();
+    
+    // Store the token in the user record with an expiration
+    user.verificationToken = verificationToken;
+    user.verificationTokenExpires = new Date(Date.now() + this.VERIFICATION_TOKEN_EXPIRATION_HOURS * 60 * 60 * 1000); // 24 hours
+    await this.usersService.update(user.id, user);
+    
+    // Build verification URL
+    const baseUrl = this.configService.getOrThrow<string>('FRONTEND_URL');
+    const verificationUrl = `${baseUrl}/verify-email?token=${verificationToken}`;
+    
+    // Send the email
+    return this.emailsService.sendTemplatedEmail(
+      user.email,
+      'email-verification',
+      {
+        firstName: user.profile?.firstName || 'User',
+        lastName: user.profile?.lastName,
+        verificationUrl,
+        expiry: this.VERIFICATION_TOKEN_EXPIRATION_HOURS,
+      }
+    );
+  }
 
   async validateUser(model: LoginUserDto): Promise<User | null> {
     // check if emailOrUserName property is an email
@@ -220,7 +251,50 @@ export class AuthService {
     }
 
     // create new user
-    return this.usersService.signUpUser(model);
+    const user = await this.usersService.signUpUser(model);
+
+    // can be decoupled to an event or queue
+    await this.sendVerificationEmail(user).catch((error) => {
+      this.logger.error('Failed to send verification email', error);
+    });
+
+    return user;
+  }
+
+  // Add a method to verify email
+  async verifyEmail(token: string): Promise<boolean> {
+    const user = await this.usersService.findOneBy({ verificationToken: token });
+    
+    if (!user || !user.verificationTokenExpires) {
+      return false;
+    }
+    
+    // Check if token is expired
+    if (user.verificationTokenExpires < new Date()) {
+      return false;
+    }
+    
+    // Mark email as verified
+    user.emailVerified = true;
+    user.verificationToken = undefined;
+    user.verificationTokenExpires = undefined;
+    await this.usersService.update(user.id, user);
+    
+    // Optionally send welcome email
+    // can be decoupled
+    this.emailsService.sendTemplatedEmail(
+      user.email,
+      'welcome',
+      {
+        firstName: user.profile?.firstName || 'User',
+        lastName: user.profile?.lastName,
+        appName: this.configService.getOrThrow<string>('APP_NAME'),
+      }
+    ).catch(error => {
+      this.logger.error(`Failed to send welcome email: ${error.message}`);
+    });
+    
+    return true;
   }
 
   clearAuthCookies(response: Response): Response {
@@ -316,6 +390,10 @@ export class AuthService {
     var user = await this.validateUser(model);
     if (!user) {
       throw new UnauthorizedException('Invalid email or password');
+    }
+
+    if (user.emailVerified === false) {
+      throw new UnauthorizedException('Email not verified');
     }
 
     const refreshToken = await this.jwtService.createRefreshToken();

@@ -30,6 +30,11 @@ export class ProfileDto {
   @IsString()
   lastName!: string;
 
+  @ApiProperty({ description: 'Full name of the profile', example: 'John Doe' })
+  @IsString()
+  @IsNotEmpty()
+  fullName!: string;
+
   @ApiProperty({ description: 'Suffix (Jr., Sr., etc.)', required: false })
   @IsOptional()
   @IsString()

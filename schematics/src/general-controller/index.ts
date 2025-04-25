@@ -1,19 +1,19 @@
 import { normalize, strings } from '@angular-devkit/core';
 import {
-    Rule,
-    SchematicContext,
-    Tree,
-    apply,
-    branchAndMerge,
-    chain,
-    forEach,
-    mergeWith,
-    move,
-    noop,
-    template,
-    url
+  Rule,
+  SchematicContext,
+  Tree,
+  apply,
+  branchAndMerge,
+  chain,
+  forEach,
+  mergeWith,
+  move,
+  noop,
+  template,
+  url
 } from '@angular-devkit/schematics';
-import { Schema } from './schema';
+import { Schema } from '../schema';
 
 export function main(options: Schema): Rule {
     return (tree: Tree, _context: SchematicContext) => {
@@ -37,6 +37,7 @@ export function main(options: Schema): Rule {
       // Create directory structure
       const entityPath = `${basePath}/entities`;
       const dtoPath = `${basePath}/dtos`;
+      const gatewayPath = `${basePath}/gateways`;
       
       if (!tree.exists(entityPath)) {
         tree.create(entityPath + '/.gitkeep', '');
@@ -44,6 +45,10 @@ export function main(options: Schema): Rule {
       
       if (!tree.exists(dtoPath)) {
         tree.create(dtoPath + '/.gitkeep', '');
+      }
+
+      if (!tree.exists(gatewayPath)) {
+        tree.create(gatewayPath + '/.gitkeep', '');
       }
   
       // Apply templates and manipulate paths
@@ -76,6 +81,14 @@ export function main(options: Schema): Rule {
             return {
               content: fileEntry.content,
               path: normalize(`dtos/${options.entityName}.dto.ts`)
+            };
+          }
+
+          // Gateway files go to gateways folder
+          if (fileName.endsWith('.gateway.ts')) {
+            return {
+              content: fileEntry.content,
+              path: normalize(`gateways/${options.entityName}.gateway.ts`)
             };
           }
           

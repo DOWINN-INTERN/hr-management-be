@@ -1,21 +1,16 @@
+import { GeneralResponseDto } from '@/common/dtos/generalresponse.dto';
 import { createController } from '@/common/factories/create-controller.factory';
-import { GetSessionDto, SessionDto, UpdateSessionDto } from './dtos/session.dto';
+import { GetSessionDto, UpdateSessionDto } from './dtos/session.dto';
 import { Session } from './entities/session.entity';
 import { SessionsService } from './sessions.service';
 
-export class SessionsController extends createController<
-    Session,
-    GetSessionDto,
-    SessionDto,
-    UpdateSessionDto
->(
-    'Sessions',       // Entity name for Swagger documentation
-    SessionsService, // The service handling Session-related operations
-    GetSessionDto,  // DTO for retrieving Sessions
-    SessionDto,     // DTO for creating Sessions
-    UpdateSessionDto // DTO for updating Sessions
-) {
-    override async create(entityDto: SessionDto, createdById: string): Promise<GetSessionDto> {
+export class SessionsController extends createController(Session, SessionsService, GetSessionDto, undefined, UpdateSessionDto)
+{
+    override async create(entityDto: any, createdById: string): Promise<GetSessionDto> {
         return await super.create(entityDto, createdById);
+    }
+
+    override async delete(id: string): Promise<GeneralResponseDto> {
+        return await super.delete(id);
     }
 }

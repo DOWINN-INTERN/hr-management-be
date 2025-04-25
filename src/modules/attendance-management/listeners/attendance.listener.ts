@@ -1,15 +1,16 @@
+import { ATTENDANCE_EVENTS, AttendanceEvent } from '@/common/events/attendance.event';
 import { AttendancePunchesService } from '@/modules/attendance-management/attendance-punches/attendance-punches.service';
 import { AttendancesService } from '@/modules/attendance-management/attendances.service';
 import { IBiometricService } from '@/modules/biometrics/interfaces/biometric.interface';
 import { BiometricDevicesService } from '@/modules/biometrics/services/biometric-devices.service';
 import { EmployeesService } from '@/modules/employee-management/employees.service';
+import { NotificationsService } from '@/modules/notifications/notifications.service';
 import { SchedulesService } from '@/modules/schedule-management/schedules.service';
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { differenceInMinutes, format, isAfter, isBefore, parseISO } from 'date-fns';
-import { AttendanceStatus } from '../enums/attendance-status.enum';
-import { ScheduleStatus } from '../enums/schedule-status';
-import { ATTENDANCE_EVENTS, AttendanceRecordedEvent } from '../events/attendance-recorded.event';
+import { AttendanceStatus } from '../../../common/enums/attendance-status.enum';
+import { ScheduleStatus } from '../../../common/enums/schedule-status';
 
 @Injectable()
 export class AttendanceListener {
@@ -26,10 +27,11 @@ export class AttendanceListener {
     private readonly employeesService: EmployeesService,
     private readonly schedulesService: SchedulesService,
     private readonly biometricDevicesService: BiometricDevicesService,
+    private readonly notificationService: NotificationsService,
   ) {}
 
   @OnEvent(ATTENDANCE_EVENTS.ATTENDANCE_RECORDED)
-  async handleAttendanceRecorded(event: AttendanceRecordedEvent): Promise<void> {
+  async handleAttendanceRecorded(event: AttendanceEvent): Promise<void> {
     this.logger.log(`Handling attendance recorded event for ${event.attendances.length} records`);
     
     // Get the biometric device entity
@@ -84,7 +86,11 @@ export class AttendanceListener {
         if (todaySchedule.status === ScheduleStatus.LEAVE) {
           this.logger.warn(`Employee ${employee.id} is on leave today`);
           // notify employee and higher ups
-          continue;
+        }
+
+        if (todaySchedule.restDay)
+        {
+
         }
 
         const { shift, startTime, endTime } = todaySchedule;

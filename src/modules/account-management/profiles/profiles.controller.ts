@@ -6,18 +6,8 @@ import { GetProfileDto, ProfileDto, UpdateProfileDto } from './dtos/profile.dto'
 import { Profile } from './entities/profile.entity';
 import { ProfilesService } from './profiles.service';
 
-export class ProfilesController extends createController<
-    Profile,
-    GetProfileDto,
-    ProfileDto,
-    UpdateProfileDto
->(
-    'Profiles',       // Entity name for Swagger documentation
-    ProfilesService, // The service handling Profile-related operations
-    GetProfileDto,  // DTO for retrieving profiles
-    ProfileDto,     // DTO for creating profiles
-    UpdateProfileDto, // DTO for updating profiles
-) {
+export class ProfilesController extends createController(Profile, ProfilesService, GetProfileDto, ProfileDto, UpdateProfileDto)
+{
     override findAllAdvanced(paginationDto: PaginationDto<Profile>): Promise<PaginatedResponseDto<GetProfileDto>> {
         return super.findAllAdvanced(paginationDto);
     }

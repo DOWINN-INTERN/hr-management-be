@@ -2,7 +2,7 @@ import { Authorize } from '@/common/decorators/authorize.decorator';
 import { CurrentUser } from '@/common/decorators/current-user.decorator';
 import { GeneralResponseDto } from '@/common/dtos/generalresponse.dto';
 import { Action } from '@/common/enums/action.enum';
-import { createController } from "@/common/factories/create-controller.factory";
+import { createController } from '@/common/factories/create-controller.factory';
 import { Body, Get, HttpStatus, Param, Post, Query, Res } from '@nestjs/common';
 import { ApiBody, ApiOperation, ApiParam, ApiQuery, ApiResponse } from '@nestjs/swagger';
 import { plainToInstance } from 'class-transformer';
@@ -11,18 +11,8 @@ import { GetPayrollDto, PayrollDto, UpdatePayrollDto } from "./dtos/payroll.dto"
 import { Payroll } from "./entities/payroll.entity";
 import { PayrollsService } from "./payrolls.service";
 
-export class PayrollsController extends createController<
-    Payroll,
-    GetPayrollDto,
-    PayrollDto,
-    UpdatePayrollDto
->(
-    'Payrolls',       // Entity name for Swagger documentation
-    PayrollsService,  // The service handling Payroll-related operations
-    GetPayrollDto,    // DTO for retrieving Payrolls
-    PayrollDto,       // DTO for creating Payrolls
-    UpdatePayrollDto, // DTO for updating Payrolls
-) {
+export class PayrollsController extends createController(Payroll, PayrollsService, GetPayrollDto, PayrollDto, UpdatePayrollDto)
+{
     constructor(private readonly payrollsService: PayrollsService) {
         super(payrollsService);
     }

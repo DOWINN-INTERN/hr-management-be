@@ -3,7 +3,7 @@ import { BaseEntity } from '@/database/entities/base.entity';
 import { Employee } from '@/modules/employee-management/entities/employee.entity';
 import { Schedule } from '@/modules/schedule-management/entities/schedule.entity';
 import { Column, Entity, JoinColumn, ManyToOne, OneToMany, OneToOne } from 'typeorm';
-import { AttendancePunches } from '../attendance-punches/entities/attendance-punch.entity';
+import { AttendancePunch } from '../attendance-punches/entities/attendance-punch.entity';
 import { FinalWorkHour } from '../final-work-hours/entities/final-work-hour.entity';
 import { WorkTimeRequest } from '../work-time-requests/entities/work-time-request.entity';
 
@@ -28,8 +28,8 @@ export class Attendance extends BaseEntity<Attendance> {
     @JoinColumn({ name: 'scheduleId' })
     schedule!: Schedule;
 
-    @OneToMany(() => AttendancePunches, (attendancePunches: AttendancePunches) => attendancePunches.attendance, { cascade: true })
-    attendancePunches!: AttendancePunches[];
+    @OneToMany(() => AttendancePunch, (attendancePunches: AttendancePunch) => attendancePunches.attendance, { cascade: true })
+    attendancePunches!: AttendancePunch[];
 
     @OneToMany(() => WorkTimeRequest, (workTimeRequest: WorkTimeRequest) => workTimeRequest.attendance, { cascade: true, nullable: true })
     workTimeRequests?: WorkTimeRequest[];

@@ -15,4 +15,5 @@ export class SessionsService extends BaseService<Session> {
     ) {
         super(sessionsRepository, usersService);
     }
+
 }

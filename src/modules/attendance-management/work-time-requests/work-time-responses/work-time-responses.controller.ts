@@ -4,18 +4,8 @@ import { GetWorkTimeResponseDto, UpdateWorkTimeResponseDto, WorkTimeResponseDto 
 import { WorkTimeResponse } from "./entities/work-time-response.entity";
 import { WorkTimeResponsesService } from "./work-time-responses.service";
 
-export class WorkTimeResponsesController extends createController<
-    WorkTimeResponse,
-    GetWorkTimeResponseDto,
-    WorkTimeResponseDto,
-    UpdateWorkTimeResponseDto
->(
-    'WorkTimeResponses',       // Entity name for Swagger documentation
-    WorkTimeResponsesService, // The service handling WorkTimeResponse-related operations
-    GetWorkTimeResponseDto,  // DTO for retrieving WorkTimeResponses
-    WorkTimeResponseDto,     // DTO for creating WorkTimeResponses
-    UpdateWorkTimeResponseDto, // DTO for updating WorkTimeResponses
-) {
+export class WorkTimeResponsesController extends createController(WorkTimeResponse, WorkTimeResponsesService, GetWorkTimeResponseDto, WorkTimeResponseDto, UpdateWorkTimeResponseDto)
+{
     override async delete(id: string): Promise<GeneralResponseDto> {
         return await super.delete(id);
     }

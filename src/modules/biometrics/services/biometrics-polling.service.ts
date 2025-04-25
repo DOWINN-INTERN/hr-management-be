@@ -1,4 +1,4 @@
-import { ATTENDANCE_EVENTS, AttendanceRecordedEvent } from '@/common/events/attendance-recorded.event';
+import { ATTENDANCE_EVENTS, AttendanceEvent } from '@/common/events/attendance.event';
 import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { EventEmitter2 } from '@nestjs/event-emitter';
@@ -127,7 +127,7 @@ export class BiometricsPollingService implements OnModuleInit, OnModuleDestroy {
             });
 
             // Emit event for new records
-            this.eventEmitter.emit(ATTENDANCE_EVENTS.ATTENDANCE_RECORDED, new AttendanceRecordedEvent(attendances, deviceId));
+            this.eventEmitter.emit(ATTENDANCE_EVENTS.ATTENDANCE_RECORDED, new AttendanceEvent(attendances, deviceId));
           }
           
           // Update counters

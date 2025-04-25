@@ -19,6 +19,9 @@ export class Profile extends BaseEntity<Profile> {
   @Column()
   lastName!: string;
 
+  @Column()
+  fullName!: string;
+
   @Column({ nullable: true })
   suffix?: string;
 

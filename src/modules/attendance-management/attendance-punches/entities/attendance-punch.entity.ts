@@ -4,7 +4,7 @@ import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
 import { Attendance } from '../../entities/attendance.entity';
 
 @Entity('attendance-punches')
-export class AttendancePunches extends BaseEntity<AttendancePunches> {
+export class AttendancePunch extends BaseEntity<AttendancePunch> {
     @ManyToOne(() => Attendance, (attendance: Attendance) => attendance.attendancePunches)
     @JoinColumn({ name: 'attendanceId' })
     attendance!: Attendance;

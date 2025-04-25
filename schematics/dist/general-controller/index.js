@@ -21,11 +21,15 @@ function main(options) {
         // Create directory structure
         const entityPath = `${basePath}/entities`;
         const dtoPath = `${basePath}/dtos`;
+        const gatewayPath = `${basePath}/gateways`;
         if (!tree.exists(entityPath)) {
             tree.create(entityPath + '/.gitkeep', '');
         }
         if (!tree.exists(dtoPath)) {
             tree.create(dtoPath + '/.gitkeep', '');
+        }
+        if (!tree.exists(gatewayPath)) {
+            tree.create(gatewayPath + '/.gitkeep', '');
         }
         // Apply templates and manipulate paths
         const templateSource = (0, schematics_1.apply)((0, schematics_1.url)('./files'), [
@@ -51,6 +55,13 @@ function main(options) {
                     return {
                         content: fileEntry.content,
                         path: (0, core_1.normalize)(`dtos/${options.entityName}.dto.ts`)
+                    };
+                }
+                // Gateway files go to gateways folder
+                if (fileName.endsWith('.gateway.ts')) {
+                    return {
+                        content: fileEntry.content,
+                        path: (0, core_1.normalize)(`gateways/${options.entityName}.gateway.ts`)
                     };
                 }
                 // All other files use the moduleName

@@ -17,7 +17,7 @@ export class UsersService extends BaseService<User>{
 
   async signUpUser(model: RegisterUserDto): Promise<User> {
     const hashedPassword = await bcrypt.hash(model.password, 10);
-    const user = this.create({ ...model, password: hashedPassword, userName: model.userName.toLowerCase().trim(), email: model.email.toLowerCase().trim() });
+    const user = this.create({ ...model, password: hashedPassword, emailVerified: false, userName: model.userName.toLowerCase().trim(), email: model.email.toLowerCase().trim() });
     return user;
   }
 

@@ -8,6 +8,7 @@ import {
     Get,
     HttpStatus,
     InternalServerErrorException,
+    Logger,
     NotFoundException,
     Param,
     Post,
@@ -43,12 +44,12 @@ interface FindEntityOptions<T> {
     transaction?: boolean;
 }
 
-export abstract class BaseController<T extends BaseEntity<T>, GetDto, EntityDto = null, UpdateDto = null> {
+export abstract class BaseController<T extends BaseEntity<T>, K extends BaseService<T>, GetDto, EntityDto = null, UpdateDto = null> {
     // Static permissions map that all instances share
     protected permissions: ControllerPermissions = { Create: [], Read: [], Update: [], Delete: [] };
-    
+    protected logger = new Logger(this.constructor.name);
     constructor(
-        protected readonly baseService: BaseService<T>,
+        protected readonly baseService: K,
         protected readonly getDtoClass: ClassConstructor<GetDto>,
         public readonly entityName: string,
     ) { 
@@ -241,7 +242,7 @@ export abstract class BaseController<T extends BaseEntity<T>, GetDto, EntityDto 
             }
             const errorMessage = error instanceof Error ? error.message : 'Unknown error';
             throw new InternalServerErrorException(
-                `Error retrieving ${this.entityName} with criteria ${JSON.stringify(criteria)}: ${errorMessage}`
+                `Error retrieving ${this.entityName.toLowerCase()} with criteria ${JSON.stringify(criteria)}: ${errorMessage}`
             );
         }
     }

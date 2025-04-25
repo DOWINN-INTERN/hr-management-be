@@ -14,7 +14,7 @@ export type Expression<T, TResult> = (entity: T) => TResult;
 
 @Injectable()
 export abstract class BaseService<T extends BaseEntity<T>> {
-  protected readonly logger = new Logger(BaseService.name);
+  protected logger = new Logger(this.constructor.name);
   protected readonly transactionService = new TransactionService(dataSource);
   private readonly entityName = this.repository.target instanceof Function ? this.repository.target.name : 'Entity';
   private readonly entityType = this.repository.target instanceof Function ? this.repository.target : Object;
@@ -984,8 +984,6 @@ export abstract class BaseService<T extends BaseEntity<T>> {
     
     await this.repository.softDelete(id);
     
-    // return this.findOneByOrFail({ id } as Partial<T>);
-
     const response = new GeneralResponseDto();
     response.statusCode = HttpStatus.NO_CONTENT;
     response.timestamp = new Date().toISOString();

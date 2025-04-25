@@ -1,5 +1,6 @@
 import { Authorize } from '@/common/decorators/authorize.decorator';
 import { CurrentUser } from '@/common/decorators/current-user.decorator';
+import { GeneralResponseDto } from '@/common/dtos/generalresponse.dto';
 import { IJwtPayload } from '@/common/interfaces/jwt-payload.interface';
 import { Body, Controller, Get, Post, Req, Res, UnauthorizedException, UseGuards } from '@nestjs/common';
 import { ApiBody, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
@@ -7,6 +8,7 @@ import { plainToInstance } from 'class-transformer';
 import { Request, Response } from 'express';
 import { GoogleAuthGuard } from '../../../common/guards/google-auth.guard';
 import { GetUserDto } from '../users/dtos/user.dto';
+import { UsersService } from '../users/users.service';
 import { AuthService } from './auth.service';
 import { LoginUserDto } from './dto/login-user.dto';
 import { RegisterUserDto } from './dto/register-user.dto';
@@ -14,7 +16,7 @@ import { RegisterUserDto } from './dto/register-user.dto';
 @ApiTags('Auth')
 @Controller()
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(private readonly authService: AuthService, private readonly usersService: UsersService) {}
 
   @Get('google')
   @UseGuards(GoogleAuthGuard)
@@ -31,6 +33,41 @@ export class AuthController {
     const login = await this.authService.loginUser(loginDto, request);
     await this.authService.setAuthCookies(response, login);
     return login;
+  }
+
+  @Post('verify-email')
+  @ApiOperation({ summary: 'Verify user email' })
+  async verifyEmail(@Body() body: { token: string }): Promise<Partial<GeneralResponseDto>> {
+    const result = await this.authService.verifyEmail(body.token);
+    
+    return {
+      statusCode: result ? 200 : 400,
+      message: result 
+        ? 'Email verified successfully' 
+        : 'Invalid or expired verification token',
+    };
+  }
+
+  @Post('resend-verification')
+  @ApiOperation({ summary: 'Resend email verification link' })
+  @ApiResponse({ status: 200, description: 'Verification email sent successfully.' })
+  @ApiResponse({ status: 400, description: 'Email is already verified' })
+  async resendVerification(@Body() body: { email: string }): Promise<Partial<GeneralResponseDto>> {
+    const user = await this.usersService.findOneByOrFail({ email: body.email });
+    
+    if (user.emailVerified) {
+      return {
+        message: 'Email is already verified',
+      };
+    }
+    
+    const result = await this.authService.sendVerificationEmail(user);
+    
+    return {
+      message: result 
+        ? 'Verification email sent successfully' 
+        : 'Failed to send verification email',
+    };
   }
 
   // @Public()

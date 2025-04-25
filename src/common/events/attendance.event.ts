@@ -4,7 +4,7 @@ export const ATTENDANCE_EVENTS = {
   ATTENDANCE_RECORDED: 'attendance.recorded'
 };
   
-export class AttendanceRecordedEvent {
+export class AttendanceEvent {
   constructor(
     public readonly attendances: AttendanceRecord[],
     public readonly deviceId: string,

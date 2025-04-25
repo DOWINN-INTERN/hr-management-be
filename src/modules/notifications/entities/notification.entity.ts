@@ -1,14 +1,10 @@
-import { NotificationTargetType } from '@/common/enums/notification-target-type.enum';
 import { NotificationType } from '@/common/enums/notification-type.enum';
 import { BaseEntity } from '@/database/entities/base.entity';
 import { User } from '@/modules/account-management/users/entities/user.entity';
-import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
 
 @Entity('notifications')
 export class Notification extends BaseEntity<Notification> {
-  @PrimaryGeneratedColumn('uuid')
-  id!: string;
-
   @Column()
   title!: string;
 
@@ -23,34 +19,24 @@ export class Notification extends BaseEntity<Notification> {
     enum: NotificationType,
     default: NotificationType.INFO
   })
-  type: NotificationType = NotificationType.INFO;
+  type!: NotificationType;
 
   @Column({ nullable: true })
   link?: string;
 
   @Column({ default: false })
-  read: boolean = false;
+  read!: boolean;
 
   @Column({ nullable: true })
   readAt?: Date;
 
-  @Column({
-    type: 'enum',
-    enum: NotificationTargetType,
-    default: NotificationTargetType.USER
-  })
-  targetType!: NotificationTargetType;
-
   @Column()
   category!: string;
-
-  @Column({ nullable: true })
-  targetId?: string;
 
   @Column('json', { nullable: true })
   metadata?: Record<string, any>;
 
-  @ManyToOne(() => User, (user: User) => user.notifications)
+  @ManyToOne(() => User, (user: User) => user.notifications, { eager: true, cascade: true })
   @JoinColumn({ name: 'userId' })
   user!: User;
 }

@@ -11,7 +11,7 @@ import { Session } from '../../sessions/entities/session.entity';
 @Entity('users')
 export class User extends BaseEntity<User> {
   @Column({ unique: true })
-  email?: string;
+  email!: string;
 
   @Column()
   password!: string;
@@ -48,6 +48,12 @@ export class User extends BaseEntity<User> {
 
   @Column({ type: 'timestamp', nullable: true })
   lockOutEnd?: Date;
+
+  @Column({ nullable: true })
+  verificationToken?: string;
+
+  @Column({ nullable: true })
+  verificationTokenExpires?: Date;
 
   @OneToMany(() => Session, (session: Session) => session.user)
   sessions?: Session[];

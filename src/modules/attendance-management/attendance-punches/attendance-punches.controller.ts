@@ -2,16 +2,10 @@ import { GeneralResponseDto } from "@/common/dtos/generalresponse.dto";
 import { createController } from "@/common/factories/create-controller.factory";
 import { AttendancePunchesService } from "./attendance-punches.service";
 import { GetAttendancePunchDto } from "./dtos/attendance-punch.dto";
-import { AttendancePunches } from "./entities/attendance-punch.entity";
+import { AttendancePunch } from "./entities/attendance-punch.entity";
 
-export class AttendancePunchesController extends createController<
-    AttendancePunches,
-    GetAttendancePunchDto
->(
-    'AttendancePunches',       // Entity name for Swagger documentation
-    AttendancePunchesService, // The service handling AttendancePunches-related operations
-    GetAttendancePunchDto,  // DTO for retrieving AttendancePunches
-) {
+export class AttendancePunchesController extends createController(AttendancePunch, AttendancePunchesService, GetAttendancePunchDto)
+{
     override async create(entityDto: null, createdById: string): Promise<GetAttendancePunchDto> {
         return await super.create(entityDto, createdById);
     }

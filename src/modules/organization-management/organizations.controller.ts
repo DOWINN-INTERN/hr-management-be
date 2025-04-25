@@ -3,17 +3,7 @@ import { GetOrganizationDto, OrganizationDto, UpdateOrganizationDto } from './dt
 import { Organization } from './entities/organization.entity';
 import { OrganizationsService } from './organizations.service';
 
-export class OrganizationsController extends createController<
-    Organization,
-    GetOrganizationDto,
-    OrganizationDto,
-    UpdateOrganizationDto
->(
-    'Organizations',
-    OrganizationsService,
-    GetOrganizationDto,
-    OrganizationDto,
-    UpdateOrganizationDto
-) {
+export class OrganizationsController extends createController(Organization, OrganizationsService, GetOrganizationDto, OrganizationDto, UpdateOrganizationDto)
+{
 
 }

@@ -10,5 +10,11 @@
         "outDir": "dist"
       }
     ]
+  },
+  "schematics": {
+    "gateway": {
+      "source": "my-nestjs-schematics",
+      "factory": "gateway"
+    }
   }
 }

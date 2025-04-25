@@ -1,7 +1,7 @@
 import { BaseEntity } from '@/database/entities/base.entity';
 import { Body, Controller, HttpStatus, Inject, Param, Query, Type } from '@nestjs/common';
 import { ApiBody, ApiOperation, ApiParam, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
-import { singular } from 'pluralize';
+import pluralize, { singular } from 'pluralize';
 import { BaseController } from '../controllers/base.controller';
 import { CurrentUser } from '../decorators/current-user.decorator';
 import { Override } from '../decorators/override.decorator';
@@ -10,41 +10,53 @@ import { PaginatedResponseDto } from '../dtos/paginated-response.dto';
 import { PaginationDto } from '../dtos/pagination.dto';
 import { BaseService } from '../services/base.service';
 
-export function createController<TEntity extends BaseEntity<TEntity>, GetDto, CreateDto = null, UpdateDto = null>(
-  entityName: string,
-  ServiceClass: Type<BaseService<TEntity>>,
-  getDtoClass: any,
-  createDtoClass?: any,
-  updateDtoClass?: any
+export function createController<TEntity extends BaseEntity<TEntity>, Service extends BaseService<TEntity>, GetDto, CreateDto = null, UpdateDto = null>(
+  EntityClass: Type<TEntity>,
+  ServiceClass: Type<Service>,
+  getDtoClass: Type<GetDto>,
+  createDtoClass?: Type<CreateDto>,
+  updateDtoClass?: Type<UpdateDto>
 ) {
-  @ApiTags(entityName)
+
+  // Extract entity name from class (removing "Entity" suffix if present)
+  const entityName = EntityClass.name.replace(/Entity$/, '');
+
+  // Add spaces before capital letters (except the first letter)
+  const spacedEntityName = entityName.replace(/([A-Z])/g, ' $1').trim();
+  // For the first character, ensure it's capitalized without a preceding space
+  const formattedEntityName = spacedEntityName.charAt(0).toUpperCase() + spacedEntityName.slice(1);
+
+  // Determine plural name for controller routes (used in swagger docs)
+  const pluralName = pluralize(formattedEntityName);
+
+  @ApiTags(pluralName)
   @Controller()
-  class DynamicController extends BaseController<TEntity, GetDto, CreateDto, UpdateDto> {
+  class DynamicController extends BaseController<TEntity, Service, GetDto, CreateDto, UpdateDto> {
     constructor(
-      @Inject(ServiceClass) baseService: BaseService<TEntity>,
+      @Inject(ServiceClass) baseService: Service,
     ) {
-      super(baseService, getDtoClass, entityName);
+      super(baseService, getDtoClass, formattedEntityName);
     }
 
     @Override()
     @ApiOperation({ 
-      summary: `Create a new ${singular(entityName)}`,
-      description: `Creates a new ${singular(entityName)} record in the database with the provided data.`
+      summary: `Create a New ${singular(formattedEntityName)}`,
+      description: `Creates a new ${singular(formattedEntityName.toLowerCase())} record in the database with the provided data.`
     })
     @ApiBody({ 
       type: createDtoClass, 
-      description: `${singular(entityName)} creation data`,
+      description: `${singular(formattedEntityName)} creation data`,
       required: true
     })
     @ApiResponse({ 
       status: HttpStatus.CREATED, 
-      description: `The ${singular(entityName)} has been successfully created.`,
+      description: `${singular(formattedEntityName)} has been successfully created.`,
       type: getDtoClass
     })
     @ApiResponse({ status: HttpStatus.BAD_REQUEST, description: 'Invalid input data.', type: GeneralResponseDto })
     @ApiResponse({ status: HttpStatus.UNPROCESSABLE_ENTITY, description: 'Unprocessable entity.', type: GeneralResponseDto })
     @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized.', type: GeneralResponseDto })
-    @ApiResponse({ status: HttpStatus.CONFLICT, description: `${singular(entityName)} already exists.`, type: GeneralResponseDto })
+    @ApiResponse({ status: HttpStatus.CONFLICT, description: `${singular(formattedEntityName)} already exists.`, type: GeneralResponseDto })
     @ApiResponse({ status: HttpStatus.INTERNAL_SERVER_ERROR, description: 'Internal server error.', type: GeneralResponseDto })
     @ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Related entity not found.', type: GeneralResponseDto })
     @ApiResponse({ status: HttpStatus.FORBIDDEN, description: 'Forbidden.', type: GeneralResponseDto })
@@ -57,28 +69,28 @@ export function createController<TEntity extends BaseEntity<TEntity>, GetDto, Cr
 
     @Override()
     @ApiOperation({ 
-      summary: `Update an existing ${singular(entityName)}`,
-      description: `Updates an existing ${singular(entityName)} record in the database with the provided data.`
+      summary: `Update an Existing ${singular(formattedEntityName)}`,
+      description: `Updates an existing ${singular(formattedEntityName).toLowerCase()} record in the database with the provided data.`
     })
     @ApiParam({ 
       name: 'id', 
-      description: `The unique identifier of the ${singular(entityName)} to update`,
+      description: `The unique identifier of the ${singular(formattedEntityName).toLowerCase()} to update`,
       required: true 
     })
     @ApiBody({ 
       type: updateDtoClass, 
-      description: `${singular(entityName)} update data`,
+      description: `${singular(formattedEntityName)} update data`,
       required: true
     })
     @ApiResponse({ 
       status: HttpStatus.OK, 
-      description: `The ${singular(entityName)} has been successfully updated.`,
+      description: `${singular(formattedEntityName)} has been successfully updated.`,
       type: getDtoClass
     })
     @ApiResponse({ status: HttpStatus.BAD_REQUEST, description: 'Invalid input data.', type: GeneralResponseDto })
     @ApiResponse({ status: HttpStatus.UNPROCESSABLE_ENTITY, description: 'Unprocessable entity.', type: GeneralResponseDto })
     @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized.', type: GeneralResponseDto })
-    @ApiResponse({ status: HttpStatus.NOT_FOUND, description: `${singular(entityName)} not found.`, type: GeneralResponseDto })
+    @ApiResponse({ status: HttpStatus.NOT_FOUND, description: `${singular(formattedEntityName)} not found.`, type: GeneralResponseDto })
     @ApiResponse({ status: HttpStatus.INTERNAL_SERVER_ERROR, description: 'Internal server error.', type: GeneralResponseDto })
     @ApiResponse({ status: HttpStatus.FORBIDDEN, description: 'Forbidden.', type: GeneralResponseDto })
     @ApiResponse({ status: HttpStatus.CONFLICT, description: 'Data conflict during update.', type: GeneralResponseDto })
@@ -92,22 +104,22 @@ export function createController<TEntity extends BaseEntity<TEntity>, GetDto, Cr
 
     @Override()
     @ApiOperation({ 
-      summary: `Hard delete a specific ${singular(entityName)}`,
-      description: `Removes a ${singular(entityName)} record from the database by its unique identifier.`
+      summary: `Hard Delete a Specific ${singular(formattedEntityName)}`,
+      description: `Removes a ${singular(formattedEntityName).toLowerCase()} record from the database by its unique identifier.`
     })
     @ApiParam({ 
       name: 'id', 
-      description: `The unique identifier of the ${singular(entityName)} to delete`,
+      description: `The unique identifier of the ${singular(formattedEntityName).toLowerCase()} to delete`,
       required: true 
     })
     @ApiResponse({ 
       status: HttpStatus.NO_CONTENT, 
-      description: `The ${singular(entityName)} has been successfully deleted.`,
+      description: `${singular(formattedEntityName)} has been successfully deleted.`,
       type: GeneralResponseDto
     })
     @ApiResponse({ status: HttpStatus.BAD_REQUEST, description: 'Invalid ID format.', type: GeneralResponseDto })
     @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized.', type: GeneralResponseDto })
-    @ApiResponse({ status: HttpStatus.NOT_FOUND, description: `${singular(entityName)} not found.`, type: GeneralResponseDto })
+    @ApiResponse({ status: HttpStatus.NOT_FOUND, description: `${singular(formattedEntityName)} not found.`, type: GeneralResponseDto })
     @ApiResponse({ status: HttpStatus.INTERNAL_SERVER_ERROR, description: 'Internal server error.', type: GeneralResponseDto })
     @ApiResponse({ status: HttpStatus.FORBIDDEN, description: 'Forbidden.', type: GeneralResponseDto })
     @ApiResponse({ status: HttpStatus.CONFLICT, description: 'Cannot delete due to existing references.', type: GeneralResponseDto })
@@ -117,22 +129,22 @@ export function createController<TEntity extends BaseEntity<TEntity>, GetDto, Cr
 
     @Override()
     @ApiOperation({ 
-      summary: `Soft delete a specific ${singular(entityName)}`,
-      description: `Marks a ${singular(entityName)} record as deleted without removing it from the database.`
+      summary: `Soft Delete a Specific ${singular(formattedEntityName)}`,
+      description: `Marks a ${singular(formattedEntityName).toLowerCase()} record as deleted without removing it from the database.`
     })
     @ApiParam({ 
       name: 'id', 
-      description: `The unique identifier of the ${singular(entityName)} to soft delete`,
+      description: `The unique identifier of the ${singular(formattedEntityName.toLowerCase())} to soft delete`,
       required: true 
     })
     @ApiResponse({ 
       status: HttpStatus.NO_CONTENT, 
-      description: `The ${singular(entityName)} has been successfully soft-deleted.`,
+      description: `${singular(formattedEntityName)} has been successfully soft-deleted.`,
       type: GeneralResponseDto
     })
     @ApiResponse({ status: HttpStatus.BAD_REQUEST, description: 'Invalid ID format.', type: GeneralResponseDto })
     @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized.', type: GeneralResponseDto })
-    @ApiResponse({ status: HttpStatus.NOT_FOUND, description: `${singular(entityName)} not found.`, type: GeneralResponseDto })
+    @ApiResponse({ status: HttpStatus.NOT_FOUND, description: `${singular(formattedEntityName)} not found.`, type: GeneralResponseDto })
     @ApiResponse({ status: HttpStatus.INTERNAL_SERVER_ERROR, description: 'Internal server error.', type: GeneralResponseDto })
     @ApiResponse({ status: HttpStatus.FORBIDDEN, description: 'Forbidden.', type: GeneralResponseDto })
     override async softDelete(
@@ -144,12 +156,12 @@ export function createController<TEntity extends BaseEntity<TEntity>, GetDto, Cr
 
     @Override()
     @ApiOperation({
-      summary: `Find a specific ${singular(entityName)} by ID`,
-      description: `Retrieve a single ${singular(entityName)} from the database using its unique identifier.`
+      summary: `Find a Specific ${singular(formattedEntityName)} by ID`,
+      description: `Retrieve a single ${singular(formattedEntityName).toLowerCase()} from the database using its unique identifier.`
     })
     @ApiParam({
       name: 'id',
-      description: `The unique identifier of the ${singular(entityName)} to retrieve`,
+      description: `The unique identifier of the ${singular(formattedEntityName).toLowerCase()} to retrieve`,
       required: true
     })
     @ApiQuery({
@@ -168,12 +180,12 @@ export function createController<TEntity extends BaseEntity<TEntity>, GetDto, Cr
     })
     @ApiResponse({
       status: HttpStatus.OK,
-      description: `The ${singular(entityName)} was successfully retrieved.`,
+      description: `${singular(formattedEntityName)} was successfully retrieved.`,
       type: getDtoClass
     })
     @ApiResponse({ status: HttpStatus.BAD_REQUEST, description: 'Invalid ID format.', type: GeneralResponseDto })
     @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized.', type: GeneralResponseDto })
-    @ApiResponse({ status: HttpStatus.NOT_FOUND, description: `${singular(entityName)} not found.`, type: GeneralResponseDto })
+    @ApiResponse({ status: HttpStatus.NOT_FOUND, description: `${singular(formattedEntityName)} not found.`, type: GeneralResponseDto })
     @ApiResponse({ status: HttpStatus.INTERNAL_SERVER_ERROR, description: 'Internal server error.', type: GeneralResponseDto })
     @ApiResponse({ status: HttpStatus.FORBIDDEN, description: 'Forbidden.', type: GeneralResponseDto })
     override async findById(
@@ -186,15 +198,15 @@ export function createController<TEntity extends BaseEntity<TEntity>, GetDto, Cr
 
     @Override()
     @ApiOperation({
-      summary: `Find ${singular(entityName)} by any field`,
-      description: `Search for ${singular(entityName)} using field-value pairs. Multiple criteria can be combined.`
+      summary: `Find ${singular(formattedEntityName)} by Any Field`,
+      description: `Search for ${singular(formattedEntityName).toLowerCase()} using field-value pairs. Multiple criteria can be combined.`
     })
     @ApiQuery({
       name: 'fields',
       required: true,
       type: String,
       description: 'Search fields in format field:value (comma-separated)',
-      example: `id:123,name:example${singular(entityName)}`
+      example: `id:123,name:example${singular(entityName).toLowerCase()}`
     })
     @ApiQuery({
       name: 'relations',
@@ -212,10 +224,10 @@ export function createController<TEntity extends BaseEntity<TEntity>, GetDto, Cr
     })
     @ApiResponse({
       status: HttpStatus.OK,
-      description: `${singular(entityName)} found successfully`,
+      description: `${singular(formattedEntityName)} found successfully`,
       type: getDtoClass
     })
-    @ApiResponse({ status: HttpStatus.NOT_FOUND, description: `${singular(entityName)} not found with the specified criteria`, type: GeneralResponseDto })
+    @ApiResponse({ status: HttpStatus.NOT_FOUND, description: `${singular(formattedEntityName)} not found with the specified criteria`, type: GeneralResponseDto })
     @ApiResponse({ status: HttpStatus.FORBIDDEN, description: 'Forbidden. User does not have permission to access this resource', type: GeneralResponseDto })
     @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized. Authentication is required', type: GeneralResponseDto })
     @ApiResponse({ status: HttpStatus.INTERNAL_SERVER_ERROR, description: 'Internal server error', type: GeneralResponseDto })
@@ -229,7 +241,7 @@ export function createController<TEntity extends BaseEntity<TEntity>, GetDto, Cr
 
     @Override()
     @ApiOperation({
-        summary: `Find all ${singular(entityName)} with advanced filtering`,
+        summary: `Find all ${singular(formattedEntityName)} with Advanced Filtering`,
         description: `
         # Advanced Filtering Guide
         

@@ -9,7 +9,6 @@ import { <%= classify(entityName) %> } from './entities/<%= dasherize(entityName
 @Module({
     imports: [
         TypeOrmModule.forFeature([<%= classify(entityName) %>]),
-        UsersModule,
 <% if (!name.includes('/')) { %>
         RouterModule.register([
             {

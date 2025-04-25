@@ -102,7 +102,7 @@ export abstract class BaseGateway implements OnGatewayInit, OnGatewayConnection,
             return; // Exit early if server or server.engine is not available
         }
         const corsConfig = {
-            origin: this.configService.get<string[]>('cors.origins', []),
+            origin: this.configService.getOrThrow<string[]>('CORS_ORIGINS'),
             credentials: true,
             methods: '*' as string | string[],
             allowedHeaders: 'Content-Type, Accept, Authorization',
@@ -351,13 +351,13 @@ export abstract class BaseGateway implements OnGatewayInit, OnGatewayConnection,
 
     // Helper method to extract token from socket connection
     private extractTokenFromSocket(client: AuthenticatedSocket): string | null {
-        const origin = client.handshake.headers.origin;
-        // log origin
-        const allowedOrigins = this.configService.get<string[]>('cors.origins', []);
-        if (!origin || !allowedOrigins.includes(origin)) {
-            this.logger.warn(`Connection attempt from unauthorized origin: ${origin}`);
-            return null;
-        }
+        // const origin = client.handshake.headers.origin;
+        // // log origin
+        // const allowedOrigins = this.configService.get<string[]>('cors.origins', []);
+        // if (!origin || !allowedOrigins.includes(origin)) {
+        //     this.logger.warn(`Connection attempt from unauthorized origin: ${origin}`);
+        //     return null;
+        // }
         
         // Try to get from handshake auth
         const authHeader = client.handshake.headers.authorization;
@@ -426,6 +426,14 @@ export abstract class BaseGateway implements OnGatewayInit, OnGatewayConnection,
     }
     
     // Messaging Methods
+    public pingUser(userId: string): void {
+        this.emitToUser({ event: 'ping' }, userId);
+    }
+
+    public pingAll(): void {
+        this.broadcast(this.namespace, { event: 'ping' });
+    }
+
     public emitToUser(data: any, userId?: string): void {
         if (!userId || !this.connectedClients.has(userId)) {
             this.logger.warn(`User ${userId} not connected`);

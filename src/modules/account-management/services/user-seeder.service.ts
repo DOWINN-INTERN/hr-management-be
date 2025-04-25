@@ -91,23 +91,25 @@ export class UserSeederService implements OnModuleInit {
         await this.usersService.update(superAdminUser.id, superAdminUser);
         // this.logger.log('Super admin email updated successfully');
       }
-      // check if password is the same as the one in the config
-      var loginCredentials: LoginUserDto = {
-        emailOrUserName: superAdminUser.email ?? "",
-        password: superAdminPassword
-      }
-
-      if (await this.authService.validateUser(loginCredentials)) {
-        // this.logger.log('Super admin password is the same as the one in the config');
-      }
-      else
-      {
-        this.logger.warn('Super admin password is different from the one in the config');
-
-        // Update super admin password to the one in the config
+      // Check if either password is missing
+      if (!superAdminUser.password) {
+        this.logger.warn('Missing password - updating to config password');
         superAdminUser.password = await bcrypt.hash(superAdminPassword, 10);
         await this.usersService.update(superAdminUser.id, superAdminUser);
-        // this.logger.log('Super admin password updated successfully');
+      } else {
+        // Only validate if both passwords exist
+        var loginCredentials: LoginUserDto = {
+          emailOrUserName: superAdminUser.email ?? "",
+          password: superAdminPassword
+        }
+
+        if (await this.authService.validateUser(loginCredentials)) {
+          // this.logger.log('Super admin password is the same as the one in the config');
+        } else {
+          this.logger.warn('Super admin password is different from the one in the config');
+          superAdminUser.password = await bcrypt.hash(superAdminPassword, 10);
+          await this.usersService.update(superAdminUser.id, superAdminUser);
+        }
       }
     }
 

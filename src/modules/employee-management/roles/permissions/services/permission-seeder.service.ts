@@ -72,8 +72,8 @@ export class PermissionSeederService implements OnModuleInit {
     const permissions: any[] = [];
     const controllers = await this.findControllerFiles();
     
-    // Pattern to match controllers that extend from createController()
-    const factoryControllerPattern = /export\s+class\s+(\w+)\s+extends\s+createController\s*<([^>]*)>\s*\(\s*['"]([^'"]+)['"]/;
+    // Updated pattern to match controllers that extend from createController() without generic types
+    const factoryControllerPattern = /export\s+class\s+(\w+)\s+extends\s+createController\s*\(\s*([\w.]+)\s*,\s*([\w.]+)\s*,\s*([\w.]+)(?:\s*,\s*([\w.]+))?(?:\s*,\s*([\w.]+))?\s*\)/;
     
     this.logger.debug(`Scanning ${controllers.length} controller files for factory controllers`);
     
@@ -84,48 +84,43 @@ export class PermissionSeederService implements OnModuleInit {
         
         if (factoryMatch) {
           const controllerName = factoryMatch[1];
-          const typeParams = factoryMatch[2].split(',').map(param => param.trim());
-          const entityName = factoryMatch[3];
+          const entityClass = factoryMatch[2];
+          const serviceClass = factoryMatch[3];
+          const getDtoClass = factoryMatch[4];
+          const createDtoClass = factoryMatch[5];
+          const updateDtoClass = factoryMatch[6];
           
-          // this.logger.debug(`Found factory controller: ${controllerName} for entity ${entityName}`);
+          // Get entity name from class reference
+          // First try to extract from entity class (removing "Entity" suffix if present)
+          let entityName = entityClass.replace(/Entity$/, '');
           
-          // Extract parameters passed to createController
-          const paramsPattern = /createController\s*<[^>]*>\s*\(\s*['"]([^'"]+)['"]\s*,\s*[^,]+\s*,\s*([^,]+)(?:\s*,\s*([^,]+))?(?:\s*,\s*([^,)]+))?\s*\)/;
-          const paramsMatch = fileContent.match(paramsPattern);
-          
-          if (paramsMatch) {
-            // Always generate MANAGE permission
-            permissions.push(this.createPermissionDefinition(Action.MANAGE, entityName));
-            
-            // Check for GetDto (Read permission)
-            if (paramsMatch[2] && paramsMatch[2].trim() !== 'null' && paramsMatch[2].trim() !== 'undefined') {
-              permissions.push(this.createPermissionDefinition(Action.READ, entityName));
-            }
-            
-            // Check for EntityDto (Create permission)
-            if (paramsMatch[3] && paramsMatch[3].trim() !== 'null' && paramsMatch[3].trim() !== 'undefined') {
-              permissions.push(this.createPermissionDefinition(Action.CREATE, entityName));
-            }
-            
-            // Check for UpdateDto (Update permission)
-            if (paramsMatch[4] && paramsMatch[4].trim() !== 'null' && paramsMatch[4].trim() !== 'undefined') {
-              permissions.push(this.createPermissionDefinition(Action.UPDATE, entityName));
-            }
-            
-            // Also check generic types as a backup
-            if (typeParams.length >= 2) { // At least has Entity and GetDto
-              permissions.push(this.createPermissionDefinition(Action.READ, entityName));
-            }
-            if (typeParams.length >= 3 && typeParams[2].trim() !== 'null') { // Has EntityDto
-              permissions.push(this.createPermissionDefinition(Action.CREATE, entityName));
-            }
-            if (typeParams.length >= 4 && typeParams[3].trim() !== 'null') { // Has UpdateDto
-              permissions.push(this.createPermissionDefinition(Action.UPDATE, entityName));
-            }
-            
-            // Add DELETE permission by default too (since most controllers likely support it)
-            permissions.push(this.createPermissionDefinition(Action.DELETE, entityName));
+          // If entityName contains dots (like module.Entity), get the last part
+          if (entityName.includes('.')) {
+            entityName = entityName.split('.').pop() || entityName;
           }
+          
+          this.logger.debug(`Found factory controller: ${controllerName} for entity ${entityName}`);
+          
+          // Always generate MANAGE permission
+          permissions.push(this.createPermissionDefinition(Action.MANAGE, entityName));
+          
+          // Check for GetDto (Read permission)
+          if (getDtoClass && getDtoClass.trim() !== 'null' && getDtoClass.trim() !== 'undefined') {
+            permissions.push(this.createPermissionDefinition(Action.READ, entityName));
+          }
+          
+          // Check for CreateDto (Create permission)
+          if (createDtoClass && createDtoClass.trim() !== 'null' && createDtoClass.trim() !== 'undefined') {
+            permissions.push(this.createPermissionDefinition(Action.CREATE, entityName));
+          }
+          
+          // Check for UpdateDto (Update permission)
+          if (updateDtoClass && updateDtoClass.trim() !== 'null' && updateDtoClass.trim() !== 'undefined') {
+            permissions.push(this.createPermissionDefinition(Action.UPDATE, entityName));
+          }
+          
+          // Add DELETE permission by default too (since most controllers likely support it)
+          permissions.push(this.createPermissionDefinition(Action.DELETE, entityName));
         }
       } catch (error) {
         this.logger.warn(`Error processing file ${file}: ${error instanceof Error ? error.message : String(error)}`);

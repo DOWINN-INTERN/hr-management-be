@@ -1,6 +1,5 @@
 import { BaseDto } from "@/common/dtos/base.dto";
 import { ReferenceDto } from "@/common/dtos/reference.dto";
-import { NotificationTargetType } from "@/common/enums/notification-target-type.enum";
 import { NotificationType } from "@/common/enums/notification-type.enum";
 import { createGetDto } from "@/common/factories/create-get-dto.factory";
 import { ApiProperty, ApiPropertyOptional, PartialType } from "@nestjs/swagger";
@@ -56,15 +55,6 @@ export class NotificationDto extends BaseDto {
   })
   @IsString()
   category!: string;
-
-  @ApiProperty({
-    description: 'The type of recipient this notification is targeted to',
-    example: 'user',
-    enum: NotificationTargetType,
-    required: true
-  })
-  @IsEnum(NotificationTargetType)
-  targetType!: NotificationTargetType;
   
   @ApiProperty({
     description: 'Optional ID of the target recipient',

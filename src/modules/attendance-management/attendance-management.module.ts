@@ -1,11 +1,15 @@
 import { Module } from '@nestjs/common';
 import { RouterModule } from '@nestjs/core';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { BiometricsModule } from '../biometrics/biometrics.module';
+import { EmployeeManagementModule } from '../employee-management/employee-management.module';
+import { ScheduleManagementModule } from '../schedule-management/schedule-management.module';
 import { AttendancePunchesModule } from './attendance-punches/attendance-punches.module';
 import { AttendancesController } from './attendances.controller';
 import { AttendancesService } from './attendances.service';
 import { Attendance } from './entities/attendance.entity';
 import { FinalWorkHoursModule } from './final-work-hours/final-work-hours.module';
+import { AttendanceListener } from './listeners/attendance.listener';
 import { WorkTimeRequestsModule } from './work-time-requests/work-time-requests.module';
 import { WorkTimeResponsesModule } from './work-time-requests/work-time-responses/work-time-responses.module';
 
@@ -42,8 +46,11 @@ import { WorkTimeResponsesModule } from './work-time-requests/work-time-response
         WorkTimeRequestsModule,
         WorkTimeResponsesModule,
         FinalWorkHoursModule,
+        BiometricsModule,
+        EmployeeManagementModule,
+        ScheduleManagementModule,
     ],
-    providers: [AttendancesService],
+    providers: [AttendancesService, AttendanceListener],
     exports: [
         AttendancesService,
         AttendancePunchesModule,

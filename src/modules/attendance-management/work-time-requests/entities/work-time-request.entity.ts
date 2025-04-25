@@ -7,6 +7,8 @@ import { WorkTimeResponse } from '../work-time-responses/entities/work-time-resp
 
 @Entity('work-time-requests')
 export class WorkTimeRequest extends BaseEntity<WorkTimeRequest> {
+    // employee
+
     @Column({ type: 'enum', enum: RequestStatus, default: RequestStatus.PENDING })
     status!: RequestStatus;
 
@@ -16,6 +18,10 @@ export class WorkTimeRequest extends BaseEntity<WorkTimeRequest> {
     @ManyToOne(() => Attendance, (attendance: Attendance) => attendance.workTimeRequests)
     @JoinColumn({ name: 'attendanceId' })
     attendance!: Attendance;
+
+    // documments
+
+    // reason
 
     @OneToOne(() => WorkTimeResponse, (workTimeResponse: WorkTimeResponse) => workTimeResponse.workTimeRequest, { eager: true, nullable: true, cascade: true })
     @JoinColumn({ name: 'workTimeResponseId' })

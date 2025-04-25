@@ -1,5 +1,6 @@
+import { EmailsModule } from '@/modules/emails/emails.module';
 import { PermissionsModule } from '@/modules/employee-management/roles/permissions/permissions.module';
-import { Module } from '@nestjs/common';
+import { Global, Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
@@ -12,6 +13,7 @@ import { AuthService } from './auth.service';
 import { JwtService } from './services/jwt.service';
 import { AccessTokenStrategy } from './strategies/access-token.strategy';
 
+@Global()
 @Module({
   imports: [
     PassportModule.register({ defaultStrategy: 'jwt' }),
@@ -25,6 +27,7 @@ import { AccessTokenStrategy } from './strategies/access-token.strategy';
         signOptions: { expiresIn: `${configService.get<string>('ACCESS_TOKEN_EXPIRATION_MINUTES')}m` },
       }),
     }),
+    EmailsModule,
   ],
   providers: [AuthService, JwtService, AccessTokenStrategy, JwtAuthGuard, PermissionsGuard, RolesGuard],
   controllers: [AuthController],
