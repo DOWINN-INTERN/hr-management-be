@@ -1,9 +1,10 @@
 import { Employee } from '@/modules/employee-management/entities/employee.entity';
 import { CutoffsService } from '@/modules/payroll-management/cutoffs/cutoffs.service';
-import { SchedulesService } from '@/modules/schedule-management/schedules.service';
-import { ScheduleGenerationService } from '@/modules/schedule-management/services/schedule-generation.service';
+import { SchedulesService } from '@/modules/shift-management/schedules/schedules.service';
+import { ScheduleGenerationService } from '@/modules/shift-management/schedules/services/schedule-generation.service';
 import { Injectable, Logger } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
+import { CutoffStatus } from '../enums/cutoff-status.enum';
 import { EmployeeAssignedEvent, GROUP_EVENTS } from '../events/employee-assigned.event';
 
 @Injectable()
@@ -21,10 +22,10 @@ export class EmployeeGroupAssignmentListener {
     this.logger.log(`Handling employee assignment event for ${event.employees.length} employees to group ${event.group.id}`);
     
     // Find all future active cutoffs instead of just one
-    const activeCutoffs = await this.cutoffsService.getActiveCutoffs();
+    const cutoff = await this.cutoffsService.findOneBy({ status: CutoffStatus.PENDING }) || await this.cutoffsService.getActiveCutoff();
     
-    if (activeCutoffs.length === 0) {
-      this.logger.warn('No active cutoffs found, skipping schedule generation');
+    if (!cutoff) {
+      this.logger.warn('No pending/active cutoff found, skipping schedule generation');
       return;
     }
     
@@ -36,30 +37,25 @@ export class EmployeeGroupAssignmentListener {
     // Get employee IDs
     const employeeIds = event.employees.map((employee: Employee) => employee.id);
     
+    this.logger.log(`Schedule generation job queued for cutoff ${cutoff.id} (${new Date(cutoff.startDate).toLocaleDateString()})`);
     // Queue schedule generation jobs for each cutoff
-    for (const cutoff of activeCutoffs) {
-      await this.scheduleGenerationService.addGenerationJob({
-        employeeIds,
-        groupId: event.group.id,
-        cutoffId: cutoff.id,
-        requestedBy: event.assignedBy,
-      });
-      
-      this.logger.log(`Schedule generation job queued for cutoff ${cutoff.id} (${new Date(cutoff.startDate).toLocaleDateString()})`);
-    }
-    
-    this.logger.log(`Schedule generation completed for ${employeeIds.length} employees across ${activeCutoffs.length} future cutoffs`);
+    await this.scheduleGenerationService.addGenerationJob({
+      employeeIds,
+      groupId: event.group.id,
+      cutoffId: cutoff.id,
+      requestedBy: event.assignedBy,
+    });
   }
 
   @OnEvent(GROUP_EVENTS.EMPLOYEE_REMOVED)
   async handleEmployeeRemovedFromGroup(event: EmployeeAssignedEvent): Promise<void> {
     this.logger.log(`Handling employee removal event for ${event.employees.length} employees from group ${event.group.id}`);
     
-    // Find all future active cutoffs that might have schedules
-    const activeCutoffs = await this.cutoffsService.getActiveCutoffs()
+    // Find all future active cutoffs instead of just one
+    const cutoff = await this.cutoffsService.findOneBy({ status: CutoffStatus.PENDING }) || await this.cutoffsService.getActiveCutoff();
     
-    if (activeCutoffs.length === 0) {
-      this.logger.log('No active cutoffs found, no schedules to delete');
+    if (!cutoff) {
+      this.logger.warn('No pending/active cutoff found, skipping schedule generation');
       return;
     }
     
@@ -67,16 +63,13 @@ export class EmployeeGroupAssignmentListener {
     const employeeIds = event.employees.map((employee: Employee) => employee.id);
     
     // Delete schedules for each cutoff and removed employee
-    for (const cutoff of activeCutoffs) {
-      await this.scheduleService.deleteSchedules({
-        employeeIds,
-        groupId: event.group.id,
-        cutoffId: cutoff.id,
-      });
-      
-      this.logger.log(`Schedules deleted for cutoff ${cutoff.id} (${new Date(cutoff.startDate).toLocaleDateString()}) for ${employeeIds.length} employees`);
-    }
+    await this.scheduleService.deleteSchedules({
+      employeeIds,
+      groupId: event.group.id,
+      cutoffId: cutoff.id,
+    });
     
-    this.logger.log(`Schedule cleanup completed for ${employeeIds.length} employees across ${activeCutoffs.length} future cutoffs`);
+    this.logger.log(`Schedules deleted for cutoff ${cutoff.id} (${new Date(cutoff.startDate).toLocaleDateString()}) for ${employeeIds.length} employees`);
+  
   }
 }

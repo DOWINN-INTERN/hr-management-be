@@ -1,6 +1,6 @@
 import { BaseEntity } from "@/database/entities/base.entity";
 import { User } from "@/modules/account-management/users/entities/user.entity";
-import { ScheduleChangeRequest } from "@/modules/schedule-management/schedule-change-requests/entities/schedule-change-request.entity";
+import { ScheduleChangeRequest } from "@/modules/shift-management/schedules/schedule-change-requests/entities/schedule-change-request.entity";
 import { Column, Entity, JoinColumn, ManyToOne } from "typeorm";
 import { DocumentType } from "../document-types/entities/document-type.entity";
 

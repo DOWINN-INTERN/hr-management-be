@@ -139,6 +139,18 @@ export class CutoffsService extends BaseService<Cutoff> {
             where: {
                 status: CutoffStatus.ACTIVE,
                 startDate: MoreThan(new Date()),
+                isDeleted: false
+            },
+            order: { startDate: 'ASC' }
+        });
+    }
+
+    async getActiveCutoff(): Promise<Cutoff | null> {
+        return await this.repository.findOne({
+            where: {
+                status: CutoffStatus.ACTIVE,
+                startDate: MoreThan(new Date()),
+                isDeleted: false
             },
             order: { startDate: 'ASC' }
         });

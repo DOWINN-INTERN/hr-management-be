@@ -8,8 +8,8 @@ import { FinalWorkHour } from '@/modules/attendance-management/final-work-hours/
 import { Role } from '@/modules/employee-management/roles/entities/role.entity';
 import { Payroll } from '@/modules/payroll-management/entities/payroll.entity';
 import { PayrollItem } from '@/modules/payroll-management/payroll-items/entities/payroll-item.entity';
-import { Schedule } from '@/modules/schedule-management/entities/schedule.entity';
-import { Group } from '@/modules/schedule-management/groups/entities/group.entity';
+import { Group } from '@/modules/shift-management/groups/entities/group.entity';
+import { Schedule } from '@/modules/shift-management/schedules/entities/schedule.entity';
 import { Column, Entity, JoinColumn, JoinTable, ManyToMany, ManyToOne, OneToMany, OneToOne } from 'typeorm';
 
 @Entity('employees')
@@ -40,7 +40,6 @@ export class Employee extends BaseEntity<Employee> {
     @Column({ nullable: true })
     cardNumber?: string;
 
-
     @Column({
         type: 'enum',
         enum: EmploymentType,
@@ -51,8 +50,11 @@ export class Employee extends BaseEntity<Employee> {
     @Column({ type: 'date' })
     commencementDate!: Date;
 
-    @Column({ type: 'float', nullable: true, default: 0 })
-    leaveCredits?: number;
+    @Column({ default: 0 })
+    leaveCredits!: number;
+
+    @Column({ default: 0 })
+    offsetLeaveCredits!: number;
 
     @OneToOne(() => User, (user) => user.employee)
     @JoinColumn({ name: 'userId' })
@@ -69,7 +71,7 @@ export class Employee extends BaseEntity<Employee> {
     @OneToMany(() => PayrollItem, (payrollItem: PayrollItem) => payrollItem.employee, { nullable: true })
     payrollItems?: PayrollItem[];
 
-    @ManyToOne(() => Group, (group: Group) => group.employees, { nullable: true })
+    @ManyToOne(() => Group, (group: Group) => group.employees, { nullable: true, eager: true })
     @JoinColumn({ name: 'groupId' })
     group?: Group;
 

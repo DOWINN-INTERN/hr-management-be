@@ -5,7 +5,7 @@ import { IBiometricService } from '@/modules/biometrics/interfaces/biometric.int
 import { BiometricDevicesService } from '@/modules/biometrics/services/biometric-devices.service';
 import { EmployeesService } from '@/modules/employee-management/employees.service';
 import { NotificationsService } from '@/modules/notifications/notifications.service';
-import { SchedulesService } from '@/modules/schedule-management/schedules.service';
+import { SchedulesService } from '@/modules/shift-management/schedules/schedules.service';
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { differenceInMinutes, format, isAfter, isBefore, parseISO } from 'date-fns';
@@ -15,7 +15,7 @@ import { ScheduleStatus } from '../../../common/enums/schedule-status';
 @Injectable()
 export class AttendanceListener {
   private readonly logger = new Logger(AttendanceListener.name);
-  private readonly LATE_THRESHOLD_MINUTES = 5; // Consider late after 10 minutes
+  private readonly GRACE_PERIOD_MINUTES = 5; // Consider late after 5 minutes
   private readonly OVER_TIME_THRESHOLD_MINUTES = 30; // Consider overtime if more than 30 minutes
   private readonly UNDER_TIME_THRESHOLD_MINUTES = 0; // Consider under time if less than 30 minutes
 
@@ -93,10 +93,10 @@ export class AttendanceListener {
 
         }
 
-        const { shift, startTime, endTime } = todaySchedule;
+        const { startTime, endTime } = todaySchedule;
 
-        const effecitiveStartTime = startTime || shift.startTime;
-        const effectiveEndTime = endTime || shift.endTime;
+        const effecitiveStartTime = startTime;
+        const effectiveEndTime = endTime;
         const shiftStartTime = parseISO(`${punchDate}T${effecitiveStartTime}`);
         const shiftEndTime = parseISO(`${punchDate}T${effectiveEndTime}`);
 
@@ -114,7 +114,7 @@ export class AttendanceListener {
           // Check if late
           if (isAfter(punchTime, shiftStartTime)) {
             const minutesLate = differenceInMinutes(punchTime, shiftStartTime);
-            if (minutesLate > this.LATE_THRESHOLD_MINUTES) {
+            if (minutesLate > this.GRACE_PERIOD_MINUTES) {
               attendanceStatuses = [...attendanceStatuses, AttendanceStatus.LATE];
               this.logger.log(`Employee ${employee.user.email} is late by ${minutesLate} minutes`);
               // notify employee and higher ups

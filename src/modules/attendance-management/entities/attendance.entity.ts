@@ -1,7 +1,7 @@
 import { AttendanceStatus } from '@/common/enums/attendance-status.enum';
 import { BaseEntity } from '@/database/entities/base.entity';
 import { Employee } from '@/modules/employee-management/entities/employee.entity';
-import { Schedule } from '@/modules/schedule-management/entities/schedule.entity';
+import { Schedule } from '@/modules/shift-management/schedules/entities/schedule.entity';
 import { Column, Entity, JoinColumn, ManyToOne, OneToMany, OneToOne } from 'typeorm';
 import { AttendancePunch } from '../attendance-punches/entities/attendance-punch.entity';
 import { FinalWorkHour } from '../final-work-hours/entities/final-work-hour.entity';

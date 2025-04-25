@@ -7,14 +7,14 @@ import { AddressesModule } from './modules/addresses/addresses.module';
 import { AttendanceManagementModule } from './modules/attendance-management/attendance-management.module';
 import { BiometricsModule } from './modules/biometrics/biometrics.module';
 import { DocumentsModule } from './modules/documents/documents.module';
+import { EmailsModule } from './modules/emails/emails.module';
 import { EmployeeManagementModule } from './modules/employee-management/employee-management.module';
 import { FilesModule } from './modules/files/files.module';
 import { LogsModule } from './modules/logs/logs.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { OrganizationManagementModule } from './modules/organization-management/organization-management.module';
 import { PayrollManagementModule } from './modules/payroll-management/payroll-management.module';
-import { ScheduleManagementModule } from './modules/schedule-management/schedule-management.module';
-import { EmailsModule } from './modules/emails/emails.module';
+import { ShiftManagementModule } from './modules/shift-management/shift-management.module';
 @Module({
   imports: [
     ConfigModule,
@@ -28,7 +28,7 @@ import { EmailsModule } from './modules/emails/emails.module';
     AccountManagementModule,
     OrganizationManagementModule,
     AttendanceManagementModule,
-    ScheduleManagementModule,
+    ShiftManagementModule,
     AddressesModule,
     DocumentsModule,
     BiometricsModule,

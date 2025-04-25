@@ -173,6 +173,7 @@ export class UserSeederService implements OnModuleInit {
         employmentCondition: EmploymentCondition.REGULAR,
         employmentType: EmploymentType.FULL_TIME,
         commencementDate: new Date(),
+        employeeNumber: 1,
       });
       // this.logger.log('SuperAdmin employee created successfully');
     } else {

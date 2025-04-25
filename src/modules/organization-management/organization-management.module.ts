@@ -35,7 +35,6 @@ import { OrganizationsService } from './organizations.service';
   exports: [
       OrganizationsService,
       BranchesModule,
-      DepartmentsModule,
   ],
   controllers: [OrganizationsController],
 })

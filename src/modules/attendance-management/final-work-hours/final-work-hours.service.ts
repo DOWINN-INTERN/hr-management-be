@@ -73,9 +73,9 @@ export class FinalWorkHoursService extends BaseService<FinalWorkHour> {
         const holidayType = schedule.holiday?.type;
         
         // Calculate regular and overtime hours
-        const regularHours = this.calculateHours(finalWorkHour.timeIn, finalWorkHour.timeOut, schedule.shift.breakTime);
+        const regularHours = this.calculateHours(finalWorkHour.timeIn, finalWorkHour.timeOut, schedule.shift.defaultBreakTime);
         const overtimeHours = finalWorkHour.overTimeOut ? 
-            this.calculateHours(finalWorkHour.timeOut, finalWorkHour.overTimeOut, schedule.shift.breakTime) : 0;
+            this.calculateHours(finalWorkHour.timeOut, finalWorkHour.overTimeOut, schedule.shift.defaultBreakTime) : 0;
         
         // Calculate night differential hours
         const nightDiffHours = this.calculateNightDifferentialHours(

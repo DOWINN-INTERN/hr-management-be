@@ -3,7 +3,7 @@ import { RouterModule } from '@nestjs/core';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { BiometricsModule } from '../biometrics/biometrics.module';
 import { EmployeeManagementModule } from '../employee-management/employee-management.module';
-import { ScheduleManagementModule } from '../schedule-management/schedule-management.module';
+import { ShiftManagementModule } from '../shift-management/shift-management.module';
 import { AttendancePunchesModule } from './attendance-punches/attendance-punches.module';
 import { AttendancesController } from './attendances.controller';
 import { AttendancesService } from './attendances.service';
@@ -48,7 +48,7 @@ import { WorkTimeResponsesModule } from './work-time-requests/work-time-response
         FinalWorkHoursModule,
         BiometricsModule,
         EmployeeManagementModule,
-        ScheduleManagementModule,
+        ShiftManagementModule,
     ],
     providers: [AttendancesService, AttendanceListener],
     exports: [

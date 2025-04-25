@@ -12,6 +12,7 @@ import { UsersService } from '../users/users.service';
 import { AuthService } from './auth.service';
 import { LoginUserDto } from './dto/login-user.dto';
 import { RegisterUserDto } from './dto/register-user.dto';
+import { TokenDto } from './dto/token.dto';
 
 @ApiTags('Auth')
 @Controller()
@@ -36,8 +37,30 @@ export class AuthController {
   }
 
   @Post('verify-email')
-  @ApiOperation({ summary: 'Verify user email' })
-  async verifyEmail(@Body() body: { token: string }): Promise<Partial<GeneralResponseDto>> {
+  @ApiOperation({ 
+    summary: 'Verify user email address',
+    description: 'Validates the verification token and marks the user\'s email as verified if valid'
+  })
+  @ApiBody({
+    description: 'Verification token received in the email',
+    type: TokenDto,
+    required: true,
+    examples: {
+      example1: {
+        value: { token: 'your-verification-token' },
+        description: 'Example of a verification token',
+      },
+    },
+  })
+  @ApiResponse({ 
+    status: 200, 
+    description: 'Email verified successfully' 
+  })
+  @ApiResponse({ 
+    status: 400, 
+    description: 'Invalid or expired verification token' 
+  })
+  async verifyEmail(@Body() body: TokenDto): Promise<Partial<GeneralResponseDto>> {
     const result = await this.authService.verifyEmail(body.token);
     
     return {

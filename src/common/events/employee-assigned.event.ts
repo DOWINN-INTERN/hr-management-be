@@ -1,5 +1,5 @@
 import { Employee } from '@/modules/employee-management/entities/employee.entity';
-import { Group } from '@/modules/schedule-management/groups/entities/group.entity';
+import { Group } from '@/modules/shift-management/groups/entities/group.entity';
 
 export const GROUP_EVENTS = {
     EMPLOYEE_ASSIGNED: 'employee.assigned.to.group',
