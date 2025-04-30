@@ -1,11 +1,10 @@
 import { CurrentUser } from '@/common/decorators/current-user.decorator';
 import { Override } from '@/common/decorators/override.decorator';
 import { createController } from '@/common/factories/create-controller.factory';
-import { Body, HttpStatus, Param, ParseUUIDPipe, Patch, Query } from '@nestjs/common';
+import { Body, HttpStatus, Param, ParseUUIDPipe, Patch } from '@nestjs/common';
 import {
     ApiOperation,
     ApiParam,
-    ApiQuery,
     ApiResponse
 } from '@nestjs/swagger';
 import { GetNotificationDto, NotificationDto, UpdateNotificationDto } from './dtos/notification.dto';
@@ -23,29 +22,16 @@ export class NotificationsController extends createController(Notification, Noti
         super(notificationsService);
     }
 
-
-    @ApiOperation({ summary: 'Create and send a new notification' })
-    @ApiResponse({ 
-        status: HttpStatus.CREATED, 
-        description: 'Returns created notification',
-        type: GetNotificationDto,
-        isArray: true
+    @ApiOperation({ 
+        summary: 'Send a Notification to Multiple Users',
+        description: 'Creates a notification for multiple recipients at once and queues them for delivery'
     })
     @Override()
     override async create(
         @Body() createNotificationDto: NotificationDto,
         @CurrentUser('sub') createdById: string
     ) {
-        // Call the specialized method for bulk notifications
-        const notifications = await this.notificationsService.createBulkNotifications(createNotificationDto, createdById);
-        
-        // Send real-time notifications if gateway is defined
-        for (const notification of notifications) {
-            // Remove optional chaining so gateway.sendNotification always gets called
-            this.notificationsGateway.emitToUser(notification, notification.user.id);
-        }
-        
-        return notifications;
+    return await this.notificationsService.createBulkNotifications(createNotificationDto, createdById);
     }   
 
     @Patch(':id/read')
@@ -66,31 +52,6 @@ export class NotificationsController extends createController(Notification, Noti
         @Param('id', ParseUUIDPipe) id: string,
         @CurrentUser('sub') userId: string
     ) {
-        throw new Error('Method not implemented.');
-    }
-
-    @Patch('mark-all-read')
-    @ApiOperation({ summary: 'Mark all notifications as read' })
-    @ApiQuery({ 
-        name: 'category', 
-        required: false, 
-        description: 'Optionally limit to a specific category' 
-    })
-    @ApiResponse({ 
-        status: HttpStatus.OK, 
-        description: 'All notifications marked as read',
-        schema: {
-        type: 'object',
-        properties: {
-            success: { type: 'boolean' },
-            unreadCount: { type: 'number' }
-        }
-        }
-    })
-    async markAllAsRead(
-        @Query('category') category: string,
-        @CurrentUser('sub') userId: string
-    ) {
-        throw new Error('Method not implemented.');
+        return await this.notificationsService.update(id, { read: true, readAt: new Date() }, userId);
     }
 }

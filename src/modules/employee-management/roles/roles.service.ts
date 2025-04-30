@@ -30,4 +30,25 @@ export class RolesService extends BaseService<Role> {
         
         return role;
     }
+
+    // getHighestScopeRole(roles: Role[]): Role | undefined {
+    //   if (!roles.length) return undefined;
+      
+    //   // Define scope priority (higher number = higher priority)
+    //   const scopePriority: Record<RoleScopeType, number> = {
+    //     [RoleScopeType.GLOBAL]: 5,
+    //     [RoleScopeType.ORGANIZATION]: 4,
+    //     [RoleScopeType.BRANCH]: 3,
+    //     [RoleScopeType.DEPARTMENT]: 2,
+    //     [RoleScopeType.OWNED]: 1
+    //   };
+      
+    //   // Sort roles by scope priority (highest first)
+    //   const sortedRoles = [...roles].sort((a, b) => 
+    //     scopePriority[b.scope] - scopePriority[a.scope]
+    //   );
+      
+    //   return sortedRoles[0];
+    // }
+
 }

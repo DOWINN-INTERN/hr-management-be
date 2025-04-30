@@ -1,7 +1,9 @@
 import { UsersService } from "@/modules/account-management/users/users.service";
 import { PermissionsService } from "@/modules/employee-management/roles/permissions/permissions.service";
+import { ActivityLogsService } from "@/modules/logs/activity-logs/activity-logs.service";
 import { CanActivate, ExecutionContext, ForbiddenException, Injectable, Logger } from "@nestjs/common";
 import { Reflector } from "@nestjs/core";
+import { singular } from "pluralize";
 import { PERMISSION_ENDPOINT_TYPE } from "../decorators/authorize.decorator";
 import { PERMISSIONS_KEY } from "../decorators/permissions.decorator";
 import { Action } from "../enums/action.enum";
@@ -17,6 +19,7 @@ export class PermissionsGuard implements CanActivate {
     private reflector: Reflector,
     private usersService: UsersService,
     private permissionsService: PermissionsService,
+    private activityLogsService: ActivityLogsService,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -28,14 +31,14 @@ export class PermissionsGuard implements CanActivate {
       );
 
       let requiredPermissions: IPermission[] = [];
+      const controllerClass = context.getClass();
+      const controllerName = controllerClass.name;
+      const baseName = singular(controllerName.replace(/controller$/i, ''));
 
       if (endpointType) {
-        const controllerClass = context.getClass();
-        const controllerName = controllerClass.name;
-
         // get the permissions for the controller in the database
-        const permissions = await this.permissionsService.getPermissionsByControllerName(controllerName);
-        
+        const permissions = await this.permissionsService.getPermissionsByControllerName(baseName);
+
         // Filter permissions based on the endpoint type action
         if (permissions && permissions.length > 0) {
           // Filter permissions that match the endpoint type action
@@ -66,7 +69,7 @@ export class PermissionsGuard implements CanActivate {
           [context.getHandler(), context.getClass()],
         ) || [];
       }
-      
+
       // If no permissions are required, allow access
       if (!requiredPermissions || requiredPermissions.length === 0) {
         return true;
@@ -75,6 +78,7 @@ export class PermissionsGuard implements CanActivate {
       // Get the user payload from the request
       const request = context.switchToHttp().getRequest();
       const userClaims = request.user as IJwtPayload;
+      const resourceId = this.getResourceInfo(request);
       
       // get user with their role and role permissions
       let user;
@@ -83,6 +87,11 @@ export class PermissionsGuard implements CanActivate {
       } catch (error: unknown) {
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
         this.logger.error(`Error fetching user permissions: ${errorMessage}`);
+
+        // Log failed permission check due to user lookup error
+        await this.logUserActivity(userClaims, endpointType, baseName, false, 
+          'Permission check failed - User not found', resourceId);
+          
         throw new ForbiddenException('Error processing permissions');
       }
 
@@ -93,14 +102,37 @@ export class PermissionsGuard implements CanActivate {
         const userId = request.params.userId || request.query.userId || request.body.userId;
         if (userId && userId !== userClaims.sub) {
           this.logger.warn(`User is trying to access another user's resource: ${userId}`);
+          
+          // Log unauthorized access attempt
+          await this.logUserActivity(
+            userClaims, endpointType, baseName, false,
+            `Attempted to access another user's resource: ${userId}`,
+            resourceId, userClaims.sub
+          );
+          
           throw new ForbiddenException('You do not have the permissions to manage this resource.');
         }
+        
+        // Log successful access to own resource
+        await this.logUserActivity(
+          userClaims, endpointType, baseName, true,
+          `Accessed own resource`,
+          resourceId, userClaims.sub
+        );
+        
         return true;
       }
 
       // If user has the super admin role, allow access
       const hasSuperAdminRole = user.employee?.roles?.some(role => role.name === Role.SUPERADMIN);
       if (hasSuperAdminRole) {
+        // Log successful access with super admin privileges
+        await this.logUserActivity(
+          userClaims, endpointType, baseName, true,
+          `Access granted with SUPERADMIN role`,
+          resourceId, userClaims.sub
+        );
+        
         return true;
       }
         
@@ -133,9 +165,24 @@ export class PermissionsGuard implements CanActivate {
 
       if (!hasRequiredPermissions) {
         this.logger.warn(`User does not have required permissions: ${JSON.stringify(requiredPermissions)}`);
+        
+        // Log failed permission check
+        await this.logUserActivity(
+          userClaims, endpointType, baseName, false,
+          `Missing required permissions: ${JSON.stringify(requiredPermissions.map(p => `${p.action} ${p.subject}`))}`,
+          resourceId, userClaims.sub
+        );
+        
         throw new ForbiddenException('You do not have the permissions to manage this resource.');
       }
 
+      // Log successful permission check
+      await this.logUserActivity(
+        userClaims, endpointType, baseName, true,
+        `Successfully performed action`,
+        resourceId, userClaims.sub
+      );
+      
       return hasRequiredPermissions;
     } catch (error: unknown) {
       if (error instanceof ForbiddenException) {
@@ -144,6 +191,44 @@ export class PermissionsGuard implements CanActivate {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       this.logger.error(`Unexpected error in permissions guard: ${errorMessage}`);
       throw new ForbiddenException('Permission check failed');
+    }
+  }
+  
+  /**
+   * Extract resource information from the request
+   */
+  private getResourceInfo(request: any) {
+    return request.params?.id || request.body?.id
+  }
+  
+  /**
+   * Log user activity with detailed information
+   */
+  private async logUserActivity(
+    userClaims: IJwtPayload,
+    endpointType: Action,
+    subject: string,
+    successful: boolean,
+    message: string,
+    resourceId?: string | null,
+    userId?: string,
+  ): Promise<void> {
+    try {
+      const userEmail = userClaims.email || 'Unknown User';
+      const action = endpointType || Action.READ;
+      const logMessage = successful
+        ? `${userEmail} ${action} ${subject}${resourceId ? ` (ID: ${resourceId})` : ''}. ${message}`
+        : `${userEmail} tried to ${action} ${subject}${resourceId ? ` (ID: ${resourceId})` : ''} but was denied. ${message}`;
+
+      await this.activityLogsService.create({
+        action,
+        subject,
+        user: { id: userId },
+        message: logMessage
+      });
+    } catch (error) {
+      // Don't let logging errors affect the app's operation
+      this.logger.error(`Failed to log user activity: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 }

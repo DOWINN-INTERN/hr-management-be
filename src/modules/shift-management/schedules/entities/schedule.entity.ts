@@ -24,16 +24,16 @@ export class Schedule extends BaseEntity<Schedule> {
     attendance?: Attendance;
 
     @Column({ type: 'time', nullable: true })
-    startTime?: string;
+    startTime!: string;
     
     @Column({ type: 'time', nullable: true })
-    endTime?: string;
+    endTime!: string;
     
     @Column({ type: 'int', nullable: true })
-    breakTime?: number; // in minutes
+    breakTime!: number; // in minutes
     
     @Column({ type: 'int', nullable: true })
-    duration?: number; // in hours
+    duration!: number; // in hours
 
     @ManyToOne(() => Shift, (shift: Shift) => shift.schedules)
     @JoinColumn({ name: 'shiftId' })

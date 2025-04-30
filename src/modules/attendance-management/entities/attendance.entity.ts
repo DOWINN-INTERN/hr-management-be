@@ -18,8 +18,8 @@ export class Attendance extends BaseEntity<Attendance> {
     })
     statuses!: AttendanceStatus[];
 
-    @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
-    timeIn!: Date;
+    @Column({ type: 'timestamp', nullable: true })
+    timeIn?: Date;
 
     @Column({ type: 'timestamp', nullable: true })
     timeOut?: Date;

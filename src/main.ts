@@ -10,26 +10,42 @@ import { apiReference } from '@scalar/nestjs-api-reference';
 import compression from 'compression';
 import rateLimit from 'express-rate-limit';
 import helmet from 'helmet';
-import morgan from 'morgan';
 import { AppModule } from './app.module';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
+import { getLogLevels } from './common/utils/day.util';
 import { swaggerConfig, swaggerCustomOptions } from './config/swagger.config';
+import { SystemLogger } from './modules/logs/system-logs/services/system-logger.service';
 
 // process.env.TZ = 'UTC';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const isDevelopment = process.env.NODE_ENV !== 'production';
+  
+  // Create the app with our custom logger
+  const app = await NestFactory.create(AppModule, {
+    logger: getLogLevels(isDevelopment),
+    bufferLogs: true, // Buffer logs until logger is set up
+  });
+  
+  // Get the SystemLogger from our module
+  const logger = await app.resolve(SystemLogger);
+  app.useLogger(logger);
+  
   const configService = app.get(ConfigService);
 
-  // Get your Bull queue from the Nest.js container
-  const scheduleQueue = app.get(getQueueToken('schedule-generation'));
+  // Dynamically get all queues from the queues.config.ts
+  const { queues } = await import('./config/queues.config');
   
   // Set up Bull Board
   const serverAdapter = new ExpressAdapter();
+  const bullAdapters = queues.map(queue => 
+    new BullAdapter(app.get(getQueueToken(queue.name)))
+  );
+  
   createBullBoard({
-    queues: [new BullAdapter(scheduleQueue)],
+    queues: bullAdapters,
     serverAdapter,
   });
 
@@ -63,7 +79,7 @@ async function bootstrap() {
   // Global exception filter
   app.useGlobalFilters(new HttpExceptionFilter());
   
-  // Global logging interceptor
+  // Global logging interceptor (using our new logging interceptor)
   app.useGlobalInterceptors(new LoggingInterceptor());
 
   // Global transform interceptor
@@ -99,7 +115,7 @@ async function bootstrap() {
   app.use(compression()); // Compress all responses to reduce the size of the response body and increase the speed of a web application
 
   // HTTP request logger
-  app.use(morgan('combined')); // Log HTTP requests with the Apache combined format (combined is the most common format) to the console
+  // app.use(morgan('combined')); // Log HTTP requests with the Apache combined format (combined is the most common format) to the console
 
   // Swagger Setup
   const document = SwaggerModule.createDocument(app, swaggerConfig); // Create a Swagger document
@@ -113,9 +129,10 @@ async function bootstrap() {
     }),
   )
 
+  logger.log(`Application is starting on port ${port}...`, 'Bootstrap');
   await app.listen(port, '0.0.0.0'); // Listen on all network interfaces (LAN)
-  console.log(`Application is running on: ${appUrl}/api`);
-  console.log(`API Reference available at: ${appUrl}/reference`);
-  console.log(`Queue monitoring available at: ${appUrl}/api/admin/queues`);
+  logger.log(`Application is running on: ${appUrl}/api`, 'Bootstrap');
+  logger.log(`API Reference available at: ${appUrl}/reference`, 'Bootstrap');
+  logger.log(`Queue monitoring available at: ${appUrl}/api/admin/queues`, 'Bootstrap');
 }
 bootstrap();

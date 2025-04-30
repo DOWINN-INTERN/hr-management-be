@@ -1,6 +1,5 @@
 import { Module } from '@nestjs/common';
 import { RouterModule } from '@nestjs/core';
-import { EventEmitterModule } from '@nestjs/event-emitter';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { BiometricsController } from './biometrics.controller';
 import { BiometricDevice } from './entities/biometric-device.entity';
@@ -13,7 +12,6 @@ import { ZKTecoBiometricsService } from './services/zkteco-biometrics.service';
 @Module({
     imports: [
         TypeOrmModule.forFeature([BiometricDevice, BiometricTemplate]),
-        EventEmitterModule.forRoot(),
         RouterModule.register([
             {
                 path: 'biometrics',

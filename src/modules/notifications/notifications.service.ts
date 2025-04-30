@@ -1,8 +1,10 @@
 import { BaseService } from '@/common/services/base.service';
 import { UsersService } from '@/modules/account-management/users/users.service';
+import { InjectQueue } from '@nestjs/bull';
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DeepPartial, Repository } from 'typeorm';
+import { Queue } from 'bull';
+import { DeepPartial, In, Repository } from 'typeorm';
 import { NotificationDto } from './dtos/notification.dto';
 import { Notification } from './entities/notification.entity';
 import { NotificationsGateway } from './gateways/notifications.gateway';
@@ -15,21 +17,45 @@ export class NotificationsService extends BaseService<Notification> {
     @InjectRepository(Notification)
     private notificationRepo: Repository<Notification>,
     protected readonly usersService: UsersService,
-    private readonly notificationsGateway: NotificationsGateway
+    private readonly notificationsGateway: NotificationsGateway,
+    @InjectQueue('notifications') private notificationsQueue: Queue
   ) {
     super(notificationRepo, usersService);
   }
 
   override async create(createDto: DeepPartial<Notification>, createdBy?: string): Promise<Notification> {
     const notification = await super.create(createDto, createdBy);
-    this.notificationsGateway.emitToUser(notification, notification.user.id);
+    // Queue for processing instead of immediate sending
+    await this.notificationsQueue.add('processNotification', {
+      notificationId: notification.id,
+      userId: notification.user.id,
+    });
     return notification;
   }
 
   override async update(id: string, updateDto: DeepPartial<Notification>, updatedBy?: string): Promise<Notification> {
     const notification = await super.update(id, updateDto, updatedBy);
-    this.notificationsGateway.emitToUser(notification, notification.user.id);
+    // Queue for processing if not just updating read status
+    if (!updateDto.read) {
+      await this.notificationsQueue.add('processNotification', {
+        notificationId: notification.id,
+        userId: notification.user.id,
+        isUpdate: true
+      });
+    } else {
+      // Just emit read status update via WebSocket
+      this.notificationsGateway.emitToUser(notification, notification.user.id);
+    }
     return notification;
+  }
+
+  async getNotificationsByIds(ids: string[]): Promise<Notification[]> {
+    const notifications = await this.notificationRepo.findBy({ id: In(ids)});
+    if (notifications.length !== ids.length) {
+      const missingIds = ids.filter(id => !notifications.some(notification => notification.id === id));
+      this.notificationLogger.warn(`Missing notifications for IDs: ${missingIds.join(', ')}`);
+    }
+    return notifications;
   }
   
   async createBulkNotifications(dto: NotificationDto, createdBy: string): Promise<Notification[]> {
@@ -45,6 +71,28 @@ export class NotificationsService extends BaseService<Notification> {
         createdBy,
       });
     });
-    return this.notificationRepo.save(notifications);
+    // Save all to database
+    const savedNotifications = await this.notificationRepo.save(notifications);
+    
+    // Group by user
+    const notificationsByUser = new Map<string, string[]>();
+    
+    savedNotifications.forEach(notification => {
+      const userId = notification.user.id;
+      if (!notificationsByUser.has(userId)) {
+        notificationsByUser.set(userId, []);
+      }
+      notificationsByUser.get(userId)!.push(notification.id);
+    });
+    
+    // Queue batch processing jobs
+    for (const [userId, notificationIds] of notificationsByUser.entries()) {
+      await this.notificationsQueue.add('processBatch', {
+        notificationIds,
+        userId
+      });
+    }
+    
+    return savedNotifications;
   }
 }

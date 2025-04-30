@@ -1,12 +1,10 @@
 import { IsTimeString } from "@/common/decorators/is-time-string.decorator";
-import { BaseDto } from "@/common/dtos/base.dto";
 import { Day } from "@/common/enums/day.enum";
-import { createGetDto } from "@/common/factories/create-get-dto.factory";
-import { ApiProperty, PartialType } from "@nestjs/swagger";
+import { ApiProperty } from "@nestjs/swagger";
 import { Type } from "class-transformer";
 import { IsBoolean, IsEnum, IsInt, IsNotEmpty, IsOptional, IsString, Min } from "class-validator";
 
-export class ShiftDayDto extends PartialType(BaseDto) {
+export class ShiftDayDto {
     @ApiProperty({ 
         description: 'Day of the week', 
         enum: Day,
@@ -79,7 +77,3 @@ export class ShiftDayDto extends PartialType(BaseDto) {
     @IsString()
     shiftId!: string;
 }
-
-export class UpdateShiftDayDto extends PartialType(ShiftDayDto) {}
-
-export class GetShiftDayDto extends createGetDto(UpdateShiftDayDto, 'shift day') {}

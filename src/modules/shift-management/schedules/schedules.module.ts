@@ -1,6 +1,6 @@
 import { CutoffsModule } from '@/modules/payroll-management/cutoffs/cutoffs.module';
 import { BullModule } from '@nestjs/bull';
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { EmployeeManagementModule } from '../../employee-management/employee-management.module';
 import { GroupsModule } from '../groups/groups.module';
@@ -21,7 +21,7 @@ import { ScheduleGenerationProcessor, ScheduleGenerationService } from './servic
         CutoffsModule,
         EmployeeManagementModule,
         GroupsModule,
-        HolidaysModule,
+        forwardRef(() => HolidaysModule),
     ],
     providers: [SchedulesService, ScheduleGenerationProcessor, ScheduleGenerationService],
     exports: [

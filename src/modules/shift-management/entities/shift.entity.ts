@@ -4,7 +4,7 @@ import { Cutoff } from '@/modules/payroll-management/cutoffs/entities/cutoff.ent
 import { Column, Entity, JoinTable, ManyToMany, OneToMany } from 'typeorm';
 import { Group } from '../groups/entities/group.entity';
 import { Schedule } from '../schedules/entities/schedule.entity';
-import { ShiftDay } from '../shift-days/entities/shift-day.entity';
+import { ShiftDay } from './shift-day.entity';
 
 @Entity('shifts')
 export class Shift extends BaseEntity<Shift> {

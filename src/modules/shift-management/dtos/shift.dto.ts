@@ -5,7 +5,7 @@ import { createGetDto } from "@/common/factories/create-get-dto.factory";
 import { ApiProperty, PartialType } from "@nestjs/swagger";
 import { Type } from "class-transformer";
 import { IsArray, IsInt, IsNotEmpty, IsOptional, IsString, Min, ValidateNested } from "class-validator";
-import { ShiftDayDto } from "../shift-days/dtos/shift-day.dto";
+import { ShiftDayDto } from "./shift-day.dto";
 
 export class ShiftDto extends PartialType(BaseDto) {
     @ApiProperty({ 

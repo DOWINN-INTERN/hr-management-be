@@ -2,7 +2,7 @@ import { ScheduleStatus } from '@/common/enums/schedule-status';
 import { BaseService } from '@/common/services/base.service';
 import { DayUtils } from '@/common/utils/day.util';
 import { UsersService } from '@/modules/account-management/users/users.service';
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { addDays, format, isBefore, isSameDay, parseISO } from 'date-fns';
 import { Between, DeepPartial, In, MoreThanOrEqual, Repository } from 'typeorm';
@@ -42,7 +42,7 @@ export class SchedulesService extends BaseService<Schedule> {
           employee: { id: employeeId },
           date: parseISO(format(new Date(), 'yyyy-MM-dd'))
         },
-        relations: { shift: true, holiday: true, employee: true }
+        relations: { shift: { days: true }, holiday: true, employee: true }
       });
     }
 
@@ -58,10 +58,6 @@ export class SchedulesService extends BaseService<Schedule> {
     tomorrow.setDate(tomorrow.getDate() + 1);
     tomorrow.setHours(0, 0, 0, 0); // Set to beginning of day
     
-    this.logger.log(
-      `Deleting future schedules (from ${tomorrow.toISOString().split('T')[0]}) for ${employeeIds.length} employees in group ${groupId} for cutoff ${cutoffId}`
-    );
-    
     try {
       // Delete schedules matching our criteria, but only from tomorrow onwards
       const result = await this.schedulesRepository.delete({
@@ -70,7 +66,6 @@ export class SchedulesService extends BaseService<Schedule> {
         date: MoreThanOrEqual(tomorrow)
       });
       
-      this.logger.log(`Deleted ${result.affected || 0} future schedules for employees from group ${groupId}`);
     } catch (error) {
       if (error instanceof Error) {
         this.logger.error(
@@ -98,7 +93,7 @@ export class SchedulesService extends BaseService<Schedule> {
         );
         
         if (!group.shift) {
-          throw new Error(`Group ${groupId} has no shift assigned`);
+          throw new NotFoundException(`${group.name} has no shift assigned`);
         }
         
         // Get cutoff

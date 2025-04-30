@@ -5,7 +5,7 @@ import {
     Index,
     PrimaryGeneratedColumn,
     BaseEntity as TypeOrmBaseEntity,
-    UpdateDateColumn,
+    UpdateDateColumn
 } from 'typeorm';
 
 export abstract class BaseEntity<T> extends TypeOrmBaseEntity {

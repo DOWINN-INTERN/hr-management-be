@@ -6,7 +6,7 @@ import { Schedule } from '../../schedules/entities/schedule.entity';
 
 @Entity('holidays')
 export class Holiday extends BaseEntity<Holiday> {
-    @Column()
+    @Column({ unique: true })
     name!: string;
 
     @Column({ nullable: true })
@@ -21,6 +21,6 @@ export class Holiday extends BaseEntity<Holiday> {
     @Column({ type: 'enum', enum: Day })
     day!: Day;
 
-    @OneToMany(() => Schedule, (schedule: Schedule) => schedule.holiday)
+    @OneToMany(() => Schedule, (schedule: Schedule) => schedule.holiday, { nullable: true, cascade: true })
     schedules?: Schedule[];
 }

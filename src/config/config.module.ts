@@ -1,7 +1,8 @@
-import { BullModule } from '@nestjs/bull';
+import { BullModule } from '@/bull/bull.module';
 import { Module } from '@nestjs/common';
-import { ConfigService, ConfigModule as NestConfigModule } from '@nestjs/config';
+import { ConfigModule as NestConfigModule } from '@nestjs/config';
 import { EventEmitterModule } from '@nestjs/event-emitter';
+import { ScheduleModule } from '@nestjs/schedule';
 import { configValidationSchema } from '../config.schema';
 
 @Module({
@@ -12,22 +13,9 @@ import { configValidationSchema } from '../config.schema';
       validationSchema: configValidationSchema,
     }),
     EventEmitterModule.forRoot(),
-    BullModule.forRootAsync({
-      imports: [ConfigModule],
-      inject: [ConfigService],
-      useFactory: (configService: ConfigService) => ({
-        redis: {
-          host: configService.get('REDIS_HOST', 'localhost'),
-          port: configService.get('REDIS_PORT', 6379),
-        },
-        defaultJobOptions: {
-          attempts: 3,
-          removeOnComplete: true,
-          removeOnFail: false,
-        },
-      }),
-    }),
+    BullModule.forRoot(),
+    ScheduleModule.forRoot(),
   ],
-  exports: [NestConfigModule, EventEmitterModule, BullModule],
+  exports: [NestConfigModule, EventEmitterModule, BullModule, ScheduleModule],
 })
 export class ConfigModule {}

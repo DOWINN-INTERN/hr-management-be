@@ -1,14 +1,14 @@
 import { BaseEntity } from '@/database/entities/base.entity';
 import { Department } from '@/modules/organization-management/branches/departments/entities/department.entity';
+import { Branch } from '@/modules/organization-management/branches/entities/branch.entity';
 import { Organization } from '@/modules/organization-management/entities/organization.entity';
 import {
-    Column,
-    Entity,
-    JoinColumn,
-    OneToOne
+  Column,
+  Entity,
+  JoinColumn,
+  OneToOne
 } from 'typeorm';
 import { Profile } from '../../account-management/profiles/entities/profile.entity';
-import { Branch } from '@/modules/organization-management/branches/entities/branch.entity';
 
 @Entity('addresses')
 export class Address extends BaseEntity<Address> {
@@ -37,7 +37,7 @@ export class Address extends BaseEntity<Address> {
     profile?: Profile;
 
     @OneToOne(() => Organization, (organization: Organization) => organization.address, {
-        onDelete: 'CASCADE', nullable: true
+        nullable: true
       })
     @JoinColumn()
     organization?: Organization;

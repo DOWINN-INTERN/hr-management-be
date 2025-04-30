@@ -96,6 +96,7 @@
     "rxjs": "^7.8.1",
     "swagger-ui-express": "^5.0.1",
     "typeorm": "^0.3.20",
+    "web-push": "^3.6.7",
     "zkteco-js": "^1.7.1"
   },
   "devDependencies": {
@@ -118,6 +119,7 @@
     "@types/pluralize": "^0.0.33",
     "@types/supertest": "^6.0.0",
     "@types/uuid": "^10.0.0",
+    "@types/web-push": "^3.6.4",
     "@typescript-eslint/eslint-plugin": "^8.0.0",
     "@typescript-eslint/parser": "^8.0.0",
     "eslint": "^8.0.0",

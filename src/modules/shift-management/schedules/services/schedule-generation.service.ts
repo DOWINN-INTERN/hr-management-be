@@ -22,14 +22,7 @@ export class ScheduleGenerationService {
 
   async addGenerationJob(data: ScheduleGenerationJob): Promise<Job<ScheduleGenerationJob>> {
     this.logger.log(`Adding schedule generation job for ${data.employeeIds.length} employees in group ${data.groupId}`);
-    return this.scheduleQueue.add('generate', data, {
-      attempts: 3,
-      backoff: {
-        type: 'exponential',
-        delay: 5000,
-      },
-      removeOnComplete: true,
-    });
+    return this.scheduleQueue.add('generate', data);
   }
 }
 

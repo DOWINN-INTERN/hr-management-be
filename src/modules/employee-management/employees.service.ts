@@ -1,9 +1,9 @@
 import { Role } from '@/common/enums/role.enum';
 import { BaseService } from '@/common/services/base.service';
 import { UsersService } from '@/modules/account-management/users/users.service';
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DeepPartial, Repository } from 'typeorm';
+import { DeepPartial, In, Repository } from 'typeorm';
 import { Employee } from './entities/employee.entity';
 import { RolesService } from './roles/roles.service';
 
@@ -47,4 +47,99 @@ export class EmployeesService extends BaseService<Employee> {
         
         return await super.create(createDto, createdBy);
     }
+
+    async getEmployeesByIds(employeeIds: string[]): Promise<Employee[]> {
+        const employees = await this.employeesRepository.findBy({
+            id: In(employeeIds),
+        });
+
+        if (employees.length !== employeeIds.length) {
+            throw new NotFoundException('Employee/s does not exist');
+        }
+
+        return employees;
+    }
+
+    // async getHigherManagement(employeeId: string): Promise<Employee[]> {
+    //     // get employee organization, branch, department, and role scope
+    //     const employee = await this.findOneByOrFail({ id: employeeId }, { relations: { roles: true } });
+    
+    //     const { organizationId, branchId, departmentId, roles } = employee;
+    
+    //     if (!roles || roles.length === 0) {
+    //         // log 
+    //         this.logger.warn(`Employee ${employeeId} has no roles`);
+    //         throw new NotFoundException('Employee has no roles');
+    //     }
+    
+    //     // get employee highest role
+    //     const employeeHighestRole = await this.rolesService.getHighestScopeRole(roles);
+    //     if (!employeeHighestRole) {
+    //         throw new NotFoundException('Could not determine employee role scope');
+    //     }
+    
+    //     // Define query parameters to find employees with higher scope
+    //     const queryBuilder = this.createQueryBuilder('employee')
+    //         .leftJoinAndSelect('employee.roles', 'role')
+    //         .where('employee.organizationId = :organizationId', { organizationId })
+    //         .andWhere('employee.id != :employeeId', { employeeId }); // Exclude the current employee
+        
+    //     // Add conditions based on role scope hierarchy
+    //     switch (employeeHighestRole.scope) {
+    //         case RoleScopeType.OWNED:
+    //             // All higher scopes are relevant
+    //             queryBuilder.andWhere('role.scope IN (:...scopes)', { 
+    //                 scopes: [
+    //                     RoleScopeType.DEPARTMENT, 
+    //                     RoleScopeType.BRANCH, 
+    //                     RoleScopeType.ORGANIZATION, 
+    //                     RoleScopeType.GLOBAL
+    //                 ] 
+    //             });
+                
+    //             // If employee has a department, include department managers
+    //             if (departmentId) {
+    //                 queryBuilder.andWhere('(role.scope != :deptScope OR (role.scope = :deptScope AND employee.departmentId = :departmentId))', 
+    //                     { deptScope: RoleScopeType.DEPARTMENT, departmentId });
+    //             }
+    //             break;
+                
+    //         case RoleScopeType.DEPARTMENT:
+    //             // Branch, organization and global scopes are higher
+    //             queryBuilder.andWhere('role.scope IN (:...scopes)', { 
+    //                 scopes: [RoleScopeType.BRANCH, RoleScopeType.ORGANIZATION, RoleScopeType.GLOBAL] 
+    //             });
+                
+    //             // If employee has a branch, include branch managers
+    //             if (branchId) {
+    //                 queryBuilder.andWhere('(role.scope != :branchScope OR (role.scope = :branchScope AND employee.branchId = :branchId))', 
+    //                     { branchScope: RoleScopeType.BRANCH, branchId });
+    //             }
+    //             break;
+                
+    //         case RoleScopeType.BRANCH:
+    //             // Only organization and global scopes are higher
+    //             queryBuilder.andWhere('role.scope IN (:...scopes)', { 
+    //                 scopes: [RoleScopeType.ORGANIZATION, RoleScopeType.GLOBAL] 
+    //             });
+    //             break;
+                
+    //         case RoleScopeType.ORGANIZATION:
+    //             // Only global scope is higher
+    //             queryBuilder.andWhere('role.scope = :scope', { scope: RoleScopeType.GLOBAL });
+    //             break;
+                
+    //         case RoleScopeType.GLOBAL:
+    //             // No higher scopes exist
+    //             return [];
+    //     }
+    
+    //     // Get unique employees (an employee might have multiple roles)
+    //     const employees = await queryBuilder.getMany();
+        
+    //     // Filter to ensure we get unique employees (in case the query returns duplicates)
+    //     const uniqueEmployees = [...new Map(employees.map(e => [e.id, e])).values()];
+        
+    //     return uniqueEmployees;
+    // }
 }

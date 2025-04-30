@@ -5,6 +5,7 @@ import { BaseEntity } from '@/database/entities/base.entity';
 import { User } from '@/modules/account-management/users/entities/user.entity';
 import { Attendance } from '@/modules/attendance-management/entities/attendance.entity';
 import { FinalWorkHour } from '@/modules/attendance-management/final-work-hours/entities/final-work-hour.entity';
+import { WorkTimeRequest } from '@/modules/attendance-management/work-time-requests/entities/work-time-request.entity';
 import { Role } from '@/modules/employee-management/roles/entities/role.entity';
 import { Payroll } from '@/modules/payroll-management/entities/payroll.entity';
 import { PayrollItem } from '@/modules/payroll-management/payroll-items/entities/payroll-item.entity';
@@ -89,4 +90,7 @@ export class Employee extends BaseEntity<Employee> {
 
     @OneToMany(() => Payroll, (payroll: Payroll) => payroll.employee, { nullable: true })
     payrolls?: Payroll[];
+
+    @OneToMany(() => WorkTimeRequest, (workTimeRequest: WorkTimeRequest) => workTimeRequest.employee, { nullable: true })
+    workTimeRequests?: WorkTimeRequest[];
 }

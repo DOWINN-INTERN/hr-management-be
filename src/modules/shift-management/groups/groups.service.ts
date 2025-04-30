@@ -24,38 +24,19 @@ export class GroupsService extends BaseService<Group> {
     override async create(createDto: DeepPartial<Group>, createdBy?: string): Promise<Group> {
         // Extract employee references before creating the group
         const employeeRefs = createDto.employees;
-        delete createDto.employees; // Remove from the DTO to avoid TypeORM trying to create new employees
-        
-        // Create the group first (without employees)
-        let group = await super.create(createDto, createdBy);
 
-        group = await this.findOneByOrFail(
-            { id: group.id },
-            { relations: { shift: true }}
-        );
+        const employeeRefsIds = employeeRefs ? employeeRefs.map(ref => ref.id).filter((id): id is string => id !== undefined) : [];
         
-        // If employee references exist, handle the relationship
-        if (employeeRefs && employeeRefs.length > 0) {
-            // Find all the employees by their IDs
-            const employeeIds = employeeRefs.map(ref => ref.id);
-            const employees = await this.employeesService.getRepository().findBy({ 
-                id: In(employeeIds)
-            });
-            
-            // Update each employee with the new group
-            if (employees.length > 0) {
-                await this.employeesService.getRepository().update(
-                    { id: In(employeeIds) },
-                    { group: { id: group.id } }
-                );
-                
-                // Emit event for employee assignment to group
-                this.eventEmitter.emit(
-                    GROUP_EVENTS.EMPLOYEE_ASSIGNED,
-                    new EmployeeAssignedEvent(group, employees, createdBy)
-                );
-            }
-        }
+        const employees = await this.employeesService.getEmployeesByIds(employeeRefsIds);
+
+        // Create the group first (without employees)
+        const group = await super.create(createDto, createdBy);
+
+        // Emit event for employee assignment to group
+        this.eventEmitter.emit(
+            GROUP_EVENTS.EMPLOYEE_ASSIGNED,
+            new EmployeeAssignedEvent(group, employees, createdBy)
+        );
         
         return group;
     }
@@ -63,36 +44,28 @@ export class GroupsService extends BaseService<Group> {
     override async update(id: string, updateDto: DeepPartial<Group>, updatedBy?: string): Promise<Group> {
         // Extract employee references before updating the group
         const employeeRefs = updateDto.employees;
-        delete updateDto.employees; // Remove from the DTO to avoid TypeORM trying to create new employees
         
-        // Update the group first (without employees)
-        let group = await super.update(id, updateDto, updatedBy);
-
-        group = await this.findOneByOrFail(
-            { id: group.id },
-            { relations: { shift: true }}
-        );
+        const employeeRefsIds = employeeRefs ? employeeRefs.map(ref => ref.id).filter((id): id is string => id !== undefined) : [];
+        
+        await this.employeesService.getEmployeesByIds(employeeRefsIds);
 
         const currentEmployees = await this.employeesService.getRepository().findBy({
-            group: { id: group.id }
+            group: { id }
         });
 
-        const employeeRefsIds = employeeRefs ? employeeRefs.map(ref => ref.id).filter((id): id is string => id !== undefined) : [];
         const currentEmployeeIds = currentEmployees ? currentEmployees.map(emp => emp.id).filter((id): id is string => id !== undefined) : [];
+        // Update the group first (without employees)
+        const group = await super.update(id, updateDto, updatedBy);
+        
         const employeesToRemove = currentEmployeeIds.filter(id => !employeeRefsIds.includes(id));
         const employeesToAdd = employeeRefsIds.filter(id => !currentEmployeeIds.includes(id));
 
         // Remove employees from the group
         if (employeesToRemove.length > 0) {
-            await this.employeesService.getRepository().update(
-                { id: In(employeesToRemove) },
-                { group: undefined }
-            );
-            
-            // Emit event for employee removal from group
             const removedEmployees = await this.employeesService.getRepository().findBy({
                 id: In(employeesToRemove)
             });
+
             this.eventEmitter.emit(
                 GROUP_EVENTS.EMPLOYEE_REMOVED,
                 new EmployeeAssignedEvent(group, removedEmployees, updatedBy)
@@ -105,19 +78,10 @@ export class GroupsService extends BaseService<Group> {
                 id: In(employeesToAdd)
             });
             
-            // Update each employee with the new group
-            if (employees.length > 0) {
-                await this.employeesService.getRepository().update(
-                    { id: In(employeesToAdd) },
-                    { group: { id: group.id } }
-                );
-                
-                // Emit event for employee assignment to group
-                this.eventEmitter.emit(
-                    GROUP_EVENTS.EMPLOYEE_ASSIGNED,
-                    new EmployeeAssignedEvent(group, employees, updatedBy)
-                );
-            }
+            this.eventEmitter.emit(
+                GROUP_EVENTS.EMPLOYEE_ASSIGNED,
+                new EmployeeAssignedEvent(group, employees, updatedBy)
+            );
         }
         
         return group;

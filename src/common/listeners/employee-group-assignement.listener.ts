@@ -49,7 +49,6 @@ export class EmployeeGroupAssignmentListener {
 
   @OnEvent(GROUP_EVENTS.EMPLOYEE_REMOVED)
   async handleEmployeeRemovedFromGroup(event: EmployeeAssignedEvent): Promise<void> {
-    this.logger.log(`Handling employee removal event for ${event.employees.length} employees from group ${event.group.id}`);
     
     // Find all future active cutoffs instead of just one
     const cutoff = await this.cutoffsService.findOneBy({ status: CutoffStatus.PENDING }) || await this.cutoffsService.getActiveCutoff();

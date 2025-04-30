@@ -1,3 +1,7 @@
+import { AttendanceStatus } from '@/common/enums/attendance-status.enum';
+import { NotificationType } from '@/common/enums/notification-type.enum';
+import { RequestStatus } from '@/common/enums/request-status.enum';
+import { ScheduleStatus } from '@/common/enums/schedule-status';
 import { ATTENDANCE_EVENTS, AttendanceEvent } from '@/common/events/attendance.event';
 import { AttendancePunchesService } from '@/modules/attendance-management/attendance-punches/attendance-punches.service';
 import { AttendancesService } from '@/modules/attendance-management/attendances.service';
@@ -9,8 +13,7 @@ import { SchedulesService } from '@/modules/shift-management/schedules/schedules
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { differenceInMinutes, format, isAfter, isBefore, parseISO } from 'date-fns';
-import { AttendanceStatus } from '../../../common/enums/attendance-status.enum';
-import { ScheduleStatus } from '../../../common/enums/schedule-status';
+import { WorkTimeRequestsService } from '../work-time-requests/work-time-requests.service';
 
 @Injectable()
 export class AttendanceListener {
@@ -27,7 +30,8 @@ export class AttendanceListener {
     private readonly employeesService: EmployeesService,
     private readonly schedulesService: SchedulesService,
     private readonly biometricDevicesService: BiometricDevicesService,
-    private readonly notificationService: NotificationsService,
+    private readonly notificationsService: NotificationsService,
+    private readonly workTimeRequestsService: WorkTimeRequestsService,
   ) {}
 
   @OnEvent(ATTENDANCE_EVENTS.ATTENDANCE_RECORDED)
@@ -76,97 +80,185 @@ export class AttendanceListener {
         
         // Find today's schedule for the employee
         const todaySchedule = await this.schedulesService.getEmployeeScheduleToday(employee.id);
-        
+        let attendanceStatuses = [];
         if (!todaySchedule) {
           this.logger.warn(`No schedule found for employee ${employee.id} on ${punchDate}`);
-          // notify employee and higher ups
+          // Notify employee
+          await this.notificationsService.create({
+            title: 'No Schedule Found',
+            message: `You have no schedule for today (${punchDate}). Your attendance will not be recorded. Please communicate with your HR/Supervisor.`,
+            type: NotificationType.WARNING,
+            category: 'ATTENDANCE',
+            user: { id: employee.user.id },
+          })
           continue;
         }
 
         if (todaySchedule.status === ScheduleStatus.LEAVE) {
           this.logger.warn(`Employee ${employee.id} is on leave today`);
-          // notify employee and higher ups
+          // Notify employee
+          await this.notificationsService.create({
+            title: 'Leave Notification',
+            message: `You are on leave today (${punchDate}). Your attendance will be recorded.`,
+            type: NotificationType.INFO,
+            category: 'ATTENDANCE',
+            user: { id: employee.user.id },
+          });
         }
 
-        if (todaySchedule.restDay)
-        {
+        if (todaySchedule.holiday) {
+          this.logger.log(`Employee ${employee.id} checked in on a holiday (${todaySchedule.holiday.name})`);
+          // Notify employee
+          await this.notificationsService.create({
+            title: 'Holiday Check-in',
+            message: `You checked in on a holiday (${todaySchedule.holiday.name}) on ${punchDate} at ${punchTimeStr}.`,
+            type: NotificationType.INFO,
+            category: 'ATTENDANCE',
+            user: { id: employee.user.id },
+          });
+        }
 
+        if (todaySchedule.restDay) {
+          this.logger.log(`Employee ${employee.id} is on rest day but checking in`);
+          // notify employee
+          await this.notificationsService.create({
+            title: 'Rest Day Check-in',
+            message: `You are on a rest day but checked in on ${punchDate} at ${punchTimeStr}.`,
+            type: NotificationType.INFO,
+            category: 'ATTENDANCE',
+            user: { id: employee.user.id },
+          });
         }
 
         const { startTime, endTime } = todaySchedule;
 
-        const effecitiveStartTime = startTime;
+        const effectiveStartTime = startTime;
         const effectiveEndTime = endTime;
-        const shiftStartTime = parseISO(`${punchDate}T${effecitiveStartTime}`);
+        const shiftStartTime = parseISO(`${punchDate}T${effectiveStartTime}`);
         const shiftEndTime = parseISO(`${punchDate}T${effectiveEndTime}`);
+        const middleTime = new Date(
+          shiftStartTime.getTime() + 
+          (shiftEndTime.getTime() - shiftStartTime.getTime()) / 2
+        );
 
         // Find attendance for today if it exists
         let existingAttendance = await this.attendancesService.getEmployeeAttendanceToday(employee.id, punchTime);
         
-        // If no existing attendance means check-in, create an attendance
+        // If no existing attendance create an attendance
         if (!existingAttendance) {
-          let attendanceStatuses = [AttendanceStatus.CHECKED_IN];
-          if (todaySchedule.holiday) {
-            this.logger.log(`Employee ${employee.id} checked in on a holiday (${todaySchedule.holiday.name})`);
-            // notify employee
-          }
-
-          // Check if late
-          if (isAfter(punchTime, shiftStartTime)) {
-            const minutesLate = differenceInMinutes(punchTime, shiftStartTime);
-            if (minutesLate > this.GRACE_PERIOD_MINUTES) {
-              attendanceStatuses = [...attendanceStatuses, AttendanceStatus.LATE];
-              this.logger.log(`Employee ${employee.user.email} is late by ${minutesLate} minutes`);
-              // notify employee and higher ups
-              // work time request
-            }
-          }
-
-          this.logger.log(`Creating new attendance record for employee ${employee.id} on ${punchDate} with status ${attendanceStatuses}`);
-          // For a new attendance record, we'll set the timeIn to this punch time
           existingAttendance = await this.attendancesService.create({
             employee: { id: employee.id },
-            statuses: [...attendanceStatuses],
-            timeIn: punchTime,
             schedule: { id: todaySchedule.id },
             createdBy: employee.user.id,
           });
         }
-        // If existing attendance found, its a check-out
-        else
-        {
+
+        // Determine check-in status based on middle time threshold
+        if (isBefore(punchTime, middleTime)) {
+          if (!existingAttendance.timeIn) {
+            attendanceStatuses.push(AttendanceStatus.CHECKED_IN);
+            // Check if late
+            if (isAfter(punchTime, shiftStartTime)) {
+              const minutesLate = differenceInMinutes(punchTime, shiftStartTime);
+              if (minutesLate > this.GRACE_PERIOD_MINUTES) {
+                attendanceStatuses.push(AttendanceStatus.LATE);
+                this.logger.log(`Employee ${employee.user.email} is late by ${minutesLate} minutes`);
+                
+                // Create work time request for late arrival
+                await this.createWorkTimeRequest(employee.id, AttendanceStatus.LATE, existingAttendance.id, minutesLate);
+                
+                // Notify employee
+                await this.notificationsService.create({
+                  title: 'Late Check-in',
+                  message: `You are late by ${minutesLate} minutes on ${punchDate} at ${punchTimeStr}.`,
+                  type: NotificationType.WARNING,
+                  category: 'ATTENDANCE',
+                  user: { id: employee.user.id },
+                });
+              }
+            }
+            existingAttendance.timeIn = punchTime;
+            existingAttendance.statuses = attendanceStatuses;
+          }
+          else {
+            this.logger.log(`Employee ${employee.user.email} already checked in`);
+            // notify employee
+            await this.notificationsService.create({
+              title: 'Already Checked In',
+              message: `You tried to check in but you have already checked in on ${punchDate} at ${punchTimeStr}.`,
+              type: NotificationType.INFO,
+              category: 'ATTENDANCE',
+              user: { id: employee.user.id },
+            });
+          }
+        } else {
+          if (!existingAttendance.timeIn)
+          {
+            attendanceStatuses.push(AttendanceStatus.NO_CHECKED_IN);
+
+            // Create work time request for no check in
+            await this.createWorkTimeRequest(employee.id, AttendanceStatus.NO_CHECKED_IN, existingAttendance.id);
+            this.logger.log(`Employee ${employee.user.email} did not check in`);
+            // Notify employee
+            await this.notificationsService.create({
+              title: 'No Check-in',
+              message: `You did not check in on ${punchDate} at ${punchTimeStr}.`,
+              type: NotificationType.WARNING,
+              category: 'ATTENDANCE',
+              user: { id: employee.user.id },
+            });
+          }
+
+          // Check if employee is undertime
           if (isBefore(punchTime, shiftEndTime)) {
             const minutesEarly = differenceInMinutes(shiftEndTime, punchTime);
             if (minutesEarly > this.UNDER_TIME_THRESHOLD_MINUTES) {
-              existingAttendance.statuses = [...existingAttendance.statuses, AttendanceStatus.UNDER_TIME];
+              attendanceStatuses.push(AttendanceStatus.UNDER_TIME);
               this.logger.log(`Employee ${employee.id} is leaving ${minutesEarly} minutes early`);
-              // notify employee and higher ups
-              // work time request
+              
+              // Create work time request for under time
+              await this.createWorkTimeRequest(employee.id, AttendanceStatus.UNDER_TIME, existingAttendance.id, minutesEarly);
+              
+              // Notify management
+              await this.notificationsService.create({
+                title: 'Early Check-out',
+                message: `You are leaving ${minutesEarly} minutes early on ${punchDate} at ${punchTimeStr}.`,
+                type: NotificationType.WARNING,
+                category: 'ATTENDANCE',
+                user: { id: employee.user.id },
+              });
             }
           } else {
+            // Check if employee is overtime
             const minutesOvertime = differenceInMinutes(punchTime, shiftEndTime);
-            if (minutesOvertime > this.OVER_TIME_THRESHOLD_MINUTES) { // Consider overtime if more than 30 minutes
-              existingAttendance.statuses = [...existingAttendance.statuses, AttendanceStatus.OVERTIME];
+            if (minutesOvertime > this.OVER_TIME_THRESHOLD_MINUTES) {
+              attendanceStatuses.push(AttendanceStatus.OVERTIME);
               this.logger.log(`Employee ${employee.id} worked ${minutesOvertime} minutes overtime`);
-              // notify employee and higher ups
-              // work time request
+              
+              // Create work time request for overtime
+              await this.createWorkTimeRequest(employee.id, AttendanceStatus.OVERTIME, existingAttendance.id, minutesOvertime);
+              
+              // Notify employee
+              await this.notificationsService.create({
+                title: 'Overtime Alert',
+                message: `You worked ${minutesOvertime} minutes overtime on ${punchDate} at ${punchTimeStr}.`,
+                type: NotificationType.INFO,
+                category: 'ATTENDANCE',
+                user: { id: employee.user.id },
+              });
             }
-            existingAttendance.statuses = [...existingAttendance.statuses, AttendanceStatus.CHECKED_OUT];
           }
           
-          // Update existing attendance
-          this.logger.log(`Updating attendance with timeOut for employee ${employee.employeeNumber}`);
-          
-          // Update time out if it does not exists
           if (!existingAttendance.timeOut) {
-            existingAttendance.timeOut = punchTime;
+            attendanceStatuses.push(AttendanceStatus.CHECKED_OUT);
+            existingAttendance.statuses = [...existingAttendance.statuses, ...attendanceStatuses];
           }
-
-          existingAttendance.updatedBy = employee.user.id;
           
-          await this.attendancesService.save(existingAttendance);
+          existingAttendance.updatedBy = employee.user.id;
+          existingAttendance.timeOut = punchTime;
         }
 
+        await this.attendancesService.save(existingAttendance);
         // Create attendance punch record
         await this.attendancePunchesService.create({
           attendance: { id: existingAttendance.id },
@@ -190,4 +282,92 @@ export class AttendanceListener {
     // After processing all records, clear the device
     await this.biometricService.clearAttendanceRecords(event.deviceId);
   }
+
+  // Helper methods for notifications and work time requests
+  
+  private async createWorkTimeRequest(employeeId: string, type: AttendanceStatus, attendanceId: string, duration?: number): Promise<void> {
+    try {
+      await this.workTimeRequestsService.create({
+        attendance: { id: attendanceId },
+        type,
+        duration,
+        status: RequestStatus.PENDING,
+        createdBy: employeeId,
+        employee: { id: employeeId },
+      });
+      this.logger.log(`Created work time request for employee ${employeeId} for type ${type}`);
+    } catch (error: any) {
+      this.logger.error(`Failed to create work time request: ${error.message}`);
+    }
+  }
+
+  // private async notifyLateCheckIn(employee: Employee, date: Date, time: Date, lateInfo: string): Promise<void> {
+  //   const managersToNotify = await this.employeesService.getEmployeeManagers(employee.id);
+    
+  //   if (managersToNotify.length > 0) {
+  //     await this.notificationsService.createBulkNotifications({
+  //       title: 'Late Check-in',
+  //       message: `Employee ${employee.user.email} checked in ${lateInfo} on ${date} at ${time}`,
+  //       type: 'WARNING',
+  //       recipients: managersToNotify.map(manager => ({ id: manager.user.id })),
+  //       read: false
+  //     }, 'SYSTEM');
+  //   }
+  // }
+
+  // private async notifyEarlyCheckout(employee, date, minutesEarly: number): Promise<void> {
+  //   const managersToNotify = await this.employeesService.getEmployeeManagers(employee.id);
+    
+  //   if (managersToNotify.length > 0) {
+  //     await this.notificationsService.createBulkNotifications({
+  //       title: 'Early Check-out',
+  //       message: `Employee ${employee.user.email} checked out ${minutesEarly} minutes early on ${date}`,
+  //       type: 'WARNING',
+  //       recipients: managersToNotify.map(manager => ({ id: manager.user.id })),
+  //       read: false
+  //     }, 'SYSTEM');
+  //   }
+  // }
+
+  // private async notifyOvertime(employee, date, minutesOvertime: number): Promise<void> {
+  //   const managersToNotify = await this.employeesService.getEmployeeManagers(employee.id);
+    
+  //   if (managersToNotify.length > 0) {
+  //     await this.notificationsService.createBulkNotifications({
+  //       title: 'Overtime Alert',
+  //       message: `Employee ${employee.user.email} worked ${minutesOvertime} minutes overtime on ${date}`,
+  //       type: 'INFO',
+  //       recipients: managersToNotify.map(manager => ({ id: manager.user.id })),
+  //       read: false
+  //     }, 'SYSTEM');
+  //   }
+  // }
+
+  // private async notifyHolidayCheckIn(employee, holidayName: string): Promise<void> {
+  //   const managersToNotify = await this.employeesService.getEmployeeManagers(employee.id);
+    
+  //   if (managersToNotify.length > 0) {
+  //     await this.notificationsService.createBulkNotifications({
+  //       title: 'Holiday Check-in',
+  //       message: `Employee ${employee.user.email} checked in on a holiday (${holidayName})`,
+  //       type: 'INFO',
+  //       recipients: managersToNotify.map(manager => ({ id: manager.user.id })),
+  //       read: false
+  //     }, 'SYSTEM');
+  //   }
+  // }
+
+  // private async notifyEmployeeOnLeave(employee, date): Promise<void> {
+  //   const managersToNotify = await this.employeesService.getEmployeeManagers(employee.id);
+    
+  //   if (managersToNotify.length > 0) {
+  //     await this.notificationsService.createBulkNotifications({
+  //       title: 'Check-in While on Leave',
+  //       message: `Employee ${employee.user.email} tried to check in while on approved leave for ${date}`,
+  //       type: 'INFO',
+  //       recipients: managersToNotify.map(manager => ({ id: manager.user.id })),
+  //       read: false
+  //     }, 'SYSTEM');
+  //   }
+  // }
 }

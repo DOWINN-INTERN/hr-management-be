@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { RouterModule } from '@nestjs/core';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { CutoffsModule } from '../payroll-management/cutoffs/cutoffs.module';
+import { ShiftDay } from './entities/shift-day.entity';
 import { Shift } from './entities/shift.entity';
 import { GroupsModule } from './groups/groups.module';
 import { HolidaysModule } from './holidays/holidays.module';
@@ -9,13 +10,12 @@ import { ScheduleChangeRequestsModule } from './schedules/schedule-change-reques
 import { ScheduleChangeResponsesModule } from './schedules/schedule-change-requests/schedule-change-responses/schedule-change-responses.module';
 import { SchedulesModule } from './schedules/schedules.module';
 import { DefaultShiftsSeeder } from './services/default-shift-seeder.service';
-import { ShiftDaysModule } from './shift-days/shift-days.module';
 import { ShiftsController } from './shifts.controller';
 import { ShiftsService } from './shifts.service';
 
 @Module({
     imports: [
-        TypeOrmModule.forFeature([Shift]),
+        TypeOrmModule.forFeature([Shift, ShiftDay]),
         RouterModule.register([
             {
                 path: 'shifts',
@@ -38,10 +38,6 @@ import { ShiftsService } from './shifts.service';
                         ]
                     },
                     {
-                        path: 'days',
-                        module: ShiftDaysModule,
-                    },
-                    {
                         path: 'groups',
                         module: GroupsModule
                     },
@@ -54,7 +50,6 @@ import { ShiftsService } from './shifts.service';
         ]),
         HolidaysModule,
         SchedulesModule,
-        ShiftDaysModule,
         GroupsModule,
         CutoffsModule,
     ],
@@ -63,7 +58,6 @@ import { ShiftsService } from './shifts.service';
         ShiftsService,
         HolidaysModule,
         SchedulesModule,
-        ShiftDaysModule,
         GroupsModule,
     ],
     controllers: [ShiftsController],

@@ -1,7 +1,7 @@
 
 import { Document } from '@/modules/documents/entities/document.entity';
 import { Employee } from '@/modules/employee-management/entities/employee.entity';
-import { ActivityLog } from '@/modules/logs/entities/activity-logs.entity';
+import { ActivityLog } from '@/modules/logs/activity-logs/entities/activity-log.entity';
 import { Notification } from '@/modules/notifications/entities/notification.entity';
 import { Column, Entity, OneToMany, OneToOne } from 'typeorm';
 import { BaseEntity } from '../../../../database/entities/base.entity';
@@ -55,19 +55,19 @@ export class User extends BaseEntity<User> {
   @Column({ nullable: true })
   verificationTokenExpires?: Date;
 
-  @OneToMany(() => Session, (session: Session) => session.user)
+  @OneToMany(() => Session, (session: Session) => session.user, { nullable: true })
   sessions?: Session[];
 
-  @OneToMany(() => ActivityLog, (activityLog: ActivityLog) => activityLog.actor)
+  @OneToMany(() => ActivityLog, (activityLog: ActivityLog) => activityLog.user, { nullable: true})
   activityLogs?: ActivityLog[];
 
-  @OneToMany(() => Document, (document: Document) => document.user)
+  @OneToMany(() => Document, (document: Document) => document.user, { nullable: true })
   documents?: Document[];
 
-  @OneToMany(() => Notification, (notification: Notification) => notification.user)
+  @OneToMany(() => Notification, (notification: Notification) => notification.user, { nullable: true })
   notifications?: Notification[];
 
-  @OneToOne(() => Employee, (employee) => employee.user)
+  @OneToOne(() => Employee, (employee) => employee.user, { nullable: true })
   employee?: Employee;
 
   // @OneToMany(() => SocialLogin, (socialLogin) => socialLogin.user)

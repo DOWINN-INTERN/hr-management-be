@@ -11,10 +11,10 @@ export class Group extends BaseEntity<Group> {
     @Column({ nullable: true })
     description?: string;
 
-    @OneToMany(() => Employee, (employee: Employee) => employee.group)
+    @OneToMany(() => Employee, (employee: Employee) => employee.group, { cascade: true, nullable: true})
     employees?: Employee[];
 
-    @ManyToOne(() => Shift, (shift: Shift) => shift.groups)
+    @ManyToOne(() => Shift, (shift: Shift) => shift.groups, { nullable: true, cascade: true, eager: true })
     @JoinColumn({ name: 'shiftId' })
     shift?: Shift;
 }
