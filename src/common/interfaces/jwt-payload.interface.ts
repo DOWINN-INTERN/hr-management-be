@@ -12,6 +12,6 @@ export interface IJwtPayload {
     departments?: string[];
     organizations?: string[];
     branches?: string[]; 
-    roles?: IRole[];
+    roles?: Partial<IRole>[];
     refreshToken?: string;
   }

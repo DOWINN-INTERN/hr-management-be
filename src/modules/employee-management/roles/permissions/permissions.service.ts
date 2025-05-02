@@ -35,7 +35,7 @@ export class PermissionsService extends BaseService<Permission> {
                 this.cachedPermissions.set(key, permission);
             }
             
-            this.logger.log(`Preloaded ${this.cachedPermissions.size} permissions into cache`);
+            // this.logger.log(`Preloaded ${this.cachedPermissions.size} permissions into cache`);
         } catch (error) {
             const errorMessage = error instanceof Error ? error.message : String(error);
             this.logger.error(`Failed to preload permissions: ${errorMessage}`);

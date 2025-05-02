@@ -23,11 +23,11 @@ export class EmailSeederService implements OnModuleInit {
       // Check if a default configuration already exists
       try {
         await this.emailConfigService.getDefaultConfiguration();
-        this.logger.log('Default email configuration already exists, skipping seeder');
+        // this.logger.log('Default email configuration already exists, skipping seeder');
         return;
       } catch (error) {
         // No default config exists, proceed with seeding
-        this.logger.log('Creating default email configuration...');
+        // this.logger.log('Creating default email configuration...');
       }
 
       // Create default email configuration using environment variables
@@ -44,7 +44,7 @@ export class EmailSeederService implements OnModuleInit {
         isDefault: true,
       });
 
-      this.logger.log(`Default email configuration created: ${defaultConfig.id}`);
+      // this.logger.log(`Default email configuration created: ${defaultConfig.id}`);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
       this.logger.error(`Failed to seed default email configuration: ${errorMessage}`);
@@ -184,11 +184,11 @@ export class EmailSeederService implements OnModuleInit {
         // Check if template already exists
         try {
           await this.emailTemplatesService.findByName(template.name);
-          this.logger.log(`Email template '${template.name}' already exists, skipping`);
+          // this.logger.log(`Email template '${template.name}' already exists, skipping`);
         } catch (error) {
           // Template doesn't exist, create it
           const createdTemplate = await this.emailTemplatesService.create(template);
-          this.logger.log(`Created email template: ${template.name} (${createdTemplate.id})`);
+          // this.logger.log(`Created email template: ${template.name} (${createdTemplate.id})`);
         }
       }
     } catch (error) {

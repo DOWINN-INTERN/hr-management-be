@@ -61,7 +61,7 @@ export class Employee extends BaseEntity<Employee> {
     @JoinColumn({ name: 'userId' })
     user!: User;
 
-    @ManyToMany(() => Role, (role: Role) => role.employees, { nullable: true, cascade: true })
+    @ManyToMany(() => Role, (role: Role) => role.employees, { nullable: true })
     @JoinTable({
         name: 'employee_roles',
         joinColumn: { name: 'employee_id', referencedColumnName: 'id' },

@@ -1,6 +1,7 @@
 import { AttendanceStatus } from '@/common/enums/attendance-status.enum';
 import { NotificationType } from '@/common/enums/notification-type.enum';
 import { RequestStatus } from '@/common/enums/request-status.enum';
+import { ATTENDANCE_EVENTS, AttendanceProcessedEvent } from '@/common/events/attendance.event';
 import { BaseService } from '@/common/services/base.service';
 import { UsersService } from '@/modules/account-management/users/users.service';
 import { Injectable } from '@nestjs/common';
@@ -60,7 +61,20 @@ export class AttendancesService extends BaseService<Attendance> {
         
         this.logger.log(`Completed processing attendance records for ${yesterdayFormatted}`);
 
+        // Get all attendance records for the day that has no final work hours yet
+        const attendances = await this.attendancesRepository.find({
+            where: {
+                timeIn: Between(startOfDay(yesterday), endOfDay(yesterday)),
+                finalWorkHour: IsNull(),
+            },
+            relations: { employee: true, schedule: true }
+        });
+
         // Emit event for attendance processing
+        this.eventEmitter.emit(
+            ATTENDANCE_EVENTS.ATTENDANCE_PROCESSED,
+            new AttendanceProcessedEvent(attendances)
+        );
     }
 
     private async handleMissingCheckOuts(date: Date) {

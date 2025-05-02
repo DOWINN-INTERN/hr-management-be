@@ -28,11 +28,11 @@ export class PermissionSeederService implements OnModuleInit {
   }
   
   async seedPermissions(): Promise<void> {
-    this.logger.log('🔍 Scanning controllers for permissions...');
+    // this.logger.log('🔍 Scanning controllers for permissions...');
     
     // Get permissions from controllers created with createController factory
     const factoryControllerPerms = await this.scanFactoryControllers();
-    this.logger.log(`Found ${factoryControllerPerms.length} permissions from factory controllers`);
+    // this.logger.log(`Found ${factoryControllerPerms.length} permissions from factory controllers`);
     
     // // Get permissions from regular BaseController extensions
     // const baseControllerPerms = await this.scanBaseControllerExtensions();
@@ -58,7 +58,7 @@ export class PermissionSeederService implements OnModuleInit {
         else updated++;
       }
       
-      this.logger.log(`Permission seeding completed: ${created} created, ${updated} updated`);
+      // this.logger.log(`Permission seeding completed: ${created} created, ${updated} updated`);
     } catch (error) {
       this.logger.error(`Error creating permissions: ${error instanceof Error ? error.message : String(error)}`);
       throw error;
@@ -75,7 +75,7 @@ export class PermissionSeederService implements OnModuleInit {
     // Updated pattern to match controllers that extend from createController() without generic types
     const factoryControllerPattern = /export\s+class\s+(\w+)\s+extends\s+createController\s*\(\s*([\w.]+)\s*,\s*([\w.]+)\s*,\s*([\w.]+)(?:\s*,\s*([\w.]+))?(?:\s*,\s*([\w.]+))?\s*\)/;
     
-    this.logger.debug(`Scanning ${controllers.length} controller files for factory controllers`);
+    // this.logger.debug(`Scanning ${controllers.length} controller files for factory controllers`);
     
     for (const file of controllers) {
       try {
@@ -99,7 +99,7 @@ export class PermissionSeederService implements OnModuleInit {
             entityName = entityName.split('.').pop() || entityName;
           }
           
-          this.logger.debug(`Found factory controller: ${controllerName} for entity ${entityName}`);
+          // this.logger.debug(`Found factory controller: ${controllerName} for entity ${entityName}`);
           
           // Always generate MANAGE permission
           permissions.push(this.createPermissionDefinition(Action.MANAGE, entityName));
@@ -155,7 +155,7 @@ export class PermissionSeederService implements OnModuleInit {
     // Get all actions from the enum
     const allActions = Object.values(Action);
     
-    this.logger.debug(`Scanning ${controllers.length} controller files for BaseController extensions`);
+    // this.logger.debug(`Scanning ${controllers.length} controller files for BaseController extensions`);
     
     for (const file of controllers) {
       try {

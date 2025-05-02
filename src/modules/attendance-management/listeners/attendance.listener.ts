@@ -1,8 +1,9 @@
 import { AttendanceStatus } from '@/common/enums/attendance-status.enum';
+import { HolidayType } from '@/common/enums/holiday-type.enum';
 import { NotificationType } from '@/common/enums/notification-type.enum';
 import { RequestStatus } from '@/common/enums/request-status.enum';
 import { ScheduleStatus } from '@/common/enums/schedule-status';
-import { ATTENDANCE_EVENTS, AttendanceEvent } from '@/common/events/attendance.event';
+import { ATTENDANCE_EVENTS, AttendanceRecordedEvent } from '@/common/events/attendance.event';
 import { AttendancePunchesService } from '@/modules/attendance-management/attendance-punches/attendance-punches.service';
 import { AttendancesService } from '@/modules/attendance-management/attendances.service';
 import { IBiometricService } from '@/modules/biometrics/interfaces/biometric.interface';
@@ -13,6 +14,7 @@ import { SchedulesService } from '@/modules/shift-management/schedules/schedules
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { differenceInMinutes, format, isAfter, isBefore, parseISO } from 'date-fns';
+import { DayType } from '../final-work-hours/entities/final-work-hour.entity';
 import { WorkTimeRequestsService } from '../work-time-requests/work-time-requests.service';
 
 @Injectable()
@@ -35,7 +37,7 @@ export class AttendanceListener {
   ) {}
 
   @OnEvent(ATTENDANCE_EVENTS.ATTENDANCE_RECORDED)
-  async handleAttendanceRecorded(event: AttendanceEvent): Promise<void> {
+  async handleAttendanceRecorded(event: AttendanceRecordedEvent): Promise<void> {
     this.logger.log(`Handling attendance recorded event for ${event.attendances.length} records`);
     
     // Get the biometric device entity
@@ -92,6 +94,29 @@ export class AttendanceListener {
             user: { id: employee.user.id },
           })
           continue;
+        }
+
+        let dayType: DayType;
+        const isRestDay = todaySchedule.restDay;
+        const holidayType = todaySchedule.holiday?.type;
+
+        if (isRestDay && holidayType === HolidayType.REGULAR) {
+            dayType = DayType.REGULAR_HOLIDAY_REST_DAY;
+        } 
+        else if (isRestDay && (holidayType === HolidayType.SPECIAL_NON_WORKING)) {
+            dayType = DayType.SPECIAL_HOLIDAY_REST_DAY;
+        }
+        else if (isRestDay) {
+            dayType = DayType.REST_DAY;
+        }
+        else if (holidayType === HolidayType.REGULAR) {
+            dayType = DayType.REGULAR_HOLIDAY;
+        }
+        else if (holidayType === HolidayType.SPECIAL_NON_WORKING || holidayType === HolidayType.SPECIAL_WORKING) {
+            dayType = DayType.SPECIAL_HOLIDAY;
+        }
+        else {
+            dayType = DayType.REGULAR_DAY;
         }
 
         if (todaySchedule.status === ScheduleStatus.LEAVE) {
@@ -165,7 +190,7 @@ export class AttendanceListener {
                 this.logger.log(`Employee ${employee.user.email} is late by ${minutesLate} minutes`);
                 
                 // Create work time request for late arrival
-                await this.createWorkTimeRequest(employee.id, AttendanceStatus.LATE, existingAttendance.id, minutesLate);
+                await this.createWorkTimeRequest(dayType, employee.id, AttendanceStatus.LATE, existingAttendance.id, minutesLate);
                 
                 // Notify employee
                 await this.notificationsService.create({
@@ -197,7 +222,7 @@ export class AttendanceListener {
             attendanceStatuses.push(AttendanceStatus.NO_CHECKED_IN);
 
             // Create work time request for no check in
-            await this.createWorkTimeRequest(employee.id, AttendanceStatus.NO_CHECKED_IN, existingAttendance.id);
+            await this.createWorkTimeRequest(dayType, employee.id, AttendanceStatus.NO_CHECKED_IN, existingAttendance.id);
             this.logger.log(`Employee ${employee.user.email} did not check in`);
             // Notify employee
             await this.notificationsService.create({
@@ -217,7 +242,7 @@ export class AttendanceListener {
               this.logger.log(`Employee ${employee.id} is leaving ${minutesEarly} minutes early`);
               
               // Create work time request for under time
-              await this.createWorkTimeRequest(employee.id, AttendanceStatus.UNDER_TIME, existingAttendance.id, minutesEarly);
+              await this.createWorkTimeRequest(dayType, employee.id, AttendanceStatus.UNDER_TIME, existingAttendance.id, minutesEarly);
               
               // Notify management
               await this.notificationsService.create({
@@ -236,7 +261,7 @@ export class AttendanceListener {
               this.logger.log(`Employee ${employee.id} worked ${minutesOvertime} minutes overtime`);
               
               // Create work time request for overtime
-              await this.createWorkTimeRequest(employee.id, AttendanceStatus.OVERTIME, existingAttendance.id, minutesOvertime);
+              await this.createWorkTimeRequest(dayType, employee.id, AttendanceStatus.OVERTIME, existingAttendance.id, minutesOvertime);
               
               // Notify employee
               await this.notificationsService.create({
@@ -283,14 +308,21 @@ export class AttendanceListener {
     await this.biometricService.clearAttendanceRecords(event.deviceId);
   }
 
+  @OnEvent(ATTENDANCE_EVENTS.ATTENDANCE_PROCESSED)
+  async handleAttendanceProcessed(): Promise<void> {
+    // create final work hours
+
+  }
+
   // Helper methods for notifications and work time requests
   
-  private async createWorkTimeRequest(employeeId: string, type: AttendanceStatus, attendanceId: string, duration?: number): Promise<void> {
+  private async createWorkTimeRequest(dayType: DayType, employeeId: string, type: AttendanceStatus, attendanceId: string, duration?: number): Promise<void> {
     try {
       await this.workTimeRequestsService.create({
         attendance: { id: attendanceId },
         type,
         duration,
+        dayType,
         status: RequestStatus.PENDING,
         createdBy: employeeId,
         employee: { id: employeeId },

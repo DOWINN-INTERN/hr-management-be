@@ -21,12 +21,12 @@ export class DefaultShiftsSeeder implements OnModuleInit {
   }
 
   async seed() {
-    this.logger.log('Seeding default shifts and groups...');
+    // this.logger.log('Seeding default shifts and groups...');
     
     // Check if default shift already exists
     const existingShifts = await this.shiftsService.getRepository().count();
     if (existingShifts > 0) {
-      this.logger.log('Shifts already exist, skipping seeder');
+      // this.logger.log('Shifts already exist, skipping seeder');
       return;
     }
     

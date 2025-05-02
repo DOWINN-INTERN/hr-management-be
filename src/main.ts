@@ -129,10 +129,9 @@ async function bootstrap() {
     }),
   )
 
-  logger.log(`Application is starting on port ${port}...`, 'Bootstrap');
   await app.listen(port, '0.0.0.0'); // Listen on all network interfaces (LAN)
-  logger.log(`Application is running on: ${appUrl}/api`, 'Bootstrap');
-  logger.log(`API Reference available at: ${appUrl}/reference`, 'Bootstrap');
-  logger.log(`Queue monitoring available at: ${appUrl}/api/admin/queues`, 'Bootstrap');
+  logger.log(`Application is running on: ${appUrl}/api`, 'Main');
+  logger.log(`API Reference available at: ${appUrl}/reference`, 'Main');
+  logger.log(`Queue monitoring available at: ${appUrl}/api/admin/queues`, 'Main');
 }
 bootstrap();

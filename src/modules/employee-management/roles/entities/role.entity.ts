@@ -16,11 +16,11 @@ export class Role extends BaseEntity<Role> {
     description?: string;
 
     @Column({
-            type: 'enum',
-            enum: RoleScopeType,
-            default: RoleScopeType.OWNED,
-        })
-    scope: RoleScopeType = RoleScopeType.OWNED;
+        type: 'enum',
+        enum: RoleScopeType,
+        default: RoleScopeType.OWNED,
+    })
+    scope!: RoleScopeType;
 
     @ManyToMany(() => Permission, (permission: Permission) => permission.roles, { nullable: true, cascade: true })
     @JoinTable({

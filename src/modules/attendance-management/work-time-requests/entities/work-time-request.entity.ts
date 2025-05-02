@@ -5,6 +5,7 @@ import { Document } from '@/modules/documents/entities/document.entity';
 import { Employee } from '@/modules/employee-management/entities/employee.entity';
 import { Column, Entity, JoinColumn, ManyToOne, OneToMany, OneToOne } from 'typeorm';
 import { Attendance } from '../../entities/attendance.entity';
+import { DayType } from '../../final-work-hours/entities/final-work-hour.entity';
 import { WorkTimeResponse } from '../work-time-responses/entities/work-time-response.entity';
 
 @Entity('work-time-requests')
@@ -22,6 +23,13 @@ export class WorkTimeRequest extends BaseEntity<WorkTimeRequest> {
 
     @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
     duration?: number; // in minutes
+
+    @Column({ 
+        type: 'enum', 
+        enum: DayType,
+        default: DayType.REGULAR_DAY
+    })
+    dayType!: DayType;
 
     @ManyToOne(() => Attendance, (attendance: Attendance) => attendance.workTimeRequests)
     @JoinColumn({ name: 'attendanceId' })

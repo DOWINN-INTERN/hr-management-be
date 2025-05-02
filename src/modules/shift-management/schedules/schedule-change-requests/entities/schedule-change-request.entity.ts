@@ -9,7 +9,7 @@ import { ScheduleChangeResponse } from '../schedule-change-responses/entities/sc
 @Entity('schedule-change-requests')
 export class ScheduleChangeRequest extends BaseEntity<ScheduleChangeRequest> {
     @Column()
-    reason!: string;
+    description!: string;
 
     @Column({ type: 'enum', enum: RequestStatus, default: RequestStatus.PENDING })
     status!: RequestStatus;

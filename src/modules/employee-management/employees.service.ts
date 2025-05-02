@@ -39,10 +39,24 @@ export class EmployeesService extends BaseService<Employee> {
             name: Role.EMPLOYEE,
         });
 
+        // store temporary roles
+        const tempRoles = createDto.roles || [];
+
+        // filter out non existing roles
+        const existingRoles = await this.rolesService.getRepository().findBy({
+            id: In(tempRoles.map(role => role.id)),
+        });
+
+        // map existing roles id to the createDto
+        createDto.roles = existingRoles.map(role => {
+            return {
+                id: role.id,
+            };
+        });
+
         // assign employee role to employee by adding to the roles array
-        createDto.roles = createDto.roles || [];
-        if (!createDto.roles.some(role => role.id === employeeRole.id)) {
-            createDto.roles.push(employeeRole);
+        if (!createDto.roles?.some(role => role.id === employeeRole.id)) {
+            createDto.roles?.push(employeeRole);
         }
         
         return await super.create(createDto, createdBy);

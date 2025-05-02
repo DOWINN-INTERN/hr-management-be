@@ -55,12 +55,12 @@ const compression_1 = __importDefault(__webpack_require__(10));
 const express_rate_limit_1 = __importDefault(__webpack_require__(11));
 const helmet_1 = __importDefault(__webpack_require__(12));
 const app_module_1 = __webpack_require__(13);
-const http_exception_filter_1 = __webpack_require__(326);
-const logging_interceptor_1 = __webpack_require__(327);
-const transform_interceptor_1 = __webpack_require__(328);
-const day_util_1 = __webpack_require__(151);
-const swagger_config_1 = __webpack_require__(329);
-const system_logger_service_1 = __webpack_require__(286);
+const http_exception_filter_1 = __webpack_require__(331);
+const logging_interceptor_1 = __webpack_require__(332);
+const transform_interceptor_1 = __webpack_require__(333);
+const day_util_1 = __webpack_require__(154);
+const swagger_config_1 = __webpack_require__(334);
+const system_logger_service_1 = __webpack_require__(291);
 // process.env.TZ = 'UTC';
 async function bootstrap() {
     const isDevelopment = process.env.NODE_ENV !== 'production';
@@ -74,7 +74,7 @@ async function bootstrap() {
     app.useLogger(logger);
     const configService = app.get(config_1.ConfigService);
     // Dynamically get all queues from the queues.config.ts
-    const { queues } = await Promise.resolve().then(() => __importStar(__webpack_require__(167)));
+    const { queues } = await Promise.resolve().then(() => __importStar(__webpack_require__(170)));
     // Set up Bull Board
     const serverAdapter = new express_1.ExpressAdapter();
     const bullAdapters = queues.map(queue => new bullAdapter_1.BullAdapter(app.get((0, bull_1.getQueueToken)(queue.name))));
@@ -142,11 +142,10 @@ async function bootstrap() {
     app.use('/reference', (0, nestjs_api_reference_1.apiReference)({
         content: document,
     }));
-    logger.log(`Application is starting on port ${port}...`, 'Bootstrap');
     await app.listen(port, '0.0.0.0'); // Listen on all network interfaces (LAN)
-    logger.log(`Application is running on: ${appUrl}/api`, 'Bootstrap');
-    logger.log(`API Reference available at: ${appUrl}/reference`, 'Bootstrap');
-    logger.log(`Queue monitoring available at: ${appUrl}/api/admin/queues`, 'Bootstrap');
+    logger.log(`Application is running on: ${appUrl}/api`, 'Main');
+    logger.log(`API Reference available at: ${appUrl}/reference`, 'Main');
+    logger.log(`Queue monitoring available at: ${appUrl}/api/admin/queues`, 'Main');
 }
 bootstrap();
 
@@ -238,21 +237,21 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.AppModule = void 0;
 const common_1 = __webpack_require__(5);
 const common_module_1 = __webpack_require__(14);
-const config_module_1 = __webpack_require__(165);
-const database_module_1 = __webpack_require__(171);
-const account_management_module_1 = __webpack_require__(172);
-const addresses_module_1 = __webpack_require__(215);
-const attendance_management_module_1 = __webpack_require__(217);
-const biometrics_module_1 = __webpack_require__(218);
-const documents_module_1 = __webpack_require__(256);
-const emails_module_1 = __webpack_require__(174);
+const config_module_1 = __webpack_require__(168);
+const database_module_1 = __webpack_require__(174);
+const account_management_module_1 = __webpack_require__(175);
+const addresses_module_1 = __webpack_require__(218);
+const attendance_management_module_1 = __webpack_require__(220);
+const biometrics_module_1 = __webpack_require__(221);
+const documents_module_1 = __webpack_require__(261);
+const emails_module_1 = __webpack_require__(177);
 const employee_management_module_1 = __webpack_require__(15);
-const files_module_1 = __webpack_require__(264);
-const logs_module_1 = __webpack_require__(280);
-const notifications_module_1 = __webpack_require__(290);
-const organization_management_module_1 = __webpack_require__(302);
-const payroll_management_module_1 = __webpack_require__(314);
-const shift_management_module_1 = __webpack_require__(130);
+const files_module_1 = __webpack_require__(269);
+const logs_module_1 = __webpack_require__(285);
+const notifications_module_1 = __webpack_require__(295);
+const organization_management_module_1 = __webpack_require__(307);
+const payroll_management_module_1 = __webpack_require__(319);
+const shift_management_module_1 = __webpack_require__(133);
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -296,11 +295,11 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.CommonModule = void 0;
 const employee_management_module_1 = __webpack_require__(15);
-const cutoffs_module_1 = __webpack_require__(125);
-const shift_management_module_1 = __webpack_require__(130);
+const cutoffs_module_1 = __webpack_require__(128);
+const shift_management_module_1 = __webpack_require__(133);
 const common_1 = __webpack_require__(5);
-const employee_group_assignement_listener_1 = __webpack_require__(163);
-const common_service_1 = __webpack_require__(164);
+const employee_group_assignement_listener_1 = __webpack_require__(166);
+const common_service_1 = __webpack_require__(167);
 const transaction_service_1 = __webpack_require__(85);
 let CommonModule = class CommonModule {
 };
@@ -335,10 +334,10 @@ const common_1 = __webpack_require__(5);
 const core_1 = __webpack_require__(7);
 const typeorm_1 = __webpack_require__(16);
 const employees_controller_1 = __webpack_require__(17);
-const employees_service_1 = __webpack_require__(101);
+const employees_service_1 = __webpack_require__(104);
 const employee_entity_1 = __webpack_require__(43);
-const permissions_module_1 = __webpack_require__(102);
-const roles_module_1 = __webpack_require__(103);
+const permissions_module_1 = __webpack_require__(105);
+const roles_module_1 = __webpack_require__(106);
 let EmployeeManagementModule = class EmployeeManagementModule {
 };
 exports.EmployeeManagementModule = EmployeeManagementModule;
@@ -390,8 +389,8 @@ module.exports = require("@nestjs/typeorm");
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.EmployeesController = void 0;
 const create_controller_factory_1 = __webpack_require__(18);
-const employee_dto_1 = __webpack_require__(97);
-const employees_service_1 = __webpack_require__(101);
+const employee_dto_1 = __webpack_require__(100);
+const employees_service_1 = __webpack_require__(104);
 const employee_entity_1 = __webpack_require__(43);
 class EmployeesController extends (0, create_controller_factory_1.createController)(employee_entity_1.Employee, employees_service_1.EmployeesService, employee_dto_1.GetEmployeeDto, employee_dto_1.EmployeeDto, employee_dto_1.UpdateEmployeeDto) {
 }
@@ -454,8 +453,8 @@ const common_1 = __webpack_require__(5);
 const swagger_1 = __webpack_require__(8);
 const pluralize_1 = __importStar(__webpack_require__(19));
 const base_controller_1 = __webpack_require__(20);
-const current_user_decorator_1 = __webpack_require__(94);
-const override_decorator_1 = __webpack_require__(95);
+const current_user_decorator_1 = __webpack_require__(97);
+const override_decorator_1 = __webpack_require__(98);
 const generalresponse_dto_1 = __webpack_require__(83);
 const pagination_dto_1 = __webpack_require__(22);
 function createController(EntityClass, ServiceClass, getDtoClass, createDtoClass, updateDtoClass) {
@@ -812,7 +811,7 @@ const common_1 = __webpack_require__(5);
 const swagger_1 = __webpack_require__(8);
 const class_transformer_1 = __webpack_require__(23);
 const authorize_decorator_1 = __webpack_require__(26);
-const current_user_decorator_1 = __webpack_require__(94);
+const current_user_decorator_1 = __webpack_require__(97);
 const action_enum_1 = __webpack_require__(40);
 const utility_helper_1 = __webpack_require__(84);
 class BaseController {
@@ -1455,16 +1454,28 @@ const permissions_guard_1 = __webpack_require__(29);
 const roles_guard_1 = __webpack_require__(92);
 const common_1 = __webpack_require__(5);
 const swagger_1 = __webpack_require__(8);
+const scope_guard_1 = __webpack_require__(94);
+const scope_interceptor_1 = __webpack_require__(95);
 const permissions_decorator_1 = __webpack_require__(90);
 const roles_decorator_1 = __webpack_require__(93);
 exports.PERMISSIONS_FUNCTION_KEY = 'permissions_function';
 exports.PERMISSION_ENDPOINT_TYPE = 'permission_endpoint_type';
 function Authorize(options) {
+    const decorators = [
+        (0, common_1.UseInterceptors)(scope_interceptor_1.ScopeInterceptor),
+        (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard, permissions_guard_1.PermissionsGuard, scope_guard_1.ScopeGuard),
+        (0, roles_decorator_1.Roles)(options === null || options === void 0 ? void 0 : options.roles),
+        (0, swagger_1.ApiBearerAuth)('access-token'),
+    ];
+    // Only add ScopeGuard for endpoints that need scope checking
     if (options === null || options === void 0 ? void 0 : options.endpointType) {
-        return (0, common_1.applyDecorators)((0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard, permissions_guard_1.PermissionsGuard), (0, roles_decorator_1.Roles)(options === null || options === void 0 ? void 0 : options.roles), (0, common_1.SetMetadata)(exports.PERMISSION_ENDPOINT_TYPE, options.endpointType), (0, swagger_1.ApiBearerAuth)('access-token'));
+        decorators.push((0, common_1.SetMetadata)(exports.PERMISSION_ENDPOINT_TYPE, options.endpointType));
     }
-    // For regular array-based permissions
-    return (0, common_1.applyDecorators)((0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard, permissions_guard_1.PermissionsGuard), (0, roles_decorator_1.Roles)(options === null || options === void 0 ? void 0 : options.roles), (0, permissions_decorator_1.Permissions)(options === null || options === void 0 ? void 0 : options.permissions), (0, swagger_1.ApiBearerAuth)('access-token'));
+    else {
+        // For regular array-based permissions
+        decorators.push((0, permissions_decorator_1.Permissions)(options === null || options === void 0 ? void 0 : options.permissions));
+    }
+    return (0, common_1.applyDecorators)(...decorators);
 }
 
 
@@ -1596,17 +1607,25 @@ let PermissionsGuard = PermissionsGuard_1 = class PermissionsGuard {
             }
             // check if user is an employee if user is not an employee only allow access to their own resource
             if (!user.employee) {
-                this.logger.warn(`User is not an employee: ${JSON.stringify(user)}`);
+                this.logger.warn(`User is not an employee`);
                 // Check if the user is trying to access their own resource
-                const userId = request.params.userId || request.query.userId || request.body.userId;
-                if (userId && userId !== userClaims.sub) {
-                    this.logger.warn(`User is trying to access another user's resource: ${userId}`);
-                    // Log unauthorized access attempt
-                    await this.logUserActivity(userClaims, endpointType, baseName, false, `Attempted to access another user's resource: ${userId}`, resourceId, userClaims.sub);
-                    throw new common_1.ForbiddenException('You do not have the permissions to manage this resource.');
-                }
-                // Log successful access to own resource
-                await this.logUserActivity(userClaims, endpointType, baseName, true, `Accessed own resource`, resourceId, userClaims.sub);
+                // const userId = request.params.userId || request.query.userId || request.body.userId;
+                // if (userId !== userClaims.sub) {
+                //   this.logger.warn(`User is trying to access another user's resource: ${userId}`);
+                //   // Log unauthorized access attempt
+                //   await this.logUserActivity(
+                //     userClaims, endpointType, baseName, false,
+                //     `Attempted to access another user's resource: ${userId}`,
+                //     resourceId, userClaims.sub
+                //   );
+                //   throw new ForbiddenException('You do not have the permission to access or manage this resource.');
+                // }
+                // // Log successful access to own resource
+                // await this.logUserActivity(
+                //   userClaims, endpointType, baseName, true,
+                //   `Accessed own resource`,
+                //   resourceId, userClaims.sub
+                // );
                 return true;
             }
             // If user has the super admin role, allow access
@@ -1620,7 +1639,6 @@ let PermissionsGuard = PermissionsGuard_1 = class PermissionsGuard {
             const userPermissions = [
                 ...new Set(((_d = (_c = user.employee) === null || _c === void 0 ? void 0 : _c.roles) === null || _d === void 0 ? void 0 : _d.flatMap(role => role.permissions).filter(Boolean)) || [])
             ];
-            this.logger.debug(`Required permissions: ${JSON.stringify(requiredPermissions)}`);
             const hasRequiredPermissions = requiredPermissions.every(requiredPermission => {
                 return userPermissions === null || userPermissions === void 0 ? void 0 : userPermissions.some(userPermission => {
                     // Direct permission match
@@ -1636,14 +1654,14 @@ let PermissionsGuard = PermissionsGuard_1 = class PermissionsGuard {
                 });
             });
             if (!hasRequiredPermissions) {
-                this.logger.warn(`User does not have required permissions: ${JSON.stringify(requiredPermissions)}`);
                 // Log failed permission check
                 await this.logUserActivity(userClaims, endpointType, baseName, false, `Missing required permissions: ${JSON.stringify(requiredPermissions.map(p => `${p.action} ${p.subject}`))}`, resourceId, userClaims.sub);
-                throw new common_1.ForbiddenException('You do not have the permissions to manage this resource.');
+                return true;
+                throw new common_1.ForbiddenException('You do not have the permissions to access or manage this resource.');
             }
             // Log successful permission check
             await this.logUserActivity(userClaims, endpointType, baseName, true, `Successfully performed action`, resourceId, userClaims.sub);
-            return hasRequiredPermissions;
+            return true;
         }
         catch (error) {
             if (error instanceof common_1.ForbiddenException) {
@@ -3644,10 +3662,6 @@ const organization_entity_1 = __webpack_require__(42);
 const typeorm_1 = __webpack_require__(25);
 const employee_entity_1 = __webpack_require__(43);
 let Role = class Role extends base_entity_1.BaseEntity {
-    constructor() {
-        super(...arguments);
-        this.scope = role_scope_type_enum_1.RoleScopeType.OWNED;
-    }
 };
 exports.Role = Role;
 __decorate([
@@ -4019,7 +4033,7 @@ __decorate([
     __metadata("design:type", typeof (_e = typeof user_entity_1.User !== "undefined" && user_entity_1.User) === "function" ? _e : Object)
 ], Employee.prototype, "user", void 0);
 __decorate([
-    (0, typeorm_1.ManyToMany)(() => role_entity_1.Role, (role) => role.employees, { nullable: true, cascade: true }),
+    (0, typeorm_1.ManyToMany)(() => role_entity_1.Role, (role) => role.employees, { nullable: true }),
     (0, typeorm_1.JoinTable)({
         name: 'employee_roles',
         joinColumn: { name: 'employee_id', referencedColumnName: 'id' },
@@ -4325,7 +4339,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
-var _a, _b, _c, _d, _e;
+var _a, _b, _c, _d, _e, _f;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.WorkTimeRequest = void 0;
 const attendance_status_enum_1 = __webpack_require__(50);
@@ -4335,6 +4349,7 @@ const document_entity_1 = __webpack_require__(48);
 const employee_entity_1 = __webpack_require__(43);
 const typeorm_1 = __webpack_require__(25);
 const attendance_entity_1 = __webpack_require__(52);
+const final_work_hour_entity_1 = __webpack_require__(58);
 const work_time_response_entity_1 = __webpack_require__(75);
 let WorkTimeRequest = class WorkTimeRequest extends base_entity_1.BaseEntity {
 };
@@ -4357,9 +4372,17 @@ __decorate([
     __metadata("design:type", Number)
 ], WorkTimeRequest.prototype, "duration", void 0);
 __decorate([
+    (0, typeorm_1.Column)({
+        type: 'enum',
+        enum: final_work_hour_entity_1.DayType,
+        default: final_work_hour_entity_1.DayType.REGULAR_DAY
+    }),
+    __metadata("design:type", typeof (_d = typeof final_work_hour_entity_1.DayType !== "undefined" && final_work_hour_entity_1.DayType) === "function" ? _d : Object)
+], WorkTimeRequest.prototype, "dayType", void 0);
+__decorate([
     (0, typeorm_1.ManyToOne)(() => attendance_entity_1.Attendance, (attendance) => attendance.workTimeRequests),
     (0, typeorm_1.JoinColumn)({ name: 'attendanceId' }),
-    __metadata("design:type", typeof (_d = typeof attendance_entity_1.Attendance !== "undefined" && attendance_entity_1.Attendance) === "function" ? _d : Object)
+    __metadata("design:type", typeof (_e = typeof attendance_entity_1.Attendance !== "undefined" && attendance_entity_1.Attendance) === "function" ? _e : Object)
 ], WorkTimeRequest.prototype, "attendance", void 0);
 __decorate([
     (0, typeorm_1.OneToMany)(() => document_entity_1.Document, (document) => document.workTimeRequest, { nullable: true }),
@@ -4372,7 +4395,7 @@ __decorate([
 __decorate([
     (0, typeorm_1.OneToOne)(() => work_time_response_entity_1.WorkTimeResponse, (workTimeResponse) => workTimeResponse.workTimeRequest, { eager: true, nullable: true, cascade: true }),
     (0, typeorm_1.JoinColumn)({ name: 'workTimeResponseId' }),
-    __metadata("design:type", typeof (_e = typeof work_time_response_entity_1.WorkTimeResponse !== "undefined" && work_time_response_entity_1.WorkTimeResponse) === "function" ? _e : Object)
+    __metadata("design:type", typeof (_f = typeof work_time_response_entity_1.WorkTimeResponse !== "undefined" && work_time_response_entity_1.WorkTimeResponse) === "function" ? _f : Object)
 ], WorkTimeRequest.prototype, "workTimeResponse", void 0);
 exports.WorkTimeRequest = WorkTimeRequest = __decorate([
     (0, typeorm_1.Entity)('work-time-requests')
@@ -5780,7 +5803,7 @@ exports.ScheduleChangeRequest = ScheduleChangeRequest;
 __decorate([
     (0, typeorm_1.Column)(),
     __metadata("design:type", String)
-], ScheduleChangeRequest.prototype, "reason", void 0);
+], ScheduleChangeRequest.prototype, "description", void 0);
 __decorate([
     (0, typeorm_1.Column)({ type: 'enum', enum: request_status_enum_1.RequestStatus, default: request_status_enum_1.RequestStatus.PENDING }),
     __metadata("design:type", typeof (_a = typeof request_status_enum_1.RequestStatus !== "undefined" && request_status_enum_1.RequestStatus) === "function" ? _a : Object)
@@ -5961,11 +5984,17 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
+var _a, _b;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.BiometricDevice = void 0;
+exports.BiometricDevice = exports.BiometricDeviceType = void 0;
 const base_entity_1 = __webpack_require__(34);
 const attendance_punch_entity_1 = __webpack_require__(73);
 const typeorm_1 = __webpack_require__(25);
+var BiometricDeviceType;
+(function (BiometricDeviceType) {
+    BiometricDeviceType["ZKTECO"] = "zkteco";
+    BiometricDeviceType["ANVIZ"] = "anviz";
+})(BiometricDeviceType || (exports.BiometricDeviceType = BiometricDeviceType = {}));
 let BiometricDevice = class BiometricDevice extends base_entity_1.BaseEntity {
 };
 exports.BiometricDevice = BiometricDevice;
@@ -5986,7 +6015,11 @@ __decorate([
     __metadata("design:type", String)
 ], BiometricDevice.prototype, "serialNumber", void 0);
 __decorate([
-    (0, typeorm_1.Column)(),
+    (0, typeorm_1.Column)({
+        type: 'enum',
+        enum: BiometricDeviceType,
+        default: BiometricDeviceType.ZKTECO
+    }),
     __metadata("design:type", String)
 ], BiometricDevice.prototype, "provider", void 0);
 __decorate([
@@ -6010,9 +6043,21 @@ __decorate([
     __metadata("design:type", Boolean)
 ], BiometricDevice.prototype, "isConnected", void 0);
 __decorate([
+    (0, typeorm_1.Column)({ type: 'timestamp', nullable: true }),
+    __metadata("design:type", typeof (_a = typeof Date !== "undefined" && Date) === "function" ? _a : Object)
+], BiometricDevice.prototype, "lastSync", void 0);
+__decorate([
     (0, typeorm_1.OneToMany)(() => attendance_punch_entity_1.AttendancePunch, (attendancePunch) => attendancePunch.biometricDevice, { nullable: true }),
     __metadata("design:type", Array)
 ], BiometricDevice.prototype, "attendancePunches", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ nullable: true }),
+    __metadata("design:type", String)
+], BiometricDevice.prototype, "manufacturer", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ nullable: true, type: 'json' }),
+    __metadata("design:type", typeof (_b = typeof Record !== "undefined" && Record) === "function" ? _b : Object)
+], BiometricDevice.prototype, "deviceCapacity", void 0);
 exports.BiometricDevice = BiometricDevice = __decorate([
     (0, typeorm_1.Entity)('biometric_devices')
 ], BiometricDevice);
@@ -6670,7 +6715,7 @@ let PermissionsService = class PermissionsService extends base_service_1.BaseSer
                 const key = this.getPermissionKey(permission.action, permission.subject);
                 this.cachedPermissions.set(key, permission);
             }
-            this.logger.log(`Preloaded ${this.cachedPermissions.size} permissions into cache`);
+            // this.logger.log(`Preloaded ${this.cachedPermissions.size} permissions into cache`);
         }
         catch (error) {
             const errorMessage = error instanceof Error ? error.message : String(error);
@@ -7066,6 +7111,430 @@ exports.Roles = Roles;
 
 /***/ }),
 /* 94 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var ScopeGuard_1;
+var _a;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.ScopeGuard = void 0;
+const common_1 = __webpack_require__(5);
+const core_1 = __webpack_require__(7);
+const role_scope_type_enum_1 = __webpack_require__(38);
+const role_enum_1 = __webpack_require__(91);
+let ScopeGuard = ScopeGuard_1 = class ScopeGuard {
+    constructor(reflector) {
+        this.reflector = reflector;
+        this.logger = new common_1.Logger(ScopeGuard_1.name);
+    }
+    async canActivate(context) {
+        var _a;
+        try {
+            const request = context.switchToHttp().getRequest();
+            const user = request.user;
+            const { resourceScope } = request;
+            const method = request.method;
+            const path = request.path;
+            // Log access attempt
+            this.logger.debug(`Access attempt: ${method} ${path}`);
+            // Check if role is super admin
+            const hasSuperAdminRole = (_a = user.roles) === null || _a === void 0 ? void 0 : _a.some(role => role.name === role_enum_1.Role.SUPERADMIN);
+            if (hasSuperAdminRole) {
+                return true;
+            }
+            // Check if resourceScope exists
+            if (!resourceScope) {
+                this.logger.warn(`Missing resourceScope in request`);
+                // For GET requests, allow access without resourceScope
+                // This fixes the issue with listing endpoints
+                if (method === 'GET') {
+                    this.logger.debug(`Allowing GET request without resourceScope: ${path}`);
+                    return true;
+                }
+                throw new common_1.InternalServerErrorException('Resource scope not defined');
+            }
+            // Check if the method is POST (creation) or PUT (update)
+            if (method !== 'POST' && method !== 'PUT') {
+                this.logger.debug(`Method ${method} allowed without scope check`);
+                return true; // Allow other methods
+            }
+            const body = request.body;
+            // Log the attempt with scope information
+            this.logger.debug(`Checking permissions for ${method} with scope type: ${resourceScope.type}`);
+            // Check creation permissions based on scope
+            if (!this.canDoInScope(body, resourceScope)) {
+                const errorMessage = this.generateErrorMessage(resourceScope.type, body);
+                this.logger.warn(`Permission denied: ${errorMessage} for user with scope ${resourceScope.type}`);
+                throw new common_1.ForbiddenException(errorMessage);
+            }
+            this.logger.debug('Permission check passed');
+            return true;
+        }
+        catch (error) {
+            // Handle and log any unexpected errors
+            if (!(error instanceof common_1.ForbiddenException) && !(error instanceof common_1.InternalServerErrorException)) {
+                this.logger.error(`Unexpected error in scope guard: ${error.message}`, error.stack);
+                throw new common_1.InternalServerErrorException('An error occurred while checking permissions');
+            }
+            throw error;
+        }
+    }
+    canDoInScope(data, resourceScope) {
+        var _a, _b, _c, _d, _e, _f;
+        try {
+            switch (resourceScope.type) {
+                case role_scope_type_enum_1.RoleScopeType.GLOBAL:
+                    // Global scope can create anywhere
+                    return true;
+                case role_scope_type_enum_1.RoleScopeType.ORGANIZATION:
+                    // Can only create within their organizations
+                    if (data.organizationId) {
+                        const hasAccess = (_b = (_a = resourceScope.organizations) === null || _a === void 0 ? void 0 : _a.includes(data.organizationId)) !== null && _b !== void 0 ? _b : false;
+                        if (!hasAccess) {
+                            this.logger.debug(`Organization access denied: user tried to access org ${data.organizationId}`);
+                        }
+                        return hasAccess;
+                    }
+                    return true;
+                case role_scope_type_enum_1.RoleScopeType.BRANCH:
+                    // Can only create within their branches
+                    if (data.branchId) {
+                        const hasAccess = (_d = (_c = resourceScope.branches) === null || _c === void 0 ? void 0 : _c.includes(data.branchId)) !== null && _d !== void 0 ? _d : false;
+                        if (!hasAccess) {
+                            this.logger.debug(`Branch access denied: user tried to access branch ${data.branchId}`);
+                        }
+                        return hasAccess;
+                    }
+                    return true;
+                case role_scope_type_enum_1.RoleScopeType.DEPARTMENT:
+                    // Can only create within their departments
+                    if (data.departmentId) {
+                        const hasAccess = (_f = (_e = resourceScope.departments) === null || _e === void 0 ? void 0 : _e.includes(data.departmentId)) !== null && _f !== void 0 ? _f : false;
+                        if (!hasAccess) {
+                            this.logger.debug(`Department access denied: user tried to access dept ${data.departmentId}`);
+                        }
+                        return hasAccess;
+                    }
+                    return true;
+                case role_scope_type_enum_1.RoleScopeType.OWNED:
+                    // Usually can't create resources for others
+                    if (data.userId) {
+                        const hasAccess = resourceScope.userId === data.userId;
+                        if (!hasAccess) {
+                            this.logger.debug(`User resource access denied: user tried to access another user's resource`);
+                        }
+                        return hasAccess;
+                    }
+                    // If no userId is provided, allow creation
+                    return true;
+                default:
+                    this.logger.warn(`Unknown scope type encountered: ${resourceScope.type}`);
+                    return false;
+            }
+        }
+        catch (error) {
+            this.logger.error(`Error in canDoInScope: ${error.message}`, error.stack);
+            return false;
+        }
+    }
+    generateErrorMessage(scopeType, data) {
+        switch (scopeType) {
+            case role_scope_type_enum_1.RoleScopeType.ORGANIZATION:
+                return data.organizationId
+                    ? `You don't have permission to manage resources in organization ${data.organizationId}`
+                    : `You don't have permission to manage organization resources`;
+            case role_scope_type_enum_1.RoleScopeType.BRANCH:
+                return data.branchId
+                    ? `You don't have permission to manage resources in branch ${data.branchId}`
+                    : `You don't have permission to manage branch resources`;
+            case role_scope_type_enum_1.RoleScopeType.DEPARTMENT:
+                return data.departmentId
+                    ? `You don't have permission to manage resources in department ${data.departmentId}`
+                    : `You don't have permission to manage department resources`;
+            case role_scope_type_enum_1.RoleScopeType.OWNED:
+                return data.userId
+                    ? `You don't have permission to manage resources for user ${data.userId}`
+                    : `You don't have permission to manage user resources`;
+            default:
+                return `You don't have permission to manage this resource`;
+        }
+    }
+};
+exports.ScopeGuard = ScopeGuard;
+exports.ScopeGuard = ScopeGuard = ScopeGuard_1 = __decorate([
+    (0, common_1.Injectable)(),
+    __metadata("design:paramtypes", [typeof (_a = typeof core_1.Reflector !== "undefined" && core_1.Reflector) === "function" ? _a : Object])
+], ScopeGuard);
+
+
+/***/ }),
+/* 95 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var ScopeInterceptor_1;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.ScopeInterceptor = void 0;
+const common_1 = __webpack_require__(5);
+const operators_1 = __webpack_require__(96);
+const role_scope_type_enum_1 = __webpack_require__(38);
+let ScopeInterceptor = ScopeInterceptor_1 = class ScopeInterceptor {
+    constructor() {
+        this.logger = new common_1.Logger(ScopeInterceptor_1.name);
+    }
+    intercept(context, next) {
+        var _a, _b, _c;
+        try {
+            const request = context.switchToHttp().getRequest();
+            const user = request.user;
+            const method = request.method;
+            const path = request.path;
+            this.logger.debug(`Processing ${method} request to ${path}`);
+            if (!user) {
+                this.logger.debug('No authenticated user found in request');
+                return next.handle();
+            }
+            this.logger.debug(`Setting resource scope for user: ${user.sub}`);
+            try {
+                // Determine effective scope
+                const roleScope = this.determineEffectiveScope(user.roles || []);
+                this.logger.debug(`Determined effective scope: ${roleScope.scopeType}`);
+                // Store scope information with correct property names
+                const resourceScope = {
+                    type: roleScope.scopeType,
+                    userId: user.sub,
+                    departments: ((_a = user.roles) === null || _a === void 0 ? void 0 : _a.flatMap(role => role.departmentId).filter((id) => id !== undefined && id !== null)) || [],
+                    branches: ((_b = user.roles) === null || _b === void 0 ? void 0 : _b.flatMap(role => role.branchId).filter((id) => id !== undefined && id !== null)) || [],
+                    organizations: ((_c = user.roles) === null || _c === void 0 ? void 0 : _c.flatMap(role => role.organizationId).filter((id) => id !== undefined && id !== null)) || [],
+                };
+                request.resourceScope = resourceScope;
+                // Apply TypeORM-compatible filters based on scope
+                request.filters = this.createTypeOrmFilters(resourceScope);
+                this.logger.debug(`Applied filters for scope type: ${resourceScope.type}`);
+            }
+            catch (error) {
+                this.logger.error(`Error setting up resource scope: ${error.message}`, error.stack);
+                throw new common_1.InternalServerErrorException('Failed to process authorization scope');
+            }
+            // Process the response to filter data
+            return next.handle().pipe((0, operators_1.map)(data => {
+                try {
+                    // Skip non-GET requests or if no scope defined
+                    if (request.method !== 'GET' || !request.resourceScope) {
+                        return data;
+                    }
+                    this.logger.debug(`Filtering GET response data by scope: ${request.resourceScope.type}`);
+                    // If data is an array, filter it based on scope
+                    if (Array.isArray(data)) {
+                        const filteredCount = data.length;
+                        const result = this.filterDataByScope(data, request.resourceScope);
+                        this.logger.debug(`Filtered data: ${result.length}/${filteredCount} items passed scope filter`);
+                        return result;
+                    }
+                    return data;
+                }
+                catch (error) {
+                    this.logger.error(`Error filtering response data: ${error.message}`, error.stack);
+                    throw new common_1.InternalServerErrorException('Failed to process response data');
+                }
+            }), (0, operators_1.catchError)(error => {
+                this.logger.error(`Interceptor pipeline error: ${error.message}`, error.stack);
+                throw error;
+            }));
+        }
+        catch (error) {
+            this.logger.error(`ScopeInterceptor error: ${error.message}`, error.stack);
+            throw error;
+        }
+    }
+    createTypeOrmFilters(resourceScope) {
+        var _a, _b, _c;
+        try {
+            const filters = {};
+            switch (resourceScope.type) {
+                case role_scope_type_enum_1.RoleScopeType.GLOBAL:
+                    this.logger.debug('Global scope: no filters applied');
+                    break;
+                case role_scope_type_enum_1.RoleScopeType.ORGANIZATION:
+                    if ((_a = resourceScope.organizations) === null || _a === void 0 ? void 0 : _a.length) {
+                        filters.organizations = resourceScope.organizations;
+                        this.logger.debug(`Organization filter applied with ${filters.organizations.length} organizations`);
+                    }
+                    else {
+                        this.logger.warn('Organization scope set but no organization IDs available');
+                    }
+                    break;
+                case role_scope_type_enum_1.RoleScopeType.BRANCH:
+                    if ((_b = resourceScope.branches) === null || _b === void 0 ? void 0 : _b.length) {
+                        filters.branches = resourceScope.branches;
+                        this.logger.debug(`Branch filter applied with ${filters.branches.length} branches`);
+                    }
+                    else {
+                        this.logger.warn('Branch scope set but no branch IDs available');
+                    }
+                    break;
+                case role_scope_type_enum_1.RoleScopeType.DEPARTMENT:
+                    if ((_c = resourceScope.departments) === null || _c === void 0 ? void 0 : _c.length) {
+                        filters.departments = resourceScope.departments;
+                        this.logger.debug(`Department filter applied with ${filters.departments.length} departments`);
+                    }
+                    else {
+                        this.logger.warn('Department scope set but no department IDs available');
+                    }
+                    break;
+                case role_scope_type_enum_1.RoleScopeType.OWNED:
+                    filters.userId = resourceScope.userId;
+                    this.logger.debug(`User-owned filter applied for user ID: ${filters.userId}`);
+                    break;
+                default:
+                    this.logger.warn(`Unknown scope type: ${resourceScope.type}`);
+            }
+            return filters;
+        }
+        catch (error) {
+            this.logger.error(`Error creating TypeORM filters: ${error.message}`, error.stack);
+            throw new common_1.InternalServerErrorException('Failed to create data filters');
+        }
+    }
+    filterDataByScope(data, resourceScope) {
+        var _a, _b, _c;
+        try {
+            if (!data.length) {
+                return data;
+            }
+            switch (resourceScope.type) {
+                case role_scope_type_enum_1.RoleScopeType.GLOBAL:
+                    this.logger.debug('Global scope: returning all data');
+                    return data;
+                case role_scope_type_enum_1.RoleScopeType.ORGANIZATION:
+                    if (!((_a = resourceScope.organizations) === null || _a === void 0 ? void 0 : _a.length)) {
+                        this.logger.warn('No organizations to filter by, returning empty set');
+                        return [];
+                    }
+                    return data.filter(item => {
+                        var _a;
+                        const result = (_a = resourceScope.organizations) === null || _a === void 0 ? void 0 : _a.includes(item.organizationId);
+                        if (!result) {
+                            this.logger.debug(`Filtered out item with organizationId: ${item.organizationId}`);
+                        }
+                        return result;
+                    });
+                case role_scope_type_enum_1.RoleScopeType.BRANCH:
+                    if (!((_b = resourceScope.branches) === null || _b === void 0 ? void 0 : _b.length)) {
+                        this.logger.warn('No branches to filter by, returning empty set');
+                        return [];
+                    }
+                    return data.filter(item => {
+                        var _a;
+                        const result = (_a = resourceScope.branches) === null || _a === void 0 ? void 0 : _a.includes(item.branchId);
+                        if (!result) {
+                            this.logger.debug(`Filtered out item with branchId: ${item.branchId}`);
+                        }
+                        return result;
+                    });
+                case role_scope_type_enum_1.RoleScopeType.DEPARTMENT:
+                    if (!((_c = resourceScope.departments) === null || _c === void 0 ? void 0 : _c.length)) {
+                        this.logger.warn('No departments to filter by, returning empty set');
+                        return [];
+                    }
+                    return data.filter(item => {
+                        var _a;
+                        const result = (_a = resourceScope.departments) === null || _a === void 0 ? void 0 : _a.includes(item.departmentId);
+                        if (!result) {
+                            this.logger.debug(`Filtered out item with departmentId: ${item.departmentId}`);
+                        }
+                        return result;
+                    });
+                case role_scope_type_enum_1.RoleScopeType.OWNED:
+                    return data.filter(item => {
+                        const result = item.userId === resourceScope.userId;
+                        if (!result) {
+                            this.logger.debug(`Filtered out item not owned by user: ${resourceScope.userId}`);
+                        }
+                        return result;
+                    });
+                default:
+                    this.logger.warn(`Unknown scope type for filtering: ${resourceScope.type}, returning all data`);
+                    return data;
+            }
+        }
+        catch (error) {
+            this.logger.error(`Error filtering data by scope: ${error.message}`, error.stack);
+            throw new common_1.InternalServerErrorException('Failed to filter response data');
+        }
+    }
+    determineEffectiveScope(roles) {
+        try {
+            if (!roles.length) {
+                this.logger.debug('No roles provided, using OWNED scope by default');
+                return { scopeType: role_scope_type_enum_1.RoleScopeType.OWNED };
+            }
+            let effectiveScopeType = role_scope_type_enum_1.RoleScopeType.OWNED;
+            for (const role of roles) {
+                const roleScope = role.scope || role_scope_type_enum_1.RoleScopeType.OWNED;
+                if (roleScope === role_scope_type_enum_1.RoleScopeType.GLOBAL) {
+                    this.logger.debug('Found GLOBAL role - assigning highest scope privilege');
+                    return { scopeType: role_scope_type_enum_1.RoleScopeType.GLOBAL };
+                }
+                if (this.isBroaderScope(roleScope, effectiveScopeType)) {
+                    this.logger.debug(`Upgrading scope from ${effectiveScopeType} to broader scope ${roleScope}`);
+                    effectiveScopeType = roleScope;
+                }
+            }
+            this.logger.debug(`Final determined scope: ${effectiveScopeType}`);
+            return { scopeType: effectiveScopeType };
+        }
+        catch (error) {
+            this.logger.error(`Error determining effective scope: ${error.message}`, error.stack);
+            throw new common_1.InternalServerErrorException('Failed to determine user access scope');
+        }
+    }
+    isBroaderScope(scopeA, scopeB) {
+        try {
+            const scopePriority = {
+                [role_scope_type_enum_1.RoleScopeType.GLOBAL]: 4,
+                [role_scope_type_enum_1.RoleScopeType.ORGANIZATION]: 3,
+                [role_scope_type_enum_1.RoleScopeType.BRANCH]: 2,
+                [role_scope_type_enum_1.RoleScopeType.DEPARTMENT]: 1,
+                [role_scope_type_enum_1.RoleScopeType.OWNED]: 0
+            };
+            return scopePriority[scopeA] > scopePriority[scopeB];
+        }
+        catch (error) {
+            this.logger.error(`Error comparing scopes: ${error.message}`, error.stack);
+            return false;
+        }
+    }
+};
+exports.ScopeInterceptor = ScopeInterceptor;
+exports.ScopeInterceptor = ScopeInterceptor = ScopeInterceptor_1 = __decorate([
+    (0, common_1.Injectable)()
+], ScopeInterceptor);
+
+
+/***/ }),
+/* 96 */
+/***/ ((module) => {
+
+module.exports = require("rxjs/operators");
+
+/***/ }),
+/* 97 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
@@ -7109,13 +7578,13 @@ exports.CurrentUser = (0, common_1.createParamDecorator)((data, context) => {
 
 
 /***/ }),
-/* 95 */
+/* 98 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Override = Override;
-__webpack_require__(96);
+__webpack_require__(99);
 /**
  * A decorator function that copies metadata from the overridden method
  * in the parent class to the overriding method in the child class.
@@ -7160,13 +7629,13 @@ function Override() {
 
 
 /***/ }),
-/* 96 */
+/* 99 */
 /***/ ((module) => {
 
 module.exports = require("reflect-metadata");
 
 /***/ }),
-/* 97 */
+/* 100 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -7182,12 +7651,12 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var _a, _b, _c, _d;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.GetEmployeeDto = exports.UpdateEmployeeDto = exports.EmployeeDto = void 0;
-const base_dto_1 = __webpack_require__(98);
-const reference_dto_1 = __webpack_require__(99);
+const base_dto_1 = __webpack_require__(101);
+const reference_dto_1 = __webpack_require__(102);
 const employment_condition_enum_1 = __webpack_require__(44);
 const employment_status_enum_1 = __webpack_require__(45);
 const employment_type_enum_1 = __webpack_require__(46);
-const create_get_dto_factory_1 = __webpack_require__(100);
+const create_get_dto_factory_1 = __webpack_require__(103);
 const swagger_1 = __webpack_require__(8);
 const class_transformer_1 = __webpack_require__(23);
 const class_validator_1 = __webpack_require__(24);
@@ -7284,7 +7753,7 @@ exports.GetEmployeeDto = GetEmployeeDto;
 
 
 /***/ }),
-/* 98 */
+/* 101 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -7363,7 +7832,7 @@ __decorate([
 
 
 /***/ }),
-/* 99 */
+/* 102 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -7394,7 +7863,7 @@ __decorate([
 
 
 /***/ }),
-/* 100 */
+/* 103 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -7538,7 +8007,7 @@ function createGetDto(dto, entity = "entity") {
 
 
 /***/ }),
-/* 101 */
+/* 104 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -7573,6 +8042,7 @@ let EmployeesService = class EmployeesService extends base_service_1.BaseService
         this.rolesService = rolesService;
     }
     async create(createDto, createdBy) {
+        var _a, _b;
         // Get the highest employee number
         const highestEmpNum = await this.employeesRepository
             .createQueryBuilder('employee')
@@ -7588,10 +8058,21 @@ let EmployeesService = class EmployeesService extends base_service_1.BaseService
         const employeeRole = await this.rolesService.findOneByOrFail({
             name: role_enum_1.Role.EMPLOYEE,
         });
+        // store temporary roles
+        const tempRoles = createDto.roles || [];
+        // filter out non existing roles
+        const existingRoles = await this.rolesService.getRepository().findBy({
+            id: (0, typeorm_2.In)(tempRoles.map(role => role.id)),
+        });
+        // map existing roles id to the createDto
+        createDto.roles = existingRoles.map(role => {
+            return {
+                id: role.id,
+            };
+        });
         // assign employee role to employee by adding to the roles array
-        createDto.roles = createDto.roles || [];
-        if (!createDto.roles.some(role => role.id === employeeRole.id)) {
-            createDto.roles.push(employeeRole);
+        if (!((_a = createDto.roles) === null || _a === void 0 ? void 0 : _a.some(role => role.id === employeeRole.id))) {
+            (_b = createDto.roles) === null || _b === void 0 ? void 0 : _b.push(employeeRole);
         }
         return await super.create(createDto, createdBy);
     }
@@ -7614,7 +8095,7 @@ exports.EmployeesService = EmployeesService = __decorate([
 
 
 /***/ }),
-/* 102 */
+/* 105 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -7628,11 +8109,11 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.PermissionsModule = void 0;
 const common_1 = __webpack_require__(5);
 const typeorm_1 = __webpack_require__(16);
-const roles_module_1 = __webpack_require__(103);
+const roles_module_1 = __webpack_require__(106);
 const permission_entity_1 = __webpack_require__(39);
-const permissions_controller_1 = __webpack_require__(119);
+const permissions_controller_1 = __webpack_require__(122);
 const permissions_service_1 = __webpack_require__(87);
-const permission_seeder_service_1 = __webpack_require__(121);
+const permission_seeder_service_1 = __webpack_require__(124);
 let PermissionsModule = class PermissionsModule {
 };
 exports.PermissionsModule = PermissionsModule;
@@ -7648,7 +8129,7 @@ exports.PermissionsModule = PermissionsModule = __decorate([
 
 
 /***/ }),
-/* 103 */
+/* 106 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -7660,11 +8141,11 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.RolesModule = void 0;
-const users_module_1 = __webpack_require__(104);
+const users_module_1 = __webpack_require__(107);
 const common_1 = __webpack_require__(5);
 const typeorm_1 = __webpack_require__(16);
 const role_entity_1 = __webpack_require__(37);
-const roles_controller_1 = __webpack_require__(117);
+const roles_controller_1 = __webpack_require__(120);
 const roles_service_1 = __webpack_require__(88);
 let RolesModule = class RolesModule {
 };
@@ -7680,7 +8161,7 @@ exports.RolesModule = RolesModule = __decorate([
 
 
 /***/ }),
-/* 104 */
+/* 107 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -7695,8 +8176,8 @@ exports.UsersModule = void 0;
 const common_1 = __webpack_require__(5);
 const typeorm_1 = __webpack_require__(16);
 const user_entity_1 = __webpack_require__(47);
-const users_gateway_1 = __webpack_require__(105);
-const users_controller_1 = __webpack_require__(113);
+const users_gateway_1 = __webpack_require__(108);
+const users_controller_1 = __webpack_require__(116);
 const users_service_1 = __webpack_require__(30);
 let UsersModule = class UsersModule {
 };
@@ -7713,20 +8194,20 @@ exports.UsersModule = UsersModule = __decorate([
 
 
 /***/ }),
-/* 105 */
+/* 108 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.UsersGateway = void 0;
-const create_gateway_factory_1 = __webpack_require__(106);
+const create_gateway_factory_1 = __webpack_require__(109);
 class UsersGateway extends (0, create_gateway_factory_1.createGateway)('users') {
 }
 exports.UsersGateway = UsersGateway;
 
 
 /***/ }),
-/* 106 */
+/* 109 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -7741,12 +8222,12 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.createGateway = createGateway;
-const jwt_service_1 = __webpack_require__(107);
+const jwt_service_1 = __webpack_require__(110);
 const users_service_1 = __webpack_require__(30);
 const common_1 = __webpack_require__(5);
 const config_1 = __webpack_require__(6);
-const websockets_1 = __webpack_require__(110);
-const base_gateway_1 = __webpack_require__(111);
+const websockets_1 = __webpack_require__(113);
+const base_gateway_1 = __webpack_require__(114);
 function createGateway(namespace) {
     var _a, _b, _c;
     let DynamicGateway = class DynamicGateway extends base_gateway_1.BaseGateway {
@@ -7765,7 +8246,7 @@ function createGateway(namespace) {
 
 
 /***/ }),
-/* 107 */
+/* 110 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -7784,8 +8265,8 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.JwtService = void 0;
 const common_1 = __webpack_require__(5);
 const config_1 = __webpack_require__(6);
-const jwt_1 = __webpack_require__(108);
-const uuid_1 = __webpack_require__(109);
+const jwt_1 = __webpack_require__(111);
+const uuid_1 = __webpack_require__(112);
 /**
  * Service responsible for JWT (JSON Web Token) operations.
  * Provides methods for creating, verifying, and decoding JWT tokens,
@@ -7916,7 +8397,10 @@ let JwtService = JwtService_1 = class JwtService {
         const now = Math.floor(Date.now() / 1000);
         const mappedRoles = ((_a = user.employee) === null || _a === void 0 ? void 0 : _a.roles) ? (_b = user.employee) === null || _b === void 0 ? void 0 : _b.roles.map(role => ({
             name: role.name,
-            scope: role.scope
+            scope: role.scope,
+            departmentId: role.departmentId,
+            organizationId: role.organizationId,
+            branchId: role.branchId,
         })) : [];
         return {
             sub: user.id,
@@ -7924,7 +8408,7 @@ let JwtService = JwtService_1 = class JwtService {
             refreshToken,
             email: user.email,
             roles: mappedRoles !== null && mappedRoles !== void 0 ? mappedRoles : [],
-            employeeId: (_c = user.employee) === null || _c === void 0 ? void 0 : _c.id
+            employeeId: (_c = user.employee) === null || _c === void 0 ? void 0 : _c.id,
         };
     }
     /**
@@ -7945,25 +8429,25 @@ exports.JwtService = JwtService = JwtService_1 = __decorate([
 
 
 /***/ }),
-/* 108 */
+/* 111 */
 /***/ ((module) => {
 
 module.exports = require("@nestjs/jwt");
 
 /***/ }),
-/* 109 */
+/* 112 */
 /***/ ((module) => {
 
 module.exports = require("uuid");
 
 /***/ }),
-/* 110 */
+/* 113 */
 /***/ ((module) => {
 
 module.exports = require("@nestjs/websockets");
 
 /***/ }),
-/* 111 */
+/* 114 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -7980,10 +8464,10 @@ var _a;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.BaseGateway = void 0;
 const common_1 = __webpack_require__(5);
-const websockets_1 = __webpack_require__(110);
+const websockets_1 = __webpack_require__(113);
 const class_transformer_1 = __webpack_require__(23);
-const socket_io_1 = __webpack_require__(112);
-const uuid_1 = __webpack_require__(109);
+const socket_io_1 = __webpack_require__(115);
+const uuid_1 = __webpack_require__(112);
 class BaseGateway {
     constructor(jwtService, usersService, configService) {
         var _a, _b;
@@ -8021,7 +8505,7 @@ class BaseGateway {
     }
     // Lifecycle hooks
     onModuleInit() {
-        this.logger.log(`Gateway ${this.constructor.name} initialized`);
+        // this.logger.log(`Gateway ${this.constructor.name} initialized`);
         this.setupHeartbeat();
         this.setupEventHandlers();
     }
@@ -8033,7 +8517,7 @@ class BaseGateway {
     }
     afterInit(server) {
         if (!server || !server.engine) {
-            this.logger.warn('Server or server.engine not available in afterInit');
+            // this.logger.warn('Server or server.engine not available in afterInit');
             return; // Exit early if server or server.engine is not available
         }
         const corsConfig = {
@@ -8464,20 +8948,20 @@ __decorate([
 
 
 /***/ }),
-/* 112 */
+/* 115 */
 /***/ ((module) => {
 
 module.exports = require("socket.io");
 
 /***/ }),
-/* 113 */
+/* 116 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.UsersController = void 0;
 const create_controller_factory_1 = __webpack_require__(18);
-const user_dto_1 = __webpack_require__(114);
+const user_dto_1 = __webpack_require__(117);
 const user_entity_1 = __webpack_require__(47);
 const users_service_1 = __webpack_require__(30);
 class UsersController extends (0, create_controller_factory_1.createController)(user_entity_1.User, users_service_1.UsersService, user_dto_1.GetUserDto, undefined, user_dto_1.UpdateUserDto) {
@@ -8492,7 +8976,7 @@ exports.UsersController = UsersController;
 
 
 /***/ }),
-/* 114 */
+/* 117 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -8508,11 +8992,11 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var _a, _b, _c;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.GetUserDto = exports.UpdateUserDto = exports.UserDto = void 0;
-const create_get_dto_factory_1 = __webpack_require__(100);
+const create_get_dto_factory_1 = __webpack_require__(103);
 const swagger_1 = __webpack_require__(8);
 const class_transformer_1 = __webpack_require__(23);
 const class_validator_1 = __webpack_require__(24);
-const profile_dto_1 = __webpack_require__(115);
+const profile_dto_1 = __webpack_require__(118);
 class UserDto {
 }
 exports.UserDto = UserDto;
@@ -8634,7 +9118,7 @@ exports.GetUserDto = GetUserDto;
 
 
 /***/ }),
-/* 115 */
+/* 118 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -8650,11 +9134,11 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var _a, _b;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.GetProfileDto = exports.UpdateProfileDto = exports.ProfileDto = void 0;
-const create_get_dto_factory_1 = __webpack_require__(100);
+const create_get_dto_factory_1 = __webpack_require__(103);
 const swagger_1 = __webpack_require__(8);
 const class_transformer_1 = __webpack_require__(23);
 const class_validator_1 = __webpack_require__(24);
-const address_dto_1 = __webpack_require__(116);
+const address_dto_1 = __webpack_require__(119);
 class ProfileDto {
 }
 exports.ProfileDto = ProfileDto;
@@ -8759,7 +9243,7 @@ exports.GetProfileDto = GetProfileDto;
 
 
 /***/ }),
-/* 116 */
+/* 119 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -8774,7 +9258,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.GetAddressDto = exports.UpdateAddressDto = exports.AddressDto = void 0;
-const create_get_dto_factory_1 = __webpack_require__(100);
+const create_get_dto_factory_1 = __webpack_require__(103);
 const swagger_1 = __webpack_require__(8);
 const class_validator_1 = __webpack_require__(24);
 class AddressDto {
@@ -8849,14 +9333,14 @@ exports.GetAddressDto = GetAddressDto;
 
 
 /***/ }),
-/* 117 */
+/* 120 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.RolesController = void 0;
 const create_controller_factory_1 = __webpack_require__(18);
-const role_dto_1 = __webpack_require__(118);
+const role_dto_1 = __webpack_require__(121);
 const role_entity_1 = __webpack_require__(37);
 const roles_service_1 = __webpack_require__(88);
 class RolesController extends (0, create_controller_factory_1.createController)(role_entity_1.Role, roles_service_1.RolesService, role_dto_1.GetRoleDto, role_dto_1.RoleDto, role_dto_1.UpdateRoleDto) {
@@ -8865,7 +9349,7 @@ exports.RolesController = RolesController;
 
 
 /***/ }),
-/* 118 */
+/* 121 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -8881,10 +9365,10 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var _a;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.GetRoleDto = exports.UpdateRoleDto = exports.RoleDto = void 0;
-const base_dto_1 = __webpack_require__(98);
-const reference_dto_1 = __webpack_require__(99);
+const base_dto_1 = __webpack_require__(101);
+const reference_dto_1 = __webpack_require__(102);
 const role_scope_type_enum_1 = __webpack_require__(38);
-const create_get_dto_factory_1 = __webpack_require__(100);
+const create_get_dto_factory_1 = __webpack_require__(103);
 const swagger_1 = __webpack_require__(8);
 const class_transformer_1 = __webpack_require__(23);
 const class_validator_1 = __webpack_require__(24);
@@ -8957,14 +9441,14 @@ exports.GetRoleDto = GetRoleDto;
 
 
 /***/ }),
-/* 119 */
+/* 122 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.PermissionsController = void 0;
 const create_controller_factory_1 = __webpack_require__(18);
-const permission_dto_1 = __webpack_require__(120);
+const permission_dto_1 = __webpack_require__(123);
 const permission_entity_1 = __webpack_require__(39);
 const permissions_service_1 = __webpack_require__(87);
 class PermissionsController extends (0, create_controller_factory_1.createController)(permission_entity_1.Permission, permissions_service_1.PermissionsService, permission_dto_1.GetPermissionDto) {
@@ -8988,7 +9472,7 @@ exports.PermissionsController = PermissionsController;
 
 
 /***/ }),
-/* 120 */
+/* 123 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -9005,7 +9489,7 @@ var _a;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.GetPermissionDto = exports.UpdatePermissionDto = exports.PermissionDto = void 0;
 const action_enum_1 = __webpack_require__(40);
-const create_get_dto_factory_1 = __webpack_require__(100);
+const create_get_dto_factory_1 = __webpack_require__(103);
 const swagger_1 = __webpack_require__(8);
 class PermissionDto {
 }
@@ -9039,7 +9523,7 @@ exports.GetPermissionDto = GetPermissionDto;
 
 
 /***/ }),
-/* 121 */
+/* 124 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -9095,9 +9579,9 @@ exports.PermissionSeederService = void 0;
 const action_enum_1 = __webpack_require__(40);
 const common_1 = __webpack_require__(5);
 const typeorm_1 = __webpack_require__(16);
-const fs = __importStar(__webpack_require__(122));
-const glob_1 = __webpack_require__(123);
-const path = __importStar(__webpack_require__(124));
+const fs = __importStar(__webpack_require__(125));
+const glob_1 = __webpack_require__(126);
+const path = __importStar(__webpack_require__(127));
 const typeorm_2 = __webpack_require__(25);
 const permission_entity_1 = __webpack_require__(39);
 let PermissionSeederService = PermissionSeederService_1 = class PermissionSeederService {
@@ -9117,10 +9601,10 @@ let PermissionSeederService = PermissionSeederService_1 = class PermissionSeeder
         }
     }
     async seedPermissions() {
-        this.logger.log('🔍 Scanning controllers for permissions...');
+        // this.logger.log('🔍 Scanning controllers for permissions...');
         // Get permissions from controllers created with createController factory
         const factoryControllerPerms = await this.scanFactoryControllers();
-        this.logger.log(`Found ${factoryControllerPerms.length} permissions from factory controllers`);
+        // this.logger.log(`Found ${factoryControllerPerms.length} permissions from factory controllers`);
         // // Get permissions from regular BaseController extensions
         // const baseControllerPerms = await this.scanBaseControllerExtensions();
         // this.logger.log(`Found ${baseControllerPerms.length} permissions from BaseController extensions`);
@@ -9141,7 +9625,7 @@ let PermissionSeederService = PermissionSeederService_1 = class PermissionSeeder
                 else
                     updated++;
             }
-            this.logger.log(`Permission seeding completed: ${created} created, ${updated} updated`);
+            // this.logger.log(`Permission seeding completed: ${created} created, ${updated} updated`);
         }
         catch (error) {
             this.logger.error(`Error creating permissions: ${error instanceof Error ? error.message : String(error)}`);
@@ -9156,7 +9640,7 @@ let PermissionSeederService = PermissionSeederService_1 = class PermissionSeeder
         const controllers = await this.findControllerFiles();
         // Updated pattern to match controllers that extend from createController() without generic types
         const factoryControllerPattern = /export\s+class\s+(\w+)\s+extends\s+createController\s*\(\s*([\w.]+)\s*,\s*([\w.]+)\s*,\s*([\w.]+)(?:\s*,\s*([\w.]+))?(?:\s*,\s*([\w.]+))?\s*\)/;
-        this.logger.debug(`Scanning ${controllers.length} controller files for factory controllers`);
+        // this.logger.debug(`Scanning ${controllers.length} controller files for factory controllers`);
         for (const file of controllers) {
             try {
                 const fileContent = fs.readFileSync(file, 'utf8');
@@ -9175,7 +9659,7 @@ let PermissionSeederService = PermissionSeederService_1 = class PermissionSeeder
                     if (entityName.includes('.')) {
                         entityName = entityName.split('.').pop() || entityName;
                     }
-                    this.logger.debug(`Found factory controller: ${controllerName} for entity ${entityName}`);
+                    // this.logger.debug(`Found factory controller: ${controllerName} for entity ${entityName}`);
                     // Always generate MANAGE permission
                     permissions.push(this.createPermissionDefinition(action_enum_1.Action.MANAGE, entityName));
                     // Check for GetDto (Read permission)
@@ -9222,7 +9706,7 @@ let PermissionSeederService = PermissionSeederService_1 = class PermissionSeeder
         const entityPattern = /(?:super\s*\(\s*[\w\s.,]+,\s*[\w\s.,]+,\s*['"](\w+)['"]|protected\s+readonly\s+entityName\s*[:=]\s*['"](\w+)['"])/;
         // Get all actions from the enum
         const allActions = Object.values(action_enum_1.Action);
-        this.logger.debug(`Scanning ${controllers.length} controller files for BaseController extensions`);
+        // this.logger.debug(`Scanning ${controllers.length} controller files for BaseController extensions`);
         for (const file of controllers) {
             try {
                 const fileContent = fs.readFileSync(file, 'utf8');
@@ -9357,25 +9841,25 @@ exports.PermissionSeederService = PermissionSeederService = PermissionSeederServ
 
 
 /***/ }),
-/* 122 */
+/* 125 */
 /***/ ((module) => {
 
 module.exports = require("fs");
 
 /***/ }),
-/* 123 */
+/* 126 */
 /***/ ((module) => {
 
 module.exports = require("glob");
 
 /***/ }),
-/* 124 */
+/* 127 */
 /***/ ((module) => {
 
 module.exports = require("path");
 
 /***/ }),
-/* 125 */
+/* 128 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -9389,8 +9873,8 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.CutoffsModule = void 0;
 const common_1 = __webpack_require__(5);
 const typeorm_1 = __webpack_require__(16);
-const cutoffs_controller_1 = __webpack_require__(126);
-const cutoffs_service_1 = __webpack_require__(127);
+const cutoffs_controller_1 = __webpack_require__(129);
+const cutoffs_service_1 = __webpack_require__(130);
 const cutoff_entity_1 = __webpack_require__(55);
 let CutoffsModule = class CutoffsModule {
 };
@@ -9408,15 +9892,15 @@ exports.CutoffsModule = CutoffsModule = __decorate([
 
 
 /***/ }),
-/* 126 */
+/* 129 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.CutoffsController = void 0;
 const create_controller_factory_1 = __webpack_require__(18);
-const cutoffs_service_1 = __webpack_require__(127);
-const cutoff_dto_1 = __webpack_require__(129);
+const cutoffs_service_1 = __webpack_require__(130);
+const cutoff_dto_1 = __webpack_require__(132);
 const cutoff_entity_1 = __webpack_require__(55);
 class CutoffsController extends (0, create_controller_factory_1.createController)(cutoff_entity_1.Cutoff, cutoffs_service_1.CutoffsService, cutoff_dto_1.GetCutoffDto, cutoff_dto_1.CutoffDto, cutoff_dto_1.UpdateCutoffDto) {
 }
@@ -9424,7 +9908,7 @@ exports.CutoffsController = CutoffsController;
 
 
 /***/ }),
-/* 127 */
+/* 130 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -9450,7 +9934,7 @@ const utility_helper_1 = __webpack_require__(84);
 const base_service_1 = __webpack_require__(31);
 const users_service_1 = __webpack_require__(30);
 const common_1 = __webpack_require__(5);
-const schedule_1 = __webpack_require__(128);
+const schedule_1 = __webpack_require__(131);
 const typeorm_1 = __webpack_require__(16);
 const typeorm_2 = __webpack_require__(25);
 const cutoff_entity_1 = __webpack_require__(55);
@@ -9708,13 +10192,13 @@ exports.CutoffsService = CutoffsService = CutoffsService_1 = __decorate([
 
 
 /***/ }),
-/* 128 */
+/* 131 */
 /***/ ((module) => {
 
 module.exports = require("@nestjs/schedule");
 
 /***/ }),
-/* 129 */
+/* 132 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -9730,10 +10214,10 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var _a, _b, _c, _d;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.GetCutoffDto = exports.UpdateCutoffDto = exports.CutoffDto = void 0;
-const base_dto_1 = __webpack_require__(98);
+const base_dto_1 = __webpack_require__(101);
 const cutoff_status_enum_1 = __webpack_require__(56);
 const cutoff_type_enum_1 = __webpack_require__(57);
-const create_get_dto_factory_1 = __webpack_require__(100);
+const create_get_dto_factory_1 = __webpack_require__(103);
 const swagger_1 = __webpack_require__(8);
 const class_transformer_1 = __webpack_require__(23);
 const class_validator_1 = __webpack_require__(24);
@@ -9805,7 +10289,7 @@ exports.GetCutoffDto = GetCutoffDto;
 
 
 /***/ }),
-/* 130 */
+/* 133 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -9820,17 +10304,17 @@ exports.ShiftManagementModule = void 0;
 const common_1 = __webpack_require__(5);
 const core_1 = __webpack_require__(7);
 const typeorm_1 = __webpack_require__(16);
-const cutoffs_module_1 = __webpack_require__(125);
+const cutoffs_module_1 = __webpack_require__(128);
 const shift_day_entity_1 = __webpack_require__(61);
 const shift_entity_1 = __webpack_require__(59);
-const groups_module_1 = __webpack_require__(131);
-const holidays_module_1 = __webpack_require__(137);
-const schedule_change_requests_module_1 = __webpack_require__(139);
-const schedule_change_responses_module_1 = __webpack_require__(143);
-const schedules_module_1 = __webpack_require__(138);
-const default_shift_seeder_service_1 = __webpack_require__(158);
-const shifts_controller_1 = __webpack_require__(160);
-const shifts_service_1 = __webpack_require__(159);
+const groups_module_1 = __webpack_require__(134);
+const holidays_module_1 = __webpack_require__(140);
+const schedule_change_requests_module_1 = __webpack_require__(142);
+const schedule_change_responses_module_1 = __webpack_require__(146);
+const schedules_module_1 = __webpack_require__(141);
+const default_shift_seeder_service_1 = __webpack_require__(161);
+const shifts_controller_1 = __webpack_require__(163);
+const shifts_service_1 = __webpack_require__(162);
 let ShiftManagementModule = class ShiftManagementModule {
 };
 exports.ShiftManagementModule = ShiftManagementModule;
@@ -9888,7 +10372,7 @@ exports.ShiftManagementModule = ShiftManagementModule = __decorate([
 
 
 /***/ }),
-/* 131 */
+/* 134 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -9904,8 +10388,8 @@ const employee_management_module_1 = __webpack_require__(15);
 const common_1 = __webpack_require__(5);
 const typeorm_1 = __webpack_require__(16);
 const group_entity_1 = __webpack_require__(60);
-const groups_controller_1 = __webpack_require__(132);
-const groups_service_1 = __webpack_require__(134);
+const groups_controller_1 = __webpack_require__(135);
+const groups_service_1 = __webpack_require__(137);
 let GroupsModule = class GroupsModule {
 };
 exports.GroupsModule = GroupsModule;
@@ -9923,23 +10407,23 @@ exports.GroupsModule = GroupsModule = __decorate([
 
 
 /***/ }),
-/* 132 */
+/* 135 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.GroupsController = void 0;
 const create_controller_factory_1 = __webpack_require__(18);
-const group_dto_1 = __webpack_require__(133);
+const group_dto_1 = __webpack_require__(136);
 const group_entity_1 = __webpack_require__(60);
-const groups_service_1 = __webpack_require__(134);
+const groups_service_1 = __webpack_require__(137);
 class GroupsController extends (0, create_controller_factory_1.createController)(group_entity_1.Group, groups_service_1.GroupsService, group_dto_1.GetGroupDto, group_dto_1.GroupDto, group_dto_1.UpdateGroupDto) {
 }
 exports.GroupsController = GroupsController;
 
 
 /***/ }),
-/* 133 */
+/* 136 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -9954,9 +10438,9 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.GetGroupDto = exports.UpdateGroupDto = exports.GroupDto = void 0;
-const base_dto_1 = __webpack_require__(98);
-const reference_dto_1 = __webpack_require__(99);
-const create_get_dto_factory_1 = __webpack_require__(100);
+const base_dto_1 = __webpack_require__(101);
+const reference_dto_1 = __webpack_require__(102);
+const create_get_dto_factory_1 = __webpack_require__(103);
 const swagger_1 = __webpack_require__(8);
 const class_transformer_1 = __webpack_require__(23);
 const class_validator_1 = __webpack_require__(24);
@@ -10012,7 +10496,7 @@ exports.GetGroupDto = GetGroupDto;
 
 
 /***/ }),
-/* 134 */
+/* 137 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -10032,12 +10516,12 @@ var GroupsService_1;
 var _a, _b, _c, _d;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.GroupsService = void 0;
-const employee_assigned_event_1 = __webpack_require__(135);
+const employee_assigned_event_1 = __webpack_require__(138);
 const base_service_1 = __webpack_require__(31);
 const users_service_1 = __webpack_require__(30);
-const employees_service_1 = __webpack_require__(101);
+const employees_service_1 = __webpack_require__(104);
 const common_1 = __webpack_require__(5);
-const event_emitter_1 = __webpack_require__(136);
+const event_emitter_1 = __webpack_require__(139);
 const typeorm_1 = __webpack_require__(16);
 const typeorm_2 = __webpack_require__(25);
 const group_entity_1 = __webpack_require__(60);
@@ -10100,7 +10584,7 @@ exports.GroupsService = GroupsService = GroupsService_1 = __decorate([
 
 
 /***/ }),
-/* 135 */
+/* 138 */
 /***/ ((__unused_webpack_module, exports) => {
 
 
@@ -10126,13 +10610,13 @@ exports.EmployeeAssignedEvent = EmployeeAssignedEvent;
 
 
 /***/ }),
-/* 136 */
+/* 139 */
 /***/ ((module) => {
 
 module.exports = require("@nestjs/event-emitter");
 
 /***/ }),
-/* 137 */
+/* 140 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -10146,10 +10630,10 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.HolidaysModule = void 0;
 const common_1 = __webpack_require__(5);
 const typeorm_1 = __webpack_require__(16);
-const schedules_module_1 = __webpack_require__(138);
+const schedules_module_1 = __webpack_require__(141);
 const holiday_entity_1 = __webpack_require__(68);
-const holidays_controller_1 = __webpack_require__(156);
-const holidays_service_1 = __webpack_require__(153);
+const holidays_controller_1 = __webpack_require__(159);
+const holidays_service_1 = __webpack_require__(156);
 let HolidaysModule = class HolidaysModule {
 };
 exports.HolidaysModule = HolidaysModule;
@@ -10167,7 +10651,7 @@ exports.HolidaysModule = HolidaysModule = __decorate([
 
 
 /***/ }),
-/* 138 */
+/* 141 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -10179,18 +10663,18 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.SchedulesModule = void 0;
-const cutoffs_module_1 = __webpack_require__(125);
+const cutoffs_module_1 = __webpack_require__(128);
 const bull_1 = __webpack_require__(4);
 const common_1 = __webpack_require__(5);
 const typeorm_1 = __webpack_require__(16);
 const employee_management_module_1 = __webpack_require__(15);
-const groups_module_1 = __webpack_require__(131);
-const holidays_module_1 = __webpack_require__(137);
+const groups_module_1 = __webpack_require__(134);
+const holidays_module_1 = __webpack_require__(140);
 const schedule_entity_1 = __webpack_require__(53);
-const schedule_change_requests_module_1 = __webpack_require__(139);
-const schedules_controller_1 = __webpack_require__(147);
-const schedules_service_1 = __webpack_require__(150);
-const schedule_generation_service_1 = __webpack_require__(154);
+const schedule_change_requests_module_1 = __webpack_require__(142);
+const schedules_controller_1 = __webpack_require__(150);
+const schedules_service_1 = __webpack_require__(153);
+const schedule_generation_service_1 = __webpack_require__(157);
 let SchedulesModule = class SchedulesModule {
 };
 exports.SchedulesModule = SchedulesModule;
@@ -10220,7 +10704,7 @@ exports.SchedulesModule = SchedulesModule = __decorate([
 
 
 /***/ }),
-/* 139 */
+/* 142 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -10235,9 +10719,9 @@ exports.ScheduleChangeRequestsModule = void 0;
 const common_1 = __webpack_require__(5);
 const typeorm_1 = __webpack_require__(16);
 const schedule_change_request_entity_1 = __webpack_require__(70);
-const schedule_change_requests_controller_1 = __webpack_require__(140);
-const schedule_change_requests_service_1 = __webpack_require__(142);
-const schedule_change_responses_module_1 = __webpack_require__(143);
+const schedule_change_requests_controller_1 = __webpack_require__(143);
+const schedule_change_requests_service_1 = __webpack_require__(145);
+const schedule_change_responses_module_1 = __webpack_require__(146);
 let ScheduleChangeRequestsModule = class ScheduleChangeRequestsModule {
 };
 exports.ScheduleChangeRequestsModule = ScheduleChangeRequestsModule;
@@ -10258,16 +10742,16 @@ exports.ScheduleChangeRequestsModule = ScheduleChangeRequestsModule = __decorate
 
 
 /***/ }),
-/* 140 */
+/* 143 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ScheduleChangeRequestsController = void 0;
 const create_controller_factory_1 = __webpack_require__(18);
-const schedule_change_request_dto_1 = __webpack_require__(141);
+const schedule_change_request_dto_1 = __webpack_require__(144);
 const schedule_change_request_entity_1 = __webpack_require__(70);
-const schedule_change_requests_service_1 = __webpack_require__(142);
+const schedule_change_requests_service_1 = __webpack_require__(145);
 class ScheduleChangeRequestsController extends (0, create_controller_factory_1.createController)(schedule_change_request_entity_1.ScheduleChangeRequest, schedule_change_requests_service_1.ScheduleChangeRequestsService, schedule_change_request_dto_1.GetScheduleChangeRequestDto, schedule_change_request_dto_1.ScheduleChangeRequestDto, schedule_change_request_dto_1.UpdateScheduleChangeRequestDto) {
     async delete(id) {
         return await super.delete(id);
@@ -10277,7 +10761,7 @@ exports.ScheduleChangeRequestsController = ScheduleChangeRequestsController;
 
 
 /***/ }),
-/* 141 */
+/* 144 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -10293,10 +10777,10 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var _a, _b;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.GetScheduleChangeRequestDto = exports.UpdateScheduleChangeRequestDto = exports.ScheduleChangeRequestDto = void 0;
-const base_dto_1 = __webpack_require__(98);
+const base_dto_1 = __webpack_require__(101);
 const request_status_enum_1 = __webpack_require__(51);
 const schedule_change_request_type_enum_1 = __webpack_require__(71);
-const create_get_dto_factory_1 = __webpack_require__(100);
+const create_get_dto_factory_1 = __webpack_require__(103);
 const swagger_1 = __webpack_require__(8);
 const class_validator_1 = __webpack_require__(24);
 class ScheduleChangeRequestDto extends (0, swagger_1.PartialType)(base_dto_1.BaseDto) {
@@ -10310,7 +10794,7 @@ __decorate([
     (0, class_validator_1.IsNotEmpty)(),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
-], ScheduleChangeRequestDto.prototype, "reason", void 0);
+], ScheduleChangeRequestDto.prototype, "description", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({
         description: 'Status of the request',
@@ -10360,7 +10844,7 @@ exports.GetScheduleChangeRequestDto = GetScheduleChangeRequestDto;
 
 
 /***/ }),
-/* 142 */
+/* 145 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -10401,7 +10885,7 @@ exports.ScheduleChangeRequestsService = ScheduleChangeRequestsService = __decora
 
 
 /***/ }),
-/* 143 */
+/* 146 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -10416,8 +10900,8 @@ exports.ScheduleChangeResponsesModule = void 0;
 const common_1 = __webpack_require__(5);
 const typeorm_1 = __webpack_require__(16);
 const schedule_change_response_entity_1 = __webpack_require__(72);
-const schedule_change_responses_controller_1 = __webpack_require__(144);
-const schedule_change_responses_service_1 = __webpack_require__(146);
+const schedule_change_responses_controller_1 = __webpack_require__(147);
+const schedule_change_responses_service_1 = __webpack_require__(149);
 let ScheduleChangeResponsesModule = class ScheduleChangeResponsesModule {
 };
 exports.ScheduleChangeResponsesModule = ScheduleChangeResponsesModule;
@@ -10434,16 +10918,16 @@ exports.ScheduleChangeResponsesModule = ScheduleChangeResponsesModule = __decora
 
 
 /***/ }),
-/* 144 */
+/* 147 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ScheduleChangeResponsesController = void 0;
 const create_controller_factory_1 = __webpack_require__(18);
-const schedule_change_response_dto_1 = __webpack_require__(145);
+const schedule_change_response_dto_1 = __webpack_require__(148);
 const schedule_change_response_entity_1 = __webpack_require__(72);
-const schedule_change_responses_service_1 = __webpack_require__(146);
+const schedule_change_responses_service_1 = __webpack_require__(149);
 class ScheduleChangeResponsesController extends (0, create_controller_factory_1.createController)(schedule_change_response_entity_1.ScheduleChangeResponse, schedule_change_responses_service_1.ScheduleChangeResponsesService, schedule_change_response_dto_1.GetScheduleChangeResponseDto, schedule_change_response_dto_1.ScheduleChangeResponseDto, schedule_change_response_dto_1.UpdateScheduleChangeResponseDto) {
     async delete(id) {
         return await super.delete(id);
@@ -10453,7 +10937,7 @@ exports.ScheduleChangeResponsesController = ScheduleChangeResponsesController;
 
 
 /***/ }),
-/* 145 */
+/* 148 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -10468,8 +10952,8 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.GetScheduleChangeResponseDto = exports.UpdateScheduleChangeResponseDto = exports.ScheduleChangeResponseDto = void 0;
-const base_dto_1 = __webpack_require__(98);
-const create_get_dto_factory_1 = __webpack_require__(100);
+const base_dto_1 = __webpack_require__(101);
+const create_get_dto_factory_1 = __webpack_require__(103);
 const swagger_1 = __webpack_require__(8);
 const class_validator_1 = __webpack_require__(24);
 class ScheduleChangeResponseDto extends (0, swagger_1.PartialType)(base_dto_1.BaseDto) {
@@ -10511,7 +10995,7 @@ exports.GetScheduleChangeResponseDto = GetScheduleChangeResponseDto;
 
 
 /***/ }),
-/* 146 */
+/* 149 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -10552,23 +11036,23 @@ exports.ScheduleChangeResponsesService = ScheduleChangeResponsesService = __deco
 
 
 /***/ }),
-/* 147 */
+/* 150 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.SchedulesController = void 0;
 const create_controller_factory_1 = __webpack_require__(18);
-const schedule_dto_1 = __webpack_require__(148);
+const schedule_dto_1 = __webpack_require__(151);
 const schedule_entity_1 = __webpack_require__(53);
-const schedules_service_1 = __webpack_require__(150);
+const schedules_service_1 = __webpack_require__(153);
 class SchedulesController extends (0, create_controller_factory_1.createController)(schedule_entity_1.Schedule, schedules_service_1.SchedulesService, schedule_dto_1.GetScheduleDto, schedule_dto_1.ScheduleDto, schedule_dto_1.UpdateScheduleDto) {
 }
 exports.SchedulesController = SchedulesController;
 
 
 /***/ }),
-/* 148 */
+/* 151 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -10584,10 +11068,10 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var _a, _b;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.GetScheduleDto = exports.UpdateScheduleDto = exports.ScheduleDto = void 0;
-const is_time_string_decorator_1 = __webpack_require__(149);
-const base_dto_1 = __webpack_require__(98);
+const is_time_string_decorator_1 = __webpack_require__(152);
+const base_dto_1 = __webpack_require__(101);
 const schedule_status_1 = __webpack_require__(54);
-const create_get_dto_factory_1 = __webpack_require__(100);
+const create_get_dto_factory_1 = __webpack_require__(103);
 const swagger_1 = __webpack_require__(8);
 const class_validator_1 = __webpack_require__(24);
 class ScheduleDto extends (0, swagger_1.PartialType)(base_dto_1.BaseDto) {
@@ -10675,7 +11159,7 @@ exports.GetScheduleDto = GetScheduleDto;
 
 
 /***/ }),
-/* 149 */
+/* 152 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
@@ -10707,7 +11191,7 @@ function IsTimeString(validationOptions) {
 
 
 /***/ }),
-/* 150 */
+/* 153 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -10728,16 +11212,16 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.SchedulesService = void 0;
 const schedule_status_1 = __webpack_require__(54);
 const base_service_1 = __webpack_require__(31);
-const day_util_1 = __webpack_require__(151);
+const day_util_1 = __webpack_require__(154);
 const users_service_1 = __webpack_require__(30);
 const common_1 = __webpack_require__(5);
 const typeorm_1 = __webpack_require__(16);
-const date_fns_1 = __webpack_require__(152);
+const date_fns_1 = __webpack_require__(155);
 const typeorm_2 = __webpack_require__(25);
-const employees_service_1 = __webpack_require__(101);
-const cutoffs_service_1 = __webpack_require__(127);
-const groups_service_1 = __webpack_require__(134);
-const holidays_service_1 = __webpack_require__(153);
+const employees_service_1 = __webpack_require__(104);
+const cutoffs_service_1 = __webpack_require__(130);
+const groups_service_1 = __webpack_require__(137);
+const holidays_service_1 = __webpack_require__(156);
 const schedule_entity_1 = __webpack_require__(53);
 let SchedulesService = class SchedulesService extends base_service_1.BaseService {
     constructor(schedulesRepository, usersService, groupsService, cutoffsService, holidaysService, employeesService) {
@@ -10896,7 +11380,7 @@ exports.SchedulesService = SchedulesService = __decorate([
 
 
 /***/ }),
-/* 151 */
+/* 154 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
@@ -10922,13 +11406,13 @@ exports.getLogLevels = getLogLevels;
 
 
 /***/ }),
-/* 152 */
+/* 155 */
 /***/ ((module) => {
 
 module.exports = require("date-fns");
 
 /***/ }),
-/* 153 */
+/* 156 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -10952,7 +11436,7 @@ const users_service_1 = __webpack_require__(30);
 const common_1 = __webpack_require__(5);
 const typeorm_1 = __webpack_require__(16);
 const typeorm_2 = __webpack_require__(25);
-const schedules_service_1 = __webpack_require__(150);
+const schedules_service_1 = __webpack_require__(153);
 const holiday_entity_1 = __webpack_require__(68);
 let HolidaysService = class HolidaysService extends base_service_1.BaseService {
     constructor(holidaysRepository, usersService, schedulesService) {
@@ -11029,7 +11513,7 @@ exports.HolidaysService = HolidaysService = __decorate([
 
 
 /***/ }),
-/* 154 */
+/* 157 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -11049,12 +11533,12 @@ var ScheduleGenerationService_1, ScheduleGenerationProcessor_1;
 var _a, _b, _c, _d, _e;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ScheduleGenerationProcessor = exports.ScheduleGenerationService = void 0;
-const employee_assigned_event_1 = __webpack_require__(135);
+const employee_assigned_event_1 = __webpack_require__(138);
 const bull_1 = __webpack_require__(4);
 const common_1 = __webpack_require__(5);
-const event_emitter_1 = __webpack_require__(136);
-const bull_2 = __webpack_require__(155);
-const schedules_service_1 = __webpack_require__(150);
+const event_emitter_1 = __webpack_require__(139);
+const bull_2 = __webpack_require__(158);
+const schedules_service_1 = __webpack_require__(153);
 let ScheduleGenerationService = ScheduleGenerationService_1 = class ScheduleGenerationService {
     constructor(scheduleQueue) {
         this.scheduleQueue = scheduleQueue;
@@ -11133,29 +11617,29 @@ exports.ScheduleGenerationProcessor = ScheduleGenerationProcessor = ScheduleGene
 
 
 /***/ }),
-/* 155 */
+/* 158 */
 /***/ ((module) => {
 
 module.exports = require("bull");
 
 /***/ }),
-/* 156 */
+/* 159 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.HolidaysController = void 0;
 const create_controller_factory_1 = __webpack_require__(18);
-const holiday_dto_1 = __webpack_require__(157);
+const holiday_dto_1 = __webpack_require__(160);
 const holiday_entity_1 = __webpack_require__(68);
-const holidays_service_1 = __webpack_require__(153);
+const holidays_service_1 = __webpack_require__(156);
 class HolidaysController extends (0, create_controller_factory_1.createController)(holiday_entity_1.Holiday, holidays_service_1.HolidaysService, holiday_dto_1.GetHolidayDto, holiday_dto_1.HolidayDto, holiday_dto_1.UpdateHolidayDto) {
 }
 exports.HolidaysController = HolidaysController;
 
 
 /***/ }),
-/* 157 */
+/* 160 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -11171,10 +11655,10 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var _a, _b, _c;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.GetHolidayDto = exports.UpdateHolidayDto = exports.HolidayDto = void 0;
-const base_dto_1 = __webpack_require__(98);
+const base_dto_1 = __webpack_require__(101);
 const day_enum_1 = __webpack_require__(62);
 const holiday_type_enum_1 = __webpack_require__(69);
-const create_get_dto_factory_1 = __webpack_require__(100);
+const create_get_dto_factory_1 = __webpack_require__(103);
 const swagger_1 = __webpack_require__(8);
 const class_transformer_1 = __webpack_require__(23);
 const class_validator_1 = __webpack_require__(24);
@@ -11241,7 +11725,7 @@ exports.GetHolidayDto = GetHolidayDto;
 
 
 /***/ }),
-/* 158 */
+/* 161 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -11260,10 +11744,10 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.DefaultShiftsSeeder = void 0;
 const cutoff_status_enum_1 = __webpack_require__(56);
 const day_enum_1 = __webpack_require__(62);
-const cutoffs_service_1 = __webpack_require__(127);
+const cutoffs_service_1 = __webpack_require__(130);
 const common_1 = __webpack_require__(5);
-const groups_service_1 = __webpack_require__(134);
-const shifts_service_1 = __webpack_require__(159);
+const groups_service_1 = __webpack_require__(137);
+const shifts_service_1 = __webpack_require__(162);
 let DefaultShiftsSeeder = DefaultShiftsSeeder_1 = class DefaultShiftsSeeder {
     constructor(shiftsService, groupsService, cutoffsService) {
         this.shiftsService = shiftsService;
@@ -11275,11 +11759,11 @@ let DefaultShiftsSeeder = DefaultShiftsSeeder_1 = class DefaultShiftsSeeder {
         await this.seed();
     }
     async seed() {
-        this.logger.log('Seeding default shifts and groups...');
+        // this.logger.log('Seeding default shifts and groups...');
         // Check if default shift already exists
         const existingShifts = await this.shiftsService.getRepository().count();
         if (existingShifts > 0) {
-            this.logger.log('Shifts already exist, skipping seeder');
+            // this.logger.log('Shifts already exist, skipping seeder');
             return;
         }
         // Find or create a default cutoff to associate with shifts
@@ -11476,7 +11960,7 @@ exports.DefaultShiftsSeeder = DefaultShiftsSeeder = DefaultShiftsSeeder_1 = __de
 
 
 /***/ }),
-/* 159 */
+/* 162 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -11517,23 +12001,23 @@ exports.ShiftsService = ShiftsService = __decorate([
 
 
 /***/ }),
-/* 160 */
+/* 163 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ShiftsController = void 0;
 const create_controller_factory_1 = __webpack_require__(18);
-const shift_dto_1 = __webpack_require__(161);
+const shift_dto_1 = __webpack_require__(164);
 const shift_entity_1 = __webpack_require__(59);
-const shifts_service_1 = __webpack_require__(159);
+const shifts_service_1 = __webpack_require__(162);
 class ShiftsController extends (0, create_controller_factory_1.createController)(shift_entity_1.Shift, shifts_service_1.ShiftsService, shift_dto_1.GetShiftDto, shift_dto_1.ShiftDto, shift_dto_1.UpdateShiftDto) {
 }
 exports.ShiftsController = ShiftsController;
 
 
 /***/ }),
-/* 161 */
+/* 164 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -11548,14 +12032,14 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.GetShiftDto = exports.UpdateShiftDto = exports.ShiftDto = void 0;
-const is_time_string_decorator_1 = __webpack_require__(149);
-const base_dto_1 = __webpack_require__(98);
-const reference_dto_1 = __webpack_require__(99);
-const create_get_dto_factory_1 = __webpack_require__(100);
+const is_time_string_decorator_1 = __webpack_require__(152);
+const base_dto_1 = __webpack_require__(101);
+const reference_dto_1 = __webpack_require__(102);
+const create_get_dto_factory_1 = __webpack_require__(103);
 const swagger_1 = __webpack_require__(8);
 const class_transformer_1 = __webpack_require__(23);
 const class_validator_1 = __webpack_require__(24);
-const shift_day_dto_1 = __webpack_require__(162);
+const shift_day_dto_1 = __webpack_require__(165);
 class ShiftDto extends (0, swagger_1.PartialType)(base_dto_1.BaseDto) {
     get defaultDuration() {
         if (!this.defaultStartTime || !this.defaultEndTime) {
@@ -11674,7 +12158,7 @@ exports.GetShiftDto = GetShiftDto;
 
 
 /***/ }),
-/* 162 */
+/* 165 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -11690,7 +12174,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var _a;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ShiftDayDto = void 0;
-const is_time_string_decorator_1 = __webpack_require__(149);
+const is_time_string_decorator_1 = __webpack_require__(152);
 const day_enum_1 = __webpack_require__(62);
 const swagger_1 = __webpack_require__(8);
 const class_transformer_1 = __webpack_require__(23);
@@ -11780,7 +12264,7 @@ __decorate([
 
 
 /***/ }),
-/* 163 */
+/* 166 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -11797,13 +12281,13 @@ var EmployeeGroupAssignmentListener_1;
 var _a, _b, _c, _d, _e, _f, _g;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.EmployeeGroupAssignmentListener = void 0;
-const cutoffs_service_1 = __webpack_require__(127);
-const schedules_service_1 = __webpack_require__(150);
-const schedule_generation_service_1 = __webpack_require__(154);
+const cutoffs_service_1 = __webpack_require__(130);
+const schedules_service_1 = __webpack_require__(153);
+const schedule_generation_service_1 = __webpack_require__(157);
 const common_1 = __webpack_require__(5);
-const event_emitter_1 = __webpack_require__(136);
+const event_emitter_1 = __webpack_require__(139);
 const cutoff_status_enum_1 = __webpack_require__(56);
-const employee_assigned_event_1 = __webpack_require__(135);
+const employee_assigned_event_1 = __webpack_require__(138);
 let EmployeeGroupAssignmentListener = EmployeeGroupAssignmentListener_1 = class EmployeeGroupAssignmentListener {
     constructor(cutoffsService, scheduleGenerationService, scheduleService) {
         this.cutoffsService = cutoffsService;
@@ -11872,7 +12356,7 @@ exports.EmployeeGroupAssignmentListener = EmployeeGroupAssignmentListener = Empl
 
 
 /***/ }),
-/* 164 */
+/* 167 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -11909,7 +12393,7 @@ exports.CommonService = CommonService = __decorate([
 
 
 /***/ }),
-/* 165 */
+/* 168 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -11921,12 +12405,12 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ConfigModule = void 0;
-const bull_module_1 = __webpack_require__(166);
+const bull_module_1 = __webpack_require__(169);
 const common_1 = __webpack_require__(5);
 const config_1 = __webpack_require__(6);
-const event_emitter_1 = __webpack_require__(136);
-const schedule_1 = __webpack_require__(128);
-const config_schema_1 = __webpack_require__(169);
+const event_emitter_1 = __webpack_require__(139);
+const schedule_1 = __webpack_require__(131);
+const config_schema_1 = __webpack_require__(172);
 let ConfigModule = class ConfigModule {
 };
 exports.ConfigModule = ConfigModule;
@@ -11948,7 +12432,7 @@ exports.ConfigModule = ConfigModule = __decorate([
 
 
 /***/ }),
-/* 166 */
+/* 169 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -11964,8 +12448,8 @@ exports.BullModule = void 0;
 const bull_1 = __webpack_require__(4);
 const common_1 = __webpack_require__(5);
 const config_1 = __webpack_require__(6);
-const queues_config_1 = __webpack_require__(167);
-const queue_factory_service_1 = __webpack_require__(168);
+const queues_config_1 = __webpack_require__(170);
+const queue_factory_service_1 = __webpack_require__(171);
 let BullModule = BullModule_1 = class BullModule {
     static forRoot() {
         return {
@@ -12005,7 +12489,7 @@ exports.BullModule = BullModule = BullModule_1 = __decorate([
 
 
 /***/ }),
-/* 167 */
+/* 170 */
 /***/ ((__unused_webpack_module, exports) => {
 
 
@@ -12048,7 +12532,7 @@ exports.queues = [
 
 
 /***/ }),
-/* 168 */
+/* 171 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -12069,7 +12553,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.QueueFactoryService = void 0;
 const bull_1 = __webpack_require__(4);
 const common_1 = __webpack_require__(5);
-const bull_2 = __webpack_require__(155);
+const bull_2 = __webpack_require__(158);
 let QueueFactoryService = class QueueFactoryService {
     constructor(notificationsQueue, scheduleQueue) {
         this.notificationsQueue = notificationsQueue;
@@ -12099,7 +12583,7 @@ exports.QueueFactoryService = QueueFactoryService = __decorate([
 
 
 /***/ }),
-/* 169 */
+/* 172 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -12138,7 +12622,7 @@ var __importStar = (this && this.__importStar) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.configValidationSchema = void 0;
-const Joi = __importStar(__webpack_require__(170));
+const Joi = __importStar(__webpack_require__(173));
 exports.configValidationSchema = Joi.object({
     PORT: Joi.number().default(3000),
     NODE_ENV: Joi.string().default('development'),
@@ -12170,13 +12654,13 @@ exports.configValidationSchema = Joi.object({
 
 
 /***/ }),
-/* 170 */
+/* 173 */
 /***/ ((module) => {
 
 module.exports = require("joi");
 
 /***/ }),
-/* 171 */
+/* 174 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -12209,7 +12693,7 @@ exports.DatabaseModule = DatabaseModule = __decorate([
 
 
 /***/ }),
-/* 172 */
+/* 175 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -12224,12 +12708,12 @@ exports.AccountManagementModule = void 0;
 const common_1 = __webpack_require__(5);
 const core_1 = __webpack_require__(7);
 const employee_management_module_1 = __webpack_require__(15);
-const roles_module_1 = __webpack_require__(103);
-const auth_module_1 = __webpack_require__(173);
-const profiles_module_1 = __webpack_require__(211);
-const user_seeder_service_1 = __webpack_require__(214);
-const sessions_module_1 = __webpack_require__(196);
-const users_module_1 = __webpack_require__(104);
+const roles_module_1 = __webpack_require__(106);
+const auth_module_1 = __webpack_require__(176);
+const profiles_module_1 = __webpack_require__(214);
+const user_seeder_service_1 = __webpack_require__(217);
+const sessions_module_1 = __webpack_require__(199);
+const users_module_1 = __webpack_require__(107);
 let AccountManagementModule = class AccountManagementModule {
 };
 exports.AccountManagementModule = AccountManagementModule;
@@ -12268,7 +12752,7 @@ exports.AccountManagementModule = AccountManagementModule = __decorate([
 
 
 /***/ }),
-/* 173 */
+/* 176 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -12280,20 +12764,20 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.AuthModule = void 0;
-const emails_module_1 = __webpack_require__(174);
-const permissions_module_1 = __webpack_require__(102);
+const emails_module_1 = __webpack_require__(177);
+const permissions_module_1 = __webpack_require__(105);
 const common_1 = __webpack_require__(5);
 const config_1 = __webpack_require__(6);
-const jwt_1 = __webpack_require__(108);
+const jwt_1 = __webpack_require__(111);
 const passport_1 = __webpack_require__(28);
 const jwt_auth_guard_1 = __webpack_require__(27);
 const permissions_guard_1 = __webpack_require__(29);
 const roles_guard_1 = __webpack_require__(92);
-const sessions_module_1 = __webpack_require__(196);
-const auth_controller_1 = __webpack_require__(200);
-const auth_service_1 = __webpack_require__(204);
-const jwt_service_1 = __webpack_require__(107);
-const access_token_strategy_1 = __webpack_require__(209);
+const sessions_module_1 = __webpack_require__(199);
+const auth_controller_1 = __webpack_require__(203);
+const auth_service_1 = __webpack_require__(207);
+const jwt_service_1 = __webpack_require__(110);
+const access_token_strategy_1 = __webpack_require__(212);
 let AuthModule = class AuthModule {
 };
 exports.AuthModule = AuthModule;
@@ -12322,7 +12806,7 @@ exports.AuthModule = AuthModule = __decorate([
 
 
 /***/ }),
-/* 174 */
+/* 177 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -12337,12 +12821,12 @@ exports.EmailsModule = void 0;
 const common_1 = __webpack_require__(5);
 const core_1 = __webpack_require__(7);
 const typeorm_1 = __webpack_require__(16);
-const email_configurations_module_1 = __webpack_require__(175);
-const email_templates_module_1 = __webpack_require__(186);
-const emails_controller_1 = __webpack_require__(192);
-const emails_service_1 = __webpack_require__(194);
-const email_entity_1 = __webpack_require__(182);
-const email_seeder_service_1 = __webpack_require__(195);
+const email_configurations_module_1 = __webpack_require__(178);
+const email_templates_module_1 = __webpack_require__(189);
+const emails_controller_1 = __webpack_require__(195);
+const emails_service_1 = __webpack_require__(197);
+const email_entity_1 = __webpack_require__(185);
+const email_seeder_service_1 = __webpack_require__(198);
 let EmailsModule = class EmailsModule {
 };
 exports.EmailsModule = EmailsModule;
@@ -12371,7 +12855,7 @@ exports.EmailsModule = EmailsModule = __decorate([
 
 
 /***/ }),
-/* 175 */
+/* 178 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -12383,13 +12867,13 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.EmailConfigurationsModule = void 0;
-const mailer_1 = __webpack_require__(176);
+const mailer_1 = __webpack_require__(179);
 const common_1 = __webpack_require__(5);
 const typeorm_1 = __webpack_require__(16);
-const email_configurations_controller_1 = __webpack_require__(177);
-const email_configurations_service_1 = __webpack_require__(179);
-const email_configuration_entity_1 = __webpack_require__(181);
-const dynamic_mailer_config_service_1 = __webpack_require__(184);
+const email_configurations_controller_1 = __webpack_require__(180);
+const email_configurations_service_1 = __webpack_require__(182);
+const email_configuration_entity_1 = __webpack_require__(184);
+const dynamic_mailer_config_service_1 = __webpack_require__(187);
 let EmailConfigurationsModule = class EmailConfigurationsModule {
 };
 exports.EmailConfigurationsModule = EmailConfigurationsModule;
@@ -12410,29 +12894,29 @@ exports.EmailConfigurationsModule = EmailConfigurationsModule = __decorate([
 
 
 /***/ }),
-/* 176 */
+/* 179 */
 /***/ ((module) => {
 
 module.exports = require("@nestjs-modules/mailer");
 
 /***/ }),
-/* 177 */
+/* 180 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.EmailConfigurationsController = void 0;
 const create_controller_factory_1 = __webpack_require__(18);
-const email_configuration_dto_1 = __webpack_require__(178);
-const email_configurations_service_1 = __webpack_require__(179);
-const email_configuration_entity_1 = __webpack_require__(181);
+const email_configuration_dto_1 = __webpack_require__(181);
+const email_configurations_service_1 = __webpack_require__(182);
+const email_configuration_entity_1 = __webpack_require__(184);
 class EmailConfigurationsController extends (0, create_controller_factory_1.createController)(email_configuration_entity_1.EmailConfiguration, email_configurations_service_1.EmailConfigurationsService, email_configuration_dto_1.GetEmailConfigurationDto, email_configuration_dto_1.EmailConfigurationDto, email_configuration_dto_1.UpdateEmailConfigurationDto) {
 }
 exports.EmailConfigurationsController = EmailConfigurationsController;
 
 
 /***/ }),
-/* 178 */
+/* 181 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -12447,8 +12931,8 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.GetEmailConfigurationDto = exports.UpdateEmailConfigurationDto = exports.EmailConfigurationDto = void 0;
-const base_dto_1 = __webpack_require__(98);
-const create_get_dto_factory_1 = __webpack_require__(100);
+const base_dto_1 = __webpack_require__(101);
+const create_get_dto_factory_1 = __webpack_require__(103);
 const swagger_1 = __webpack_require__(8);
 const class_validator_1 = __webpack_require__(24);
 class EmailConfigurationDto extends (0, swagger_1.PartialType)(base_dto_1.BaseDto) {
@@ -12556,7 +13040,7 @@ exports.GetEmailConfigurationDto = GetEmailConfigurationDto;
 
 
 /***/ }),
-/* 179 */
+/* 182 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -12613,9 +13097,9 @@ const users_service_1 = __webpack_require__(30);
 const common_1 = __webpack_require__(5);
 const config_1 = __webpack_require__(6);
 const typeorm_1 = __webpack_require__(16);
-const nodemailer = __importStar(__webpack_require__(180));
+const nodemailer = __importStar(__webpack_require__(183));
 const typeorm_2 = __webpack_require__(25);
-const email_configuration_entity_1 = __webpack_require__(181);
+const email_configuration_entity_1 = __webpack_require__(184);
 let EmailConfigurationsService = class EmailConfigurationsService extends base_service_1.BaseService {
     constructor(emailConfigurationsRepository, usersService, configService) {
         super(emailConfigurationsRepository, usersService);
@@ -12725,13 +13209,13 @@ exports.EmailConfigurationsService = EmailConfigurationsService = __decorate([
 
 
 /***/ }),
-/* 180 */
+/* 183 */
 /***/ ((module) => {
 
 module.exports = require("nodemailer");
 
 /***/ }),
-/* 181 */
+/* 184 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -12748,7 +13232,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.EmailConfiguration = void 0;
 const base_entity_1 = __webpack_require__(34);
 const typeorm_1 = __webpack_require__(25);
-const email_entity_1 = __webpack_require__(182);
+const email_entity_1 = __webpack_require__(185);
 let EmailConfiguration = class EmailConfiguration extends base_entity_1.BaseEntity {
 };
 exports.EmailConfiguration = EmailConfiguration;
@@ -12802,7 +13286,7 @@ exports.EmailConfiguration = EmailConfiguration = __decorate([
 
 
 /***/ }),
-/* 182 */
+/* 185 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -12818,10 +13302,10 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var _a, _b, _c;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Email = void 0;
-const email_status_enum_1 = __webpack_require__(183);
+const email_status_enum_1 = __webpack_require__(186);
 const base_entity_1 = __webpack_require__(34);
 const typeorm_1 = __webpack_require__(25);
-const email_configuration_entity_1 = __webpack_require__(181);
+const email_configuration_entity_1 = __webpack_require__(184);
 let Email = class Email extends base_entity_1.BaseEntity {
 };
 exports.Email = Email;
@@ -12876,7 +13360,7 @@ exports.Email = Email = __decorate([
 
 
 /***/ }),
-/* 183 */
+/* 186 */
 /***/ ((__unused_webpack_module, exports) => {
 
 
@@ -12902,7 +13386,7 @@ var EmailStatus;
 
 
 /***/ }),
-/* 184 */
+/* 187 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -12918,9 +13402,9 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var _a;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.DynamicMailerConfigService = void 0;
-const handlebars_adapter_1 = __webpack_require__(185);
+const handlebars_adapter_1 = __webpack_require__(188);
 const common_1 = __webpack_require__(5);
-const email_configurations_service_1 = __webpack_require__(179);
+const email_configurations_service_1 = __webpack_require__(182);
 let DynamicMailerConfigService = class DynamicMailerConfigService {
     constructor(emailConfigService) {
         this.emailConfigService = emailConfigService;
@@ -12966,13 +13450,13 @@ exports.DynamicMailerConfigService = DynamicMailerConfigService = __decorate([
 
 
 /***/ }),
-/* 185 */
+/* 188 */
 /***/ ((module) => {
 
 module.exports = require("@nestjs-modules/mailer/dist/adapters/handlebars.adapter");
 
 /***/ }),
-/* 186 */
+/* 189 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -12986,9 +13470,9 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.EmailTemplatesModule = void 0;
 const common_1 = __webpack_require__(5);
 const typeorm_1 = __webpack_require__(16);
-const email_templates_controller_1 = __webpack_require__(187);
-const email_templates_service_1 = __webpack_require__(189);
-const email_template_entity_1 = __webpack_require__(191);
+const email_templates_controller_1 = __webpack_require__(190);
+const email_templates_service_1 = __webpack_require__(192);
+const email_template_entity_1 = __webpack_require__(194);
 let EmailTemplatesModule = class EmailTemplatesModule {
 };
 exports.EmailTemplatesModule = EmailTemplatesModule;
@@ -13005,7 +13489,7 @@ exports.EmailTemplatesModule = EmailTemplatesModule = __decorate([
 
 
 /***/ }),
-/* 187 */
+/* 190 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -13027,9 +13511,9 @@ exports.EmailTemplatesController = void 0;
 const create_controller_factory_1 = __webpack_require__(18);
 const common_1 = __webpack_require__(5);
 const swagger_1 = __webpack_require__(8);
-const email_template_dto_1 = __webpack_require__(188);
-const email_templates_service_1 = __webpack_require__(189);
-const email_template_entity_1 = __webpack_require__(191);
+const email_template_dto_1 = __webpack_require__(191);
+const email_templates_service_1 = __webpack_require__(192);
+const email_template_entity_1 = __webpack_require__(194);
 class EmailTemplatesController extends (0, create_controller_factory_1.createController)(email_template_entity_1.EmailTemplate, email_templates_service_1.EmailTemplatesService, email_template_dto_1.GetEmailTemplateDto, email_template_entity_1.EmailTemplate, email_template_dto_1.UpdateEmailTemplateDto) {
     async previewTemplate(body) {
         return this.baseService.renderTemplate(body.templateName, body.context, body.department);
@@ -13047,7 +13531,7 @@ __decorate([
 
 
 /***/ }),
-/* 188 */
+/* 191 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -13062,8 +13546,8 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.GetEmailTemplateDto = exports.UpdateEmailTemplateDto = exports.EmailTemplateDto = void 0;
-const base_dto_1 = __webpack_require__(98);
-const create_get_dto_factory_1 = __webpack_require__(100);
+const base_dto_1 = __webpack_require__(101);
+const create_get_dto_factory_1 = __webpack_require__(103);
 const swagger_1 = __webpack_require__(8);
 const class_validator_1 = __webpack_require__(24);
 const swagger_2 = __webpack_require__(8);
@@ -13085,7 +13569,7 @@ exports.GetEmailTemplateDto = GetEmailTemplateDto;
 
 
 /***/ }),
-/* 189 */
+/* 192 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -13141,9 +13625,9 @@ const base_service_1 = __webpack_require__(31);
 const users_service_1 = __webpack_require__(30);
 const common_1 = __webpack_require__(5);
 const typeorm_1 = __webpack_require__(16);
-const Handlebars = __importStar(__webpack_require__(190));
+const Handlebars = __importStar(__webpack_require__(193));
 const typeorm_2 = __webpack_require__(25);
-const email_template_entity_1 = __webpack_require__(191);
+const email_template_entity_1 = __webpack_require__(194);
 let EmailTemplatesService = class EmailTemplatesService extends base_service_1.BaseService {
     constructor(emailTemplatesRepository, usersService) {
         super(emailTemplatesRepository, usersService);
@@ -13208,13 +13692,13 @@ exports.EmailTemplatesService = EmailTemplatesService = __decorate([
 
 
 /***/ }),
-/* 190 */
+/* 193 */
 /***/ ((module) => {
 
 module.exports = require("handlebars");
 
 /***/ }),
-/* 191 */
+/* 194 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -13272,7 +13756,7 @@ exports.EmailTemplate = EmailTemplate = __decorate([
 
 
 /***/ }),
-/* 192 */
+/* 195 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -13294,9 +13778,9 @@ exports.EmailsController = void 0;
 const create_controller_factory_1 = __webpack_require__(18);
 const common_1 = __webpack_require__(5);
 const swagger_1 = __webpack_require__(8);
-const email_dto_1 = __webpack_require__(193);
-const emails_service_1 = __webpack_require__(194);
-const email_entity_1 = __webpack_require__(182);
+const email_dto_1 = __webpack_require__(196);
+const emails_service_1 = __webpack_require__(197);
+const email_entity_1 = __webpack_require__(185);
 class EmailsController extends (0, create_controller_factory_1.createController)(email_entity_1.Email, emails_service_1.EmailsService, email_dto_1.GetEmailDto, email_dto_1.EmailDto, email_dto_1.UpdateEmailDto) {
     // // Email sending endpoints
     // @Post('send')
@@ -13341,7 +13825,7 @@ __decorate([
 
 
 /***/ }),
-/* 193 */
+/* 196 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -13356,8 +13840,8 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.GetEmailDto = exports.UpdateEmailDto = exports.EmailDto = void 0;
-const base_dto_1 = __webpack_require__(98);
-const create_get_dto_factory_1 = __webpack_require__(100);
+const base_dto_1 = __webpack_require__(101);
+const create_get_dto_factory_1 = __webpack_require__(103);
 const swagger_1 = __webpack_require__(8);
 const class_validator_1 = __webpack_require__(24);
 const swagger_2 = __webpack_require__(8);
@@ -13379,7 +13863,7 @@ exports.GetEmailDto = GetEmailDto;
 
 
 /***/ }),
-/* 194 */
+/* 197 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -13398,16 +13882,16 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 var _a, _b, _c, _d, _e;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.EmailsService = void 0;
-const email_status_enum_1 = __webpack_require__(183);
+const email_status_enum_1 = __webpack_require__(186);
 const base_service_1 = __webpack_require__(31);
 const users_service_1 = __webpack_require__(30);
-const mailer_1 = __webpack_require__(176);
+const mailer_1 = __webpack_require__(179);
 const common_1 = __webpack_require__(5);
 const typeorm_1 = __webpack_require__(16);
 const typeorm_2 = __webpack_require__(25);
-const email_configurations_service_1 = __webpack_require__(179);
-const email_templates_service_1 = __webpack_require__(189);
-const email_entity_1 = __webpack_require__(182);
+const email_configurations_service_1 = __webpack_require__(182);
+const email_templates_service_1 = __webpack_require__(192);
+const email_entity_1 = __webpack_require__(185);
 let EmailsService = class EmailsService extends base_service_1.BaseService {
     constructor(emailsRepository, usersService, emailConfigService, emailTemplateService, mailerService) {
         super(emailsRepository, usersService);
@@ -13608,7 +14092,7 @@ exports.EmailsService = EmailsService = __decorate([
 
 
 /***/ }),
-/* 195 */
+/* 198 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -13627,8 +14111,8 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.EmailSeederService = void 0;
 const common_1 = __webpack_require__(5);
 const config_1 = __webpack_require__(6);
-const email_configurations_service_1 = __webpack_require__(179);
-const email_templates_service_1 = __webpack_require__(189);
+const email_configurations_service_1 = __webpack_require__(182);
+const email_templates_service_1 = __webpack_require__(192);
 let EmailSeederService = EmailSeederService_1 = class EmailSeederService {
     constructor(emailConfigService, emailTemplatesService, configService) {
         this.emailConfigService = emailConfigService;
@@ -13645,12 +14129,12 @@ let EmailSeederService = EmailSeederService_1 = class EmailSeederService {
             // Check if a default configuration already exists
             try {
                 await this.emailConfigService.getDefaultConfiguration();
-                this.logger.log('Default email configuration already exists, skipping seeder');
+                // this.logger.log('Default email configuration already exists, skipping seeder');
                 return;
             }
             catch (error) {
                 // No default config exists, proceed with seeding
-                this.logger.log('Creating default email configuration...');
+                // this.logger.log('Creating default email configuration...');
             }
             // Create default email configuration using environment variables
             const defaultConfig = await this.emailConfigService.create({
@@ -13665,7 +14149,7 @@ let EmailSeederService = EmailSeederService_1 = class EmailSeederService {
                 fromName: this.configService.getOrThrow('EMAIL_FROM_NAME'),
                 isDefault: true,
             });
-            this.logger.log(`Default email configuration created: ${defaultConfig.id}`);
+            // this.logger.log(`Default email configuration created: ${defaultConfig.id}`);
         }
         catch (error) {
             const errorMessage = error instanceof Error ? error.message : String(error);
@@ -13804,12 +14288,12 @@ let EmailSeederService = EmailSeederService_1 = class EmailSeederService {
                 // Check if template already exists
                 try {
                     await this.emailTemplatesService.findByName(template.name);
-                    this.logger.log(`Email template '${template.name}' already exists, skipping`);
+                    // this.logger.log(`Email template '${template.name}' already exists, skipping`);
                 }
                 catch (error) {
                     // Template doesn't exist, create it
                     const createdTemplate = await this.emailTemplatesService.create(template);
-                    this.logger.log(`Created email template: ${template.name} (${createdTemplate.id})`);
+                    // this.logger.log(`Created email template: ${template.name} (${createdTemplate.id})`);
                 }
             }
         }
@@ -13827,7 +14311,7 @@ exports.EmailSeederService = EmailSeederService = EmailSeederService_1 = __decor
 
 
 /***/ }),
-/* 196 */
+/* 199 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -13842,8 +14326,8 @@ exports.SessionsModule = void 0;
 const common_1 = __webpack_require__(5);
 const typeorm_1 = __webpack_require__(16);
 const session_entity_1 = __webpack_require__(81);
-const sessions_controller_1 = __webpack_require__(197);
-const sessions_service_1 = __webpack_require__(199);
+const sessions_controller_1 = __webpack_require__(200);
+const sessions_service_1 = __webpack_require__(202);
 let SessionsModule = class SessionsModule {
 };
 exports.SessionsModule = SessionsModule;
@@ -13858,16 +14342,16 @@ exports.SessionsModule = SessionsModule = __decorate([
 
 
 /***/ }),
-/* 197 */
+/* 200 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.SessionsController = void 0;
 const create_controller_factory_1 = __webpack_require__(18);
-const session_dto_1 = __webpack_require__(198);
+const session_dto_1 = __webpack_require__(201);
 const session_entity_1 = __webpack_require__(81);
-const sessions_service_1 = __webpack_require__(199);
+const sessions_service_1 = __webpack_require__(202);
 class SessionsController extends (0, create_controller_factory_1.createController)(session_entity_1.Session, sessions_service_1.SessionsService, session_dto_1.GetSessionDto, undefined, session_dto_1.UpdateSessionDto) {
     async create(entityDto, createdById) {
         return await super.create(entityDto, createdById);
@@ -13880,7 +14364,7 @@ exports.SessionsController = SessionsController;
 
 
 /***/ }),
-/* 198 */
+/* 201 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -13895,8 +14379,8 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.GetSessionDto = exports.UpdateSessionDto = exports.SessionDto = void 0;
-const base_dto_1 = __webpack_require__(98);
-const create_get_dto_factory_1 = __webpack_require__(100);
+const base_dto_1 = __webpack_require__(101);
+const create_get_dto_factory_1 = __webpack_require__(103);
 const swagger_1 = __webpack_require__(8);
 const class_validator_1 = __webpack_require__(24);
 class SessionDto extends (0, swagger_1.PartialType)(base_dto_1.BaseDto) {
@@ -13923,7 +14407,7 @@ exports.GetSessionDto = GetSessionDto;
 
 
 /***/ }),
-/* 199 */
+/* 202 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -13964,7 +14448,7 @@ exports.SessionsService = SessionsService = __decorate([
 
 
 /***/ }),
-/* 200 */
+/* 203 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -13984,19 +14468,19 @@ var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.AuthController = void 0;
 const authorize_decorator_1 = __webpack_require__(26);
-const current_user_decorator_1 = __webpack_require__(94);
-const jwt_payload_interface_1 = __webpack_require__(201);
+const current_user_decorator_1 = __webpack_require__(97);
+const jwt_payload_interface_1 = __webpack_require__(204);
 const common_1 = __webpack_require__(5);
 const swagger_1 = __webpack_require__(8);
 const class_transformer_1 = __webpack_require__(23);
-const express_1 = __webpack_require__(202);
-const google_auth_guard_1 = __webpack_require__(203);
-const user_dto_1 = __webpack_require__(114);
+const express_1 = __webpack_require__(205);
+const google_auth_guard_1 = __webpack_require__(206);
+const user_dto_1 = __webpack_require__(117);
 const users_service_1 = __webpack_require__(30);
-const auth_service_1 = __webpack_require__(204);
-const login_user_dto_1 = __webpack_require__(206);
-const register_user_dto_1 = __webpack_require__(207);
-const token_dto_1 = __webpack_require__(208);
+const auth_service_1 = __webpack_require__(207);
+const login_user_dto_1 = __webpack_require__(209);
+const register_user_dto_1 = __webpack_require__(210);
+const token_dto_1 = __webpack_require__(211);
 let AuthController = class AuthController {
     constructor(authService, usersService) {
         this.authService = authService;
@@ -14227,7 +14711,7 @@ exports.AuthController = AuthController = __decorate([
 
 
 /***/ }),
-/* 201 */
+/* 204 */
 /***/ ((__unused_webpack_module, exports) => {
 
 
@@ -14235,13 +14719,13 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 
 
 /***/ }),
-/* 202 */
+/* 205 */
 /***/ ((module) => {
 
 module.exports = require("express");
 
 /***/ }),
-/* 203 */
+/* 206 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -14264,7 +14748,7 @@ exports.GoogleAuthGuard = GoogleAuthGuard = __decorate([
 
 
 /***/ }),
-/* 204 */
+/* 207 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -14315,15 +14799,15 @@ var _a, _b, _c, _d, _e, _f;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.AuthService = void 0;
 const utility_helper_1 = __webpack_require__(84);
-const common_service_1 = __webpack_require__(164);
-const emails_service_1 = __webpack_require__(194);
+const common_service_1 = __webpack_require__(167);
+const emails_service_1 = __webpack_require__(197);
 const common_1 = __webpack_require__(5);
 const config_1 = __webpack_require__(6);
-const bcrypt = __importStar(__webpack_require__(205));
-const uuid_1 = __webpack_require__(109);
-const sessions_service_1 = __webpack_require__(199);
+const bcrypt = __importStar(__webpack_require__(208));
+const uuid_1 = __webpack_require__(112);
+const sessions_service_1 = __webpack_require__(202);
 const users_service_1 = __webpack_require__(30);
-const jwt_service_1 = __webpack_require__(107);
+const jwt_service_1 = __webpack_require__(110);
 let AuthService = AuthService_1 = class AuthService {
     constructor(usersService, jwtService, configService, commonService, sessionsService, emailsService) {
         this.usersService = usersService;
@@ -14663,13 +15147,13 @@ exports.AuthService = AuthService = AuthService_1 = __decorate([
 
 
 /***/ }),
-/* 205 */
+/* 208 */
 /***/ ((module) => {
 
 module.exports = require("bcrypt");
 
 /***/ }),
-/* 206 */
+/* 209 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -14705,7 +15189,7 @@ __decorate([
 
 
 /***/ }),
-/* 207 */
+/* 210 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -14724,7 +15208,7 @@ exports.RegisterUserDto = void 0;
 const swagger_1 = __webpack_require__(8);
 const class_transformer_1 = __webpack_require__(23);
 const class_validator_1 = __webpack_require__(24);
-const profile_dto_1 = __webpack_require__(115);
+const profile_dto_1 = __webpack_require__(118);
 class RegisterUserDto {
 }
 exports.RegisterUserDto = RegisterUserDto;
@@ -14770,7 +15254,7 @@ __decorate([
 
 
 /***/ }),
-/* 208 */
+/* 211 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -14804,7 +15288,7 @@ __decorate([
 
 
 /***/ }),
-/* 209 */
+/* 212 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -14824,8 +15308,8 @@ const users_service_1 = __webpack_require__(30);
 const common_1 = __webpack_require__(5);
 const config_1 = __webpack_require__(6);
 const passport_1 = __webpack_require__(28);
-const passport_jwt_1 = __webpack_require__(210);
-const jwt_service_1 = __webpack_require__(107);
+const passport_jwt_1 = __webpack_require__(213);
+const jwt_service_1 = __webpack_require__(110);
 let AccessTokenStrategy = class AccessTokenStrategy extends (0, passport_1.PassportStrategy)(passport_jwt_1.Strategy, 'jwt') {
     constructor(configService, jwtService, userService) {
         super({
@@ -14865,13 +15349,13 @@ exports.AccessTokenStrategy = AccessTokenStrategy = __decorate([
 
 
 /***/ }),
-/* 210 */
+/* 213 */
 /***/ ((module) => {
 
 module.exports = require("passport-jwt");
 
 /***/ }),
-/* 211 */
+/* 214 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -14886,8 +15370,8 @@ exports.ProfilesModule = void 0;
 const common_1 = __webpack_require__(5);
 const typeorm_1 = __webpack_require__(16);
 const profile_entity_1 = __webpack_require__(33);
-const profiles_controller_1 = __webpack_require__(212);
-const profiles_service_1 = __webpack_require__(213);
+const profiles_controller_1 = __webpack_require__(215);
+const profiles_service_1 = __webpack_require__(216);
 let ProfilesModule = class ProfilesModule {
 };
 exports.ProfilesModule = ProfilesModule;
@@ -14902,16 +15386,16 @@ exports.ProfilesModule = ProfilesModule = __decorate([
 
 
 /***/ }),
-/* 212 */
+/* 215 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ProfilesController = void 0;
 const create_controller_factory_1 = __webpack_require__(18);
-const profile_dto_1 = __webpack_require__(115);
+const profile_dto_1 = __webpack_require__(118);
 const profile_entity_1 = __webpack_require__(33);
-const profiles_service_1 = __webpack_require__(213);
+const profiles_service_1 = __webpack_require__(216);
 class ProfilesController extends (0, create_controller_factory_1.createController)(profile_entity_1.Profile, profiles_service_1.ProfilesService, profile_dto_1.GetProfileDto, profile_dto_1.ProfileDto, profile_dto_1.UpdateProfileDto) {
     findAllAdvanced(paginationDto) {
         return super.findAllAdvanced(paginationDto);
@@ -14933,7 +15417,7 @@ exports.ProfilesController = ProfilesController;
 
 
 /***/ }),
-/* 213 */
+/* 216 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -14974,7 +15458,7 @@ exports.ProfilesService = ProfilesService = __decorate([
 
 
 /***/ }),
-/* 214 */
+/* 217 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -15029,12 +15513,12 @@ const employment_status_enum_1 = __webpack_require__(45);
 const employment_type_enum_1 = __webpack_require__(46);
 const role_scope_type_enum_1 = __webpack_require__(38);
 const role_enum_1 = __webpack_require__(91);
-const auth_service_1 = __webpack_require__(204);
-const employees_service_1 = __webpack_require__(101);
+const auth_service_1 = __webpack_require__(207);
+const employees_service_1 = __webpack_require__(104);
 const roles_service_1 = __webpack_require__(88);
 const common_1 = __webpack_require__(5);
 const config_1 = __webpack_require__(6);
-const bcrypt = __importStar(__webpack_require__(205));
+const bcrypt = __importStar(__webpack_require__(208));
 const users_service_1 = __webpack_require__(30);
 let UserSeederService = UserSeederService_1 = class UserSeederService {
     constructor(usersService, authService, rolesService, employeesService, configService) {
@@ -15195,7 +15679,7 @@ exports.UserSeederService = UserSeederService = UserSeederService_1 = __decorate
 
 
 /***/ }),
-/* 215 */
+/* 218 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -15209,7 +15693,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.AddressesModule = void 0;
 const common_1 = __webpack_require__(5);
 const typeorm_1 = __webpack_require__(16);
-const addresses_service_1 = __webpack_require__(216);
+const addresses_service_1 = __webpack_require__(219);
 const address_entity_1 = __webpack_require__(35);
 let AddressesModule = class AddressesModule {
 };
@@ -15224,7 +15708,7 @@ exports.AddressesModule = AddressesModule = __decorate([
 
 
 /***/ }),
-/* 216 */
+/* 219 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -15265,7 +15749,7 @@ exports.AddressesService = AddressesService = __decorate([
 
 
 /***/ }),
-/* 217 */
+/* 220 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -15280,17 +15764,17 @@ exports.AttendanceManagementModule = void 0;
 const common_1 = __webpack_require__(5);
 const core_1 = __webpack_require__(7);
 const typeorm_1 = __webpack_require__(16);
-const biometrics_module_1 = __webpack_require__(218);
+const biometrics_module_1 = __webpack_require__(221);
 const employee_management_module_1 = __webpack_require__(15);
-const shift_management_module_1 = __webpack_require__(130);
-const attendance_punches_module_1 = __webpack_require__(234);
-const attendances_controller_1 = __webpack_require__(238);
-const attendances_service_1 = __webpack_require__(239);
+const shift_management_module_1 = __webpack_require__(133);
+const attendance_punches_module_1 = __webpack_require__(239);
+const attendances_controller_1 = __webpack_require__(243);
+const attendances_service_1 = __webpack_require__(244);
 const attendance_entity_1 = __webpack_require__(52);
-const final_work_hours_module_1 = __webpack_require__(244);
-const attendance_listener_1 = __webpack_require__(248);
-const work_time_requests_module_1 = __webpack_require__(249);
-const work_time_responses_module_1 = __webpack_require__(252);
+const final_work_hours_module_1 = __webpack_require__(249);
+const attendance_listener_1 = __webpack_require__(253);
+const work_time_requests_module_1 = __webpack_require__(254);
+const work_time_responses_module_1 = __webpack_require__(257);
 let AttendanceManagementModule = class AttendanceManagementModule {
 };
 exports.AttendanceManagementModule = AttendanceManagementModule;
@@ -15346,7 +15830,7 @@ exports.AttendanceManagementModule = AttendanceManagementModule = __decorate([
 
 
 /***/ }),
-/* 218 */
+/* 221 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -15358,50 +15842,72 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.BiometricsModule = void 0;
+const attendance_punch_entity_1 = __webpack_require__(73);
 const common_1 = __webpack_require__(5);
 const core_1 = __webpack_require__(7);
 const typeorm_1 = __webpack_require__(16);
-const biometrics_controller_1 = __webpack_require__(219);
+const biometrics_controller_1 = __webpack_require__(222);
 const biometric_device_entity_1 = __webpack_require__(74);
-const biometric_template_entity_1 = __webpack_require__(227);
-const timeout_interceptor_1 = __webpack_require__(223);
-const biometric_devices_service_1 = __webpack_require__(228);
-const biometrics_polling_service_1 = __webpack_require__(229);
-const zkteco_biometrics_service_1 = __webpack_require__(231);
+const biometric_template_entity_1 = __webpack_require__(229);
+const timeout_interceptor_1 = __webpack_require__(224);
+const attendance_tracking_service_1 = __webpack_require__(230);
+const biometric_devices_service_1 = __webpack_require__(227);
+const biometrics_factory_service_1 = __webpack_require__(228);
+const biometrics_polling_service_1 = __webpack_require__(231);
+const zkteco_biometrics_service_1 = __webpack_require__(233);
+const anvis_biometrics_service_1 = __webpack_require__(236);
 let BiometricsModule = class BiometricsModule {
 };
 exports.BiometricsModule = BiometricsModule;
 exports.BiometricsModule = BiometricsModule = __decorate([
     (0, common_1.Module)({
         imports: [
-            typeorm_1.TypeOrmModule.forFeature([biometric_device_entity_1.BiometricDevice, biometric_template_entity_1.BiometricTemplate]),
-            core_1.RouterModule.register([
-                {
+            typeorm_1.TypeOrmModule.forFeature([biometric_device_entity_1.BiometricDevice, biometric_template_entity_1.BiometricTemplate, attendance_punch_entity_1.AttendancePunch]),
+            core_1.RouterModule.register([{
                     path: 'biometrics',
                     module: BiometricsModule,
-                },
-            ]),
+                }]),
         ],
         controllers: [biometrics_controller_1.BiometricsController],
         providers: [
+            // Register ZKTeco service
+            {
+                provide: 'ZKTECO_SERVICE',
+                useClass: zkteco_biometrics_service_1.ZKTecoBiometricsService,
+            },
+            // Register Anviz service
+            {
+                provide: 'ANVIZ_SERVICE',
+                useClass: anvis_biometrics_service_1.AnvizBiometricService,
+            },
+            // Register the legacy token for backward compatibility
             {
                 provide: 'BIOMETRIC_SERVICE',
-                useClass: zkteco_biometrics_service_1.ZKTecoBiometricsService,
+                useExisting: 'ZKTECO_SERVICE', // Default to ZKTeco for backward compatibility
             },
             {
                 provide: timeout_interceptor_1.TimeoutInterceptor,
-                useFactory: () => new timeout_interceptor_1.TimeoutInterceptor(30), // specify timeout in seconds
+                useFactory: () => new timeout_interceptor_1.TimeoutInterceptor(30),
             },
             biometrics_polling_service_1.BiometricsPollingService,
-            biometric_devices_service_1.BiometricDevicesService
+            biometric_devices_service_1.BiometricDevicesService,
+            biometrics_factory_service_1.BiometricsFactoryService,
+            attendance_tracking_service_1.AttendanceTrackingService,
         ],
-        exports: ['BIOMETRIC_SERVICE', biometric_devices_service_1.BiometricDevicesService],
+        exports: [
+            'ZKTECO_SERVICE',
+            'ANVIZ_SERVICE',
+            'BIOMETRIC_SERVICE',
+            biometric_devices_service_1.BiometricDevicesService,
+            biometrics_factory_service_1.BiometricsFactoryService,
+            attendance_tracking_service_1.AttendanceTrackingService,
+        ],
     })
 ], BiometricsModule);
 
 
 /***/ }),
-/* 219 */
+/* 222 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -15420,93 +15926,174 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.BiometricsController = void 0;
-const generalresponse_dto_1 = __webpack_require__(83);
 const common_1 = __webpack_require__(5);
 const swagger_1 = __webpack_require__(8);
-const connect_device_dto_1 = __webpack_require__(220);
-const set_time_dto_1 = __webpack_require__(221);
-const set_user_dto_1 = __webpack_require__(222);
-const timeout_interceptor_1 = __webpack_require__(223);
+const class_validator_1 = __webpack_require__(24);
+const error_response_dto_1 = __webpack_require__(223);
+const biometric_device_entity_1 = __webpack_require__(74);
+const timeout_interceptor_1 = __webpack_require__(224);
 const biometric_interface_1 = __webpack_require__(226);
-let BiometricsController = class BiometricsController {
-    constructor(biometricService) {
-        this.biometricService = biometricService;
+const biometric_devices_service_1 = __webpack_require__(227);
+const biometrics_factory_service_1 = __webpack_require__(228);
+class ConnectDeviceDto {
+    constructor() {
+        this.port = 4370;
+        this.deviceType = biometric_device_entity_1.BiometricDeviceType.ZKTECO;
     }
-    // Helper method for consistent error handling
+}
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Device IP address',
+        example: '192.168.1.100'
+    }),
+    (0, class_validator_1.IsIP)(4),
+    __metadata("design:type", String)
+], ConnectDeviceDto.prototype, "ipAddress", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Device port number',
+        example: 4370,
+        default: 4370
+    }),
+    (0, class_validator_1.IsInt)(),
+    (0, class_validator_1.Min)(1),
+    (0, class_validator_1.Max)(65535),
+    __metadata("design:type", Number)
+], ConnectDeviceDto.prototype, "port", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Device type/manufacturer',
+        enum: biometric_device_entity_1.BiometricDeviceType,
+        default: biometric_device_entity_1.BiometricDeviceType.ZKTECO,
+        example: 'zkteco'
+    }),
+    (0, class_validator_1.IsEnum)(biometric_device_entity_1.BiometricDeviceType),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], ConnectDeviceDto.prototype, "deviceType", void 0);
+class SetUserDto {
+}
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Device ID to register user on',
+        example: '192.168.1.100:4370'
+    }),
+    __metadata("design:type", String)
+], SetUserDto.prototype, "deviceId", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'User ID',
+        example: '1001'
+    }),
+    __metadata("design:type", String)
+], SetUserDto.prototype, "userId", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'User name',
+        example: 'John Doe'
+    }),
+    __metadata("design:type", String)
+], SetUserDto.prototype, "name", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'User password',
+        example: '1234',
+        required: false
+    }),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], SetUserDto.prototype, "password", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'User card number',
+        example: '8987656789',
+        required: false
+    }),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], SetUserDto.prototype, "cardNumber", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'User role (0=normal, 14=admin)',
+        example: 0,
+        required: false
+    }),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Number)
+], SetUserDto.prototype, "role", void 0);
+class GetFingerprintDto {
+    constructor() {
+        this.fingerId = 0;
+    }
+}
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Device ID to get fingerprint from',
+        example: '192.168.1.100:4370'
+    }),
+    __metadata("design:type", String)
+], GetFingerprintDto.prototype, "deviceId", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'User ID',
+        example: '1001'
+    }),
+    __metadata("design:type", String)
+], GetFingerprintDto.prototype, "userId", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Finger ID (0-9)',
+        example: 0,
+        required: false
+    }),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Number)
+], GetFingerprintDto.prototype, "fingerId", void 0);
+let BiometricsController = class BiometricsController {
+    constructor(defaultBiometricService, biometricsFactory, biometricDevicesService) {
+        this.defaultBiometricService = defaultBiometricService;
+        this.biometricsFactory = biometricsFactory;
+        this.biometricDevicesService = biometricDevicesService;
+    }
+    getErrorMessage(error) {
+        return error instanceof Error ? error.message : 'An unknown error occurred';
+    }
     handleError(error, defaultMessage, notImplementedMessage) {
         if (error instanceof common_1.HttpException) {
             throw error;
         }
         const errorMessage = this.getErrorMessage(error);
-        if (notImplementedMessage && errorMessage.includes('not implemented')) {
+        // Check if this is a "not implemented" error
+        if (errorMessage.includes('not implemented') || errorMessage.includes('NOT_IMPLEMENTED')) {
             throw new common_1.HttpException(notImplementedMessage, common_1.HttpStatus.NOT_IMPLEMENTED);
         }
+        // Check if this is a "not found" error
+        if (errorMessage.includes('not found') || errorMessage.includes('not connected')) {
+            throw new common_1.HttpException(`Device not found or not connected: ${errorMessage}`, common_1.HttpStatus.NOT_FOUND);
+        }
+        // Generic error response
         throw new common_1.HttpException(`${defaultMessage}: ${errorMessage}`, common_1.HttpStatus.INTERNAL_SERVER_ERROR);
     }
-    // Helper to safely extract error messages
-    getErrorMessage(error) {
-        if (error instanceof Error) {
-            return error.message;
+    async getUserFingerprint(getFingerprintDto) {
+        try {
+            const { deviceId, userId, fingerId = 0 } = getFingerprintDto;
+            // Get the appropriate service based on device type
+            const service = await this.biometricsFactory.getServiceByDeviceId(deviceId);
+            const template = await service.getUserFingerprint(deviceId, userId, fingerId);
+            if (!template) {
+                throw new common_1.HttpException(`No fingerprint template found for user ${userId} (finger ${fingerId})`, common_1.HttpStatus.NOT_FOUND);
+            }
+            return template;
         }
-        if (typeof error === 'string') {
-            return error;
+        catch (error) {
+            return this.handleError(error, 'Failed to retrieve fingerprint template', 'Fingerprint template retrieval not supported by this device type');
         }
-        if (error && typeof error === 'object' && 'message' in error && typeof error.message === 'string') {
-            return error.message;
-        }
-        return String(error);
     }
-    // @ApiOperation({ summary: 'Get fingerprint template for a user' })
-    // @ApiResponse({ 
-    // status: HttpStatus.OK, 
-    // description: 'Fingerprint template retrieved successfully',
-    // schema: {
-    //     type: 'object',
-    //     properties: {
-    //     id: { type: 'string', example: '1001-0' },
-    //     userId: { type: 'string', example: '1001' },
-    //     fingerId: { type: 'number', example: 0 },
-    //     template: { type: 'string', format: 'binary', description: 'Binary template data' },
-    //     provider: { type: 'string', example: 'zkteco' }
-    //     }
-    // }
-    // })
-    // @ApiResponse({ 
-    //     status: HttpStatus.NOT_FOUND, 
-    //     description: 'Template or device not found',
-    //     type: ErrorResponseDto
-    // })
-    // @ApiResponse({ 
-    //     status: HttpStatus.BAD_REQUEST, 
-    //     description: 'Invalid request',
-    //     type: ErrorResponseDto
-    // })
-    // @Get('users/fingerprint')
-    // async getUserFingerprint(
-    //     @Query(new ValidationPipe({ transform: true })) getFingerprintDto: GetFingerprintDto
-    // ): Promise<IBiometricTemplate | null> {
-    //     try {
-    //         const { deviceId, userId, fingerId = 0 } = getFingerprintDto;
-    //         const template = await this.biometricService.getUserFingerprint(
-    //             deviceId,
-    //             userId,
-    //             fingerId
-    //         );
-    //         if (!template) {
-    //             throw new NotFoundException(`No fingerprint template found for user ${userId} (finger ${fingerId})`);
-    //         }
-    //         return template;
-    //     } catch (error: unknown) {
-    //         return this.handleError(
-    //             error,
-    //             'Failed to retrieve fingerprint template',
-    //             'Fingerprint template not found or retrieval not supported by this device type'
-    //         );
-    //     }
-    // }
     async registerUser(setUserDto) {
         try {
-            return await this.biometricService.registerUser(setUserDto.deviceId, {
+            // Get the appropriate service based on the device ID
+            const service = await this.biometricsFactory.getServiceByDeviceId(setUserDto.deviceId);
+            return await service.registerUser(setUserDto.deviceId, {
                 userId: setUserDto.userId,
                 name: setUserDto.name,
                 password: setUserDto.password,
@@ -15518,12 +16105,21 @@ let BiometricsController = class BiometricsController {
             return this.handleError(error, 'Failed to register user', 'User registration not supported by this device type');
         }
     }
-    // =============================================
-    // Device Management Endpoints
-    // =============================================
     async connectDevice(connectDeviceDto) {
         try {
-            return await this.biometricService.connect(connectDeviceDto.ipAddress, connectDeviceDto.port);
+            // Use the appropriate service based on device type
+            const service = this.biometricsFactory.getService(connectDeviceDto.deviceType || biometric_device_entity_1.BiometricDeviceType.ZKTECO);
+            const device = await service.connect(connectDeviceDto.ipAddress, connectDeviceDto.port);
+            // If connection was successful, update or create device in database
+            if (device) {
+                // Create a BiometricDevice entity instance
+                const biometricDevice = new biometric_device_entity_1.BiometricDevice({});
+                // Set properties from device object
+                Object.assign(biometricDevice, Object.assign(Object.assign({}, device), { provider: connectDeviceDto.deviceType || biometric_device_entity_1.BiometricDeviceType.ZKTECO }));
+                // Save additional info to database
+                await this.biometricDevicesService.save(biometricDevice);
+            }
+            return device;
         }
         catch (error) {
             if (error instanceof common_1.HttpException) {
@@ -15534,373 +16130,99 @@ let BiometricsController = class BiometricsController {
     }
     async disconnectDevice(deviceId) {
         try {
-            const result = await this.biometricService.disconnect(deviceId);
+            // Get the appropriate service based on the device ID
+            const service = await this.biometricsFactory.getServiceByDeviceId(deviceId);
+            const result = await service.disconnect(deviceId);
+            // Update database record
+            if (result) {
+                await this.biometricDevicesService.update(deviceId, {
+                    isConnected: false
+                });
+            }
             return {
                 success: result,
-                message: result ? 'Device disconnected successfully' : 'Device disconnection initiated'
+                message: result
+                    ? 'Device disconnected successfully'
+                    : 'Device disconnect failed'
             };
         }
         catch (error) {
-            return this.handleError(error, 'Failed to disconnect device', 'Device disconnection not supported by this device type');
+            return this.handleError(error, 'Failed to disconnect device', 'Device disconnection failed');
         }
     }
     async getConnectedDevices() {
-        const devices = await this.biometricService.getConnectedDevices();
-        return {
-            devices,
-            count: devices.length
-        };
+        try {
+            // Get all devices from database
+            const devices = await this.biometricDevicesService.getRepository().find({
+                where: { isConnected: true }
+            });
+            return devices;
+        }
+        catch (error) {
+            throw new common_1.HttpException(`Failed to get connected devices: ${this.getErrorMessage(error)}`, common_1.HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
     async getDeviceInfo(deviceId) {
         try {
-            return await this.biometricService.getDeviceInfo(deviceId);
+            // Get the appropriate service based on the device ID
+            const service = await this.biometricsFactory.getServiceByDeviceId(deviceId);
+            return await service.getDeviceInfo(deviceId);
         }
         catch (error) {
             return this.handleError(error, 'Failed to get device information', 'Device information retrieval not supported by this device type');
         }
     }
-    // @ApiOperation({ summary: 'Restart a biometric device' })
-    // @ApiResponse({ status: HttpStatus.OK, description: 'Device restarted successfully' })
-    // @ApiResponse({ 
-    //     status: HttpStatus.NOT_FOUND, 
-    //     description: 'Device not found',
-    //     type: ErrorResponseDto
-    // })
-    // @ApiResponse({ 
-    //     status: HttpStatus.NOT_IMPLEMENTED, 
-    //     description: 'Feature not implemented on this device',
-    //     type: ErrorResponseDto
-    // })
-    // @ApiParam({ name: 'deviceId', description: 'Device ID to restart' })
-    // @Post('devices/:deviceId/restart')
-    // async restartDevice(
-    //     @Param('deviceId') deviceId: string
-    // ): Promise<{ success: boolean; message: string }> {
-    //     try {
-    //     const result = await this.biometricService.restartDevice?.(deviceId);
-    //     return { 
-    //         success: result,
-    //         message: result ? 'Device restart initiated' : 'Device restart failed'
-    //     };
-    //     } catch (error: unknown) {
-    //     return this.handleError(
-    //         error,
-    //         'Failed to restart device',
-    //         'Device restart not supported by this device type'
-    //     );
-    //     }
-    // }
-    //   @ApiOperation({ summary: 'Unlock a device door' })
-    //   @ApiResponse({ status: HttpStatus.OK, description: 'Door unlocked successfully' })
-    //   @ApiResponse({ 
-    //     status: HttpStatus.NOT_FOUND, 
-    //     description: 'Device not found',
-    //     type: ErrorResponseDto
-    //   })
-    //   @ApiResponse({ 
-    //     status: HttpStatus.NOT_IMPLEMENTED, 
-    //     description: 'Feature not implemented on this device',
-    //     type: ErrorResponseDto
-    //   })
-    //   @ApiParam({ name: 'deviceId', description: 'Target device ID' })
-    //   @Post('devices/:deviceId/unlock')
-    //   async unlockDoor(
-    //     @Param('deviceId') deviceId: string
-    //   ): Promise<{ success: boolean; message: string }> {
-    //     try {
-    //       const result = await this.biometricService.unlockDoor?.(deviceId);
-    //       return { 
-    //         success: result,
-    //         message: result ? 'Door unlocked successfully' : 'Failed to unlock door'
-    //       };
-    //     } catch (error: unknown) {
-    //       return this.handleError(
-    //         error,
-    //         'Failed to unlock door',
-    //         'Door unlock not supported by this device type'
-    //       );
-    //     }
-    //   }
-    //   @ApiOperation({ summary: 'Execute a custom command on a device' })
-    //   @ApiResponse({ status: HttpStatus.OK, description: 'Command executed successfully' })
-    //   @ApiResponse({ 
-    //     status: HttpStatus.BAD_REQUEST, 
-    //     description: 'Invalid command',
-    //     type: ErrorResponseDto
-    //   })
-    //   @ApiResponse({ 
-    //     status: HttpStatus.NOT_FOUND, 
-    //     description: 'Device not found',
-    //     type: ErrorResponseDto
-    //   })
-    //   @ApiResponse({ 
-    //     status: HttpStatus.NOT_IMPLEMENTED, 
-    //     description: 'Feature not implemented on this device',
-    //     type: ErrorResponseDto
-    //   })
-    //   @ApiParam({ name: 'deviceId', description: 'Target device ID' })
-    //   @Post('devices/:deviceId/command')
-    //   async executeCommand(
-    //     @Param('deviceId') deviceId: string,
-    //     @Body(new ValidationPipe({ transform: true })) commandDto: CommandDto
-    //   ): Promise<{ success: boolean; result: any }> {
-    //     try {
-    //       const result = await this.biometricService.executeCommand?.(
-    //         deviceId, 
-    //         commandDto.command,
-    //         commandDto.data
-    //       );
-    //       return { 
-    //         success: true,
-    //         result
-    //       };
-    //     } catch (error: unknown) {
-    //       return this.handleError(
-    //         error,
-    //         'Failed to execute command',
-    //         'Command execution not supported by this device type'
-    //       );
-    //     }
-    //   }
-    //   @ApiOperation({ summary: 'Get device time' })
-    //   @ApiResponse({ status: HttpStatus.OK, description: 'Current device time' })
-    //   @ApiResponse({ 
-    //     status: HttpStatus.NOT_FOUND, 
-    //     description: 'Device not found',
-    //     type: ErrorResponseDto
-    //   })
-    //   @ApiResponse({ 
-    //     status: HttpStatus.NOT_IMPLEMENTED, 
-    //     description: 'Feature not implemented on this device',
-    //     type: ErrorResponseDto
-    //   })
-    //   @ApiParam({ name: 'deviceId', description: 'Target device ID' })
-    //   @Get('devices/:deviceId/time')
-    //   async getTime(
-    //     @Param('deviceId') deviceId: string
-    //   ): Promise<{ deviceId: string; time: Date }> {
-    //     try {
-    //       const time = await this.biometricService.getTime?.(deviceId);
-    //       return { deviceId, time };
-    //     } catch (error: unknown) {
-    //       return this.handleError(
-    //         error,
-    //         'Failed to get device time',
-    //         'Time retrieval not supported by this device type'
-    //       );
-    //     }
-    //   }
-    async setTime(deviceId, timeDto) {
-        var _a, _b;
+    async setTime(deviceId, body) {
         try {
-            const time = new Date(timeDto.time);
-            const result = await ((_b = (_a = this.biometricService).setTime) === null || _b === void 0 ? void 0 : _b.call(_a, deviceId, time));
-            return {
-                success: result,
-                message: result ? 'Device time set successfully' : 'Failed to set device time'
-            };
+            // Get the appropriate service based on the device ID
+            const service = await this.biometricsFactory.getServiceByDeviceId(deviceId);
+            // Parse the time or use current time
+            const time = body.time ? new Date(body.time) : new Date();
+            // Validate time format
+            if (isNaN(time.getTime())) {
+                throw new common_1.HttpException('Invalid time format', common_1.HttpStatus.BAD_REQUEST);
+            }
+            const result = await service.setTime(deviceId, time);
+            return { success: result };
         }
         catch (error) {
             return this.handleError(error, 'Failed to set device time', 'Time setting not supported by this device type');
         }
     }
-    // =============================================
-    // User & Template Management Endpoints
-    // =============================================
-    //   @ApiOperation({ summary: 'Enroll a user fingerprint' })
-    //   @ApiResponse({ 
-    //     status: HttpStatus.CREATED, 
-    //     description: 'User fingerprint enrolled successfully',
-    //     type: Object
-    //   })
-    //   @ApiResponse({ 
-    //     status: HttpStatus.BAD_REQUEST, 
-    //     description: 'Invalid input data',
-    //     type: ErrorResponseDto
-    //   })
-    //   @ApiResponse({ 
-    //     status: HttpStatus.NOT_FOUND, 
-    //     description: 'Device not found',
-    //     type: ErrorResponseDto
-    //   })
-    //   @ApiResponse({ 
-    //     status: HttpStatus.NOT_IMPLEMENTED, 
-    //     description: 'Feature not implemented on this device',
-    //     type: ErrorResponseDto
-    //   })
-    //   @Post('users/enroll')
-    //   async enrollUser(
-    //     @Body(new ValidationPipe({ transform: true })) enrollUserDto: EnrollUserDto
-    //   ): Promise<IBiometricTemplate> {
-    //     try {
-    //       return await this.biometricService.enrollUser(
-    //         enrollUserDto.deviceId,
-    //         enrollUserDto.userId,
-    //         enrollUserDto.fingerId
-    //       );
-    //     } catch (error: unknown) {
-    //       return this.handleError(
-    //         error,
-    //         'Failed to enroll user',
-    //         'User enrollment not supported by this device type'
-    //       );
-    //     }
-    //   }
-    //   @ApiOperation({ summary: 'Create or update a user on a device' })
-    //   @ApiResponse({ 
-    //     status: HttpStatus.CREATED, 
-    //     description: 'User created/updated successfully',
-    //     type: Object
-    //   })
-    //   @ApiResponse({ 
-    //     status: HttpStatus.BAD_REQUEST, 
-    //     description: 'Invalid input data',
-    //     type: ErrorResponseDto
-    //   })
-    //   @ApiResponse({ 
-    //     status: HttpStatus.NOT_FOUND, 
-    //     description: 'Device not found',
-    //     type: ErrorResponseDto
-    //   })
-    //   @ApiResponse({ 
-    //     status: HttpStatus.NOT_IMPLEMENTED, 
-    //     description: 'Feature not implemented on this device',
-    //     type: ErrorResponseDto
-    //   })
-    //   @Post('devices/:deviceId/users')
-    //   async setUser(
-    //     @Param('deviceId') deviceId: string,
-    //     @Body(new ValidationPipe({ transform: true })) userDto: SetUserDto
-    //   ): Promise<{ success: boolean; message: string }> {
-    //     try {
-    //       const result = await this.biometricService.setUser?.(
-    //         deviceId,
-    //         userDto.uid,
-    //         userDto.userId,
-    //         userDto.name,
-    //         userDto.password,
-    //         userDto.role,
-    //         userDto.cardno
-    //       );
-    //       return { 
-    //         success: result,
-    //         message: result 
-    //           ? `User ${userDto.userId} created/updated successfully` 
-    //           : `Failed to create/update user ${userDto.userId}`
-    //       };
-    //     } catch (error: unknown) {
-    //       return this.handleError(
-    //         error,
-    //         'Failed to create/update user',
-    //         'User creation not supported by this device type'
-    //       );
-    //     }
-    //   }
     async deleteUser(deviceId, userId) {
         try {
-            const result = await this.biometricService.deleteUser(deviceId, userId);
-            return {
-                success: result,
-                message: result ? `User ${userId} successfully deleted` : `Failed to delete user ${userId}`
-            };
+            // Get the appropriate service based on the device ID
+            const service = await this.biometricsFactory.getServiceByDeviceId(deviceId);
+            const result = await service.deleteUser(deviceId, userId);
+            return { success: result };
         }
         catch (error) {
             return this.handleError(error, 'Failed to delete user', 'User deletion not supported by this device type');
         }
     }
-    //   @ApiOperation({ summary: 'Verify a fingerprint' })
-    //   @ApiResponse({ status: HttpStatus.OK, description: 'Verification result' })
-    //   @ApiResponse({ 
-    //     status: HttpStatus.BAD_REQUEST, 
-    //     description: 'Invalid input data',
-    //     type: ErrorResponseDto
-    //   })
-    //   @ApiResponse({ 
-    //     status: HttpStatus.NOT_FOUND, 
-    //     description: 'Device not found',
-    //     type: ErrorResponseDto
-    //   })
-    //   @ApiResponse({ 
-    //     status: HttpStatus.NOT_IMPLEMENTED, 
-    //     description: 'Feature not implemented on this device',
-    //     type: ErrorResponseDto
-    //   })
-    //   @Post('verify')
-    //   async verifyFingerprint(
-    //     @Body(new ValidationPipe({ transform: true })) verifyDto: VerifyFingerprintDto
-    //   ): Promise<{ verified: boolean; userId: string }> {
-    //     try {
-    //       const result = await this.biometricService.verifyFingerprint(
-    //         verifyDto.deviceId,
-    //         verifyDto.template
-    //       );
-    //       return { 
-    //         verified: result,
-    //         userId: verifyDto.template.userId
-    //       };
-    //     } catch (error: unknown) {
-    //       return this.handleError(
-    //         error,
-    //         'Failed to verify fingerprint',
-    //         'Fingerprint verification not supported by this device type'
-    //       );
-    //     }
-    //   }
-    //   @ApiOperation({ summary: 'Sync users between two devices' })
-    //   @ApiResponse({ status: HttpStatus.OK, description: 'Users synced successfully' })
-    //   @ApiResponse({ 
-    //     status: HttpStatus.BAD_REQUEST, 
-    //     description: 'Invalid input data',
-    //     type: ErrorResponseDto
-    //   })
-    //   @ApiResponse({ 
-    //     status: HttpStatus.NOT_FOUND, 
-    //     description: 'Device not found',
-    //     type: ErrorResponseDto
-    //   })
-    //   @ApiResponse({ 
-    //     status: HttpStatus.NOT_IMPLEMENTED, 
-    //     description: 'Feature not implemented on this device',
-    //     type: ErrorResponseDto
-    //   })
-    //   @Post('devices/sync')
-    //   async syncUsers(
-    //     @Body(new ValidationPipe({ transform: true })) syncUsersDto: SyncUsersDto
-    //   ): Promise<{ syncedCount: number; success: boolean; message: string }> {
-    //     try {
-    //       const count = await this.biometricService.syncUsers?.(
-    //         syncUsersDto.sourceDeviceId,
-    //         syncUsersDto.targetDeviceId
-    //       );
-    //       return { 
-    //         syncedCount: count,
-    //         success: count > 0,
-    //         message: count > 0 
-    //           ? `Successfully synced ${count} users` 
-    //           : 'No users were synced'
-    //       };
-    //     } catch (error: unknown) {
-    //       return this.handleError(
-    //         error,
-    //         'Failed to sync users',
-    //         'User synchronization not supported by this device type'
-    //       );
-    //     }
-    //   }
-    // =============================================
-    // Data Operation Endpoints
-    // =============================================
     async getUsers(deviceId) {
         try {
-            return await this.biometricService.getUsers(deviceId);
+            // Get the appropriate service based on the device ID
+            const service = await this.biometricsFactory.getServiceByDeviceId(deviceId);
+            return await service.getUsers(deviceId);
         }
         catch (error) {
-            return this.handleError(error, 'Failed to get users', 'User listing not supported by this device type');
+            return this.handleError(error, 'Failed to get users', 'User retrieval not supported by this device type');
         }
     }
-    async getAttendanceRecords(deviceId, startDate, endDate) {
+    async getAttendanceRecords(deviceId, startDateParam, endDateParam) {
         try {
-            const records = await this.biometricService.getAttendanceRecords(deviceId, startDate ? new Date(startDate) : undefined, endDate ? new Date(endDate) : undefined);
+            // Parse dates if provided
+            const startDate = startDateParam ? new Date(startDateParam) : undefined;
+            const endDate = endDateParam ? new Date(endDateParam) : undefined;
+            // Validate date formats
+            if ((startDate && isNaN(startDate.getTime())) ||
+                (endDate && isNaN(endDate.getTime()))) {
+                throw new common_1.HttpException('Invalid date format', common_1.HttpStatus.BAD_REQUEST);
+            }
+            // Get the appropriate service based on the device ID
+            const service = await this.biometricsFactory.getServiceByDeviceId(deviceId);
+            const records = await service.getAttendanceRecords(deviceId, startDate, endDate);
             return {
                 records,
                 count: records.length,
@@ -15912,9 +16234,10 @@ let BiometricsController = class BiometricsController {
         }
     }
     async getAttendanceSize(deviceId) {
-        var _a, _b;
         try {
-            const size = await ((_b = (_a = this.biometricService).getAttendanceSize) === null || _b === void 0 ? void 0 : _b.call(_a, deviceId));
+            // Get the appropriate service based on the device ID
+            const service = await this.biometricsFactory.getServiceByDeviceId(deviceId);
+            const size = await service.getAttendanceSize(deviceId);
             return { size, deviceId };
         }
         catch (error) {
@@ -15923,7 +16246,9 @@ let BiometricsController = class BiometricsController {
     }
     async clearAttendanceRecords(deviceId) {
         try {
-            const result = await this.biometricService.clearAttendanceRecords(deviceId);
+            // Get the appropriate service based on the device ID
+            const service = await this.biometricsFactory.getServiceByDeviceId(deviceId);
+            const result = await service.clearAttendanceRecords(deviceId);
             return {
                 success: result,
                 message: result
@@ -15938,6 +16263,38 @@ let BiometricsController = class BiometricsController {
 };
 exports.BiometricsController = BiometricsController;
 __decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Get fingerprint template for a user' }),
+    (0, swagger_1.ApiResponse)({
+        status: common_1.HttpStatus.OK,
+        description: 'Fingerprint template retrieved successfully',
+        schema: {
+            type: 'object',
+            properties: {
+                id: { type: 'string', example: '1001-0' },
+                userId: { type: 'string', example: '1001' },
+                fingerId: { type: 'number', example: 0 },
+                template: { type: 'string', format: 'binary', description: 'Binary template data' },
+                provider: { type: 'string', example: 'zkteco' }
+            }
+        }
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: common_1.HttpStatus.NOT_FOUND,
+        description: 'Template or device not found',
+        type: error_response_dto_1.ErrorResponseDto
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: common_1.HttpStatus.BAD_REQUEST,
+        description: 'Invalid request',
+        type: error_response_dto_1.ErrorResponseDto
+    }),
+    (0, common_1.Get)('users/fingerprint'),
+    __param(0, (0, common_1.Query)(new common_1.ValidationPipe({ transform: true }))),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [GetFingerprintDto]),
+    __metadata("design:returntype", typeof (_d = typeof Promise !== "undefined" && Promise) === "function" ? _d : Object)
+], BiometricsController.prototype, "getUserFingerprint", null);
+__decorate([
     (0, swagger_1.ApiOperation)({ summary: 'Register a new user on a biometric device' }),
     (0, swagger_1.ApiResponse)({
         status: common_1.HttpStatus.CREATED,
@@ -15947,18 +16304,18 @@ __decorate([
     (0, swagger_1.ApiResponse)({
         status: common_1.HttpStatus.BAD_REQUEST,
         description: 'Invalid input data',
-        type: generalresponse_dto_1.GeneralResponseDto
+        type: error_response_dto_1.ErrorResponseDto
     }),
     (0, swagger_1.ApiResponse)({
         status: common_1.HttpStatus.NOT_FOUND,
         description: 'Device not found',
-        type: generalresponse_dto_1.GeneralResponseDto
+        type: error_response_dto_1.ErrorResponseDto
     }),
     (0, common_1.Post)('users/register'),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [typeof (_b = typeof set_user_dto_1.SetUserDto !== "undefined" && set_user_dto_1.SetUserDto) === "function" ? _b : Object]),
-    __metadata("design:returntype", typeof (_c = typeof Promise !== "undefined" && Promise) === "function" ? _c : Object)
+    __metadata("design:paramtypes", [SetUserDto]),
+    __metadata("design:returntype", typeof (_e = typeof Promise !== "undefined" && Promise) === "function" ? _e : Object)
 ], BiometricsController.prototype, "registerUser", null);
 __decorate([
     (0, swagger_1.ApiOperation)({ summary: 'Connect to a biometric device' }),
@@ -15970,18 +16327,22 @@ __decorate([
     (0, swagger_1.ApiResponse)({
         status: common_1.HttpStatus.BAD_REQUEST,
         description: 'Invalid input data',
-        type: generalresponse_dto_1.GeneralResponseDto
+        type: error_response_dto_1.ErrorResponseDto
     }),
     (0, swagger_1.ApiResponse)({
         status: common_1.HttpStatus.SERVICE_UNAVAILABLE,
         description: 'Device connection failed',
-        type: generalresponse_dto_1.GeneralResponseDto
+        type: error_response_dto_1.ErrorResponseDto
+    }),
+    (0, swagger_1.ApiBody)({
+        type: ConnectDeviceDto,
+        description: 'Device connection parameters'
     }),
     (0, common_1.Post)('devices/connect'),
-    __param(0, (0, common_1.Body)(new common_1.ValidationPipe({ transform: true }))),
+    __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [typeof (_d = typeof connect_device_dto_1.ConnectDeviceDto !== "undefined" && connect_device_dto_1.ConnectDeviceDto) === "function" ? _d : Object]),
-    __metadata("design:returntype", typeof (_e = typeof Promise !== "undefined" && Promise) === "function" ? _e : Object)
+    __metadata("design:paramtypes", [ConnectDeviceDto]),
+    __metadata("design:returntype", typeof (_f = typeof Promise !== "undefined" && Promise) === "function" ? _f : Object)
 ], BiometricsController.prototype, "connectDevice", null);
 __decorate([
     (0, swagger_1.ApiOperation)({ summary: 'Disconnect from a biometric device' }),
@@ -15989,14 +16350,14 @@ __decorate([
     (0, swagger_1.ApiResponse)({
         status: common_1.HttpStatus.NOT_FOUND,
         description: 'Device not found',
-        type: generalresponse_dto_1.GeneralResponseDto
+        type: error_response_dto_1.ErrorResponseDto
     }),
     (0, swagger_1.ApiParam)({ name: 'deviceId', description: 'Device ID to disconnect from' }),
     (0, common_1.Post)('devices/:deviceId/disconnect'),
     __param(0, (0, common_1.Param)('deviceId')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
-    __metadata("design:returntype", typeof (_f = typeof Promise !== "undefined" && Promise) === "function" ? _f : Object)
+    __metadata("design:returntype", typeof (_g = typeof Promise !== "undefined" && Promise) === "function" ? _g : Object)
 ], BiometricsController.prototype, "disconnectDevice", null);
 __decorate([
     (0, swagger_1.ApiOperation)({ summary: 'Get all connected biometric devices' }),
@@ -16008,7 +16369,7 @@ __decorate([
     (0, common_1.Get)('devices'),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
-    __metadata("design:returntype", typeof (_g = typeof Promise !== "undefined" && Promise) === "function" ? _g : Object)
+    __metadata("design:returntype", typeof (_h = typeof Promise !== "undefined" && Promise) === "function" ? _h : Object)
 ], BiometricsController.prototype, "getConnectedDevices", null);
 __decorate([
     (0, swagger_1.ApiOperation)({ summary: 'Get device information' }),
@@ -16016,14 +16377,14 @@ __decorate([
     (0, swagger_1.ApiResponse)({
         status: common_1.HttpStatus.NOT_FOUND,
         description: 'Device not found',
-        type: generalresponse_dto_1.GeneralResponseDto
+        type: error_response_dto_1.ErrorResponseDto
     }),
     (0, swagger_1.ApiParam)({ name: 'deviceId', description: 'Target device ID' }),
     (0, common_1.Get)('devices/:deviceId/info'),
     __param(0, (0, common_1.Param)('deviceId')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
-    __metadata("design:returntype", typeof (_h = typeof Promise !== "undefined" && Promise) === "function" ? _h : Object)
+    __metadata("design:returntype", typeof (_j = typeof Promise !== "undefined" && Promise) === "function" ? _j : Object)
 ], BiometricsController.prototype, "getDeviceInfo", null);
 __decorate([
     (0, swagger_1.ApiOperation)({ summary: 'Set device time' }),
@@ -16031,24 +16392,24 @@ __decorate([
     (0, swagger_1.ApiResponse)({
         status: common_1.HttpStatus.BAD_REQUEST,
         description: 'Invalid time format',
-        type: generalresponse_dto_1.GeneralResponseDto
+        type: error_response_dto_1.ErrorResponseDto
     }),
     (0, swagger_1.ApiResponse)({
         status: common_1.HttpStatus.NOT_FOUND,
         description: 'Device not found',
-        type: generalresponse_dto_1.GeneralResponseDto
+        type: error_response_dto_1.ErrorResponseDto
     }),
     (0, swagger_1.ApiResponse)({
         status: common_1.HttpStatus.NOT_IMPLEMENTED,
         description: 'Feature not implemented on this device',
-        type: generalresponse_dto_1.GeneralResponseDto
+        type: error_response_dto_1.ErrorResponseDto
     }),
     (0, swagger_1.ApiParam)({ name: 'deviceId', description: 'Target device ID' }),
     (0, common_1.Put)('devices/:deviceId/time'),
     __param(0, (0, common_1.Param)('deviceId')),
-    __param(1, (0, common_1.Body)(new common_1.ValidationPipe({ transform: true }))),
+    __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, typeof (_j = typeof set_time_dto_1.SetTimeDto !== "undefined" && set_time_dto_1.SetTimeDto) === "function" ? _j : Object]),
+    __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", typeof (_k = typeof Promise !== "undefined" && Promise) === "function" ? _k : Object)
 ], BiometricsController.prototype, "setTime", null);
 __decorate([
@@ -16057,17 +16418,17 @@ __decorate([
     (0, swagger_1.ApiResponse)({
         status: common_1.HttpStatus.NOT_FOUND,
         description: 'Device or user not found',
-        type: generalresponse_dto_1.GeneralResponseDto
+        type: error_response_dto_1.ErrorResponseDto
     }),
     (0, swagger_1.ApiResponse)({
         status: common_1.HttpStatus.BAD_REQUEST,
         description: 'Invalid user ID format',
-        type: generalresponse_dto_1.GeneralResponseDto
+        type: error_response_dto_1.ErrorResponseDto
     }),
     (0, swagger_1.ApiResponse)({
         status: common_1.HttpStatus.INTERNAL_SERVER_ERROR,
         description: 'Error deleting user',
-        type: generalresponse_dto_1.GeneralResponseDto
+        type: error_response_dto_1.ErrorResponseDto
     }),
     (0, swagger_1.ApiParam)({ name: 'deviceId', description: 'Target device ID' }),
     (0, swagger_1.ApiParam)({ name: 'userId', description: 'User ID to delete' }),
@@ -16083,17 +16444,17 @@ __decorate([
     (0, swagger_1.ApiResponse)({
         status: common_1.HttpStatus.OK,
         description: 'List of user IDs',
-        type: [String]
+        type: [Object]
     }),
     (0, swagger_1.ApiResponse)({
         status: common_1.HttpStatus.NOT_FOUND,
         description: 'Device not found',
-        type: generalresponse_dto_1.GeneralResponseDto
+        type: error_response_dto_1.ErrorResponseDto
     }),
     (0, swagger_1.ApiResponse)({
         status: common_1.HttpStatus.NOT_IMPLEMENTED,
         description: 'Feature not implemented on this device',
-        type: generalresponse_dto_1.GeneralResponseDto
+        type: error_response_dto_1.ErrorResponseDto
     }),
     (0, swagger_1.ApiParam)({ name: 'deviceId', description: 'Target device ID' }),
     (0, common_1.Get)('devices/:deviceId/users'),
@@ -16112,12 +16473,12 @@ __decorate([
     (0, swagger_1.ApiResponse)({
         status: common_1.HttpStatus.NOT_FOUND,
         description: 'Device not found',
-        type: generalresponse_dto_1.GeneralResponseDto
+        type: error_response_dto_1.ErrorResponseDto
     }),
     (0, swagger_1.ApiResponse)({
         status: common_1.HttpStatus.NOT_IMPLEMENTED,
         description: 'Feature not implemented on this device',
-        type: generalresponse_dto_1.GeneralResponseDto
+        type: error_response_dto_1.ErrorResponseDto
     }),
     (0, swagger_1.ApiParam)({ name: 'deviceId', description: 'Target device ID' }),
     (0, swagger_1.ApiQuery)({ name: 'startDate', required: false, description: 'Filter by start date (ISO format)' }),
@@ -16140,12 +16501,12 @@ __decorate([
     (0, swagger_1.ApiResponse)({
         status: common_1.HttpStatus.NOT_FOUND,
         description: 'Device not found',
-        type: generalresponse_dto_1.GeneralResponseDto
+        type: error_response_dto_1.ErrorResponseDto
     }),
     (0, swagger_1.ApiResponse)({
         status: common_1.HttpStatus.NOT_IMPLEMENTED,
         description: 'Feature not implemented on this device',
-        type: generalresponse_dto_1.GeneralResponseDto
+        type: error_response_dto_1.ErrorResponseDto
     }),
     (0, swagger_1.ApiParam)({ name: 'deviceId', description: 'Target device ID' }),
     (0, common_1.Get)('devices/:deviceId/attendance/size'),
@@ -16160,12 +16521,12 @@ __decorate([
     (0, swagger_1.ApiResponse)({
         status: common_1.HttpStatus.NOT_FOUND,
         description: 'Device not found',
-        type: generalresponse_dto_1.GeneralResponseDto
+        type: error_response_dto_1.ErrorResponseDto
     }),
     (0, swagger_1.ApiResponse)({
         status: common_1.HttpStatus.NOT_IMPLEMENTED,
         description: 'Feature not implemented on this device',
-        type: generalresponse_dto_1.GeneralResponseDto
+        type: error_response_dto_1.ErrorResponseDto
     }),
     (0, swagger_1.ApiParam)({ name: 'deviceId', description: 'Target device ID' }),
     (0, common_1.Delete)('devices/:deviceId/attendance'),
@@ -16179,153 +16540,8 @@ exports.BiometricsController = BiometricsController = __decorate([
     (0, common_1.Controller)(),
     (0, common_1.UseInterceptors)(new timeout_interceptor_1.TimeoutInterceptor(30)),
     __param(0, (0, common_1.Inject)('BIOMETRIC_SERVICE')),
-    __metadata("design:paramtypes", [typeof (_a = typeof biometric_interface_1.IBiometricService !== "undefined" && biometric_interface_1.IBiometricService) === "function" ? _a : Object])
+    __metadata("design:paramtypes", [typeof (_a = typeof biometric_interface_1.IBiometricService !== "undefined" && biometric_interface_1.IBiometricService) === "function" ? _a : Object, typeof (_b = typeof biometrics_factory_service_1.BiometricsFactoryService !== "undefined" && biometrics_factory_service_1.BiometricsFactoryService) === "function" ? _b : Object, typeof (_c = typeof biometric_devices_service_1.BiometricDevicesService !== "undefined" && biometric_devices_service_1.BiometricDevicesService) === "function" ? _c : Object])
 ], BiometricsController);
-
-
-/***/ }),
-/* 220 */
-/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
-
-
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-var __metadata = (this && this.__metadata) || function (k, v) {
-    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.ConnectDeviceDto = void 0;
-const swagger_1 = __webpack_require__(8);
-const class_validator_1 = __webpack_require__(24);
-class ConnectDeviceDto {
-}
-exports.ConnectDeviceDto = ConnectDeviceDto;
-__decorate([
-    (0, swagger_1.ApiProperty)({
-        description: 'IP address of the biometric device',
-        example: '192.168.1.100'
-    }),
-    (0, class_validator_1.IsNotEmpty)(),
-    (0, class_validator_1.IsIP)(4, { message: 'IP address must be a valid IPv4 address' }),
-    __metadata("design:type", String)
-], ConnectDeviceDto.prototype, "ipAddress", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({
-        description: 'Port number of the biometric device',
-        example: 4370,
-        minimum: 1,
-        maximum: 65535
-    }),
-    (0, class_validator_1.IsNotEmpty)(),
-    (0, class_validator_1.IsInt)(),
-    (0, class_validator_1.Min)(1),
-    (0, class_validator_1.Max)(65535),
-    __metadata("design:type", Number)
-], ConnectDeviceDto.prototype, "port", void 0);
-
-
-/***/ }),
-/* 221 */
-/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
-
-
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-var __metadata = (this && this.__metadata) || function (k, v) {
-    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.SetTimeDto = void 0;
-const swagger_1 = __webpack_require__(8);
-const class_validator_1 = __webpack_require__(24);
-class SetTimeDto {
-}
-exports.SetTimeDto = SetTimeDto;
-__decorate([
-    (0, swagger_1.ApiProperty)({
-        description: 'Time to set on the device (ISO format)',
-        example: '2025-04-08T12:00:00.000Z'
-    }),
-    (0, class_validator_1.IsNotEmpty)(),
-    (0, class_validator_1.IsDateString)(),
-    __metadata("design:type", String)
-], SetTimeDto.prototype, "time", void 0);
-
-
-/***/ }),
-/* 222 */
-/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
-
-
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-var __metadata = (this && this.__metadata) || function (k, v) {
-    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.SetUserDto = void 0;
-const swagger_1 = __webpack_require__(8);
-const class_validator_1 = __webpack_require__(24);
-class SetUserDto {
-}
-exports.SetUserDto = SetUserDto;
-__decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Target device ID' }),
-    (0, class_validator_1.IsString)(),
-    (0, class_validator_1.IsNotEmpty)(),
-    __metadata("design:type", String)
-], SetUserDto.prototype, "deviceId", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ description: 'User ID', example: '1001' }),
-    (0, class_validator_1.IsString)(),
-    (0, class_validator_1.IsNotEmpty)(),
-    __metadata("design:type", String)
-], SetUserDto.prototype, "userId", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ description: 'User name', example: 'John Doe' }),
-    (0, class_validator_1.IsString)(),
-    (0, class_validator_1.IsNotEmpty)(),
-    (0, class_validator_1.Length)(1, 24, { message: 'Name must be between 1 and 24 characters' }),
-    __metadata("design:type", String)
-], SetUserDto.prototype, "name", void 0);
-__decorate([
-    (0, swagger_1.ApiPropertyOptional)({ description: 'User password (max 8 characters)', example: '1234' }),
-    (0, class_validator_1.IsString)(),
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.Length)(0, 8, { message: 'Password must be less than 8 characters' }),
-    __metadata("design:type", String)
-], SetUserDto.prototype, "password", void 0);
-__decorate([
-    (0, swagger_1.ApiPropertyOptional)({ description: 'Card number', example: '7654321' }),
-    (0, class_validator_1.IsString)(),
-    (0, class_validator_1.IsOptional)(),
-    __metadata("design:type", String)
-], SetUserDto.prototype, "cardNumber", void 0);
-__decorate([
-    (0, swagger_1.ApiPropertyOptional)({
-        description: 'User role (0 = normal user, 14 = admin)',
-        example: 0,
-        minimum: 0,
-        maximum: 14
-    }),
-    (0, class_validator_1.IsNumber)(),
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.Min)(0),
-    (0, class_validator_1.Max)(14),
-    __metadata("design:type", Number)
-], SetUserDto.prototype, "role", void 0);
 
 
 /***/ }),
@@ -16343,10 +16559,71 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.ErrorResponseDto = void 0;
+const swagger_1 = __webpack_require__(8);
+/**
+ * DTO for biometrics API error responses
+ */
+class ErrorResponseDto {
+}
+exports.ErrorResponseDto = ErrorResponseDto;
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'HTTP status code of the error response',
+        example: 400,
+        type: Number,
+    }),
+    __metadata("design:type", Number)
+], ErrorResponseDto.prototype, "statusCode", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Error message or messages describing the issue',
+        example: 'Failed to connect to device',
+        oneOf: [
+            { type: 'string' },
+            { type: 'array', items: { type: 'string' } }
+        ]
+    }),
+    __metadata("design:type", Object)
+], ErrorResponseDto.prototype, "message", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Error code for client identification',
+        example: 'DEVICE_CONNECTION_ERROR',
+        type: String,
+    }),
+    __metadata("design:type", String)
+], ErrorResponseDto.prototype, "code", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Additional error details or context',
+        example: 'Device might be offline or credentials are invalid',
+        type: String,
+        required: false
+    }),
+    __metadata("design:type", String)
+], ErrorResponseDto.prototype, "detail", void 0);
+
+
+/***/ }),
+/* 224 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.TimeoutInterceptor = void 0;
 const common_1 = __webpack_require__(5);
-const rxjs_1 = __webpack_require__(224);
-const operators_1 = __webpack_require__(225);
+const rxjs_1 = __webpack_require__(225);
+const operators_1 = __webpack_require__(96);
 let TimeoutInterceptor = class TimeoutInterceptor {
     constructor(timeoutSeconds = 30) {
         this.timeoutSeconds = timeoutSeconds;
@@ -16368,16 +16645,10 @@ exports.TimeoutInterceptor = TimeoutInterceptor = __decorate([
 
 
 /***/ }),
-/* 224 */
-/***/ ((module) => {
-
-module.exports = require("rxjs");
-
-/***/ }),
 /* 225 */
 /***/ ((module) => {
 
-module.exports = require("rxjs/operators");
+module.exports = require("rxjs");
 
 /***/ }),
 /* 226 */
@@ -16389,6 +16660,112 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 
 /***/ }),
 /* 227 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
+var _a, _b;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.BiometricDevicesService = void 0;
+const base_service_1 = __webpack_require__(31);
+const users_service_1 = __webpack_require__(30);
+const common_1 = __webpack_require__(5);
+const typeorm_1 = __webpack_require__(16);
+const typeorm_2 = __webpack_require__(25);
+const biometric_device_entity_1 = __webpack_require__(74);
+let BiometricDevicesService = class BiometricDevicesService extends base_service_1.BaseService {
+    constructor(biometricDevicesRepository, usersService) {
+        super(biometricDevicesRepository, usersService);
+        this.biometricDevicesRepository = biometricDevicesRepository;
+        this.usersService = usersService;
+    }
+};
+exports.BiometricDevicesService = BiometricDevicesService;
+exports.BiometricDevicesService = BiometricDevicesService = __decorate([
+    (0, common_1.Injectable)(),
+    __param(0, (0, typeorm_1.InjectRepository)(biometric_device_entity_1.BiometricDevice)),
+    __metadata("design:paramtypes", [typeof (_a = typeof typeorm_2.Repository !== "undefined" && typeorm_2.Repository) === "function" ? _a : Object, typeof (_b = typeof users_service_1.UsersService !== "undefined" && users_service_1.UsersService) === "function" ? _b : Object])
+], BiometricDevicesService);
+
+
+/***/ }),
+/* 228 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
+var _a, _b, _c;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.BiometricsFactoryService = void 0;
+const common_1 = __webpack_require__(5);
+const biometric_interface_1 = __webpack_require__(226);
+const biometric_devices_service_1 = __webpack_require__(227);
+let BiometricsFactoryService = class BiometricsFactoryService {
+    constructor(zktecoService, anvizService, biometricDevicesService) {
+        this.zktecoService = zktecoService;
+        this.anvizService = anvizService;
+        this.biometricDevicesService = biometricDevicesService;
+    }
+    /**
+     * Get the appropriate biometric service based on device type
+     * @param deviceType Type of biometric device (zkteco or anviz)
+     */
+    getService(deviceType) {
+        switch (deviceType.toLowerCase()) {
+            case 'anviz':
+                return this.anvizService;
+            case 'zkteco':
+            default:
+                return this.zktecoService;
+        }
+    }
+    /**
+     * Get the appropriate biometric service for an existing device
+     * @param deviceId Device identifier
+     */
+    async getServiceByDeviceId(deviceId) {
+        // Look up the device in the database
+        const device = await this.biometricDevicesService.findOneBy({ id: deviceId });
+        if (!device) {
+            throw new Error(`Device with ID ${deviceId} not found`);
+        }
+        // Return the appropriate service based on the provider
+        return this.getService(device.provider);
+    }
+};
+exports.BiometricsFactoryService = BiometricsFactoryService;
+exports.BiometricsFactoryService = BiometricsFactoryService = __decorate([
+    (0, common_1.Injectable)(),
+    __param(0, (0, common_1.Inject)('ZKTECO_SERVICE')),
+    __param(1, (0, common_1.Inject)('ANVIZ_SERVICE')),
+    __metadata("design:paramtypes", [typeof (_a = typeof biometric_interface_1.IBiometricService !== "undefined" && biometric_interface_1.IBiometricService) === "function" ? _a : Object, typeof (_b = typeof biometric_interface_1.IBiometricService !== "undefined" && biometric_interface_1.IBiometricService) === "function" ? _b : Object, typeof (_c = typeof biometric_devices_service_1.BiometricDevicesService !== "undefined" && biometric_devices_service_1.BiometricDevicesService) === "function" ? _c : Object])
+], BiometricsFactoryService);
+
+
+/***/ }),
+/* 229 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -16431,7 +16808,7 @@ exports.BiometricTemplate = BiometricTemplate = __decorate([
 
 
 /***/ }),
-/* 228 */
+/* 230 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -16447,32 +16824,96 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-var _a, _b;
+var AttendanceTrackingService_1;
+var _a, _b, _c, _d, _e;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.BiometricDevicesService = void 0;
-const base_service_1 = __webpack_require__(31);
-const users_service_1 = __webpack_require__(30);
+exports.AttendanceTrackingService = void 0;
+const attendance_punch_entity_1 = __webpack_require__(73);
 const common_1 = __webpack_require__(5);
+const event_emitter_1 = __webpack_require__(139);
 const typeorm_1 = __webpack_require__(16);
 const typeorm_2 = __webpack_require__(25);
 const biometric_device_entity_1 = __webpack_require__(74);
-let BiometricDevicesService = class BiometricDevicesService extends base_service_1.BaseService {
-    constructor(biometricDevicesRepository, usersService) {
-        super(biometricDevicesRepository, usersService);
-        this.biometricDevicesRepository = biometricDevicesRepository;
-        this.usersService = usersService;
+const biometric_interface_1 = __webpack_require__(226);
+let AttendanceTrackingService = AttendanceTrackingService_1 = class AttendanceTrackingService {
+    constructor(attendancePunchRepository, deviceRepository, eventEmitter) {
+        this.attendancePunchRepository = attendancePunchRepository;
+        this.deviceRepository = deviceRepository;
+        this.eventEmitter = eventEmitter;
+        this.logger = new common_1.Logger(AttendanceTrackingService_1.name);
+    }
+    /**
+     * Handle attendance events from any biometric device
+     * @param record Attendance record from device
+     */
+    async handleAttendanceEvent(record) {
+        try {
+            // Get device information
+            const device = await this.deviceRepository.findOneBy({ id: record.deviceId });
+            if (!device) {
+                this.logger.warn(`Received attendance record from unknown device ID: ${record.deviceId}`);
+                return;
+            }
+            //   // Create and save attendance punch
+            //   const attendancePunch = this.attendancePunchRepository.create({
+            //     punchType: this.mapAttendanceType(record.type),
+            //     biometricDevice: device,
+            //     // Removed verificationMode as it doesn't exist in the entity
+            //     data: JSON.stringify(record)
+            //   });
+            //   const savedPunch = await this.attendancePunchRepository.save(attendancePunch);
+            //   this.logger.log(`Recorded attendance for user ${record.userId} from device ${device.serialNumber || device.id}`);
+            //   // Emit event for other services to react to
+            //   this.eventEmitter.emit('attendance.recorded', {
+            //     ...savedPunch,
+            //     deviceInfo: {
+            //       id: device.id,
+            //       ipAddress: device.ipAddress,
+            //       model: device.model,
+            //       serialNumber: device.serialNumber,
+            //       provider: device.provider
+            //     }
+            //   });
+        }
+        catch (error) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            this.logger.error(`Error recording attendance: ${errorMessage}`);
+        }
+    }
+    /**
+     * Map device-specific attendance type codes to standardized types
+     * @param attendanceType Type code from device
+     * @returns Standardized attendance type string
+     */
+    mapAttendanceType(attendanceType) {
+        switch (attendanceType) {
+            case 0: return 'CHECK_IN';
+            case 1: return 'CHECK_OUT';
+            case 2: return 'BREAK_OUT';
+            case 3: return 'BREAK_IN';
+            case 4: return 'OVERTIME_IN';
+            case 5: return 'OVERTIME_OUT';
+            default: return 'CHECK_IN';
+        }
     }
 };
-exports.BiometricDevicesService = BiometricDevicesService;
-exports.BiometricDevicesService = BiometricDevicesService = __decorate([
+exports.AttendanceTrackingService = AttendanceTrackingService;
+__decorate([
+    (0, event_emitter_1.OnEvent)('biometric.attendance'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [typeof (_d = typeof biometric_interface_1.AttendanceRecord !== "undefined" && biometric_interface_1.AttendanceRecord) === "function" ? _d : Object]),
+    __metadata("design:returntype", typeof (_e = typeof Promise !== "undefined" && Promise) === "function" ? _e : Object)
+], AttendanceTrackingService.prototype, "handleAttendanceEvent", null);
+exports.AttendanceTrackingService = AttendanceTrackingService = AttendanceTrackingService_1 = __decorate([
     (0, common_1.Injectable)(),
-    __param(0, (0, typeorm_1.InjectRepository)(biometric_device_entity_1.BiometricDevice)),
-    __metadata("design:paramtypes", [typeof (_a = typeof typeorm_2.Repository !== "undefined" && typeorm_2.Repository) === "function" ? _a : Object, typeof (_b = typeof users_service_1.UsersService !== "undefined" && users_service_1.UsersService) === "function" ? _b : Object])
-], BiometricDevicesService);
+    __param(0, (0, typeorm_1.InjectRepository)(attendance_punch_entity_1.AttendancePunch)),
+    __param(1, (0, typeorm_1.InjectRepository)(biometric_device_entity_1.BiometricDevice)),
+    __metadata("design:paramtypes", [typeof (_a = typeof typeorm_2.Repository !== "undefined" && typeorm_2.Repository) === "function" ? _a : Object, typeof (_b = typeof typeorm_2.Repository !== "undefined" && typeorm_2.Repository) === "function" ? _b : Object, typeof (_c = typeof event_emitter_1.EventEmitter2 !== "undefined" && event_emitter_1.EventEmitter2) === "function" ? _c : Object])
+], AttendanceTrackingService);
 
 
 /***/ }),
-/* 229 */
+/* 231 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -16489,10 +16930,10 @@ var BiometricsPollingService_1;
 var _a, _b;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.BiometricsPollingService = void 0;
-const attendance_event_1 = __webpack_require__(230);
+const attendance_event_1 = __webpack_require__(232);
 const common_1 = __webpack_require__(5);
 const config_1 = __webpack_require__(6);
-const event_emitter_1 = __webpack_require__(136);
+const event_emitter_1 = __webpack_require__(139);
 let BiometricsPollingService = BiometricsPollingService_1 = class BiometricsPollingService {
     constructor(configService, eventEmitter) {
         this.configService = configService;
@@ -16504,7 +16945,7 @@ let BiometricsPollingService = BiometricsPollingService_1 = class BiometricsPoll
     }
     // Lifecycle hooks
     onModuleInit() {
-        this.logger.log('Biometric polling service initialized');
+        // this.logger.log('Biometric polling service initialized');
     }
     onModuleDestroy() {
         this.stopAllPolling();
@@ -16595,7 +17036,7 @@ let BiometricsPollingService = BiometricsPollingService_1 = class BiometricsPoll
                             attendances.push(standardizedRecord);
                         });
                         // Emit event for new records
-                        this.eventEmitter.emit(attendance_event_1.ATTENDANCE_EVENTS.ATTENDANCE_RECORDED, new attendance_event_1.AttendanceEvent(attendances, deviceId));
+                        this.eventEmitter.emit(attendance_event_1.ATTENDANCE_EVENTS.ATTENDANCE_RECORDED, new attendance_event_1.AttendanceRecordedEvent(attendances, deviceId));
                     }
                     // Update counters
                     // lastAttendanceCount = currentCount;
@@ -16646,26 +17087,42 @@ exports.BiometricsPollingService = BiometricsPollingService = BiometricsPollingS
 
 
 /***/ }),
-/* 230 */
+/* 232 */
 /***/ ((__unused_webpack_module, exports) => {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.AttendanceEvent = exports.ATTENDANCE_EVENTS = void 0;
+exports.FinalWorkHoursCalculationEvent = exports.AttendanceProcessedEvent = exports.AttendanceRecordedEvent = exports.ATTENDANCE_EVENTS = void 0;
 exports.ATTENDANCE_EVENTS = {
-    ATTENDANCE_RECORDED: 'attendance.recorded'
+    ATTENDANCE_RECORDED: 'attendance.recorded',
+    ATTENDANCE_PROCESSED: 'attendance.processed',
+    FINAL_WORK_HOURS_CALCULATION: 'attendance.final_work_hours_calculation'
 };
-class AttendanceEvent {
+class AttendanceRecordedEvent {
     constructor(attendances, deviceId) {
         this.attendances = attendances;
         this.deviceId = deviceId;
     }
 }
-exports.AttendanceEvent = AttendanceEvent;
+exports.AttendanceRecordedEvent = AttendanceRecordedEvent;
+class AttendanceProcessedEvent {
+    constructor(attendances) {
+        this.attendances = attendances;
+    }
+}
+exports.AttendanceProcessedEvent = AttendanceProcessedEvent;
+class FinalWorkHoursCalculationEvent {
+    constructor(attendanceIds, batchId, processedBy) {
+        this.attendanceIds = attendanceIds;
+        this.batchId = batchId;
+        this.processedBy = processedBy;
+    }
+}
+exports.FinalWorkHoursCalculationEvent = FinalWorkHoursCalculationEvent;
 
 
 /***/ }),
-/* 231 */
+/* 233 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -16688,13 +17145,13 @@ exports.ZKTecoBiometricsService = void 0;
 const common_1 = __webpack_require__(5);
 const config_1 = __webpack_require__(6);
 const typeorm_1 = __webpack_require__(16);
-const ZKLib = __webpack_require__(232);
-const event_emitter_1 = __webpack_require__(136);
+const ZKLib = __webpack_require__(234);
+const event_emitter_1 = __webpack_require__(139);
 const typeorm_2 = __webpack_require__(25);
 const biometric_device_entity_1 = __webpack_require__(74);
-const biometric_template_entity_1 = __webpack_require__(227);
-const base_biometrics_service_1 = __webpack_require__(233);
-const biometrics_polling_service_1 = __webpack_require__(229);
+const biometric_template_entity_1 = __webpack_require__(229);
+const base_biometrics_service_1 = __webpack_require__(235);
+const biometrics_polling_service_1 = __webpack_require__(231);
 /**
  * ZKTeco implementation of the biometric service
  * Handles communication with ZKTeco biometric devices
@@ -17792,13 +18249,13 @@ exports.ZKTecoBiometricsService = ZKTecoBiometricsService = ZKTecoBiometricsServ
 
 
 /***/ }),
-/* 232 */
+/* 234 */
 /***/ ((module) => {
 
 module.exports = require("zkteco-js");
 
 /***/ }),
-/* 233 */
+/* 235 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
@@ -18000,7 +18457,495 @@ exports.BaseBiometricsService = BaseBiometricsService;
 
 
 /***/ }),
-/* 234 */
+/* 236 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
+var _a, _b, _c;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.AnvizBiometricService = void 0;
+const common_1 = __webpack_require__(5);
+const event_emitter_1 = __webpack_require__(139);
+const typeorm_1 = __webpack_require__(16);
+const typeorm_2 = __webpack_require__(25);
+const biometric_device_entity_1 = __webpack_require__(74);
+const biometric_template_entity_1 = __webpack_require__(229);
+const base_biometrics_service_1 = __webpack_require__(235);
+const anviz_client_1 = __webpack_require__(237);
+let AnvizBiometricService = class AnvizBiometricService extends base_biometrics_service_1.BaseBiometricsService {
+    constructor(deviceRepository, templateRepository, eventEmitter) {
+        super(deviceRepository, templateRepository, eventEmitter);
+        this.deviceRepository = deviceRepository;
+        this.templateRepository = templateRepository;
+        this.eventEmitter = eventEmitter;
+        this.clients = new Map();
+    }
+    // ─────────────────────────────────────────────────────────────────────────────
+    // Core device management
+    // ─────────────────────────────────────────────────────────────────────────────
+    async connectWithRetry(deviceId, ipAddress, port) {
+        var _a;
+        const maxAttempts = 3;
+        let lastError;
+        const channel = Buffer.from([0xFF, 0xFF, 0xFF, 0xFF]);
+        const client = new anviz_client_1.AnvizClient(ipAddress, port);
+        for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+            try {
+                this.logger.log(`Connecting to ${deviceId} (attempt ${attempt})`);
+                await client.connect(3000);
+                this.clients.set(deviceId, { client, channel });
+                const info = await client.getDeviceInfo(channel);
+                const saved = (_a = await this.deviceRepository.findOne({
+                    where: { ipAddress, port }
+                })) !== null && _a !== void 0 ? _a : this.deviceRepository.create({ ipAddress, port });
+                await this.deviceRepository.save(saved);
+                const device = {
+                    id: deviceId,
+                    ipAddress,
+                    port,
+                    model: undefined,
+                    serialNumber: undefined,
+                    isConnected: true,
+                    firmware: info.firmwareVersion,
+                    platform: undefined,
+                    deviceVersion: undefined,
+                    os: undefined,
+                };
+                this.devices.set(deviceId, device);
+                this.logger.log(`Connected to device ${deviceId}`);
+                return device;
+            }
+            catch (err) {
+                lastError = err;
+                this.logger.warn(`Attempt ${attempt} failed: ${this.formatErrorMessage(err)}`);
+                await new Promise(res => setTimeout(res, 1000));
+            }
+        }
+        throw new base_biometrics_service_1.BiometricException(`Failed to connect to device ${deviceId}: ${this.formatErrorMessage(lastError)}`, common_1.HttpStatus.GATEWAY_TIMEOUT);
+    }
+    async connect(ipAddress, port) {
+        const deviceId = this.generateDeviceId(ipAddress, port);
+        if (this.connections.has(deviceId)) {
+            return this.devices.get(deviceId);
+        }
+        return this.connectWithRetry(deviceId, ipAddress, port);
+    }
+    async disconnect(deviceId) {
+        const entry = this.clients.get(deviceId);
+        if (!entry)
+            return false;
+        try {
+            entry.client.disconnect();
+            this.clients.delete(deviceId);
+            const dev = this.devices.get(deviceId);
+            if (dev)
+                dev.isConnected = false;
+            this.devices.delete(deviceId);
+            this.logger.log(`Disconnected device ${deviceId}`);
+            return true;
+        }
+        catch (err) {
+            this.logger.error(`Error disconnecting ${deviceId}: ${this.formatErrorMessage(err)}`);
+            return false;
+        }
+    }
+    async getConnectedDevices() {
+        return Array.from(this.devices.values());
+    }
+    // ─────────────────────────────────────────────────────────────────────────────
+    // Device information
+    // ─────────────────────────────────────────────────────────────────────────────
+    async getDeviceInfo(deviceId) {
+        var _a;
+        const { client, channel } = (_a = this.clients.get(deviceId)) !== null && _a !== void 0 ? _a : (() => { throw new base_biometrics_service_1.BiometricException(`Device ${deviceId} not connected`, common_1.HttpStatus.NOT_FOUND); })();
+        const info = await client.getDeviceInfo(channel);
+        return {
+            firmwareVersion: info.firmwareVersion,
+            password: info.password,
+            sleepTime: info.sleepTime,
+            volume: info.volume,
+            language: info.language,
+            dateFormat: info.dateFormat,
+            attendanceState: info.attendanceState,
+            languageSettingFlag: info.languageSettingFlag,
+            cmdVersion: info.cmdVersion,
+        };
+    }
+    async getSerialNumber(deviceId) {
+        // Not available in V2.1 basic info; stubbed
+        throw new base_biometrics_service_1.BiometricException('Serial number not supported by protocol', common_1.HttpStatus.NOT_IMPLEMENTED);
+    }
+    async getFirmwareVersion(deviceId) {
+        const info = await this.getDeviceInfo(deviceId);
+        return info.firmwareVersion;
+    }
+    async getDeviceName(deviceId) {
+        // Not implemented in V2.1
+        throw new base_biometrics_service_1.BiometricException('Device name not supported by protocol', common_1.HttpStatus.NOT_IMPLEMENTED);
+    }
+    async restartDevice(deviceId) {
+        // No restart command in basic V2.1
+        throw new base_biometrics_service_1.BiometricException('Restart not supported by protocol', common_1.HttpStatus.NOT_IMPLEMENTED);
+    }
+    // ─────────────────────────────────────────────────────────────────────────────
+    // Time management
+    // ─────────────────────────────────────────────────────────────────────────────
+    async getTime(deviceId) {
+        var _a;
+        const { client, channel } = (_a = this.clients.get(deviceId)) !== null && _a !== void 0 ? _a : (() => { throw new base_biometrics_service_1.BiometricException(`Device ${deviceId} not connected`, common_1.HttpStatus.NOT_FOUND); })();
+        return client.getDateTime(channel);
+    }
+    async setTime(deviceId, time) {
+        var _a;
+        const { client, channel } = (_a = this.clients.get(deviceId)) !== null && _a !== void 0 ? _a : (() => { throw new base_biometrics_service_1.BiometricException(`Device ${deviceId} not connected`, common_1.HttpStatus.NOT_FOUND); })();
+        await client.setDateTime(channel, time);
+        return true;
+    }
+    // ─────────────────────────────────────────────────────────────────────────────
+    // User management
+    // ─────────────────────────────────────────────────────────────────────────────
+    async registerUser(deviceId, userData) {
+        throw new base_biometrics_service_1.BiometricException('registerUser not implemented', common_1.HttpStatus.NOT_IMPLEMENTED);
+    }
+    async getUserFingerprint(deviceId, userId, fingerId) {
+        throw new base_biometrics_service_1.BiometricException('getUserFingerprint not implemented', common_1.HttpStatus.NOT_IMPLEMENTED);
+    }
+    async enrollUser(deviceId, userId, fingerId) {
+        throw new base_biometrics_service_1.BiometricException('enrollUser not implemented', common_1.HttpStatus.NOT_IMPLEMENTED);
+    }
+    async deleteUser(deviceId, userId) {
+        throw new base_biometrics_service_1.BiometricException('deleteUser not implemented', common_1.HttpStatus.NOT_IMPLEMENTED);
+    }
+    async verifyFingerprint(deviceId, template) {
+        throw new base_biometrics_service_1.BiometricException('verifyFingerprint not implemented', common_1.HttpStatus.NOT_IMPLEMENTED);
+    }
+    async getUsers(deviceId) {
+        throw new base_biometrics_service_1.BiometricException('getUsers not implemented', common_1.HttpStatus.NOT_IMPLEMENTED);
+    }
+    async getUserDetails(deviceId) {
+        throw new base_biometrics_service_1.BiometricException('getUserDetails not implemented', common_1.HttpStatus.NOT_IMPLEMENTED);
+    }
+    async setUser(deviceId, uid, userId, name, password, role, cardno) {
+        throw new base_biometrics_service_1.BiometricException('setUser not implemented', common_1.HttpStatus.NOT_IMPLEMENTED);
+    }
+    async syncUsers(sourceDeviceId, targetDeviceId) {
+        throw new base_biometrics_service_1.BiometricException('syncUsers not implemented', common_1.HttpStatus.NOT_IMPLEMENTED);
+    }
+    // ─────────────────────────────────────────────────────────────────────────────
+    // Attendance management
+    // ─────────────────────────────────────────────────────────────────────────────
+    async getAttendanceRecords(deviceId, startDate, endDate) {
+        var _a;
+        const { client, channel } = (_a = this.clients.get(deviceId)) !== null && _a !== void 0 ? _a : (() => { throw new base_biometrics_service_1.BiometricException(`Device ${deviceId} not connected`, common_1.HttpStatus.NOT_FOUND); })();
+        const raw = await client.downloadRecords(channel, 0, 25);
+        const recs = raw.map(buf => ({
+            userId: buf.readUInt32BE(0).toString(),
+            timestamp: new Date(2000 + buf.readUInt8(4), buf.readUInt8(5) - 1, buf.readUInt8(6), buf.readUInt8(7), buf.readUInt8(8), buf.readUInt8(9)),
+            type: buf.readUInt8(10),
+            deviceId,
+            verificationMode: buf.readUInt8(11),
+            status: buf.readUInt8(12),
+            workcode: buf.readUInt8(13),
+        }));
+        const filtered = recs.filter(r => {
+            if (startDate && r.timestamp < startDate)
+                return false;
+            if (endDate && r.timestamp > endDate)
+                return false;
+            return true;
+        });
+        filtered.forEach(r => this.emitAttendanceEvent(r));
+        return filtered;
+    }
+    async clearAttendanceRecords(deviceId) {
+        throw new base_biometrics_service_1.BiometricException('clearAttendanceRecords not implemented', common_1.HttpStatus.NOT_IMPLEMENTED);
+    }
+    async getAttendanceSize(deviceId) {
+        throw new base_biometrics_service_1.BiometricException('getAttendanceSize not implemented', common_1.HttpStatus.NOT_IMPLEMENTED);
+    }
+    // ─────────────────────────────────────────────────────────────────────────────
+    // Real-time monitoring
+    // ─────────────────────────────────────────────────────────────────────────────
+    startRealTimeMonitoring(deviceId, callback) {
+        throw new base_biometrics_service_1.BiometricException('Real-time monitoring not implemented', common_1.HttpStatus.NOT_IMPLEMENTED);
+    }
+    stopRealTimeMonitoring(monitoringId) {
+        throw new base_biometrics_service_1.BiometricException('Real-time monitoring not implemented', common_1.HttpStatus.NOT_IMPLEMENTED);
+    }
+    // ─────────────────────────────────────────────────────────────────────────────
+    // Door control
+    // ─────────────────────────────────────────────────────────────────────────────
+    async unlockDoor(deviceId) {
+        throw new base_biometrics_service_1.BiometricException('unlockDoor not implemented', common_1.HttpStatus.NOT_IMPLEMENTED);
+    }
+    // ─────────────────────────────────────────────────────────────────────────────
+    // Generic command
+    // ─────────────────────────────────────────────────────────────────────────────
+    async executeCommand(deviceId, command, data) {
+        throw new base_biometrics_service_1.BiometricException('executeCommand not implemented', common_1.HttpStatus.NOT_IMPLEMENTED);
+    }
+};
+exports.AnvizBiometricService = AnvizBiometricService;
+exports.AnvizBiometricService = AnvizBiometricService = __decorate([
+    (0, common_1.Injectable)(),
+    __param(0, (0, typeorm_1.InjectRepository)(biometric_device_entity_1.BiometricDevice)),
+    __param(1, (0, typeorm_1.InjectRepository)(biometric_template_entity_1.BiometricTemplate)),
+    __metadata("design:paramtypes", [typeof (_a = typeof typeorm_2.Repository !== "undefined" && typeorm_2.Repository) === "function" ? _a : Object, typeof (_b = typeof typeorm_2.Repository !== "undefined" && typeorm_2.Repository) === "function" ? _b : Object, typeof (_c = typeof event_emitter_1.EventEmitter2 !== "undefined" && event_emitter_1.EventEmitter2) === "function" ? _c : Object])
+], AnvizBiometricService);
+
+
+/***/ }),
+/* 237 */
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.AnvizClient = exports.Command = exports.AckCode = void 0;
+// AnvizClient.ts
+const net_1 = __webpack_require__(238);
+const STX = 0xA5;
+/** All the return codes (RET) from the device */
+var AckCode;
+(function (AckCode) {
+    AckCode[AckCode["SUCCESS"] = 0] = "SUCCESS";
+    AckCode[AckCode["FAIL"] = 1] = "FAIL";
+    AckCode[AckCode["FULL"] = 4] = "FULL";
+    AckCode[AckCode["EMPTY"] = 5] = "EMPTY";
+    AckCode[AckCode["NO_USER"] = 6] = "NO_USER";
+    AckCode[AckCode["TIME_OUT"] = 8] = "TIME_OUT";
+    AckCode[AckCode["USER_OCCUPIED"] = 10] = "USER_OCCUPIED";
+    AckCode[AckCode["FINGER_OCCUPIED"] = 11] = "FINGER_OCCUPIED";
+})(AckCode || (exports.AckCode = AckCode = {}));
+/** All Part II command op-codes */
+var Command;
+(function (Command) {
+    Command[Command["GetDeviceInfo"] = 48] = "GetDeviceInfo";
+    Command[Command["SetDeviceInfo"] = 49] = "SetDeviceInfo";
+    Command[Command["GetTAConfig2"] = 50] = "GetTAConfig2";
+    Command[Command["SetTAConfig2"] = 51] = "SetTAConfig2";
+    Command[Command["GetDateTime"] = 56] = "GetDateTime";
+    Command[Command["SetDateTime"] = 57] = "SetDateTime";
+    Command[Command["GetNetworkParams"] = 58] = "GetNetworkParams";
+    Command[Command["SetNetworkParams"] = 59] = "SetNetworkParams";
+    Command[Command["GetRecordInfo"] = 60] = "GetRecordInfo";
+    Command[Command["DownloadRecords"] = 64] = "DownloadRecords";
+    // … add others 0x42,0x44…0x5F as needed …
+})(Command || (exports.Command = Command = {}));
+/** CRC-16/X-25 (poly=0x1021, init=0xFFFF, reflect in/out) */
+function crc16(buffer) {
+    let crc = 0xFFFF;
+    for (const b of buffer) {
+        crc ^= b;
+        for (let i = 0; i < 8; i++) {
+            if (crc & 1)
+                crc = (crc >>> 1) ^ 0x8408;
+            else
+                crc = crc >>> 1;
+        }
+    }
+    // swap bytes
+    return ((crc & 0xFF) << 8) | (crc >>> 8);
+}
+class AnvizClient {
+    constructor(host, port = 4370) {
+        this.host = host;
+        this.port = port;
+        this.socket = new net_1.Socket();
+        this.socket.on('data', this.onData.bind(this));
+        this.socket.on('error', err => {
+            if (this.pending) {
+                this.pending.reject(err);
+                this.pending = undefined;
+            }
+        });
+    }
+    /** Open TCP connection */
+    connect(timeout = 5000) {
+        return new Promise((res, rej) => {
+            const to = setTimeout(() => rej(new Error('Connect timeout')), timeout);
+            this.socket.once('connect', () => { clearTimeout(to); res(); });
+            this.socket.once('error', e => { clearTimeout(to); rej(e); });
+            this.socket.connect(this.port, this.host);
+        });
+    }
+    /** Gracefully close */
+    disconnect() {
+        this.socket.end();
+    }
+    /** Internal: called on incoming data */
+    onData(data) {
+        if (!this.pending)
+            return;
+        clearTimeout(this.pending.timeout);
+        this.pending.resolve(data);
+        this.pending = undefined;
+    }
+    /**
+     * Internal: send raw framed packet, await full raw response
+     * Frame: [STX][CH×4][CMD][LEN16][DATA][CRC16]
+     */
+    sendRaw(channel, cmd, payload = Buffer.alloc(0), timeout = 2000) {
+        if (channel.length !== 4)
+            throw new Error('Channel must be 4 bytes');
+        if (payload.length > 400)
+            throw new Error('Payload too large');
+        // build header + payload
+        const header = Buffer.alloc(1 + 4 + 1 + 2);
+        header.writeUInt8(STX, 0);
+        channel.copy(header, 1);
+        header.writeUInt8(cmd, 5);
+        header.writeUInt16BE(payload.length, 6);
+        const frame = Buffer.concat([header, payload]);
+        const crc = crc16(frame);
+        const crcBuf = Buffer.alloc(2);
+        crcBuf.writeUInt16BE(crc, 0);
+        // send + await
+        return new Promise((resolve, reject) => {
+            this.pending = {
+                resolve,
+                reject,
+                timeout: setTimeout(() => {
+                    this.pending = undefined;
+                    reject(new Error('Response timeout'));
+                }, timeout)
+            };
+            this.socket.write(Buffer.concat([frame, crcBuf]));
+        });
+    }
+    /**
+     * Internal: parse ACK/RET/LEN/DATA, throw on errors
+     */
+    async sendCommand(channel, cmd, payload = Buffer.alloc(0), parser) {
+        const resp = await this.sendRaw(channel, cmd, payload);
+        if (resp.readUInt8(0) !== STX)
+            throw new Error('Bad STX');
+        const ack = resp.readUInt8(5);
+        const ret = resp.readUInt8(6);
+        const len = resp.readUInt16BE(7);
+        const data = resp.slice(9, 9 + len);
+        if (ack !== (cmd | 0x80))
+            throw new Error(`Unexpected ACK: 0x${ack.toString(16)}`);
+        if (ret !== AckCode.SUCCESS)
+            throw new Error(`Device error RET=0x${ret.toString(16)}`);
+        return parser ? parser(data) : data;
+    }
+    // ─── High-level SDK methods ────────────────────────────────────────────────
+    /** CMD 0x30: get basic device info */
+    async getDeviceInfo(channel) {
+        return this.sendCommand(channel, Command.GetDeviceInfo, Buffer.alloc(0), buf => ({
+            firmwareVersion: buf.slice(0, 8).toString('ascii'),
+            password: buf.slice(8, 11).toString('ascii'),
+            sleepTime: buf.readUInt8(11),
+            volume: buf.readUInt8(12),
+            language: buf.readUInt8(13),
+            dateFormat: buf.readUInt8(14),
+            attendanceState: buf.readUInt8(15),
+            languageSettingFlag: buf.readUInt8(16),
+            cmdVersion: buf.readUInt8(17),
+        }));
+    }
+    /** CMD 0x31: set basic device info */
+    async setDeviceInfo(channel, cfg) {
+        const data = Buffer.alloc(10, 0xFF);
+        if (cfg.password !== undefined) {
+            data[0] = (cfg.password.length << 4);
+            Buffer.from(cfg.password).copy(data, 1);
+        }
+        if (cfg.sleepTime !== undefined)
+            data[3] = cfg.sleepTime;
+        if (cfg.volume !== undefined)
+            data[4] = cfg.volume;
+        if (cfg.language !== undefined)
+            data[5] = cfg.language;
+        if (cfg.dateFormat !== undefined)
+            data[6] = cfg.dateFormat;
+        if (cfg.attendanceState !== undefined)
+            data[7] = cfg.attendanceState;
+        if (cfg.languageSettingFlag !== undefined)
+            data[8] = cfg.languageSettingFlag;
+        await this.sendCommand(channel, Command.SetDeviceInfo, data);
+    }
+    /** CMD 0x38: get device date/time */
+    async getDateTime(channel) {
+        return this.sendCommand(channel, Command.GetDateTime, Buffer.alloc(0), buf => {
+            const [y, m, d, h, min, s] = Array.from(buf.values());
+            return new Date(2000 + y, m - 1, d, h, min, s);
+        });
+    }
+    /** CMD 0x39: set device date/time */
+    async setDateTime(channel, dt) {
+        const year = dt.getFullYear() - 2000;
+        const data = Buffer.from([
+            year, dt.getMonth() + 1, dt.getDate(),
+            dt.getHours(), dt.getMinutes(), dt.getSeconds()
+        ]);
+        await this.sendCommand(channel, Command.SetDateTime, data);
+    }
+    /** CMD 0x3A: get TCP/IP parameters */
+    async getNetworkParams(channel) {
+        return this.sendCommand(channel, Command.GetNetworkParams, Buffer.alloc(0), buf => ({
+            ip: [buf[0], buf[1], buf[2], buf[3]],
+            mask: [buf[4], buf[5], buf[6], buf[7]],
+            mac: [buf[8], buf[9], buf[10], buf[11], buf[12], buf[13]],
+            gateway: [buf[14], buf[15], buf[16], buf[17]],
+            serverIp: [buf[18], buf[19], buf[20], buf[21]],
+            farLimit: buf.readUInt16BE(22),
+            comPort: buf.readUInt8(24),
+            mode: buf.readUInt8(25),
+            dhcpLimit: buf.readUInt8(26),
+        }));
+    }
+    /** CMD 0x3B: set TCP/IP parameters */
+    async setNetworkParams(channel, cfg) {
+        const data = Buffer.alloc(27);
+        data.set(cfg.ip, 0);
+        data.set(cfg.mask, 4);
+        data.set(cfg.mac, 8);
+        data.set(cfg.gateway, 14);
+        data.set(cfg.serverIp, 18);
+        data.writeUInt16BE(cfg.farLimit, 22);
+        data.writeUInt8(cfg.comPort, 24);
+        data.writeUInt8(cfg.mode, 25);
+        data.writeUInt8(cfg.dhcpLimit, 26);
+        await this.sendCommand(channel, Command.SetNetworkParams, data);
+    }
+    /** CMD 0x40: download attendance records (mode=0/1/2/0x10, count=1–25) */
+    async downloadRecords(channel, mode, count) {
+        if (count < 1 || count > 25)
+            throw new Error('count must be 1–25');
+        const payload = Buffer.from([mode, count]);
+        const raw = await this.sendCommand(channel, Command.DownloadRecords, payload);
+        const valid = raw.readUInt8(0);
+        const recs = [];
+        for (let i = 0; i < valid; i++) {
+            recs.push(raw.slice(1 + i * 14, 1 + (i + 1) * 14));
+        }
+        return recs;
+    }
+}
+exports.AnvizClient = AnvizClient;
+
+
+/***/ }),
+/* 238 */
+/***/ ((module) => {
+
+module.exports = require("net");
+
+/***/ }),
+/* 239 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -18014,8 +18959,8 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.AttendancePunchesModule = void 0;
 const common_1 = __webpack_require__(5);
 const typeorm_1 = __webpack_require__(16);
-const attendance_punches_controller_1 = __webpack_require__(235);
-const attendance_punches_service_1 = __webpack_require__(236);
+const attendance_punches_controller_1 = __webpack_require__(240);
+const attendance_punches_service_1 = __webpack_require__(241);
 const attendance_punch_entity_1 = __webpack_require__(73);
 let AttendancePunchesModule = class AttendancePunchesModule {
 };
@@ -18031,15 +18976,15 @@ exports.AttendancePunchesModule = AttendancePunchesModule = __decorate([
 
 
 /***/ }),
-/* 235 */
+/* 240 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.AttendancePunchesController = void 0;
 const create_controller_factory_1 = __webpack_require__(18);
-const attendance_punches_service_1 = __webpack_require__(236);
-const attendance_punch_dto_1 = __webpack_require__(237);
+const attendance_punches_service_1 = __webpack_require__(241);
+const attendance_punch_dto_1 = __webpack_require__(242);
 const attendance_punch_entity_1 = __webpack_require__(73);
 class AttendancePunchesController extends (0, create_controller_factory_1.createController)(attendance_punch_entity_1.AttendancePunch, attendance_punches_service_1.AttendancePunchesService, attendance_punch_dto_1.GetAttendancePunchDto) {
     async create(entityDto, createdById) {
@@ -18059,7 +19004,7 @@ exports.AttendancePunchesController = AttendancePunchesController;
 
 
 /***/ }),
-/* 236 */
+/* 241 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -18100,7 +19045,7 @@ exports.AttendancePunchesService = AttendancePunchesService = __decorate([
 
 
 /***/ }),
-/* 237 */
+/* 242 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -18115,8 +19060,8 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.GetAttendancePunchDto = exports.UpdateAttendancePunchDto = exports.AttendancePunchDto = void 0;
-const base_dto_1 = __webpack_require__(98);
-const create_get_dto_factory_1 = __webpack_require__(100);
+const base_dto_1 = __webpack_require__(101);
+const create_get_dto_factory_1 = __webpack_require__(103);
 const swagger_1 = __webpack_require__(8);
 const class_transformer_1 = __webpack_require__(23);
 const class_validator_1 = __webpack_require__(24);
@@ -18178,15 +19123,15 @@ exports.GetAttendancePunchDto = GetAttendancePunchDto;
 
 
 /***/ }),
-/* 238 */
+/* 243 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.AttendancesController = void 0;
 const create_controller_factory_1 = __webpack_require__(18);
-const attendances_service_1 = __webpack_require__(239);
-const attendance_dto_1 = __webpack_require__(243);
+const attendances_service_1 = __webpack_require__(244);
+const attendance_dto_1 = __webpack_require__(248);
 const attendance_entity_1 = __webpack_require__(52);
 class AttendancesController extends (0, create_controller_factory_1.createController)(attendance_entity_1.Attendance, attendances_service_1.AttendancesService, attendance_dto_1.GetAttendanceDto, undefined, attendance_dto_1.UpdateAttendanceDto) {
     async create(entityDto, createdById) {
@@ -18203,7 +19148,7 @@ exports.AttendancesController = AttendancesController;
 
 
 /***/ }),
-/* 239 */
+/* 244 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -18225,20 +19170,21 @@ exports.AttendancesService = void 0;
 const attendance_status_enum_1 = __webpack_require__(50);
 const notification_type_enum_1 = __webpack_require__(80);
 const request_status_enum_1 = __webpack_require__(51);
+const attendance_event_1 = __webpack_require__(232);
 const base_service_1 = __webpack_require__(31);
 const users_service_1 = __webpack_require__(30);
 const common_1 = __webpack_require__(5);
-const event_emitter_1 = __webpack_require__(136);
-const schedule_1 = __webpack_require__(128);
+const event_emitter_1 = __webpack_require__(139);
+const schedule_1 = __webpack_require__(131);
 const typeorm_1 = __webpack_require__(16);
-const date_fns_1 = __webpack_require__(152);
+const date_fns_1 = __webpack_require__(155);
 const typeorm_2 = __webpack_require__(25);
-const employees_service_1 = __webpack_require__(101);
-const notifications_service_1 = __webpack_require__(240);
-const schedules_service_1 = __webpack_require__(150);
+const employees_service_1 = __webpack_require__(104);
+const notifications_service_1 = __webpack_require__(245);
+const schedules_service_1 = __webpack_require__(153);
 const attendance_entity_1 = __webpack_require__(52);
 const work_time_request_entity_1 = __webpack_require__(49);
-const work_time_requests_service_1 = __webpack_require__(242);
+const work_time_requests_service_1 = __webpack_require__(247);
 let AttendancesService = class AttendancesService extends base_service_1.BaseService {
     constructor(attendancesRepository, usersService, workTimeRequestsService, notificationsService, employeesService, schedulesService, eventEmitter) {
         super(attendancesRepository, usersService);
@@ -18271,7 +19217,16 @@ let AttendancesService = class AttendancesService extends base_service_1.BaseSer
         // Process employees that has no attendance record or absent
         await this.handleAbsentEmployees(yesterday);
         this.logger.log(`Completed processing attendance records for ${yesterdayFormatted}`);
+        // Get all attendance records for the day that has no final work hours yet
+        const attendances = await this.attendancesRepository.find({
+            where: {
+                timeIn: (0, typeorm_2.Between)((0, date_fns_1.startOfDay)(yesterday), (0, date_fns_1.endOfDay)(yesterday)),
+                finalWorkHour: (0, typeorm_2.IsNull)(),
+            },
+            relations: { employee: true, schedule: true }
+        });
         // Emit event for attendance processing
+        this.eventEmitter.emit(attendance_event_1.ATTENDANCE_EVENTS.ATTENDANCE_PROCESSED, new attendance_event_1.AttendanceProcessedEvent(attendances));
     }
     async handleMissingCheckOuts(date) {
         const formattedDate = (0, date_fns_1.format)(date, 'yyyy-MM-dd');
@@ -18444,7 +19399,7 @@ exports.AttendancesService = AttendancesService = __decorate([
 
 
 /***/ }),
-/* 240 */
+/* 245 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -18469,10 +19424,10 @@ const users_service_1 = __webpack_require__(30);
 const bull_1 = __webpack_require__(4);
 const common_1 = __webpack_require__(5);
 const typeorm_1 = __webpack_require__(16);
-const bull_2 = __webpack_require__(155);
+const bull_2 = __webpack_require__(158);
 const typeorm_2 = __webpack_require__(25);
 const notification_entity_1 = __webpack_require__(79);
-const notifications_gateway_1 = __webpack_require__(241);
+const notifications_gateway_1 = __webpack_require__(246);
 let NotificationsService = NotificationsService_1 = class NotificationsService extends base_service_1.BaseService {
     constructor(notificationRepo, usersService, notificationsGateway, notificationsQueue) {
         super(notificationRepo, usersService);
@@ -18554,20 +19509,20 @@ exports.NotificationsService = NotificationsService = NotificationsService_1 = _
 
 
 /***/ }),
-/* 241 */
+/* 246 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.NotificationsGateway = void 0;
-const create_gateway_factory_1 = __webpack_require__(106);
+const create_gateway_factory_1 = __webpack_require__(109);
 class NotificationsGateway extends (0, create_gateway_factory_1.createGateway)('notifications') {
 }
 exports.NotificationsGateway = NotificationsGateway;
 
 
 /***/ }),
-/* 242 */
+/* 247 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -18608,7 +19563,7 @@ exports.WorkTimeRequestsService = WorkTimeRequestsService = __decorate([
 
 
 /***/ }),
-/* 243 */
+/* 248 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -18624,9 +19579,9 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var _a, _b;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.GetAttendanceDto = exports.UpdateAttendanceDto = exports.CreateAttendanceDto = exports.AttendanceDto = void 0;
-const base_dto_1 = __webpack_require__(98);
+const base_dto_1 = __webpack_require__(101);
 const attendance_status_enum_1 = __webpack_require__(50);
-const create_get_dto_factory_1 = __webpack_require__(100);
+const create_get_dto_factory_1 = __webpack_require__(103);
 const swagger_1 = __webpack_require__(8);
 const class_transformer_1 = __webpack_require__(23);
 const class_validator_1 = __webpack_require__(24);
@@ -18699,7 +19654,7 @@ exports.GetAttendanceDto = GetAttendanceDto;
 
 
 /***/ }),
-/* 244 */
+/* 249 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -18714,8 +19669,8 @@ exports.FinalWorkHoursModule = void 0;
 const common_1 = __webpack_require__(5);
 const typeorm_1 = __webpack_require__(16);
 const final_work_hour_entity_1 = __webpack_require__(58);
-const final_work_hours_controller_1 = __webpack_require__(245);
-const final_work_hours_service_1 = __webpack_require__(247);
+const final_work_hours_controller_1 = __webpack_require__(250);
+const final_work_hours_service_1 = __webpack_require__(252);
 let FinalWorkHoursModule = class FinalWorkHoursModule {
 };
 exports.FinalWorkHoursModule = FinalWorkHoursModule;
@@ -18732,16 +19687,16 @@ exports.FinalWorkHoursModule = FinalWorkHoursModule = __decorate([
 
 
 /***/ }),
-/* 245 */
+/* 250 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.FinalWorkHoursController = void 0;
 const create_controller_factory_1 = __webpack_require__(18);
-const final_work_hour_dto_1 = __webpack_require__(246);
+const final_work_hour_dto_1 = __webpack_require__(251);
 const final_work_hour_entity_1 = __webpack_require__(58);
-const final_work_hours_service_1 = __webpack_require__(247);
+const final_work_hours_service_1 = __webpack_require__(252);
 class FinalWorkHoursController extends (0, create_controller_factory_1.createController)(final_work_hour_entity_1.FinalWorkHour, final_work_hours_service_1.FinalWorkHoursService, final_work_hour_dto_1.GetFinalWorkHourDto, undefined, final_work_hour_dto_1.UpdateFinalWorkHourDto) {
     async create(entityDto, createdById) {
         return await super.create(entityDto, createdById);
@@ -18754,7 +19709,7 @@ exports.FinalWorkHoursController = FinalWorkHoursController;
 
 
 /***/ }),
-/* 246 */
+/* 251 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -18769,8 +19724,8 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.GetFinalWorkHourDto = exports.UpdateFinalWorkHourDto = exports.FinalWorkHourDto = void 0;
-const base_dto_1 = __webpack_require__(98);
-const create_get_dto_factory_1 = __webpack_require__(100);
+const base_dto_1 = __webpack_require__(101);
+const create_get_dto_factory_1 = __webpack_require__(103);
 const swagger_1 = __webpack_require__(8);
 const class_validator_1 = __webpack_require__(24);
 const swagger_2 = __webpack_require__(8);
@@ -18792,7 +19747,7 @@ exports.GetFinalWorkHourDto = GetFinalWorkHourDto;
 
 
 /***/ }),
-/* 247 */
+/* 252 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -18978,7 +19933,7 @@ exports.FinalWorkHoursService = FinalWorkHoursService = __decorate([
 
 
 /***/ }),
-/* 248 */
+/* 253 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -18995,25 +19950,27 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
 var AttendanceListener_1;
-var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k;
+var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.AttendanceListener = void 0;
 const attendance_status_enum_1 = __webpack_require__(50);
+const holiday_type_enum_1 = __webpack_require__(69);
 const notification_type_enum_1 = __webpack_require__(80);
 const request_status_enum_1 = __webpack_require__(51);
 const schedule_status_1 = __webpack_require__(54);
-const attendance_event_1 = __webpack_require__(230);
-const attendance_punches_service_1 = __webpack_require__(236);
-const attendances_service_1 = __webpack_require__(239);
+const attendance_event_1 = __webpack_require__(232);
+const attendance_punches_service_1 = __webpack_require__(241);
+const attendances_service_1 = __webpack_require__(244);
 const biometric_interface_1 = __webpack_require__(226);
-const biometric_devices_service_1 = __webpack_require__(228);
-const employees_service_1 = __webpack_require__(101);
-const notifications_service_1 = __webpack_require__(240);
-const schedules_service_1 = __webpack_require__(150);
+const biometric_devices_service_1 = __webpack_require__(227);
+const employees_service_1 = __webpack_require__(104);
+const notifications_service_1 = __webpack_require__(245);
+const schedules_service_1 = __webpack_require__(153);
 const common_1 = __webpack_require__(5);
-const event_emitter_1 = __webpack_require__(136);
-const date_fns_1 = __webpack_require__(152);
-const work_time_requests_service_1 = __webpack_require__(242);
+const event_emitter_1 = __webpack_require__(139);
+const date_fns_1 = __webpack_require__(155);
+const final_work_hour_entity_1 = __webpack_require__(58);
+const work_time_requests_service_1 = __webpack_require__(247);
 let AttendanceListener = AttendanceListener_1 = class AttendanceListener {
     constructor(biometricService, attendancesService, attendancePunchesService, employeesService, schedulesService, biometricDevicesService, notificationsService, workTimeRequestsService) {
         this.biometricService = biometricService;
@@ -19030,6 +19987,7 @@ let AttendanceListener = AttendanceListener_1 = class AttendanceListener {
         this.UNDER_TIME_THRESHOLD_MINUTES = 0; // Consider under time if less than 30 minutes
     }
     async handleAttendanceRecorded(event) {
+        var _a;
         this.logger.log(`Handling attendance recorded event for ${event.attendances.length} records`);
         // Get the biometric device entity
         const biometricDevice = await this.biometricDevicesService.findOneBy({ id: event.deviceId });
@@ -19078,6 +20036,27 @@ let AttendanceListener = AttendanceListener_1 = class AttendanceListener {
                         user: { id: employee.user.id },
                     });
                     continue;
+                }
+                let dayType;
+                const isRestDay = todaySchedule.restDay;
+                const holidayType = (_a = todaySchedule.holiday) === null || _a === void 0 ? void 0 : _a.type;
+                if (isRestDay && holidayType === holiday_type_enum_1.HolidayType.REGULAR) {
+                    dayType = final_work_hour_entity_1.DayType.REGULAR_HOLIDAY_REST_DAY;
+                }
+                else if (isRestDay && (holidayType === holiday_type_enum_1.HolidayType.SPECIAL_NON_WORKING)) {
+                    dayType = final_work_hour_entity_1.DayType.SPECIAL_HOLIDAY_REST_DAY;
+                }
+                else if (isRestDay) {
+                    dayType = final_work_hour_entity_1.DayType.REST_DAY;
+                }
+                else if (holidayType === holiday_type_enum_1.HolidayType.REGULAR) {
+                    dayType = final_work_hour_entity_1.DayType.REGULAR_HOLIDAY;
+                }
+                else if (holidayType === holiday_type_enum_1.HolidayType.SPECIAL_NON_WORKING || holidayType === holiday_type_enum_1.HolidayType.SPECIAL_WORKING) {
+                    dayType = final_work_hour_entity_1.DayType.SPECIAL_HOLIDAY;
+                }
+                else {
+                    dayType = final_work_hour_entity_1.DayType.REGULAR_DAY;
                 }
                 if (todaySchedule.status === schedule_status_1.ScheduleStatus.LEAVE) {
                     this.logger.warn(`Employee ${employee.id} is on leave today`);
@@ -19140,7 +20119,7 @@ let AttendanceListener = AttendanceListener_1 = class AttendanceListener {
                                 attendanceStatuses.push(attendance_status_enum_1.AttendanceStatus.LATE);
                                 this.logger.log(`Employee ${employee.user.email} is late by ${minutesLate} minutes`);
                                 // Create work time request for late arrival
-                                await this.createWorkTimeRequest(employee.id, attendance_status_enum_1.AttendanceStatus.LATE, existingAttendance.id, minutesLate);
+                                await this.createWorkTimeRequest(dayType, employee.id, attendance_status_enum_1.AttendanceStatus.LATE, existingAttendance.id, minutesLate);
                                 // Notify employee
                                 await this.notificationsService.create({
                                     title: 'Late Check-in',
@@ -19170,7 +20149,7 @@ let AttendanceListener = AttendanceListener_1 = class AttendanceListener {
                     if (!existingAttendance.timeIn) {
                         attendanceStatuses.push(attendance_status_enum_1.AttendanceStatus.NO_CHECKED_IN);
                         // Create work time request for no check in
-                        await this.createWorkTimeRequest(employee.id, attendance_status_enum_1.AttendanceStatus.NO_CHECKED_IN, existingAttendance.id);
+                        await this.createWorkTimeRequest(dayType, employee.id, attendance_status_enum_1.AttendanceStatus.NO_CHECKED_IN, existingAttendance.id);
                         this.logger.log(`Employee ${employee.user.email} did not check in`);
                         // Notify employee
                         await this.notificationsService.create({
@@ -19188,7 +20167,7 @@ let AttendanceListener = AttendanceListener_1 = class AttendanceListener {
                             attendanceStatuses.push(attendance_status_enum_1.AttendanceStatus.UNDER_TIME);
                             this.logger.log(`Employee ${employee.id} is leaving ${minutesEarly} minutes early`);
                             // Create work time request for under time
-                            await this.createWorkTimeRequest(employee.id, attendance_status_enum_1.AttendanceStatus.UNDER_TIME, existingAttendance.id, minutesEarly);
+                            await this.createWorkTimeRequest(dayType, employee.id, attendance_status_enum_1.AttendanceStatus.UNDER_TIME, existingAttendance.id, minutesEarly);
                             // Notify management
                             await this.notificationsService.create({
                                 title: 'Early Check-out',
@@ -19206,7 +20185,7 @@ let AttendanceListener = AttendanceListener_1 = class AttendanceListener {
                             attendanceStatuses.push(attendance_status_enum_1.AttendanceStatus.OVERTIME);
                             this.logger.log(`Employee ${employee.id} worked ${minutesOvertime} minutes overtime`);
                             // Create work time request for overtime
-                            await this.createWorkTimeRequest(employee.id, attendance_status_enum_1.AttendanceStatus.OVERTIME, existingAttendance.id, minutesOvertime);
+                            await this.createWorkTimeRequest(dayType, employee.id, attendance_status_enum_1.AttendanceStatus.OVERTIME, existingAttendance.id, minutesOvertime);
                             // Notify employee
                             await this.notificationsService.create({
                                 title: 'Overtime Alert',
@@ -19248,13 +20227,17 @@ let AttendanceListener = AttendanceListener_1 = class AttendanceListener {
         // After processing all records, clear the device
         await this.biometricService.clearAttendanceRecords(event.deviceId);
     }
+    async handleAttendanceProcessed() {
+        // create final work hours
+    }
     // Helper methods for notifications and work time requests
-    async createWorkTimeRequest(employeeId, type, attendanceId, duration) {
+    async createWorkTimeRequest(dayType, employeeId, type, attendanceId, duration) {
         try {
             await this.workTimeRequestsService.create({
                 attendance: { id: attendanceId },
                 type,
                 duration,
+                dayType,
                 status: request_status_enum_1.RequestStatus.PENDING,
                 createdBy: employeeId,
                 employee: { id: employeeId },
@@ -19270,9 +20253,15 @@ exports.AttendanceListener = AttendanceListener;
 __decorate([
     (0, event_emitter_1.OnEvent)(attendance_event_1.ATTENDANCE_EVENTS.ATTENDANCE_RECORDED),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [typeof (_j = typeof attendance_event_1.AttendanceEvent !== "undefined" && attendance_event_1.AttendanceEvent) === "function" ? _j : Object]),
+    __metadata("design:paramtypes", [typeof (_j = typeof attendance_event_1.AttendanceRecordedEvent !== "undefined" && attendance_event_1.AttendanceRecordedEvent) === "function" ? _j : Object]),
     __metadata("design:returntype", typeof (_k = typeof Promise !== "undefined" && Promise) === "function" ? _k : Object)
 ], AttendanceListener.prototype, "handleAttendanceRecorded", null);
+__decorate([
+    (0, event_emitter_1.OnEvent)(attendance_event_1.ATTENDANCE_EVENTS.ATTENDANCE_PROCESSED),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", typeof (_l = typeof Promise !== "undefined" && Promise) === "function" ? _l : Object)
+], AttendanceListener.prototype, "handleAttendanceProcessed", null);
 exports.AttendanceListener = AttendanceListener = AttendanceListener_1 = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, common_1.Inject)('BIOMETRIC_SERVICE')),
@@ -19281,7 +20270,7 @@ exports.AttendanceListener = AttendanceListener = AttendanceListener_1 = __decor
 
 
 /***/ }),
-/* 249 */
+/* 254 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -19296,9 +20285,9 @@ exports.WorkTimeRequestsModule = void 0;
 const common_1 = __webpack_require__(5);
 const typeorm_1 = __webpack_require__(16);
 const work_time_request_entity_1 = __webpack_require__(49);
-const work_time_requests_controller_1 = __webpack_require__(250);
-const work_time_requests_service_1 = __webpack_require__(242);
-const work_time_responses_module_1 = __webpack_require__(252);
+const work_time_requests_controller_1 = __webpack_require__(255);
+const work_time_requests_service_1 = __webpack_require__(247);
+const work_time_responses_module_1 = __webpack_require__(257);
 let WorkTimeRequestsModule = class WorkTimeRequestsModule {
 };
 exports.WorkTimeRequestsModule = WorkTimeRequestsModule;
@@ -19319,16 +20308,16 @@ exports.WorkTimeRequestsModule = WorkTimeRequestsModule = __decorate([
 
 
 /***/ }),
-/* 250 */
+/* 255 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.WorkTimeRequestsController = void 0;
 const create_controller_factory_1 = __webpack_require__(18);
-const work_time_request_dto_1 = __webpack_require__(251);
+const work_time_request_dto_1 = __webpack_require__(256);
 const work_time_request_entity_1 = __webpack_require__(49);
-const work_time_requests_service_1 = __webpack_require__(242);
+const work_time_requests_service_1 = __webpack_require__(247);
 class WorkTimeRequestsController extends (0, create_controller_factory_1.createController)(work_time_request_entity_1.WorkTimeRequest, work_time_requests_service_1.WorkTimeRequestsService, work_time_request_dto_1.GetWorkTimeRequestDto, work_time_request_dto_1.WorkTimeRequestDto, work_time_request_dto_1.UpdateWorkTimeRequestDto) {
     async delete(id) {
         return await super.delete(id);
@@ -19338,7 +20327,7 @@ exports.WorkTimeRequestsController = WorkTimeRequestsController;
 
 
 /***/ }),
-/* 251 */
+/* 256 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -19354,10 +20343,10 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var _a, _b;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.GetWorkTimeRequestDto = exports.UpdateWorkTimeRequestDto = exports.WorkTimeRequestDto = void 0;
-const base_dto_1 = __webpack_require__(98);
+const base_dto_1 = __webpack_require__(101);
 const attendance_status_enum_1 = __webpack_require__(50);
 const request_status_enum_1 = __webpack_require__(51);
-const create_get_dto_factory_1 = __webpack_require__(100);
+const create_get_dto_factory_1 = __webpack_require__(103);
 const swagger_1 = __webpack_require__(8);
 const class_validator_1 = __webpack_require__(24);
 class WorkTimeRequestDto extends (0, swagger_1.PartialType)(base_dto_1.BaseDto) {
@@ -19402,7 +20391,7 @@ exports.GetWorkTimeRequestDto = GetWorkTimeRequestDto;
 
 
 /***/ }),
-/* 252 */
+/* 257 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -19417,8 +20406,8 @@ exports.WorkTimeResponsesModule = void 0;
 const common_1 = __webpack_require__(5);
 const typeorm_1 = __webpack_require__(16);
 const work_time_response_entity_1 = __webpack_require__(75);
-const work_time_responses_controller_1 = __webpack_require__(253);
-const work_time_responses_service_1 = __webpack_require__(255);
+const work_time_responses_controller_1 = __webpack_require__(258);
+const work_time_responses_service_1 = __webpack_require__(260);
 let WorkTimeResponsesModule = class WorkTimeResponsesModule {
 };
 exports.WorkTimeResponsesModule = WorkTimeResponsesModule;
@@ -19435,16 +20424,16 @@ exports.WorkTimeResponsesModule = WorkTimeResponsesModule = __decorate([
 
 
 /***/ }),
-/* 253 */
+/* 258 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.WorkTimeResponsesController = void 0;
 const create_controller_factory_1 = __webpack_require__(18);
-const work_time_response_dto_1 = __webpack_require__(254);
+const work_time_response_dto_1 = __webpack_require__(259);
 const work_time_response_entity_1 = __webpack_require__(75);
-const work_time_responses_service_1 = __webpack_require__(255);
+const work_time_responses_service_1 = __webpack_require__(260);
 class WorkTimeResponsesController extends (0, create_controller_factory_1.createController)(work_time_response_entity_1.WorkTimeResponse, work_time_responses_service_1.WorkTimeResponsesService, work_time_response_dto_1.GetWorkTimeResponseDto, work_time_response_dto_1.WorkTimeResponseDto, work_time_response_dto_1.UpdateWorkTimeResponseDto) {
     async delete(id) {
         return await super.delete(id);
@@ -19454,7 +20443,7 @@ exports.WorkTimeResponsesController = WorkTimeResponsesController;
 
 
 /***/ }),
-/* 254 */
+/* 259 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -19469,8 +20458,8 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.GetWorkTimeResponseDto = exports.UpdateWorkTimeResponseDto = exports.WorkTimeResponseDto = void 0;
-const base_dto_1 = __webpack_require__(98);
-const create_get_dto_factory_1 = __webpack_require__(100);
+const base_dto_1 = __webpack_require__(101);
+const create_get_dto_factory_1 = __webpack_require__(103);
 const swagger_1 = __webpack_require__(8);
 const class_validator_1 = __webpack_require__(24);
 class WorkTimeResponseDto extends (0, swagger_1.PartialType)(base_dto_1.BaseDto) {
@@ -19512,7 +20501,7 @@ exports.GetWorkTimeResponseDto = GetWorkTimeResponseDto;
 
 
 /***/ }),
-/* 255 */
+/* 260 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -19553,7 +20542,7 @@ exports.WorkTimeResponsesService = WorkTimeResponsesService = __decorate([
 
 
 /***/ }),
-/* 256 */
+/* 261 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -19568,9 +20557,9 @@ exports.DocumentsModule = void 0;
 const common_1 = __webpack_require__(5);
 const core_1 = __webpack_require__(7);
 const typeorm_1 = __webpack_require__(16);
-const document_types_module_1 = __webpack_require__(257);
-const documents_controller_1 = __webpack_require__(261);
-const documents_service_1 = __webpack_require__(262);
+const document_types_module_1 = __webpack_require__(262);
+const documents_controller_1 = __webpack_require__(266);
+const documents_service_1 = __webpack_require__(267);
 const document_entity_1 = __webpack_require__(48);
 let DocumentsModule = class DocumentsModule {
 };
@@ -19599,7 +20588,7 @@ exports.DocumentsModule = DocumentsModule = __decorate([
 
 
 /***/ }),
-/* 257 */
+/* 262 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -19613,8 +20602,8 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.DocumentTypesModule = void 0;
 const common_1 = __webpack_require__(5);
 const typeorm_1 = __webpack_require__(16);
-const document_types_controller_1 = __webpack_require__(258);
-const document_types_service_1 = __webpack_require__(259);
+const document_types_controller_1 = __webpack_require__(263);
+const document_types_service_1 = __webpack_require__(264);
 const document_type_entity_1 = __webpack_require__(76);
 let DocumentTypesModule = class DocumentTypesModule {
 };
@@ -19630,15 +20619,15 @@ exports.DocumentTypesModule = DocumentTypesModule = __decorate([
 
 
 /***/ }),
-/* 258 */
+/* 263 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.DocumentTypesController = void 0;
 const create_controller_factory_1 = __webpack_require__(18);
-const document_types_service_1 = __webpack_require__(259);
-const document_type_dto_1 = __webpack_require__(260);
+const document_types_service_1 = __webpack_require__(264);
+const document_type_dto_1 = __webpack_require__(265);
 const document_type_entity_1 = __webpack_require__(76);
 class DocumentTypesController extends (0, create_controller_factory_1.createController)(document_type_entity_1.DocumentType, document_types_service_1.DocumentTypesService, document_type_dto_1.GetDocumentTypeDto, document_type_dto_1.DocumentTypeDto, document_type_dto_1.UpdateDocumentTypeDto) {
 }
@@ -19646,7 +20635,7 @@ exports.DocumentTypesController = DocumentTypesController;
 
 
 /***/ }),
-/* 259 */
+/* 264 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -19687,7 +20676,7 @@ exports.DocumentTypesService = DocumentTypesService = __decorate([
 
 
 /***/ }),
-/* 260 */
+/* 265 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -19702,8 +20691,8 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.GetDocumentTypeDto = exports.UpdateDocumentTypeDto = exports.DocumentTypeDto = void 0;
-const base_dto_1 = __webpack_require__(98);
-const create_get_dto_factory_1 = __webpack_require__(100);
+const base_dto_1 = __webpack_require__(101);
+const create_get_dto_factory_1 = __webpack_require__(103);
 const swagger_1 = __webpack_require__(8);
 const class_validator_1 = __webpack_require__(24);
 class DocumentTypeDto extends base_dto_1.BaseDto {
@@ -19757,15 +20746,15 @@ exports.GetDocumentTypeDto = GetDocumentTypeDto;
 
 
 /***/ }),
-/* 261 */
+/* 266 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.DocumentsController = void 0;
 const create_controller_factory_1 = __webpack_require__(18);
-const documents_service_1 = __webpack_require__(262);
-const document_dto_1 = __webpack_require__(263);
+const documents_service_1 = __webpack_require__(267);
+const document_dto_1 = __webpack_require__(268);
 const document_entity_1 = __webpack_require__(48);
 class DocumentsController extends (0, create_controller_factory_1.createController)(document_entity_1.Document, documents_service_1.DocumentsService, document_dto_1.GetDocumentDto, document_dto_1.DocumentDto, document_dto_1.UpdateDocumentDto) {
 }
@@ -19773,7 +20762,7 @@ exports.DocumentsController = DocumentsController;
 
 
 /***/ }),
-/* 262 */
+/* 267 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -19814,7 +20803,7 @@ exports.DocumentsService = DocumentsService = __decorate([
 
 
 /***/ }),
-/* 263 */
+/* 268 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -19829,8 +20818,8 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.GetDocumentDto = exports.UpdateDocumentDto = exports.DocumentDto = void 0;
-const base_dto_1 = __webpack_require__(98);
-const create_get_dto_factory_1 = __webpack_require__(100);
+const base_dto_1 = __webpack_require__(101);
+const create_get_dto_factory_1 = __webpack_require__(103);
 const swagger_1 = __webpack_require__(8);
 const class_validator_1 = __webpack_require__(24);
 class DocumentDto extends base_dto_1.BaseDto {
@@ -19887,7 +20876,7 @@ exports.GetDocumentDto = GetDocumentDto;
 
 
 /***/ }),
-/* 264 */
+/* 269 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -19900,8 +20889,8 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.FilesModule = void 0;
 const common_1 = __webpack_require__(5);
-const file_provider_config_1 = __webpack_require__(265);
-const files_controller_1 = __webpack_require__(274);
+const file_provider_config_1 = __webpack_require__(270);
+const files_controller_1 = __webpack_require__(279);
 let FilesModule = class FilesModule {
 };
 exports.FilesModule = FilesModule;
@@ -19914,14 +20903,14 @@ exports.FilesModule = FilesModule = __decorate([
 
 
 /***/ }),
-/* 265 */
+/* 270 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.fileProviders = exports.fileProviderConfig = exports.FILE_SERVICE = void 0;
 const config_1 = __webpack_require__(6);
-const local_file_service_1 = __webpack_require__(266);
+const local_file_service_1 = __webpack_require__(271);
 exports.FILE_SERVICE = 'FILE_SERVICE';
 exports.fileProviderConfig = {
     provide: exports.FILE_SERVICE,
@@ -19948,7 +20937,7 @@ exports.fileProviders = [exports.fileProviderConfig, local_file_service_1.LocalF
 
 
 /***/ }),
-/* 266 */
+/* 271 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -20002,12 +20991,12 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.LocalFileService = void 0;
 const common_1 = __webpack_require__(5);
 const config_1 = __webpack_require__(6);
-const fs = __importStar(__webpack_require__(122));
-const fs_1 = __webpack_require__(122);
-const mime = __importStar(__webpack_require__(267));
-const path_1 = __importDefault(__webpack_require__(124));
-const file_list_options_dto_1 = __webpack_require__(268);
-const base_file_service_1 = __webpack_require__(269);
+const fs = __importStar(__webpack_require__(125));
+const fs_1 = __webpack_require__(125);
+const mime = __importStar(__webpack_require__(272));
+const path_1 = __importDefault(__webpack_require__(127));
+const file_list_options_dto_1 = __webpack_require__(273);
+const base_file_service_1 = __webpack_require__(274);
 let LocalFileService = class LocalFileService extends base_file_service_1.BaseFileService {
     constructor(configService) {
         const uploadDir = configService.getOrThrow('FILE_DIRECTORY');
@@ -20610,13 +21599,13 @@ exports.LocalFileService = LocalFileService = __decorate([
 
 
 /***/ }),
-/* 267 */
+/* 272 */
 /***/ ((module) => {
 
 module.exports = require("mime-types");
 
 /***/ }),
-/* 268 */
+/* 273 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -20795,7 +21784,7 @@ __decorate([
 
 
 /***/ }),
-/* 269 */
+/* 274 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -20847,12 +21836,12 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.BaseFileService = void 0;
 const common_1 = __webpack_require__(5);
-const crypto = __importStar(__webpack_require__(270));
-const csv_writer_1 = __webpack_require__(271);
-const ExcelJS = __importStar(__webpack_require__(272));
-const fs = __importStar(__webpack_require__(122));
-const path = __importStar(__webpack_require__(124));
-const pdfkit_1 = __importDefault(__webpack_require__(273));
+const crypto = __importStar(__webpack_require__(275));
+const csv_writer_1 = __webpack_require__(276);
+const ExcelJS = __importStar(__webpack_require__(277));
+const fs = __importStar(__webpack_require__(125));
+const path = __importStar(__webpack_require__(127));
+const pdfkit_1 = __importDefault(__webpack_require__(278));
 let BaseFileService = class BaseFileService {
     constructor(uploadDir, baseUrl) {
         this.logger = new common_1.Logger(this.constructor.name);
@@ -21087,31 +22076,31 @@ exports.BaseFileService = BaseFileService = __decorate([
 
 
 /***/ }),
-/* 270 */
+/* 275 */
 /***/ ((module) => {
 
 module.exports = require("crypto");
 
 /***/ }),
-/* 271 */
+/* 276 */
 /***/ ((module) => {
 
 module.exports = require("csv-writer");
 
 /***/ }),
-/* 272 */
+/* 277 */
 /***/ ((module) => {
 
 module.exports = require("exceljs");
 
 /***/ }),
-/* 273 */
+/* 278 */
 /***/ ((module) => {
 
 module.exports = require("pdfkit");
 
 /***/ }),
-/* 274 */
+/* 279 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -21132,16 +22121,16 @@ var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r, _s, _t, _u, 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.FilesController = void 0;
 const authorize_decorator_1 = __webpack_require__(26);
-const current_user_decorator_1 = __webpack_require__(94);
+const current_user_decorator_1 = __webpack_require__(97);
 const common_1 = __webpack_require__(5);
-const platform_express_1 = __webpack_require__(275);
+const platform_express_1 = __webpack_require__(280);
 const swagger_1 = __webpack_require__(8);
-const express_1 = __webpack_require__(202);
-const file_provider_config_1 = __webpack_require__(265);
-const directory_metadata_dto_1 = __webpack_require__(276);
-const file_list_response_dto_1 = __webpack_require__(277);
-const file_meta_data_dto_1 = __webpack_require__(278);
-const file_service_interface_1 = __webpack_require__(279);
+const express_1 = __webpack_require__(205);
+const file_provider_config_1 = __webpack_require__(270);
+const directory_metadata_dto_1 = __webpack_require__(281);
+const file_list_response_dto_1 = __webpack_require__(282);
+const file_meta_data_dto_1 = __webpack_require__(283);
+const file_service_interface_1 = __webpack_require__(284);
 let FilesController = FilesController_1 = class FilesController {
     constructor(fileService) {
         this.fileService = fileService;
@@ -21683,13 +22672,13 @@ exports.FilesController = FilesController = FilesController_1 = __decorate([
 
 
 /***/ }),
-/* 275 */
+/* 280 */
 /***/ ((module) => {
 
 module.exports = require("@nestjs/platform-express");
 
 /***/ }),
-/* 276 */
+/* 281 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -21740,7 +22729,7 @@ __decorate([
 
 
 /***/ }),
-/* 277 */
+/* 282 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -21757,8 +22746,8 @@ var _a;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.FileListResponseDto = void 0;
 const swagger_1 = __webpack_require__(8);
-const directory_metadata_dto_1 = __webpack_require__(276);
-const file_meta_data_dto_1 = __webpack_require__(278);
+const directory_metadata_dto_1 = __webpack_require__(281);
+const file_meta_data_dto_1 = __webpack_require__(283);
 class FileListResponseDto {
 }
 exports.FileListResponseDto = FileListResponseDto;
@@ -21801,7 +22790,7 @@ __decorate([
 
 
 /***/ }),
-/* 278 */
+/* 283 */
 /***/ ((__unused_webpack_module, exports) => {
 
 
@@ -21813,7 +22802,7 @@ exports.FileMetadata = FileMetadata;
 
 
 /***/ }),
-/* 279 */
+/* 284 */
 /***/ ((__unused_webpack_module, exports) => {
 
 
@@ -21821,7 +22810,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 
 
 /***/ }),
-/* 280 */
+/* 285 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -21835,8 +22824,8 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.LogsModule = void 0;
 const common_1 = __webpack_require__(5);
 const core_1 = __webpack_require__(7);
-const activity_logs_module_1 = __webpack_require__(281);
-const system_logs_module_1 = __webpack_require__(284);
+const activity_logs_module_1 = __webpack_require__(286);
+const system_logs_module_1 = __webpack_require__(289);
 let LogsModule = class LogsModule {
 };
 exports.LogsModule = LogsModule;
@@ -21869,7 +22858,7 @@ exports.LogsModule = LogsModule = __decorate([
 
 
 /***/ }),
-/* 281 */
+/* 286 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -21883,7 +22872,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ActivityLogsModule = void 0;
 const common_1 = __webpack_require__(5);
 const typeorm_1 = __webpack_require__(16);
-const activity_logs_controller_1 = __webpack_require__(282);
+const activity_logs_controller_1 = __webpack_require__(287);
 const activity_logs_service_1 = __webpack_require__(89);
 const activity_log_entity_1 = __webpack_require__(77);
 let ActivityLogsModule = class ActivityLogsModule {
@@ -21902,7 +22891,7 @@ exports.ActivityLogsModule = ActivityLogsModule = __decorate([
 
 
 /***/ }),
-/* 282 */
+/* 287 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
@@ -21910,7 +22899,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ActivityLogsController = void 0;
 const create_controller_factory_1 = __webpack_require__(18);
 const activity_logs_service_1 = __webpack_require__(89);
-const activity_log_dto_1 = __webpack_require__(283);
+const activity_log_dto_1 = __webpack_require__(288);
 const activity_log_entity_1 = __webpack_require__(77);
 class ActivityLogsController extends (0, create_controller_factory_1.createController)(activity_log_entity_1.ActivityLog, activity_logs_service_1.ActivityLogsService, activity_log_dto_1.GetActivityLogDto) {
 }
@@ -21918,7 +22907,7 @@ exports.ActivityLogsController = ActivityLogsController;
 
 
 /***/ }),
-/* 283 */
+/* 288 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -21934,10 +22923,10 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var _a, _b, _c;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.GetActivityLogDto = exports.UpdateActivityLogDto = exports.ActivityLogDto = void 0;
-const base_dto_1 = __webpack_require__(98);
+const base_dto_1 = __webpack_require__(101);
 const action_enum_1 = __webpack_require__(40);
 const log_level_enum_1 = __webpack_require__(78);
-const create_get_dto_factory_1 = __webpack_require__(100);
+const create_get_dto_factory_1 = __webpack_require__(103);
 const user_entity_1 = __webpack_require__(47);
 const swagger_1 = __webpack_require__(8);
 const class_transformer_1 = __webpack_require__(23);
@@ -22009,7 +22998,7 @@ exports.GetActivityLogDto = GetActivityLogDto;
 
 
 /***/ }),
-/* 284 */
+/* 289 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -22023,10 +23012,10 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.SystemLogsModule = void 0;
 const common_1 = __webpack_require__(5);
 const typeorm_1 = __webpack_require__(16);
-const system_log_entity_1 = __webpack_require__(285);
-const system_logger_service_1 = __webpack_require__(286);
-const system_logs_controller_1 = __webpack_require__(288);
-const system_logs_service_1 = __webpack_require__(287);
+const system_log_entity_1 = __webpack_require__(290);
+const system_logger_service_1 = __webpack_require__(291);
+const system_logs_controller_1 = __webpack_require__(293);
+const system_logs_service_1 = __webpack_require__(292);
 let SystemLogsModule = class SystemLogsModule {
 };
 exports.SystemLogsModule = SystemLogsModule;
@@ -22043,7 +23032,7 @@ exports.SystemLogsModule = SystemLogsModule = __decorate([
 
 
 /***/ }),
-/* 285 */
+/* 290 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -22096,7 +23085,7 @@ exports.SystemLog = SystemLog = __decorate([
 
 
 /***/ }),
-/* 286 */
+/* 291 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -22114,7 +23103,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.SystemLogger = void 0;
 const log_level_enum_1 = __webpack_require__(78);
 const common_1 = __webpack_require__(5);
-const system_logs_service_1 = __webpack_require__(287);
+const system_logs_service_1 = __webpack_require__(292);
 let SystemLogger = class SystemLogger extends common_1.ConsoleLogger {
     constructor(systemLogsService) {
         super();
@@ -22123,42 +23112,49 @@ let SystemLogger = class SystemLogger extends common_1.ConsoleLogger {
         this.logQueue = [];
         this.isBatchProcessing = false;
         this.batchSize = 10; // Configurable batch size
+        // Define an array of log patterns to ignore (context + message patterns)
+        this.ignoredLogPatterns = [
+            { context: 'RouterExplorer', messagePattern: 'Mapped {' },
+            { context: 'RoutesResolver', messagePattern: 'Controller' },
+            { context: 'InstanceLoader', messagePattern: 'Starting' },
+        ];
     }
-    /**
-     * Override the log method to write to both console and database
-     */
+    // Helper method to check if a log should be ignored
+    shouldIgnoreLog(message, context) {
+        if (!context)
+            return false;
+        return this.ignoredLogPatterns.some(pattern => context === pattern.context);
+    }
     log(message, context) {
-        super.log(message, context);
-        this.saveLog(message, context, log_level_enum_1.LogLevel.LOG);
+        if (!this.shouldIgnoreLog(message, context)) {
+            super.log(message, context);
+            this.saveLog(message, context, log_level_enum_1.LogLevel.LOG);
+        }
     }
-    /**
-     * Override the error method to write to both console and database
-     */
     error(message, trace, context) {
-        super.error(message, trace, context);
-        const fullMessage = trace ? `${message}\n${trace}` : message;
-        this.saveLog(fullMessage, context, log_level_enum_1.LogLevel.ERROR);
+        if (!this.shouldIgnoreLog(message, context)) {
+            super.error(message, trace, context);
+            const fullMessage = trace ? `${message}\n${trace}` : message;
+            this.saveLog(fullMessage, context, log_level_enum_1.LogLevel.ERROR);
+        }
     }
-    /**
-     * Override the warn method to write to both console and database
-     */
     warn(message, context) {
-        super.warn(message, context);
-        this.saveLog(message, context, log_level_enum_1.LogLevel.WARN);
+        if (!this.shouldIgnoreLog(message, context)) {
+            super.warn(message, context);
+            this.saveLog(message, context, log_level_enum_1.LogLevel.WARN);
+        }
     }
-    /**
-     * Override the debug method to write to both console and database
-     */
     debug(message, context) {
-        super.debug(message, context);
-        this.saveLog(message, context, log_level_enum_1.LogLevel.DEBUG);
+        if (!this.shouldIgnoreLog(message, context)) {
+            super.debug(message, context);
+            this.saveLog(message, context, log_level_enum_1.LogLevel.DEBUG);
+        }
     }
-    /**
-     * Override the verbose method to write to both console and database
-     */
     verbose(message, context) {
-        super.verbose(message, context);
-        this.saveLog(message, context, log_level_enum_1.LogLevel.VERBOSE);
+        if (!this.shouldIgnoreLog(message, context)) {
+            super.verbose(message, context);
+            this.saveLog(message, context, log_level_enum_1.LogLevel.VERBOSE);
+        }
     }
     /**
      * Save the log message to the database if the logs service is available
@@ -22216,7 +23212,7 @@ exports.SystemLogger = SystemLogger = __decorate([
 
 
 /***/ }),
-/* 287 */
+/* 292 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -22238,10 +23234,10 @@ exports.SystemLogsService = void 0;
 const base_service_1 = __webpack_require__(31);
 const users_service_1 = __webpack_require__(30);
 const common_1 = __webpack_require__(5);
-const schedule_1 = __webpack_require__(128);
+const schedule_1 = __webpack_require__(131);
 const typeorm_1 = __webpack_require__(16);
 const typeorm_2 = __webpack_require__(25);
-const system_log_entity_1 = __webpack_require__(285);
+const system_log_entity_1 = __webpack_require__(290);
 let SystemLogsService = class SystemLogsService extends base_service_1.BaseService {
     constructor(systemLogsRepository, usersService) {
         super(systemLogsRepository, usersService);
@@ -22285,23 +23281,23 @@ exports.SystemLogsService = SystemLogsService = __decorate([
 
 
 /***/ }),
-/* 288 */
+/* 293 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.SystemLogsController = void 0;
 const create_controller_factory_1 = __webpack_require__(18);
-const system_log_dto_1 = __webpack_require__(289);
-const system_log_entity_1 = __webpack_require__(285);
-const system_logs_service_1 = __webpack_require__(287);
+const system_log_dto_1 = __webpack_require__(294);
+const system_log_entity_1 = __webpack_require__(290);
+const system_logs_service_1 = __webpack_require__(292);
 class SystemLogsController extends (0, create_controller_factory_1.createController)(system_log_entity_1.SystemLog, system_logs_service_1.SystemLogsService, system_log_dto_1.GetSystemLogDto) {
 }
 exports.SystemLogsController = SystemLogsController;
 
 
 /***/ }),
-/* 289 */
+/* 294 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -22317,9 +23313,9 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var _a;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.GetSystemLogDto = exports.UpdateSystemLogDto = exports.SystemLogDto = void 0;
-const base_dto_1 = __webpack_require__(98);
+const base_dto_1 = __webpack_require__(101);
 const log_level_enum_1 = __webpack_require__(78);
-const create_get_dto_factory_1 = __webpack_require__(100);
+const create_get_dto_factory_1 = __webpack_require__(103);
 const swagger_1 = __webpack_require__(8);
 const class_validator_1 = __webpack_require__(24);
 class SystemLogDto extends (0, swagger_1.PartialType)(base_dto_1.BaseDto) {
@@ -22365,7 +23361,7 @@ exports.GetSystemLogDto = GetSystemLogDto;
 
 
 /***/ }),
-/* 290 */
+/* 295 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -22381,13 +23377,13 @@ const bull_1 = __webpack_require__(4);
 const common_1 = __webpack_require__(5);
 const typeorm_1 = __webpack_require__(16);
 const notification_entity_1 = __webpack_require__(79);
-const notifications_gateway_1 = __webpack_require__(241);
-const notifications_controller_1 = __webpack_require__(291);
-const notifications_service_1 = __webpack_require__(240);
-const notifications_processor_1 = __webpack_require__(293);
-const push_subscriptions_module_1 = __webpack_require__(299);
-const user_connection_service_1 = __webpack_require__(296);
-const web_push_service_1 = __webpack_require__(297);
+const notifications_gateway_1 = __webpack_require__(246);
+const notifications_controller_1 = __webpack_require__(296);
+const notifications_service_1 = __webpack_require__(245);
+const notifications_processor_1 = __webpack_require__(298);
+const push_subscriptions_module_1 = __webpack_require__(304);
+const user_connection_service_1 = __webpack_require__(301);
+const web_push_service_1 = __webpack_require__(302);
 let NotificationsModule = class NotificationsModule {
 };
 exports.NotificationsModule = NotificationsModule;
@@ -22421,7 +23417,7 @@ exports.NotificationsModule = NotificationsModule = __decorate([
 
 
 /***/ }),
-/* 291 */
+/* 296 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -22440,14 +23436,14 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 var _a;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.NotificationsController = void 0;
-const current_user_decorator_1 = __webpack_require__(94);
-const override_decorator_1 = __webpack_require__(95);
+const current_user_decorator_1 = __webpack_require__(97);
+const override_decorator_1 = __webpack_require__(98);
 const create_controller_factory_1 = __webpack_require__(18);
 const common_1 = __webpack_require__(5);
 const swagger_1 = __webpack_require__(8);
-const notification_dto_1 = __webpack_require__(292);
+const notification_dto_1 = __webpack_require__(297);
 const notification_entity_1 = __webpack_require__(79);
-const notifications_service_1 = __webpack_require__(240);
+const notifications_service_1 = __webpack_require__(245);
 class NotificationsController extends (0, create_controller_factory_1.createController)(notification_entity_1.Notification, notifications_service_1.NotificationsService, notification_dto_1.GetNotificationDto, notification_dto_1.NotificationDto, notification_dto_1.UpdateNotificationDto) {
     constructor(notificationsService, notificationsGateway) {
         super(notificationsService);
@@ -22498,7 +23494,7 @@ __decorate([
 
 
 /***/ }),
-/* 292 */
+/* 297 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -22514,10 +23510,10 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var _a, _b;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.GetNotificationDto = exports.UpdateNotificationDto = exports.NotificationDto = void 0;
-const base_dto_1 = __webpack_require__(98);
-const reference_dto_1 = __webpack_require__(99);
+const base_dto_1 = __webpack_require__(101);
+const reference_dto_1 = __webpack_require__(102);
 const notification_type_enum_1 = __webpack_require__(80);
-const create_get_dto_factory_1 = __webpack_require__(100);
+const create_get_dto_factory_1 = __webpack_require__(103);
 const swagger_1 = __webpack_require__(8);
 const class_transformer_1 = __webpack_require__(23);
 const class_validator_1 = __webpack_require__(24);
@@ -22622,7 +23618,7 @@ exports.GetNotificationDto = GetNotificationDto;
 
 
 /***/ }),
-/* 293 */
+/* 298 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -22641,12 +23637,12 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.NotificationsProcessor = void 0;
 const bull_1 = __webpack_require__(4);
 const common_1 = __webpack_require__(5);
-const bull_2 = __webpack_require__(155);
-const notifications_gateway_1 = __webpack_require__(241);
-const notifications_service_1 = __webpack_require__(240);
-const push_subscriptions_service_1 = __webpack_require__(294);
-const user_connection_service_1 = __webpack_require__(296);
-const web_push_service_1 = __webpack_require__(297);
+const bull_2 = __webpack_require__(158);
+const notifications_gateway_1 = __webpack_require__(246);
+const notifications_service_1 = __webpack_require__(245);
+const push_subscriptions_service_1 = __webpack_require__(299);
+const user_connection_service_1 = __webpack_require__(301);
+const web_push_service_1 = __webpack_require__(302);
 let NotificationsProcessor = NotificationsProcessor_1 = class NotificationsProcessor {
     constructor(notificationsService, notificationsGateway, webPushService, pushSubscriptionService, userConnectionService) {
         this.notificationsService = notificationsService;
@@ -22974,7 +23970,7 @@ exports.NotificationsProcessor = NotificationsProcessor = NotificationsProcessor
 
 
 /***/ }),
-/* 294 */
+/* 299 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -22998,7 +23994,7 @@ const users_service_1 = __webpack_require__(30);
 const common_1 = __webpack_require__(5);
 const typeorm_1 = __webpack_require__(16);
 const typeorm_2 = __webpack_require__(25);
-const push_subscription_entity_1 = __webpack_require__(295);
+const push_subscription_entity_1 = __webpack_require__(300);
 let PushSubscriptionsService = class PushSubscriptionsService extends base_service_1.BaseService {
     constructor(pushSubscriptionsRepository, usersService) {
         super(pushSubscriptionsRepository, usersService);
@@ -23065,7 +24061,7 @@ exports.PushSubscriptionsService = PushSubscriptionsService = __decorate([
 
 
 /***/ }),
-/* 295 */
+/* 300 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -23103,7 +24099,7 @@ exports.PushSubscription = PushSubscription = __decorate([
 
 
 /***/ }),
-/* 296 */
+/* 301 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -23124,7 +24120,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.UserConnectionService = void 0;
 const bull_1 = __webpack_require__(4);
 const common_1 = __webpack_require__(5);
-const bull_2 = __webpack_require__(155);
+const bull_2 = __webpack_require__(158);
 let UserConnectionService = class UserConnectionService {
     constructor(notificationsQueue) {
         this.notificationsQueue = notificationsQueue;
@@ -23167,7 +24163,7 @@ exports.UserConnectionService = UserConnectionService = __decorate([
 
 
 /***/ }),
-/* 297 */
+/* 302 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -23219,7 +24215,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.WebPushService = void 0;
 const common_1 = __webpack_require__(5);
 const config_1 = __webpack_require__(6);
-const webPush = __importStar(__webpack_require__(298));
+const webPush = __importStar(__webpack_require__(303));
 let WebPushService = WebPushService_1 = class WebPushService {
     constructor(configService) {
         this.configService = configService;
@@ -23288,13 +24284,13 @@ exports.WebPushService = WebPushService = WebPushService_1 = __decorate([
 
 
 /***/ }),
-/* 298 */
+/* 303 */
 /***/ ((module) => {
 
 module.exports = require("web-push");
 
 /***/ }),
-/* 299 */
+/* 304 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -23308,9 +24304,9 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.PushSubscriptionsModule = void 0;
 const common_1 = __webpack_require__(5);
 const typeorm_1 = __webpack_require__(16);
-const push_subscriptions_controller_1 = __webpack_require__(300);
-const push_subscriptions_service_1 = __webpack_require__(294);
-const push_subscription_entity_1 = __webpack_require__(295);
+const push_subscriptions_controller_1 = __webpack_require__(305);
+const push_subscriptions_service_1 = __webpack_require__(299);
+const push_subscription_entity_1 = __webpack_require__(300);
 let PushSubscriptionsModule = class PushSubscriptionsModule {
 };
 exports.PushSubscriptionsModule = PushSubscriptionsModule;
@@ -23327,7 +24323,7 @@ exports.PushSubscriptionsModule = PushSubscriptionsModule = __decorate([
 
 
 /***/ }),
-/* 300 */
+/* 305 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -23347,13 +24343,13 @@ var _a;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.PushSubscriptionsController = void 0;
 const authorize_decorator_1 = __webpack_require__(26);
-const current_user_decorator_1 = __webpack_require__(94);
+const current_user_decorator_1 = __webpack_require__(97);
 const create_controller_factory_1 = __webpack_require__(18);
 const common_1 = __webpack_require__(5);
 const swagger_1 = __webpack_require__(8);
-const push_subscription_dto_1 = __webpack_require__(301);
-const push_subscription_entity_1 = __webpack_require__(295);
-const push_subscriptions_service_1 = __webpack_require__(294);
+const push_subscription_dto_1 = __webpack_require__(306);
+const push_subscription_entity_1 = __webpack_require__(300);
+const push_subscriptions_service_1 = __webpack_require__(299);
 class PushSubscriptionsController extends (0, create_controller_factory_1.createController)(push_subscription_entity_1.PushSubscription, // Entity name for Swagger documentation
 push_subscriptions_service_1.PushSubscriptionsService, // The service handling PushSubscription-related operations
 push_subscription_dto_1.GetPushSubscriptionDto) {
@@ -23439,7 +24435,7 @@ __decorate([
 
 
 /***/ }),
-/* 301 */
+/* 306 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -23454,8 +24450,8 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.GetPushSubscriptionDto = exports.UpdatePushSubscriptionDto = exports.PushSubscriptionDto = void 0;
-const base_dto_1 = __webpack_require__(98);
-const create_get_dto_factory_1 = __webpack_require__(100);
+const base_dto_1 = __webpack_require__(101);
+const create_get_dto_factory_1 = __webpack_require__(103);
 const swagger_1 = __webpack_require__(8);
 const class_validator_1 = __webpack_require__(24);
 class PushSubscriptionDto extends (0, swagger_1.PartialType)(base_dto_1.BaseDto) {
@@ -23476,7 +24472,7 @@ exports.GetPushSubscriptionDto = GetPushSubscriptionDto;
 
 
 /***/ }),
-/* 302 */
+/* 307 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -23491,11 +24487,11 @@ exports.OrganizationManagementModule = void 0;
 const common_1 = __webpack_require__(5);
 const core_1 = __webpack_require__(7);
 const typeorm_1 = __webpack_require__(16);
-const branches_module_1 = __webpack_require__(303);
-const departments_module_1 = __webpack_require__(307);
+const branches_module_1 = __webpack_require__(308);
+const departments_module_1 = __webpack_require__(312);
 const organization_entity_1 = __webpack_require__(42);
-const organizations_controller_1 = __webpack_require__(311);
-const organizations_service_1 = __webpack_require__(313);
+const organizations_controller_1 = __webpack_require__(316);
+const organizations_service_1 = __webpack_require__(318);
 let OrganizationManagementModule = class OrganizationManagementModule {
 };
 exports.OrganizationManagementModule = OrganizationManagementModule;
@@ -23535,7 +24531,7 @@ exports.OrganizationManagementModule = OrganizationManagementModule = __decorate
 
 
 /***/ }),
-/* 303 */
+/* 308 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -23549,9 +24545,9 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.BranchesModule = void 0;
 const common_1 = __webpack_require__(5);
 const typeorm_1 = __webpack_require__(16);
-const branches_controller_1 = __webpack_require__(304);
-const branches_service_1 = __webpack_require__(305);
-const departments_module_1 = __webpack_require__(307);
+const branches_controller_1 = __webpack_require__(309);
+const branches_service_1 = __webpack_require__(310);
+const departments_module_1 = __webpack_require__(312);
 const branch_entity_1 = __webpack_require__(41);
 let BranchesModule = class BranchesModule {
 };
@@ -23568,15 +24564,15 @@ exports.BranchesModule = BranchesModule = __decorate([
 
 
 /***/ }),
-/* 304 */
+/* 309 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.BranchesController = void 0;
 const create_controller_factory_1 = __webpack_require__(18);
-const branches_service_1 = __webpack_require__(305);
-const branch_dto_1 = __webpack_require__(306);
+const branches_service_1 = __webpack_require__(310);
+const branch_dto_1 = __webpack_require__(311);
 const branch_entity_1 = __webpack_require__(41);
 class BranchesController extends (0, create_controller_factory_1.createController)(branch_entity_1.Branch, branches_service_1.BranchesService, branch_dto_1.GetBranchDto, branch_dto_1.BranchDto, branch_dto_1.UpdateBranchDto) {
 }
@@ -23584,7 +24580,7 @@ exports.BranchesController = BranchesController;
 
 
 /***/ }),
-/* 305 */
+/* 310 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -23625,7 +24621,7 @@ exports.BranchesService = BranchesService = __decorate([
 
 
 /***/ }),
-/* 306 */
+/* 311 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -23641,8 +24637,8 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var _a;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.GetBranchDto = exports.UpdateBranchDto = exports.BranchDto = void 0;
-const create_get_dto_factory_1 = __webpack_require__(100);
-const address_dto_1 = __webpack_require__(116);
+const create_get_dto_factory_1 = __webpack_require__(103);
+const address_dto_1 = __webpack_require__(119);
 const swagger_1 = __webpack_require__(8);
 const class_transformer_1 = __webpack_require__(23);
 const class_validator_1 = __webpack_require__(24);
@@ -23710,7 +24706,7 @@ exports.GetBranchDto = GetBranchDto;
 
 
 /***/ }),
-/* 307 */
+/* 312 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -23724,8 +24720,8 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.DepartmentsModule = void 0;
 const common_1 = __webpack_require__(5);
 const typeorm_1 = __webpack_require__(16);
-const departments_controller_1 = __webpack_require__(308);
-const departments_service_1 = __webpack_require__(309);
+const departments_controller_1 = __webpack_require__(313);
+const departments_service_1 = __webpack_require__(314);
 const department_entity_1 = __webpack_require__(36);
 let DepartmentsModule = class DepartmentsModule {
 };
@@ -23743,15 +24739,15 @@ exports.DepartmentsModule = DepartmentsModule = __decorate([
 
 
 /***/ }),
-/* 308 */
+/* 313 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.DepartmentsController = void 0;
 const create_controller_factory_1 = __webpack_require__(18);
-const departments_service_1 = __webpack_require__(309);
-const department_dto_1 = __webpack_require__(310);
+const departments_service_1 = __webpack_require__(314);
+const department_dto_1 = __webpack_require__(315);
 const department_entity_1 = __webpack_require__(36);
 class DepartmentsController extends (0, create_controller_factory_1.createController)(department_entity_1.Department, departments_service_1.DepartmentsService, department_dto_1.GetDepartmentDto, department_dto_1.DepartmentDto, department_dto_1.UpdateDepartmentDto) {
 }
@@ -23759,7 +24755,7 @@ exports.DepartmentsController = DepartmentsController;
 
 
 /***/ }),
-/* 309 */
+/* 314 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -23800,7 +24796,7 @@ exports.DepartmentsService = DepartmentsService = __decorate([
 
 
 /***/ }),
-/* 310 */
+/* 315 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -23816,8 +24812,8 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var _a;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.GetDepartmentDto = exports.UpdateDepartmentDto = exports.DepartmentDto = void 0;
-const create_get_dto_factory_1 = __webpack_require__(100);
-const address_dto_1 = __webpack_require__(116);
+const create_get_dto_factory_1 = __webpack_require__(103);
+const address_dto_1 = __webpack_require__(119);
 const swagger_1 = __webpack_require__(8);
 const class_transformer_1 = __webpack_require__(23);
 const class_validator_1 = __webpack_require__(24);
@@ -23885,23 +24881,23 @@ exports.GetDepartmentDto = GetDepartmentDto;
 
 
 /***/ }),
-/* 311 */
+/* 316 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.OrganizationsController = void 0;
 const create_controller_factory_1 = __webpack_require__(18);
-const organization_dto_1 = __webpack_require__(312);
+const organization_dto_1 = __webpack_require__(317);
 const organization_entity_1 = __webpack_require__(42);
-const organizations_service_1 = __webpack_require__(313);
+const organizations_service_1 = __webpack_require__(318);
 class OrganizationsController extends (0, create_controller_factory_1.createController)(organization_entity_1.Organization, organizations_service_1.OrganizationsService, organization_dto_1.GetOrganizationDto, organization_dto_1.OrganizationDto, organization_dto_1.UpdateOrganizationDto) {
 }
 exports.OrganizationsController = OrganizationsController;
 
 
 /***/ }),
-/* 312 */
+/* 317 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -23917,8 +24913,8 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var _a;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.GetOrganizationDto = exports.UpdateOrganizationDto = exports.OrganizationDto = void 0;
-const create_get_dto_factory_1 = __webpack_require__(100);
-const address_dto_1 = __webpack_require__(116);
+const create_get_dto_factory_1 = __webpack_require__(103);
+const address_dto_1 = __webpack_require__(119);
 const swagger_1 = __webpack_require__(8);
 const class_transformer_1 = __webpack_require__(23);
 const class_validator_1 = __webpack_require__(24);
@@ -23980,7 +24976,7 @@ exports.GetOrganizationDto = GetOrganizationDto;
 
 
 /***/ }),
-/* 313 */
+/* 318 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -24021,7 +25017,7 @@ exports.OrganizationsService = OrganizationsService = __decorate([
 
 
 /***/ }),
-/* 314 */
+/* 319 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -24036,14 +25032,14 @@ exports.PayrollManagementModule = void 0;
 const common_1 = __webpack_require__(5);
 const core_1 = __webpack_require__(7);
 const typeorm_1 = __webpack_require__(16);
-const final_work_hours_module_1 = __webpack_require__(244);
+const final_work_hours_module_1 = __webpack_require__(249);
 const employee_management_module_1 = __webpack_require__(15);
-const cutoffs_module_1 = __webpack_require__(125);
+const cutoffs_module_1 = __webpack_require__(128);
 const payroll_entity_1 = __webpack_require__(63);
-const payroll_item_types_module_1 = __webpack_require__(315);
-const payroll_items_module_1 = __webpack_require__(319);
-const payrolls_controller_1 = __webpack_require__(323);
-const payrolls_service_1 = __webpack_require__(324);
+const payroll_item_types_module_1 = __webpack_require__(320);
+const payroll_items_module_1 = __webpack_require__(324);
+const payrolls_controller_1 = __webpack_require__(328);
+const payrolls_service_1 = __webpack_require__(329);
 let PayrollManagementModule = class PayrollManagementModule {
 };
 exports.PayrollManagementModule = PayrollManagementModule;
@@ -24090,7 +25086,7 @@ exports.PayrollManagementModule = PayrollManagementModule = __decorate([
 
 
 /***/ }),
-/* 315 */
+/* 320 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -24105,8 +25101,8 @@ exports.PayrollItemTypesModule = void 0;
 const common_1 = __webpack_require__(5);
 const typeorm_1 = __webpack_require__(16);
 const payroll_item_type_entity_1 = __webpack_require__(66);
-const payroll_item_types_controller_1 = __webpack_require__(316);
-const payroll_item_types_service_1 = __webpack_require__(318);
+const payroll_item_types_controller_1 = __webpack_require__(321);
+const payroll_item_types_service_1 = __webpack_require__(323);
 let PayrollItemTypesModule = class PayrollItemTypesModule {
 };
 exports.PayrollItemTypesModule = PayrollItemTypesModule;
@@ -24123,23 +25119,23 @@ exports.PayrollItemTypesModule = PayrollItemTypesModule = __decorate([
 
 
 /***/ }),
-/* 316 */
+/* 321 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.PayrollItemTypesController = void 0;
 const create_controller_factory_1 = __webpack_require__(18);
-const payroll_item_type_dto_1 = __webpack_require__(317);
+const payroll_item_type_dto_1 = __webpack_require__(322);
 const payroll_item_type_entity_1 = __webpack_require__(66);
-const payroll_item_types_service_1 = __webpack_require__(318);
+const payroll_item_types_service_1 = __webpack_require__(323);
 class PayrollItemTypesController extends (0, create_controller_factory_1.createController)(payroll_item_type_entity_1.PayrollItemType, payroll_item_types_service_1.PayrollItemTypesService, payroll_item_type_dto_1.GetPayrollItemTypeDto, payroll_item_type_dto_1.PayrollItemTypeDto, payroll_item_type_dto_1.UpdatePayrollItemTypeDto) {
 }
 exports.PayrollItemTypesController = PayrollItemTypesController;
 
 
 /***/ }),
-/* 317 */
+/* 322 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -24155,9 +25151,9 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var _a, _b, _c, _d;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.GetPayrollItemTypeDto = exports.UpdatePayrollItemTypeDto = exports.PayrollItemTypeDto = void 0;
-const base_dto_1 = __webpack_require__(98);
+const base_dto_1 = __webpack_require__(101);
 const payroll_item_category_enum_1 = __webpack_require__(67);
-const create_get_dto_factory_1 = __webpack_require__(100);
+const create_get_dto_factory_1 = __webpack_require__(103);
 const swagger_1 = __webpack_require__(8);
 const class_transformer_1 = __webpack_require__(23);
 const class_validator_1 = __webpack_require__(24);
@@ -24399,7 +25395,7 @@ exports.GetPayrollItemTypeDto = GetPayrollItemTypeDto;
 
 
 /***/ }),
-/* 318 */
+/* 323 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -24440,7 +25436,7 @@ exports.PayrollItemTypesService = PayrollItemTypesService = __decorate([
 
 
 /***/ }),
-/* 319 */
+/* 324 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -24455,8 +25451,8 @@ exports.PayrollItemsModule = void 0;
 const common_1 = __webpack_require__(5);
 const typeorm_1 = __webpack_require__(16);
 const payroll_item_entity_1 = __webpack_require__(65);
-const payroll_items_controller_1 = __webpack_require__(320);
-const payroll_items_service_1 = __webpack_require__(322);
+const payroll_items_controller_1 = __webpack_require__(325);
+const payroll_items_service_1 = __webpack_require__(327);
 let PayrollItemsModule = class PayrollItemsModule {
 };
 exports.PayrollItemsModule = PayrollItemsModule;
@@ -24473,23 +25469,23 @@ exports.PayrollItemsModule = PayrollItemsModule = __decorate([
 
 
 /***/ }),
-/* 320 */
+/* 325 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.PayrollItemsController = void 0;
 const create_controller_factory_1 = __webpack_require__(18);
-const payroll_dto_1 = __webpack_require__(321);
+const payroll_dto_1 = __webpack_require__(326);
 const payroll_item_entity_1 = __webpack_require__(65);
-const payroll_items_service_1 = __webpack_require__(322);
+const payroll_items_service_1 = __webpack_require__(327);
 class PayrollItemsController extends (0, create_controller_factory_1.createController)(payroll_item_entity_1.PayrollItem, payroll_items_service_1.PayrollItemsService, payroll_dto_1.GetPayrollDto, payroll_dto_1.PayrollDto, payroll_dto_1.UpdatePayrollDto) {
 }
 exports.PayrollItemsController = PayrollItemsController;
 
 
 /***/ }),
-/* 321 */
+/* 326 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -24504,8 +25500,8 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.GetPayrollDto = exports.UpdatePayrollDto = exports.PayrollDto = void 0;
-const base_dto_1 = __webpack_require__(98);
-const create_get_dto_factory_1 = __webpack_require__(100);
+const base_dto_1 = __webpack_require__(101);
+const create_get_dto_factory_1 = __webpack_require__(103);
 const swagger_1 = __webpack_require__(8);
 const class_validator_1 = __webpack_require__(24);
 const swagger_2 = __webpack_require__(8);
@@ -24527,7 +25523,7 @@ exports.GetPayrollDto = GetPayrollDto;
 
 
 /***/ }),
-/* 322 */
+/* 327 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -24568,7 +25564,7 @@ exports.PayrollItemsService = PayrollItemsService = __decorate([
 
 
 /***/ }),
-/* 323 */
+/* 328 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -24588,17 +25584,17 @@ var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.PayrollsController = void 0;
 const authorize_decorator_1 = __webpack_require__(26);
-const current_user_decorator_1 = __webpack_require__(94);
+const current_user_decorator_1 = __webpack_require__(97);
 const generalresponse_dto_1 = __webpack_require__(83);
 const action_enum_1 = __webpack_require__(40);
 const create_controller_factory_1 = __webpack_require__(18);
 const common_1 = __webpack_require__(5);
 const swagger_1 = __webpack_require__(8);
 const class_transformer_1 = __webpack_require__(23);
-const express_1 = __webpack_require__(202);
-const payroll_dto_1 = __webpack_require__(321);
+const express_1 = __webpack_require__(205);
+const payroll_dto_1 = __webpack_require__(326);
 const payroll_entity_1 = __webpack_require__(63);
-const payrolls_service_1 = __webpack_require__(324);
+const payrolls_service_1 = __webpack_require__(329);
 class PayrollsController extends (0, create_controller_factory_1.createController)(payroll_entity_1.Payroll, payrolls_service_1.PayrollsService, payroll_dto_1.GetPayrollDto, payroll_dto_1.PayrollDto, payroll_dto_1.UpdatePayrollDto) {
     constructor(payrollsService) {
         super(payrollsService);
@@ -24973,7 +25969,7 @@ __decorate([
 
 
 /***/ }),
-/* 324 */
+/* 329 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -25001,17 +25997,44 @@ const role_scope_type_enum_1 = __webpack_require__(38);
 const utility_helper_1 = __webpack_require__(84);
 const base_service_1 = __webpack_require__(31);
 const users_service_1 = __webpack_require__(30);
-const final_work_hours_service_1 = __webpack_require__(247);
+const final_work_hours_service_1 = __webpack_require__(252);
 const common_1 = __webpack_require__(5);
 const typeorm_1 = __webpack_require__(16);
-const mathjs_1 = __webpack_require__(325);
+const mathjs_1 = __webpack_require__(330);
 const typeorm_2 = __webpack_require__(25);
-const employees_service_1 = __webpack_require__(101);
-const cutoffs_service_1 = __webpack_require__(127);
+const employees_service_1 = __webpack_require__(104);
+const cutoffs_service_1 = __webpack_require__(130);
 const payroll_entity_1 = __webpack_require__(63);
-const payroll_item_types_service_1 = __webpack_require__(318);
+const payroll_item_types_service_1 = __webpack_require__(323);
 const payroll_item_entity_1 = __webpack_require__(65);
-const payroll_items_service_1 = __webpack_require__(322);
+const payroll_items_service_1 = __webpack_require__(327);
+// Add these types to your system using PayrollItemType entity
+const salaryCompensationTypes = [
+    {
+        name: 'Monthly Salary',
+        category: payroll_item_category_enum_1.PayrollItemCategory.COMPENSATION,
+        unit: 'PHP',
+        computationFormula: 'return Amount;', // Simply return the configured amount
+        isSystemGenerated: true,
+        isRequired: true
+    },
+    {
+        name: 'Daily Rate',
+        category: payroll_item_category_enum_1.PayrollItemCategory.COMPENSATION,
+        unit: 'PHP',
+        computationFormula: 'return Amount * WorkingDaysInPeriod;',
+        isSystemGenerated: true,
+        isRequired: true
+    },
+    {
+        name: 'Hourly Rate',
+        category: payroll_item_category_enum_1.PayrollItemCategory.COMPENSATION,
+        unit: 'PHP',
+        computationFormula: 'return Amount * WorkHoursInPeriod;',
+        isSystemGenerated: true,
+        isRequired: true
+    }
+];
 const sssEmployeeContribution = {
     name: 'SSS Employee Contribution',
     description: 'Social Security System employee contribution',
@@ -25206,6 +26229,38 @@ let PayrollsService = PayrollsService_1 = class PayrollsService extends base_ser
         const hourlyRate = dailyRate / 8;
         return { monthlyRate, dailyRate, hourlyRate };
     }
+    calculateRatesBase(employee, cutoff, baseCompensationItem) {
+        const compensationType = baseCompensationItem.payrollItemType.name;
+        const amount = baseCompensationItem.amount;
+        // Calculate days in period
+        const businessDaysInPeriod = utility_helper_1.UtilityHelper.getBusinessDays(cutoff.startDate, cutoff.endDate);
+        const businessDaysInMonth = utility_helper_1.UtilityHelper.getBusinessDaysInMonth(cutoff.startDate);
+        // Initialize with default values
+        let monthlyRate = 0;
+        let dailyRate = 0;
+        let hourlyRate = 0;
+        // Calculate based on compensation type
+        switch (compensationType) {
+            case 'Monthly Salary':
+                monthlyRate = amount;
+                dailyRate = amount / businessDaysInMonth;
+                hourlyRate = dailyRate / 8; // Assuming 8-hour workday
+                break;
+            case 'Daily Rate':
+                dailyRate = amount;
+                monthlyRate = dailyRate * businessDaysInMonth;
+                hourlyRate = dailyRate / 8;
+                break;
+            case 'Hourly Rate':
+                hourlyRate = amount;
+                dailyRate = hourlyRate * 8;
+                monthlyRate = dailyRate * businessDaysInMonth;
+                break;
+            default:
+                throw new Error(`Unknown compensation type: ${compensationType}`);
+        }
+        return { monthlyRate, dailyRate, hourlyRate };
+    }
     /**
      * Calculate basic pay components from work hours
      */
@@ -25340,7 +26395,7 @@ let PayrollsService = PayrollsService_1 = class PayrollsService extends base_ser
             where: { isActive: true, isDeleted: false },
             order: { category: 'ASC', name: 'ASC' }
         });
-        // Get employee's assigned payroll items
+        // Get employee's assigned payroll items including base compensation
         const employeePayrollItems = await this.payrollItemsService.getRepository().find({
             where: {
                 employee: { id: payroll.employee.id },
@@ -25350,6 +26405,11 @@ let PayrollsService = PayrollsService_1 = class PayrollsService extends base_ser
                 payrollItemType: true
             }
         });
+        // Find base compensation - Prioritize compensation items
+        const baseCompensationItem = employeePayrollItems.find(item => item.payrollItemType.category === payroll_item_category_enum_1.PayrollItemCategory.COMPENSATION);
+        if (!baseCompensationItem) {
+            throw new Error(`No base compensation defined for employee ${payroll.employee.id}`);
+        }
         // Clear existing payroll items if reprocessing
         if ((_a = payroll.payrollItems) === null || _a === void 0 ? void 0 : _a.length) {
             for (const item of payroll.payrollItems) {
@@ -25358,6 +26418,7 @@ let PayrollsService = PayrollsService_1 = class PayrollsService extends base_ser
         }
         // Order for processing categories
         const processingOrder = [
+            payroll_item_category_enum_1.PayrollItemCategory.COMPENSATION,
             payroll_item_category_enum_1.PayrollItemCategory.ALLOWANCE,
             payroll_item_category_enum_1.PayrollItemCategory.BONUS,
             payroll_item_category_enum_1.PayrollItemCategory.COMMISSION,
@@ -25933,13 +26994,13 @@ exports.PayrollsService = PayrollsService = PayrollsService_1 = __decorate([
 
 
 /***/ }),
-/* 325 */
+/* 330 */
 /***/ ((module) => {
 
 module.exports = require("mathjs");
 
 /***/ }),
-/* 326 */
+/* 331 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -25986,7 +27047,7 @@ var HttpExceptionFilter_1;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.HttpExceptionFilter = void 0;
 const common_1 = __webpack_require__(5);
-const crypto = __importStar(__webpack_require__(270));
+const crypto = __importStar(__webpack_require__(275));
 /**
  * HttpExceptionFilter is a global filter that handles all exceptions thrown in the application.
  * It logs the error details, sanitizes sensitive information, and sends a user-friendly response to the client.
@@ -26137,7 +27198,7 @@ exports.HttpExceptionFilter = HttpExceptionFilter = HttpExceptionFilter_1 = __de
 
 
 /***/ }),
-/* 327 */
+/* 332 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -26183,8 +27244,8 @@ var __importStar = (this && this.__importStar) || (function () {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.LoggingInterceptor = void 0;
 const common_1 = __webpack_require__(5);
-const crypto = __importStar(__webpack_require__(270));
-const operators_1 = __webpack_require__(225);
+const crypto = __importStar(__webpack_require__(275));
+const operators_1 = __webpack_require__(96);
 /**
  * LoggingInterceptor is a NestJS interceptor that logs HTTP requests and responses.
  * It also sanitizes sensitive data and adds a correlation ID to each request and response.
@@ -26321,7 +27382,7 @@ exports.LoggingInterceptor = LoggingInterceptor = __decorate([
 
 
 /***/ }),
-/* 328 */
+/* 333 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -26335,7 +27396,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.TransformInterceptor = void 0;
 const common_1 = __webpack_require__(5);
 const class_transformer_1 = __webpack_require__(23);
-const operators_1 = __webpack_require__(225);
+const operators_1 = __webpack_require__(96);
 /**
  * A NestJS interceptor that transforms the response data.
  *
@@ -26367,7 +27428,7 @@ exports.TransformInterceptor = TransformInterceptor = __decorate([
 
 
 /***/ }),
-/* 329 */
+/* 334 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
@@ -26375,7 +27436,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.swaggerCustomOptions = exports.swaggerConfig = exports.getLocalIpAddress = void 0;
 const config_1 = __webpack_require__(6);
 const swagger_1 = __webpack_require__(8);
-const os_1 = __webpack_require__(330);
+const os_1 = __webpack_require__(335);
 // Initialize ConfigService
 const configService = new config_1.ConfigService();
 // Get local IP address
@@ -26442,7 +27503,7 @@ exports.swaggerCustomOptions = {
 
 
 /***/ }),
-/* 330 */
+/* 335 */
 /***/ ((module) => {
 
 module.exports = require("os");

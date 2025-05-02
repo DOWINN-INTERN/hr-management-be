@@ -1,11 +1,107 @@
-import { GeneralResponseDto as ErrorResponseDto } from '@/common/dtos/generalresponse.dto';
 import { Body, Controller, Delete, Get, HttpException, HttpStatus, Inject, Param, Post, Put, Query, UseInterceptors, ValidationPipe } from '@nestjs/common';
-import { ApiOperation, ApiParam, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
-import { ConnectDeviceDto } from './dtos/connect-device.dto';
-import { SetTimeDto } from './dtos/set-time.dto';
-import { SetUserDto } from './dtos/set-user.dto';
+import { ApiBody, ApiOperation, ApiParam, ApiProperty, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { IsEnum, IsInt, IsIP, IsOptional, Max, Min } from 'class-validator';
+import { ErrorResponseDto } from './dtos/error-response.dto';
+import { BiometricDevice, BiometricDeviceType } from './entities/biometric-device.entity';
 import { TimeoutInterceptor } from './interceptors/timeout.interceptor';
-import { AttendanceRecord, IBiometricDevice, IBiometricService, IBiometricUser } from './interfaces/biometric.interface';
+import { AttendanceRecord, IBiometricDevice, IBiometricService, IBiometricTemplate, IBiometricUser } from './interfaces/biometric.interface';
+import { BiometricDevicesService } from './services/biometric-devices.service';
+import { BiometricsFactoryService } from './services/biometrics-factory.service';
+
+class ConnectDeviceDto {
+    @ApiProperty({
+        description: 'Device IP address',
+        example: '192.168.1.100'
+    })
+    @IsIP(4)
+    ipAddress!: string;
+
+    @ApiProperty({
+        description: 'Device port number',
+        example: 4370,
+        default: 4370
+    })
+    @IsInt()
+    @Min(1)
+    @Max(65535)
+    port: number = 4370;
+
+    @ApiProperty({
+        description: 'Device type/manufacturer',
+        enum: BiometricDeviceType,
+        default: BiometricDeviceType.ZKTECO,
+        example: 'zkteco'
+    })
+    @IsEnum(BiometricDeviceType)
+    @IsOptional()
+    deviceType?: string = BiometricDeviceType.ZKTECO;
+}
+
+class SetUserDto {
+    @ApiProperty({
+        description: 'Device ID to register user on',
+        example: '192.168.1.100:4370'
+    })
+    deviceId!: string;
+
+    @ApiProperty({
+        description: 'User ID',
+        example: '1001'
+    })
+    userId!: string;
+
+    @ApiProperty({
+        description: 'User name',
+        example: 'John Doe'
+    })
+    name!: string;
+
+    @ApiProperty({
+        description: 'User password',
+        example: '1234',
+        required: false
+    })
+    @IsOptional()
+    password?: string;
+
+    @ApiProperty({
+        description: 'User card number',
+        example: '8987656789',
+        required: false
+    })
+    @IsOptional()
+    cardNumber?: string;
+
+    @ApiProperty({
+        description: 'User role (0=normal, 14=admin)',
+        example: 0,
+        required: false
+    })
+    @IsOptional()
+    role?: number;
+}
+
+class GetFingerprintDto {
+    @ApiProperty({
+        description: 'Device ID to get fingerprint from',
+        example: '192.168.1.100:4370'
+    })
+    deviceId!: string;
+
+    @ApiProperty({
+        description: 'User ID',
+        example: '1001'
+    })
+    userId!: string;
+
+    @ApiProperty({
+        description: 'Finger ID (0-9)',
+        example: 0,
+        required: false
+    })
+    @IsOptional()
+    fingerId?: number = 0;
+}
 
 @ApiTags('Biometrics')
 @Controller()
@@ -13,95 +109,106 @@ import { AttendanceRecord, IBiometricDevice, IBiometricService, IBiometricUser }
 export class BiometricsController {
     constructor(
         @Inject('BIOMETRIC_SERVICE')
-        private readonly biometricService: IBiometricService
+        private readonly defaultBiometricService: IBiometricService,
+        private readonly biometricsFactory: BiometricsFactoryService,
+        private readonly biometricDevicesService: BiometricDevicesService
     ) {}
 
-    // Helper method for consistent error handling
-    private handleError(error: unknown, defaultMessage: string, notImplementedMessage?: string): never {
+    private getErrorMessage(error: unknown): string {
+        return error instanceof Error ? error.message : 'An unknown error occurred';
+    }
+
+    private handleError(
+        error: unknown,
+        defaultMessage: string,
+        notImplementedMessage: string
+    ): never {
         if (error instanceof HttpException) {
             throw error;
         }
-        
+
         const errorMessage = this.getErrorMessage(error);
         
-        if (notImplementedMessage && errorMessage.includes('not implemented')) {
+        // Check if this is a "not implemented" error
+        if (errorMessage.includes('not implemented') || errorMessage.includes('NOT_IMPLEMENTED')) {
             throw new HttpException(
                 notImplementedMessage,
                 HttpStatus.NOT_IMPLEMENTED
             );
         }
         
+        // Check if this is a "not found" error
+        if (errorMessage.includes('not found') || errorMessage.includes('not connected')) {
+            throw new HttpException(
+                `Device not found or not connected: ${errorMessage}`,
+                HttpStatus.NOT_FOUND
+            );
+        }
+
+        // Generic error response
         throw new HttpException(
             `${defaultMessage}: ${errorMessage}`,
             HttpStatus.INTERNAL_SERVER_ERROR
         );
     }
-  
-    // Helper to safely extract error messages
-    private getErrorMessage(error: unknown): string {
-        if (error instanceof Error) {
-            return error.message;
-        }
-        if (typeof error === 'string') {
-            return error;
-        }
-        if (error && typeof error === 'object' && 'message' in error && typeof error.message === 'string') {
-            return error.message;
-        }
-        return String(error);
-    }
 
-    // @ApiOperation({ summary: 'Get fingerprint template for a user' })
-    // @ApiResponse({ 
-    // status: HttpStatus.OK, 
-    // description: 'Fingerprint template retrieved successfully',
-    // schema: {
-    //     type: 'object',
-    //     properties: {
-    //     id: { type: 'string', example: '1001-0' },
-    //     userId: { type: 'string', example: '1001' },
-    //     fingerId: { type: 'number', example: 0 },
-    //     template: { type: 'string', format: 'binary', description: 'Binary template data' },
-    //     provider: { type: 'string', example: 'zkteco' }
-    //     }
-    // }
-    // })
-    // @ApiResponse({ 
-    //     status: HttpStatus.NOT_FOUND, 
-    //     description: 'Template or device not found',
-    //     type: ErrorResponseDto
-    // })
-    // @ApiResponse({ 
-    //     status: HttpStatus.BAD_REQUEST, 
-    //     description: 'Invalid request',
-    //     type: ErrorResponseDto
-    // })
-    // @Get('users/fingerprint')
-    // async getUserFingerprint(
-    //     @Query(new ValidationPipe({ transform: true })) getFingerprintDto: GetFingerprintDto
-    // ): Promise<IBiometricTemplate | null> {
-    //     try {
-    //         const { deviceId, userId, fingerId = 0 } = getFingerprintDto;
+    @ApiOperation({ summary: 'Get fingerprint template for a user' })
+    @ApiResponse({ 
+        status: HttpStatus.OK, 
+        description: 'Fingerprint template retrieved successfully',
+        schema: {
+            type: 'object',
+            properties: {
+                id: { type: 'string', example: '1001-0' },
+                userId: { type: 'string', example: '1001' },
+                fingerId: { type: 'number', example: 0 },
+                template: { type: 'string', format: 'binary', description: 'Binary template data' },
+                provider: { type: 'string', example: 'zkteco' }
+            }
+        }
+    })
+    @ApiResponse({ 
+        status: HttpStatus.NOT_FOUND, 
+        description: 'Template or device not found',
+        type: ErrorResponseDto
+    })
+    @ApiResponse({ 
+        status: HttpStatus.BAD_REQUEST, 
+        description: 'Invalid request',
+        type: ErrorResponseDto
+    })
+    @Get('users/fingerprint')
+    async getUserFingerprint(
+        @Query(new ValidationPipe({ transform: true })) getFingerprintDto: GetFingerprintDto
+    ): Promise<IBiometricTemplate | null> {
+        try {
+            const { deviceId, userId, fingerId = 0 } = getFingerprintDto;
             
-    //         const template = await this.biometricService.getUserFingerprint(
-    //             deviceId,
-    //             userId,
-    //             fingerId
-    //         );
+            // Get the appropriate service based on device type
+            const service = await this.biometricsFactory.getServiceByDeviceId(deviceId);
             
-    //         if (!template) {
-    //             throw new NotFoundException(`No fingerprint template found for user ${userId} (finger ${fingerId})`);
-    //         }
+            const template = await service.getUserFingerprint(
+                deviceId,
+                userId,
+                fingerId
+            );
             
-    //         return template;
-    //     } catch (error: unknown) {
-    //         return this.handleError(
-    //             error,
-    //             'Failed to retrieve fingerprint template',
-    //             'Fingerprint template not found or retrieval not supported by this device type'
-    //         );
-    //     }
-    // }
+            if (!template) {
+                throw new HttpException(
+                    `No fingerprint template found for user ${userId} (finger ${fingerId})`,
+                    HttpStatus.NOT_FOUND
+                );
+            }
+            
+            return template;
+        } catch (error: unknown) {
+            return this.handleError(
+                error,
+                'Failed to retrieve fingerprint template',
+                'Fingerprint template retrieval not supported by this device type'
+            );
+        }
+    }
 
     @ApiOperation({ summary: 'Register a new user on a biometric device' })
     @ApiResponse({ 
@@ -124,7 +231,10 @@ export class BiometricsController {
         @Body() setUserDto: SetUserDto
     ): Promise<IBiometricUser> {
         try {
-            return await this.biometricService.registerUser(
+            // Get the appropriate service based on the device ID
+            const service = await this.biometricsFactory.getServiceByDeviceId(setUserDto.deviceId);
+            
+            return await service.registerUser(
                 setUserDto.deviceId,
                 {
                     userId: setUserDto.userId,
@@ -136,17 +246,13 @@ export class BiometricsController {
             );
         } catch (error: unknown) {
             return this.handleError(
-            error,
+                error,
                 'Failed to register user',
                 'User registration not supported by this device type'
             );
         }
     }
 
-    // =============================================
-    // Device Management Endpoints
-    // =============================================
-    
     @ApiOperation({ summary: 'Connect to a biometric device' })
     @ApiResponse({ 
         status: HttpStatus.CREATED, 
@@ -163,15 +269,42 @@ export class BiometricsController {
         description: 'Device connection failed',
         type: ErrorResponseDto 
     })
+    @ApiBody({
+        type: ConnectDeviceDto,
+        description: 'Device connection parameters'
+
+    })
     @Post('devices/connect')
     async connectDevice(
-        @Body(new ValidationPipe({ transform: true })) connectDeviceDto: ConnectDeviceDto
+        @Body() connectDeviceDto: ConnectDeviceDto
     ): Promise<IBiometricDevice | null> {
         try {
-            return await this.biometricService.connect(
+            // Use the appropriate service based on device type
+            const service = this.biometricsFactory.getService(
+                connectDeviceDto.deviceType || BiometricDeviceType.ZKTECO
+            );
+            
+            const device = await service.connect(
                 connectDeviceDto.ipAddress,
                 connectDeviceDto.port
             );
+            
+            // If connection was successful, update or create device in database
+            if (device) {
+                // Create a BiometricDevice entity instance
+                const biometricDevice = new BiometricDevice({});
+                
+                // Set properties from device object
+                Object.assign(biometricDevice, {
+                    ...device,
+                    provider: connectDeviceDto.deviceType || BiometricDeviceType.ZKTECO
+                });
+                
+                // Save additional info to database
+                await this.biometricDevicesService.save(biometricDevice);
+            }
+            
+            return device;
         } catch (error: unknown) {
             if (error instanceof HttpException) {
                 throw error;
@@ -194,16 +327,29 @@ export class BiometricsController {
     @Post('devices/:deviceId/disconnect')
     async disconnectDevice(@Param('deviceId') deviceId: string): Promise<{ success: boolean; message: string }> {
         try {
-            const result = await this.biometricService.disconnect(deviceId);
-            return { 
-                success: result, 
-                message: result ? 'Device disconnected successfully' : 'Device disconnection initiated'
+            // Get the appropriate service based on the device ID
+            const service = await this.biometricsFactory.getServiceByDeviceId(deviceId);
+            
+            const result = await service.disconnect(deviceId);
+            
+            // Update database record
+            if (result) {
+                await this.biometricDevicesService.update(deviceId, {
+                    isConnected: false
+                });
+            }
+            
+            return {
+                success: result,
+                message: result 
+                    ? 'Device disconnected successfully' 
+                    : 'Device disconnect failed'
             };
         } catch (error: unknown) {
             return this.handleError(
                 error,
                 'Failed to disconnect device',
-                'Device disconnection not supported by this device type'
+                'Device disconnection failed'
             );
         }
     }
@@ -215,12 +361,20 @@ export class BiometricsController {
         type: [Object]
     })
     @Get('devices')
-    async getConnectedDevices(): Promise<{ devices: IBiometricDevice[]; count: number }> {
-        const devices = await this.biometricService.getConnectedDevices();
-            return { 
-            devices,
-            count: devices.length
-        };
+    async getConnectedDevices(): Promise<IBiometricDevice[]> {
+        try {
+            // Get all devices from database
+            const devices = await this.biometricDevicesService.getRepository().find({
+                where: { isConnected: true }
+            });
+            
+            return devices;
+        } catch (error: unknown) {
+            throw new HttpException(
+                `Failed to get connected devices: ${this.getErrorMessage(error)}`,
+                HttpStatus.INTERNAL_SERVER_ERROR
+            );
+        }
     }
 
     @ApiOperation({ summary: 'Get device information' })
@@ -232,11 +386,12 @@ export class BiometricsController {
     })
     @ApiParam({ name: 'deviceId', description: 'Target device ID' })
     @Get('devices/:deviceId/info')
-    async getDeviceInfo(
-        @Param('deviceId') deviceId: string
-    ): Promise<Record<string, any>> {
+    async getDeviceInfo(@Param('deviceId') deviceId: string): Promise<Record<string, any>> {
         try {
-            return await this.biometricService.getDeviceInfo(deviceId);
+            // Get the appropriate service based on the device ID
+            const service = await this.biometricsFactory.getServiceByDeviceId(deviceId);
+            
+            return await service.getDeviceInfo(deviceId);
         } catch (error: unknown) {
             return this.handleError(
                 error,
@@ -245,141 +400,6 @@ export class BiometricsController {
             );
         }
     }
-
-    // @ApiOperation({ summary: 'Restart a biometric device' })
-    // @ApiResponse({ status: HttpStatus.OK, description: 'Device restarted successfully' })
-    // @ApiResponse({ 
-    //     status: HttpStatus.NOT_FOUND, 
-    //     description: 'Device not found',
-    //     type: ErrorResponseDto
-    // })
-    // @ApiResponse({ 
-    //     status: HttpStatus.NOT_IMPLEMENTED, 
-    //     description: 'Feature not implemented on this device',
-    //     type: ErrorResponseDto
-    // })
-    // @ApiParam({ name: 'deviceId', description: 'Device ID to restart' })
-    // @Post('devices/:deviceId/restart')
-    // async restartDevice(
-    //     @Param('deviceId') deviceId: string
-    // ): Promise<{ success: boolean; message: string }> {
-    //     try {
-    //     const result = await this.biometricService.restartDevice?.(deviceId);
-    //     return { 
-    //         success: result,
-    //         message: result ? 'Device restart initiated' : 'Device restart failed'
-    //     };
-    //     } catch (error: unknown) {
-    //     return this.handleError(
-    //         error,
-    //         'Failed to restart device',
-    //         'Device restart not supported by this device type'
-    //     );
-    //     }
-    // }
-
-    //   @ApiOperation({ summary: 'Unlock a device door' })
-    //   @ApiResponse({ status: HttpStatus.OK, description: 'Door unlocked successfully' })
-    //   @ApiResponse({ 
-    //     status: HttpStatus.NOT_FOUND, 
-    //     description: 'Device not found',
-    //     type: ErrorResponseDto
-    //   })
-    //   @ApiResponse({ 
-    //     status: HttpStatus.NOT_IMPLEMENTED, 
-    //     description: 'Feature not implemented on this device',
-    //     type: ErrorResponseDto
-    //   })
-    //   @ApiParam({ name: 'deviceId', description: 'Target device ID' })
-    //   @Post('devices/:deviceId/unlock')
-    //   async unlockDoor(
-    //     @Param('deviceId') deviceId: string
-    //   ): Promise<{ success: boolean; message: string }> {
-    //     try {
-    //       const result = await this.biometricService.unlockDoor?.(deviceId);
-    //       return { 
-    //         success: result,
-    //         message: result ? 'Door unlocked successfully' : 'Failed to unlock door'
-    //       };
-    //     } catch (error: unknown) {
-    //       return this.handleError(
-    //         error,
-    //         'Failed to unlock door',
-    //         'Door unlock not supported by this device type'
-    //       );
-    //     }
-    //   }
-
-    //   @ApiOperation({ summary: 'Execute a custom command on a device' })
-    //   @ApiResponse({ status: HttpStatus.OK, description: 'Command executed successfully' })
-    //   @ApiResponse({ 
-    //     status: HttpStatus.BAD_REQUEST, 
-    //     description: 'Invalid command',
-    //     type: ErrorResponseDto
-    //   })
-    //   @ApiResponse({ 
-    //     status: HttpStatus.NOT_FOUND, 
-    //     description: 'Device not found',
-    //     type: ErrorResponseDto
-    //   })
-    //   @ApiResponse({ 
-    //     status: HttpStatus.NOT_IMPLEMENTED, 
-    //     description: 'Feature not implemented on this device',
-    //     type: ErrorResponseDto
-    //   })
-    //   @ApiParam({ name: 'deviceId', description: 'Target device ID' })
-    //   @Post('devices/:deviceId/command')
-    //   async executeCommand(
-    //     @Param('deviceId') deviceId: string,
-    //     @Body(new ValidationPipe({ transform: true })) commandDto: CommandDto
-    //   ): Promise<{ success: boolean; result: any }> {
-    //     try {
-    //       const result = await this.biometricService.executeCommand?.(
-    //         deviceId, 
-    //         commandDto.command,
-    //         commandDto.data
-    //       );
-    //       return { 
-    //         success: true,
-    //         result
-    //       };
-    //     } catch (error: unknown) {
-    //       return this.handleError(
-    //         error,
-    //         'Failed to execute command',
-    //         'Command execution not supported by this device type'
-    //       );
-    //     }
-    //   }
-
-    //   @ApiOperation({ summary: 'Get device time' })
-    //   @ApiResponse({ status: HttpStatus.OK, description: 'Current device time' })
-    //   @ApiResponse({ 
-    //     status: HttpStatus.NOT_FOUND, 
-    //     description: 'Device not found',
-    //     type: ErrorResponseDto
-    //   })
-    //   @ApiResponse({ 
-    //     status: HttpStatus.NOT_IMPLEMENTED, 
-    //     description: 'Feature not implemented on this device',
-    //     type: ErrorResponseDto
-    //   })
-    //   @ApiParam({ name: 'deviceId', description: 'Target device ID' })
-    //   @Get('devices/:deviceId/time')
-    //   async getTime(
-    //     @Param('deviceId') deviceId: string
-    //   ): Promise<{ deviceId: string; time: Date }> {
-    //     try {
-    //       const time = await this.biometricService.getTime?.(deviceId);
-    //       return { deviceId, time };
-    //     } catch (error: unknown) {
-    //       return this.handleError(
-    //         error,
-    //         'Failed to get device time',
-    //         'Time retrieval not supported by this device type'
-    //       );
-    //     }
-    //   }
 
     @ApiOperation({ summary: 'Set device time' })
     @ApiResponse({ status: HttpStatus.OK, description: 'Device time set successfully' })
@@ -402,118 +422,34 @@ export class BiometricsController {
     @Put('devices/:deviceId/time')
     async setTime(
         @Param('deviceId') deviceId: string,
-        @Body(new ValidationPipe({ transform: true })) timeDto: SetTimeDto
-    ): Promise<{ success: boolean; message: string }> {
+        @Body() body: { time?: string }
+    ): Promise<{ success: boolean }> {
         try {
-        const time = new Date(timeDto.time);
-        const result = await this.biometricService.setTime?.(deviceId, time);
-        return { 
-            success: result,
-            message: result ? 'Device time set successfully' : 'Failed to set device time'
-        };
+            // Get the appropriate service based on the device ID
+            const service = await this.biometricsFactory.getServiceByDeviceId(deviceId);
+            
+            // Parse the time or use current time
+            const time = body.time ? new Date(body.time) : new Date();
+            
+            // Validate time format
+            if (isNaN(time.getTime())) {
+                throw new HttpException(
+                    'Invalid time format',
+                    HttpStatus.BAD_REQUEST
+                );
+            }
+            
+            const result = await service.setTime(deviceId, time);
+            
+            return { success: result };
         } catch (error: unknown) {
-        return this.handleError(
-            error,
-            'Failed to set device time',
-            'Time setting not supported by this device type'
-        );
+            return this.handleError(
+                error,
+                'Failed to set device time',
+                'Time setting not supported by this device type'
+            );
         }
     }
-
-  // =============================================
-  // User & Template Management Endpoints
-  // =============================================
-
-    //   @ApiOperation({ summary: 'Enroll a user fingerprint' })
-    //   @ApiResponse({ 
-    //     status: HttpStatus.CREATED, 
-    //     description: 'User fingerprint enrolled successfully',
-    //     type: Object
-    //   })
-    //   @ApiResponse({ 
-    //     status: HttpStatus.BAD_REQUEST, 
-    //     description: 'Invalid input data',
-    //     type: ErrorResponseDto
-    //   })
-    //   @ApiResponse({ 
-    //     status: HttpStatus.NOT_FOUND, 
-    //     description: 'Device not found',
-    //     type: ErrorResponseDto
-    //   })
-    //   @ApiResponse({ 
-    //     status: HttpStatus.NOT_IMPLEMENTED, 
-    //     description: 'Feature not implemented on this device',
-    //     type: ErrorResponseDto
-    //   })
-    //   @Post('users/enroll')
-    //   async enrollUser(
-    //     @Body(new ValidationPipe({ transform: true })) enrollUserDto: EnrollUserDto
-    //   ): Promise<IBiometricTemplate> {
-    //     try {
-    //       return await this.biometricService.enrollUser(
-    //         enrollUserDto.deviceId,
-    //         enrollUserDto.userId,
-    //         enrollUserDto.fingerId
-    //       );
-    //     } catch (error: unknown) {
-    //       return this.handleError(
-    //         error,
-    //         'Failed to enroll user',
-    //         'User enrollment not supported by this device type'
-    //       );
-    //     }
-    //   }
-
-    //   @ApiOperation({ summary: 'Create or update a user on a device' })
-    //   @ApiResponse({ 
-    //     status: HttpStatus.CREATED, 
-    //     description: 'User created/updated successfully',
-    //     type: Object
-    //   })
-    //   @ApiResponse({ 
-    //     status: HttpStatus.BAD_REQUEST, 
-    //     description: 'Invalid input data',
-    //     type: ErrorResponseDto
-    //   })
-    //   @ApiResponse({ 
-    //     status: HttpStatus.NOT_FOUND, 
-    //     description: 'Device not found',
-    //     type: ErrorResponseDto
-    //   })
-    //   @ApiResponse({ 
-    //     status: HttpStatus.NOT_IMPLEMENTED, 
-    //     description: 'Feature not implemented on this device',
-    //     type: ErrorResponseDto
-    //   })
-    //   @Post('devices/:deviceId/users')
-    //   async setUser(
-    //     @Param('deviceId') deviceId: string,
-    //     @Body(new ValidationPipe({ transform: true })) userDto: SetUserDto
-    //   ): Promise<{ success: boolean; message: string }> {
-    //     try {
-    //       const result = await this.biometricService.setUser?.(
-    //         deviceId,
-    //         userDto.uid,
-    //         userDto.userId,
-    //         userDto.name,
-    //         userDto.password,
-    //         userDto.role,
-    //         userDto.cardno
-    //       );
-    //       return { 
-    //         success: result,
-    //         message: result 
-    //           ? `User ${userDto.userId} created/updated successfully` 
-    //           : `Failed to create/update user ${userDto.userId}`
-    //       };
-    //     } catch (error: unknown) {
-    //       return this.handleError(
-    //         error,
-    //         'Failed to create/update user',
-    //         'User creation not supported by this device type'
-    //       );
-    //     }
-    //   }
 
     @ApiOperation({ summary: 'Delete a user from a device' })
     @ApiResponse({ status: HttpStatus.OK, description: 'User deleted successfully' })
@@ -538,13 +474,14 @@ export class BiometricsController {
     async deleteUser(
         @Param('deviceId') deviceId: string,
         @Param('userId') userId: string
-    ): Promise<{ success: boolean; message: string }> {
+    ): Promise<{ success: boolean }> {
         try {
-            const result = await this.biometricService.deleteUser(deviceId, userId);
-            return { 
-                success: result,
-                message: result ? `User ${userId} successfully deleted` : `Failed to delete user ${userId}`
-            };
+            // Get the appropriate service based on the device ID
+            const service = await this.biometricsFactory.getServiceByDeviceId(deviceId);
+            
+            const result = await service.deleteUser(deviceId, userId);
+            
+            return { success: result };
         } catch (error: unknown) {
             return this.handleError(
                 error,
@@ -554,97 +491,11 @@ export class BiometricsController {
         }
     }
 
-    //   @ApiOperation({ summary: 'Verify a fingerprint' })
-    //   @ApiResponse({ status: HttpStatus.OK, description: 'Verification result' })
-    //   @ApiResponse({ 
-    //     status: HttpStatus.BAD_REQUEST, 
-    //     description: 'Invalid input data',
-    //     type: ErrorResponseDto
-    //   })
-    //   @ApiResponse({ 
-    //     status: HttpStatus.NOT_FOUND, 
-    //     description: 'Device not found',
-    //     type: ErrorResponseDto
-    //   })
-    //   @ApiResponse({ 
-    //     status: HttpStatus.NOT_IMPLEMENTED, 
-    //     description: 'Feature not implemented on this device',
-    //     type: ErrorResponseDto
-    //   })
-    //   @Post('verify')
-    //   async verifyFingerprint(
-    //     @Body(new ValidationPipe({ transform: true })) verifyDto: VerifyFingerprintDto
-    //   ): Promise<{ verified: boolean; userId: string }> {
-    //     try {
-    //       const result = await this.biometricService.verifyFingerprint(
-    //         verifyDto.deviceId,
-    //         verifyDto.template
-    //       );
-    //       return { 
-    //         verified: result,
-    //         userId: verifyDto.template.userId
-    //       };
-    //     } catch (error: unknown) {
-    //       return this.handleError(
-    //         error,
-    //         'Failed to verify fingerprint',
-    //         'Fingerprint verification not supported by this device type'
-    //       );
-    //     }
-    //   }
-
-    //   @ApiOperation({ summary: 'Sync users between two devices' })
-    //   @ApiResponse({ status: HttpStatus.OK, description: 'Users synced successfully' })
-    //   @ApiResponse({ 
-    //     status: HttpStatus.BAD_REQUEST, 
-    //     description: 'Invalid input data',
-    //     type: ErrorResponseDto
-    //   })
-    //   @ApiResponse({ 
-    //     status: HttpStatus.NOT_FOUND, 
-    //     description: 'Device not found',
-    //     type: ErrorResponseDto
-    //   })
-    //   @ApiResponse({ 
-    //     status: HttpStatus.NOT_IMPLEMENTED, 
-    //     description: 'Feature not implemented on this device',
-    //     type: ErrorResponseDto
-    //   })
-    //   @Post('devices/sync')
-    //   async syncUsers(
-    //     @Body(new ValidationPipe({ transform: true })) syncUsersDto: SyncUsersDto
-    //   ): Promise<{ syncedCount: number; success: boolean; message: string }> {
-    //     try {
-    //       const count = await this.biometricService.syncUsers?.(
-    //         syncUsersDto.sourceDeviceId,
-    //         syncUsersDto.targetDeviceId
-    //       );
-        
-    //       return { 
-    //         syncedCount: count,
-    //         success: count > 0,
-    //         message: count > 0 
-    //           ? `Successfully synced ${count} users` 
-    //           : 'No users were synced'
-    //       };
-    //     } catch (error: unknown) {
-    //       return this.handleError(
-    //         error,
-    //         'Failed to sync users',
-    //         'User synchronization not supported by this device type'
-    //       );
-    //     }
-    //   }
-
-    // =============================================
-    // Data Operation Endpoints
-    // =============================================
-
     @ApiOperation({ summary: 'Get users registered on a device' })
     @ApiResponse({ 
         status: HttpStatus.OK, 
         description: 'List of user IDs',
-        type: [String]
+        type: [Object]
     })
     @ApiResponse({ 
         status: HttpStatus.NOT_FOUND, 
@@ -658,16 +509,17 @@ export class BiometricsController {
     })
     @ApiParam({ name: 'deviceId', description: 'Target device ID' })
     @Get('devices/:deviceId/users')
-    async getUsers(
-        @Param('deviceId') deviceId: string
-    ): Promise<IBiometricUser[]> {
+    async getUsers(@Param('deviceId') deviceId: string): Promise<IBiometricUser[]> {
         try {
-            return await this.biometricService.getUsers(deviceId);
+            // Get the appropriate service based on the device ID
+            const service = await this.biometricsFactory.getServiceByDeviceId(deviceId);
+            
+            return await service.getUsers(deviceId);
         } catch (error: unknown) {
             return this.handleError(
                 error,
                 'Failed to get users',
-                'User listing not supported by this device type'
+                'User retrieval not supported by this device type'
             );
         }
     }
@@ -694,21 +546,30 @@ export class BiometricsController {
     @Get('devices/:deviceId/attendance')
     async getAttendanceRecords(
         @Param('deviceId') deviceId: string,
-        @Query('startDate') startDate?: string,
-        @Query('endDate') endDate?: string
+        @Query('startDate') startDateParam?: string,
+        @Query('endDate') endDateParam?: string
     ): Promise<{ records: AttendanceRecord[]; count: number; deviceId: string }> {
         try {
-        const records = await this.biometricService.getAttendanceRecords(
-            deviceId,
-            startDate ? new Date(startDate) : undefined,
-            endDate ? new Date(endDate) : undefined
-        );
-        
-        return { 
-            records,
-            count: records.length,
-            deviceId
-        };
+            // Parse dates if provided
+            const startDate = startDateParam ? new Date(startDateParam) : undefined;
+            const endDate = endDateParam ? new Date(endDateParam) : undefined;
+            
+            // Validate date formats
+            if ((startDate && isNaN(startDate.getTime())) || 
+                (endDate && isNaN(endDate.getTime()))) {
+                throw new HttpException('Invalid date format', HttpStatus.BAD_REQUEST);
+            }
+            
+            // Get the appropriate service based on the device ID
+            const service = await this.biometricsFactory.getServiceByDeviceId(deviceId);
+            
+            const records = await service.getAttendanceRecords(deviceId, startDate, endDate);
+            
+            return { 
+                records,
+                count: records.length,
+                deviceId
+            };
         } catch (error: unknown) {
             return this.handleError(
                 error,
@@ -740,7 +601,11 @@ export class BiometricsController {
         @Param('deviceId') deviceId: string
     ): Promise<{ size: number; deviceId: string }> {
         try {
-            const size = await this.biometricService.getAttendanceSize?.(deviceId);
+            // Get the appropriate service based on the device ID
+            const service = await this.biometricsFactory.getServiceByDeviceId(deviceId);
+            
+            const size = await service.getAttendanceSize(deviceId);
+            
             return { size, deviceId };
         } catch (error: unknown) {
             return this.handleError(
@@ -759,9 +624,9 @@ export class BiometricsController {
         type: ErrorResponseDto
     })
     @ApiResponse({ 
-                status: HttpStatus.NOT_IMPLEMENTED, 
-                description: 'Feature not implemented on this device',
-                type: ErrorResponseDto
+        status: HttpStatus.NOT_IMPLEMENTED, 
+        description: 'Feature not implemented on this device',
+        type: ErrorResponseDto
     })
     @ApiParam({ name: 'deviceId', description: 'Target device ID' })
     @Delete('devices/:deviceId/attendance')
@@ -769,7 +634,11 @@ export class BiometricsController {
         @Param('deviceId') deviceId: string
     ): Promise<{ success: boolean; message: string }> {
         try {
-        const result = await this.biometricService.clearAttendanceRecords(deviceId);
+            // Get the appropriate service based on the device ID
+            const service = await this.biometricsFactory.getServiceByDeviceId(deviceId);
+            
+            const result = await service.clearAttendanceRecords(deviceId);
+            
             return { 
                 success: result,
                 message: result 

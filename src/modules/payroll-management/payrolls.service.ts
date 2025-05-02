@@ -22,6 +22,34 @@ import { PayrollItemTypesService } from './payroll-item-types/payroll-item-types
 import { PayrollItem } from './payroll-items/entities/payroll-item.entity';
 import { PayrollItemsService } from './payroll-items/payroll-items.service';
 
+// Add these types to your system using PayrollItemType entity
+const salaryCompensationTypes = [
+  {
+    name: 'Monthly Salary',
+    category: PayrollItemCategory.COMPENSATION,
+    unit: 'PHP',
+    computationFormula: 'return Amount;', // Simply return the configured amount
+    isSystemGenerated: true,
+    isRequired: true
+  },
+  {
+    name: 'Daily Rate',
+    category: PayrollItemCategory.COMPENSATION,
+    unit: 'PHP',
+    computationFormula: 'return Amount * WorkingDaysInPeriod;',
+    isSystemGenerated: true,
+    isRequired: true
+  },
+  {
+    name: 'Hourly Rate',
+    category: PayrollItemCategory.COMPENSATION,
+    unit: 'PHP',
+    computationFormula: 'return Amount * WorkHoursInPeriod;',
+    isSystemGenerated: true,
+    isRequired: true
+  }
+];
+
 const sssEmployeeContribution = {
   name: 'SSS Employee Contribution',
   description: 'Social Security System employee contribution',
@@ -232,6 +260,50 @@ export class PayrollsService extends BaseService<Payroll> {
     
     return { monthlyRate, dailyRate, hourlyRate };
   }
+
+  calculateRatesBase(employee: Employee, cutoff: Cutoff, baseCompensationItem: PayrollItem): {
+    monthlyRate: number;
+    dailyRate: number;
+    hourlyRate: number;
+  } {
+    const compensationType = baseCompensationItem.payrollItemType.name;
+    const amount = baseCompensationItem.amount;
+    
+    // Calculate days in period
+    const businessDaysInPeriod = UtilityHelper.getBusinessDays(cutoff.startDate, cutoff.endDate);
+    const businessDaysInMonth = UtilityHelper.getBusinessDaysInMonth(cutoff.startDate);
+    
+    // Initialize with default values
+    let monthlyRate = 0;
+    let dailyRate = 0;
+    let hourlyRate = 0;
+    
+    // Calculate based on compensation type
+    switch (compensationType) {
+      case 'Monthly Salary':
+        monthlyRate = amount;
+        dailyRate = amount / businessDaysInMonth;
+        hourlyRate = dailyRate / 8; // Assuming 8-hour workday
+        break;
+        
+      case 'Daily Rate':
+        dailyRate = amount;
+        monthlyRate = dailyRate * businessDaysInMonth;
+        hourlyRate = dailyRate / 8;
+        break;
+        
+      case 'Hourly Rate':
+        hourlyRate = amount;
+        dailyRate = hourlyRate * 8;
+        monthlyRate = dailyRate * businessDaysInMonth;
+        break;
+        
+      default:
+        throw new Error(`Unknown compensation type: ${compensationType}`);
+    }
+    
+    return { monthlyRate, dailyRate, hourlyRate };
+  }
   
   /**
    * Calculate basic pay components from work hours
@@ -419,7 +491,7 @@ export class PayrollsService extends BaseService<Payroll> {
       order: { category: 'ASC', name: 'ASC' }
     });
     
-    // Get employee's assigned payroll items
+    // Get employee's assigned payroll items including base compensation
     const employeePayrollItems = await this.payrollItemsService.getRepository().find({
       where: {
         employee: { id: payroll.employee.id },
@@ -430,6 +502,15 @@ export class PayrollsService extends BaseService<Payroll> {
       }
     });
     
+    // Find base compensation - Prioritize compensation items
+    const baseCompensationItem = employeePayrollItems.find(item => 
+      item.payrollItemType.category === PayrollItemCategory.COMPENSATION
+    );
+    
+    if (!baseCompensationItem) {
+      throw new Error(`No base compensation defined for employee ${payroll.employee.id}`);
+    }
+    
     // Clear existing payroll items if reprocessing
     if (payroll.payrollItems?.length) {
       for (const item of payroll.payrollItems) {
@@ -439,6 +520,7 @@ export class PayrollsService extends BaseService<Payroll> {
     
     // Order for processing categories
     const processingOrder = [
+      PayrollItemCategory.COMPENSATION,
       PayrollItemCategory.ALLOWANCE,
       PayrollItemCategory.BONUS,
       PayrollItemCategory.COMMISSION,

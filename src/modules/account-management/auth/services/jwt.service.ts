@@ -153,7 +153,10 @@ export class JwtService {
     const now = Math.floor(Date.now() / 1000);
     const mappedRoles = user.employee?.roles ? user.employee?.roles.map(role => ({
       name: role.name,
-      scope: role.scope
+      scope: role.scope,
+      departmentId: role.departmentId,
+      organizationId: role.organizationId,
+      branchId: role.branchId,
     })) : [];
 
     return {
@@ -162,7 +165,7 @@ export class JwtService {
       refreshToken,
       email: user.email,
       roles: mappedRoles ?? [],
-      employeeId: user.employee?.id
+      employeeId: user.employee?.id,
     };
   }
 

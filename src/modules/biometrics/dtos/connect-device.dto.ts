@@ -1,24 +1,32 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsIP, IsInt, IsNotEmpty, Max, Min } from 'class-validator';
+import { IsEnum, IsIP, IsInt, IsOptional, Max, Min } from 'class-validator';
+import { BiometricDeviceType } from '../entities/biometric-device.entity';
 
 export class ConnectDeviceDto {
-  @ApiProperty({
-    description: 'IP address of the biometric device',
-    example: '192.168.1.100'
-  })
-  @IsNotEmpty()
-  @IsIP(4, { message: 'IP address must be a valid IPv4 address' })
-  ipAddress!: string;
+    @ApiProperty({
+        description: 'Device IP address',
+        example: '192.168.1.100'
+    })
+    @IsIP(4)
+    ipAddress!: string;
 
-  @ApiProperty({
-    description: 'Port number of the biometric device',
-    example: 4370,
-    minimum: 1,
-    maximum: 65535
-  })
-  @IsNotEmpty()
-  @IsInt()
-  @Min(1)
-  @Max(65535)
-  port!: number;
+    @ApiProperty({
+        description: 'Device port number',
+        example: 4370,
+        default: 4370
+    })
+    @IsInt()
+    @Min(1)
+    @Max(65535)
+    port: number = 4370;
+
+    @ApiProperty({
+        description: 'Device type/manufacturer',
+        enum: BiometricDeviceType,
+        default: BiometricDeviceType.ZKTECO,
+        example: 'zkteco'
+    })
+    @IsEnum(BiometricDeviceType)
+    @IsOptional()
+    deviceType?: string;
 }

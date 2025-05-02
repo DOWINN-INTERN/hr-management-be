@@ -12,7 +12,7 @@ export class ScheduleChangeRequestDto extends PartialType(BaseDto) {
     })
     @IsNotEmpty()
     @IsString()
-    reason!: string;
+    description!: string;
     
     @ApiProperty({ 
         description: 'Status of the request',

@@ -84,7 +84,7 @@ export abstract class BaseGateway implements OnGatewayInit, OnGatewayConnection,
 
     // Lifecycle hooks
     onModuleInit() {
-        this.logger.log(`Gateway ${this.constructor.name} initialized`);
+        // this.logger.log(`Gateway ${this.constructor.name} initialized`);
         this.setupHeartbeat();
         this.setupEventHandlers();
     }
@@ -98,7 +98,7 @@ export abstract class BaseGateway implements OnGatewayInit, OnGatewayConnection,
 
     afterInit(server: Server) {
         if (!server || !server.engine) {
-            this.logger.warn('Server or server.engine not available in afterInit');
+            // this.logger.warn('Server or server.engine not available in afterInit');
             return; // Exit early if server or server.engine is not available
         }
         const corsConfig = {
