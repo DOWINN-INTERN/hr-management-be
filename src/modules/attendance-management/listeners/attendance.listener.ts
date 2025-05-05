@@ -6,12 +6,11 @@ import { ScheduleStatus } from '@/common/enums/schedule-status';
 import { ATTENDANCE_EVENTS, AttendanceRecordedEvent } from '@/common/events/attendance.event';
 import { AttendancePunchesService } from '@/modules/attendance-management/attendance-punches/attendance-punches.service';
 import { AttendancesService } from '@/modules/attendance-management/attendances.service';
-import { IBiometricService } from '@/modules/biometrics/interfaces/biometric.interface';
 import { BiometricDevicesService } from '@/modules/biometrics/services/biometric-devices.service';
 import { EmployeesService } from '@/modules/employee-management/employees.service';
 import { NotificationsService } from '@/modules/notifications/notifications.service';
 import { SchedulesService } from '@/modules/shift-management/schedules/schedules.service';
-import { Inject, Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { differenceInMinutes, format, isAfter, isBefore, parseISO } from 'date-fns';
 import { DayType } from '../final-work-hours/entities/final-work-hour.entity';
@@ -25,8 +24,6 @@ export class AttendanceListener {
   private readonly UNDER_TIME_THRESHOLD_MINUTES = 0; // Consider under time if less than 30 minutes
 
   constructor(
-    @Inject('BIOMETRIC_SERVICE')
-    private readonly biometricService: IBiometricService,
     private readonly attendancesService: AttendancesService,
     private readonly attendancePunchesService: AttendancePunchesService,
     private readonly employeesService: EmployeesService,
@@ -41,7 +38,7 @@ export class AttendanceListener {
     this.logger.log(`Handling attendance recorded event for ${event.attendances.length} records`);
     
     // Get the biometric device entity
-    const biometricDevice = await this.biometricDevicesService.findOneBy({ id: event.deviceId });
+    const biometricDevice = await this.biometricDevicesService.findOneBy({ deviceId: event.deviceId });
     if (!biometricDevice) {
       this.logger.error(`Biometric device with ID ${event.deviceId} not found`);
       return;
@@ -54,7 +51,7 @@ export class AttendanceListener {
         this.logger.log(`Raw userId from device: "${record.userId}"`);
 
         // Validate userId is a proper number before parsing
-        if (!record.userId || !/^\d+$/.test(record.userId.trim())) {
+        if (!record.userId || !/^\d+$/.test(record.userId)) {
           this.logger.warn(`Invalid user ID format: "${record.userId}". Must be numeric.`);
           continue;
         }
@@ -78,7 +75,7 @@ export class AttendanceListener {
         const punchTime = new Date(record.timestamp);
         const punchDate = format(punchTime, 'yyyy-MM-dd');
         const punchTimeStr = format(punchTime, 'HH:mm:ss');
-        const punchType = record.type;
+        const punchType = record.punchType;
         
         // Find today's schedule for the employee
         const todaySchedule = await this.schedulesService.getEmployeeScheduleToday(employee.id);
@@ -288,7 +285,8 @@ export class AttendanceListener {
         await this.attendancePunchesService.create({
           attendance: { id: existingAttendance.id },
           time: punchTime,
-          punchType: record.type.toString(),
+          punchType: record.punchType,
+          punchMethod: record.punchMethod,
           employeeNumber,
           biometricDevice: { id: biometricDevice.id },
           createdBy: employee.user.id,
@@ -303,9 +301,6 @@ export class AttendanceListener {
         }
       }
     }
-
-    // After processing all records, clear the device
-    await this.biometricService.clearAttendanceRecords(event.deviceId);
   }
 
   @OnEvent(ATTENDANCE_EVENTS.ATTENDANCE_PROCESSED)

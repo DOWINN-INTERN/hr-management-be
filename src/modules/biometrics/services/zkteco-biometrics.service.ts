@@ -1,14 +1,18 @@
-import { HttpStatus, Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
+import { BadRequestException, HttpStatus, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 
 const ZKLib = require("zkteco-js");
 
+import { BiometricDeviceType } from '@/common/enums/biometrics-device-type.enum';
+import { PunchMethod } from '@/common/enums/punch-method.enum';
+import { PunchType } from '@/common/enums/punch-type.enum';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Repository } from 'typeorm';
+import { ConnectDeviceDto } from '../dtos/connect-device.dto';
 import { BiometricDevice } from '../entities/biometric-device.entity';
 import { BiometricTemplate } from '../entities/biometric-template.entity';
-import { AttendanceRecord, IBiometricDevice, IBiometricTemplate, IBiometricUser } from '../interfaces/biometric.interface';
+import { AttendanceRecord, IBiometricTemplate, IBiometricUser } from '../interfaces/biometric.interface';
 import { BaseBiometricsService, BiometricException } from './base-biometrics.service';
 import { BiometricsPollingService } from './biometrics-polling.service';
 
@@ -17,8 +21,7 @@ import { BiometricsPollingService } from './biometrics-polling.service';
  * Handles communication with ZKTeco biometric devices
  */
 @Injectable()
-export class ZKTecoBiometricsService extends BaseBiometricsService implements OnModuleDestroy {
-    protected readonly logger = new Logger(ZKTecoBiometricsService.name);
+export class ZKTecoBiometricsService extends BaseBiometricsService {
     
     constructor(
         private readonly configService: ConfigService,
@@ -29,7 +32,7 @@ export class ZKTecoBiometricsService extends BaseBiometricsService implements On
         protected readonly templateRepository: Repository<BiometricTemplate>,
         protected readonly eventEmitter: EventEmitter2,
     ) {
-        super(deviceRepository, templateRepository, eventEmitter);
+        super(deviceRepository, eventEmitter);
         // Listen for attendance events from polling service
         this.eventEmitter.on('attendance.recorded', (record: AttendanceRecord) => {
             this.emitAttendanceEvent(record);
@@ -242,6 +245,8 @@ export class ZKTecoBiometricsService extends BaseBiometricsService implements On
         }
     }
 
+    biometricDeviceType: BiometricDeviceType = BiometricDeviceType.ZKTECO;
+
     /**
      * Connect to a device with retry logic
      * @param deviceId Device identifier
@@ -250,13 +255,14 @@ export class ZKTecoBiometricsService extends BaseBiometricsService implements On
      * @returns Connected device information
      */
     async connectWithRetry(
-        deviceId: string, 
-        ipAddress: string,
-        port: number
-    ): Promise<IBiometricDevice> {
+        dto: ConnectDeviceDto,
+        deviceId: string
+    ): Promise<BiometricDevice> {
         const timeout = this.configService.get<number>('ZKTECO_TIMEOUT', 5000);
         const retryAttempts = this.configService.get<number>('ZKTECO_RETRY_ATTEMPTS', 3);
         const retryDelay = this.configService.get<number>('ZKTECO_RETRY_DELAY', 1000);
+
+        const { ipAddress, port } = dto;
         
         let attempts = 0;
         let lastError: Error = new Error('No connection attempts made');
@@ -304,10 +310,11 @@ export class ZKTecoBiometricsService extends BaseBiometricsService implements On
                 this.connections.set(deviceId, zk);
 
                 // Create device object with enhanced info
-                const device: IBiometricDevice = {
-                    id: deviceId,
+                const device: Partial<BiometricDevice> = {
+                    deviceId,
                     ipAddress,
                     port,
+                    provider: this.biometricDeviceType,
                     model: deviceInfo?.deviceName || deviceInfo?.model || 'Unknown',
                     serialNumber: deviceInfo?.serialNumber || 'Unknown',
                     firmware: deviceInfo?.firmware,
@@ -317,23 +324,8 @@ export class ZKTecoBiometricsService extends BaseBiometricsService implements On
                     isConnected: true,
                 };
 
-                // Store device in memory
-                this.devices.set(deviceId, device);
-                
                 // Store in database
-                await this.deviceRepository.save({
-                    id: deviceId,
-                    ipAddress,
-                    port,
-                    model: device.model,
-                    serialNumber: device.serialNumber,
-                    provider: 'zkteco',
-                    firmware: device.firmware,
-                    platform: device.platform,
-                    deviceVersion: device.deviceVersion,
-                    os: device.os,
-                    isConnected: true,
-                });
+                const save = await this.deviceRepository.save(device);
 
                 // Register the connection with the polling service
                 this.biometricsPollingService.registerDeviceConnection(deviceId, zk);
@@ -343,7 +335,7 @@ export class ZKTecoBiometricsService extends BaseBiometricsService implements On
     
                 
                 this.logger.log(`Successfully connected to ZKTeco device at ${ipAddress}:${port}`);
-                return device;
+                return save;
             } catch (error) {
                 // Ensure error is properly typed
                 this.logger.warn(`Connection attempt ${attempts} to device ${deviceId}`);
@@ -363,133 +355,22 @@ export class ZKTecoBiometricsService extends BaseBiometricsService implements On
         );
     }
 
-    /**
-     * Set up default real-time monitoring for a device
-     * @param deviceId Device identifier 
-     * @param zkDevice ZK device instance
-     */
-    private async setupDefaultRealTimeMonitoring(deviceId: string, zkDevice: any): Promise<void> {
-        this.logger.log(`Setting up default real-time monitoring for device ${deviceId}`);
-        
-        // Before attempting to get real-time logs, ensure connection is active
-        if (!zkDevice._socket || !zkDevice._socket.writable) {
-            await zkDevice.createSocket();
-            this.logger.debug(`Refreshed socket connection for device ${deviceId}`);
-        }
-        
-        // Enable device first to ensure it's ready to receive commands
-        await zkDevice.enableDevice();
-
-        // Register for real-time logs
-        zkDevice.getRealTimeLogs((record: any) => {
-            if (!record) return;
-            
-            this.logger.debug(`Received real-time log: ${JSON.stringify(record)}`);
-            
-            // Convert to standard format
-            const standardizedRecord: AttendanceRecord = {
-                userId: record.userId || '',
-                timestamp: new Date(record.timestamp || Date.now()),
-                type: record.type ?? 0,
-                deviceId: deviceId,
-                verificationMode: record.verificationMode,
-                status: record.status,
-                workcode: record.workcode,
-                data: record.data
-            };
-            
-            // Emit event for this record
-            this.emitAttendanceEvent(standardizedRecord);
-            
-            // Call any custom callback if registered
-            const monitorInfo = this.activeMonitoring.get(deviceId);
-            if (monitorInfo && typeof monitorInfo.callback === 'function') {
-                monitorInfo.callback(standardizedRecord);
-            }
-        });
-        
-        // Store in active monitoring with empty callback
-        this.activeMonitoring.set(deviceId, { deviceId, callback: undefined });
-        
-        this.logger.log(`Default real-time monitoring established for device ${deviceId}`);
-    }
-
-    /**
-     * Setup monitoring for device connection status
-     * @param deviceId Device identifier
-     * @param zkDevice ZK device instance
-     */
-    private setupDeviceMonitoring(deviceId: string, zkDevice: any): void {
-        const pingInterval = this.configService.get<number>('DEVICE_PING_INTERVAL', 3000);
-        
-        const interval = setInterval(async () => {
-            if (!this.connections.has(deviceId)) {
-                clearInterval(interval);
-                return;
-            }
-            
-            try {
-                // Try to get device info as a ping
-                await zkDevice.getInfo();
-                
-                // If monitoring was set up but is no longer active, try to restart it
-                if (this.activeMonitoring.has(deviceId) && !this.isMonitoringActive(deviceId)) {
-                    this.logger.warn(`Real-time monitoring appears to have stopped for device ${deviceId}. Attempting to restart...`);
-                    
-                    try {
-                        await this.setupDefaultRealTimeMonitoring(deviceId, zkDevice);
-                        this.logger.log(`Successfully restarted real-time monitoring for device ${deviceId}`);
-                    } catch (monitoringError) {
-                        this.logger.error(`Failed to restart monitoring: ${monitoringError instanceof Error ? monitoringError.message : String(monitoringError)}`);
-                    }
-                }
-            } catch (error) {
-                // Your existing error handling code
-            }
-        }, pingInterval);
-    }
-
-
-    /**
-     * Disconnect from a ZKTeco device
-     * @param deviceId Device identifier
-     * @returns True if disconnected successfully
-     */
-    async disconnect(deviceId: string): Promise<boolean> {
+    async disconnect(deviceId: string, isManual: boolean = true): Promise<BiometricDevice> {
         // Stop the polling first
         this.biometricsPollingService.stopPolling(deviceId);
         const zkDevice = this.connections.get(deviceId);
         if (!zkDevice) {
-            this.logger.warn(`Attempted to disconnect from device ${deviceId} but no connection found`);
-            return false;
+            throw new BadRequestException(`Device ${deviceId} not connected`);
         }
-
-        try {
-            // Clear monitoring first
-            this.activeMonitoring.delete(deviceId);
-            
-            // Use disconnect method
-            await zkDevice.disconnect();
-            this.connections.delete(deviceId);
         
-            const device = this.devices.get(deviceId);
-            if (device) {
-                device.isConnected = false;
-                this.devices.set(deviceId, device);
-            }
+        // Clear monitoring first
+        this.activeMonitoring.delete(deviceId);
+            ~
+        // Use disconnect method
+        await zkDevice.disconnect();
+        this.connections.delete(deviceId);
             
-            await this.deviceRepository.update(
-                { id: deviceId },
-                { isConnected: false }
-            );
-            
-            this.logger.log(`Successfully disconnected from ZKTeco device ${deviceId}`);
-            return true;
-        } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : String(error);
-            this.logger.error(`Error disconnecting from device ${deviceId}: ${errorMessage}`);
-            return false;
-        }
+        return await this.updateDeviceStatus(deviceId, false, isManual ? false : true);
     }
 
     /**
@@ -1023,14 +904,11 @@ export class ZKTecoBiometricsService extends BaseBiometricsService implements On
         const standardizedRecords: AttendanceRecord[] = records.map(record => ({
             userId: record.userId || '',
             timestamp: new Date(record.timestamp),
-            type: record.type ?? 0, // Required field with fallback
+            punchType: record.status as PunchType,
+            punchMethod: PunchMethod.MANUAL, // Default value for punch method
             deviceId: deviceId, // Required field - use the current device ID
-            verificationMode: record.verificationMode,
-            status: record.status,
-            workcode: record.workcode,
             isSynced: false, // Default value for new records
             retrievedAt: new Date(), // Set current time as retrieval time
-            data: record.data
         }));
         
         // Filter by date if provided
@@ -1050,71 +928,6 @@ export class ZKTecoBiometricsService extends BaseBiometricsService implements On
         this.logger.error(`Error getting attendance records from device ${deviceId}: ${errorMessage}`);
         throw new BiometricException(`Failed to get attendance records: ${errorMessage}`);
         }
-    }
-
-    /**
-     * Set up real-time attendance log monitoring
-     * @param deviceId Device identifier
-     * @param callback Function to call when attendance logs are received
-     * @returns Monitoring ID that can be used to stop monitoring
-     */
-    startRealTimeMonitoring(
-        deviceId: string,
-        callback: (record: AttendanceRecord) => void
-    ): string {
-        const zkDevice = this.getConnectedDevice(deviceId);
-        const monitoringId = `monitoring-${deviceId}-${Date.now()}`;
-    
-        try {
-        this.logger.log(`Registering custom callback for real-time monitoring on device ${deviceId}`);
-        
-        // Update or create monitoring info
-        this.activeMonitoring.set(deviceId, { 
-            deviceId, 
-            callback: callback  // Store the callback
-        });
-        
-        // If monitoring isn't already active, set it up
-        if (!this.isMonitoringActive(deviceId)) {
-            this.setupDefaultRealTimeMonitoring(deviceId, zkDevice)
-            .catch(err => {
-                const errMsg = err instanceof Error ? err.message : String(err);
-                this.logger.error(`Failed to set up monitoring for device ${deviceId}: ${errMsg}`);
-            });
-        }
-        
-        this.logger.log(`Real-time monitoring callback registered for device ${deviceId} with ID ${monitoringId}`);
-        return monitoringId;
-        } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : String(error);
-        this.logger.error(`Error registering monitoring callback for device ${deviceId}: ${errorMessage}`);
-        throw new BiometricException(`Failed to start real-time monitoring: ${errorMessage}`);
-        }
-    }
-    
-    /**
-     * Check if monitoring is active for a device
-     */
-    private isMonitoringActive(deviceId: string): boolean {
-        return this.activeMonitoring.has(deviceId);
-    }
-
-    /**
-     * Stop real-time monitoring
-     * @param monitoringId Monitoring ID returned from startRealTimeMonitoring
-     * @returns True if stopped successfully
-     */
-    stopRealTimeMonitoring(monitoringId: string): boolean {
-        // This would need to be implemented based on how the library handles stopping monitoring
-        // This is a placeholder implementation
-        this.logger.log(`Stopping real-time monitoring for ID ${monitoringId}`);
-        
-        // In a real implementation, you would:
-        // 1. Look up the deviceId and monitoring info using the monitoringId
-        // 2. Call the appropriate method to stop monitoring on the device
-        // 3. Clean up any resources
-        
-        return true;
     }
 
     /**

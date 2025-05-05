@@ -1,14 +1,17 @@
+import { BiometricDeviceType } from '@/common/enums/biometrics-device-type.enum';
 import { BaseEntity } from '@/database/entities/base.entity';
 import { AttendancePunch } from '@/modules/attendance-management/attendance-punches/entities/attendance-punch.entity';
 import { Column, Entity, OneToMany } from 'typeorm';
 
-export enum BiometricDeviceType {
-  ZKTECO = 'zkteco',
-  ANVIZ = 'anviz'
-}
 
 @Entity('biometric_devices')
 export class BiometricDevice extends BaseEntity<BiometricDevice> {
+    @Column({ unique: true })
+    name?: string;
+
+    @Column({ unique: true })
+    deviceId!: string;
+
     @Column()
     ipAddress!: string;
 
@@ -26,7 +29,7 @@ export class BiometricDevice extends BaseEntity<BiometricDevice> {
         enum: BiometricDeviceType,
         default: BiometricDeviceType.ZKTECO
     })
-    provider!: string;
+    provider!: BiometricDeviceType;
 
     @Column({ nullable: true })
     firmware?: string;
@@ -43,15 +46,12 @@ export class BiometricDevice extends BaseEntity<BiometricDevice> {
     @Column({ default: false })
     isConnected!: boolean;
 
+    @Column()
+    isOffline!: boolean;
+
     @Column({ type: 'timestamp', nullable: true })
     lastSync?: Date;
 
     @OneToMany(() => AttendancePunch, (attendancePunch: AttendancePunch) => attendancePunch.biometricDevice, { nullable: true })
     attendancePunches?: AttendancePunch[];
-
-    @Column({ nullable: true })
-    manufacturer?: string;
-
-    @Column({ nullable: true, type: 'json' })
-    deviceCapacity?: Record<string, any>;
 }

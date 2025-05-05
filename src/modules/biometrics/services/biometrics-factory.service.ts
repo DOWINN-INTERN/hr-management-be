@@ -1,3 +1,4 @@
+import { BiometricDeviceType } from '@/common/enums/biometrics-device-type.enum';
 import { Inject, Injectable } from '@nestjs/common';
 import { IBiometricService } from '../interfaces/biometric.interface';
 import { BiometricDevicesService } from './biometric-devices.service';
@@ -30,13 +31,9 @@ export class BiometricsFactoryService {
    */
   async getServiceByDeviceId(deviceId: string): Promise<IBiometricService> {
     // Look up the device in the database
-    const device = await this.biometricDevicesService.findOneBy({ id: deviceId });
-    
-    if (!device) {
-      throw new Error(`Device with ID ${deviceId} not found`);
-    }
+    const device = await this.biometricDevicesService.findOneByOrFail({ deviceId });
     
     // Return the appropriate service based on the provider
-    return this.getService(device.provider as 'zkteco' | 'anviz');
+    return this.getService(device.provider as BiometricDeviceType);
   }
 }

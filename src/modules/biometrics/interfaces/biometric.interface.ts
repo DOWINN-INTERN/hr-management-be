@@ -1,15 +1,7 @@
-export interface IBiometricDevice {
-    id: string;
-    ipAddress: string;
-    port: number;
-    model?: string;
-    serialNumber?: string;
-    isConnected: boolean;
-    firmware?: string;
-    platform?: string;
-    deviceVersion?: string;
-    os?: string;
-}
+import { PunchMethod } from "@/common/enums/punch-method.enum";
+import { PunchType } from "@/common/enums/punch-type.enum";
+import { ConnectDeviceDto } from "../dtos/connect-device.dto";
+import { BiometricDevice } from "../entities/biometric-device.entity";
 
 export interface IBiometricTemplate {
     id: string;
@@ -21,12 +13,10 @@ export interface IBiometricTemplate {
 
 export interface IBiometricService {
     // Core device management (required)
-    connect(ipAddress: string, port: number): Promise<IBiometricDevice | null>;
-    disconnect(deviceId: string): Promise<boolean>;
-    getConnectedDevices(): Promise<IBiometricDevice[]>;
+    connect(dto: ConnectDeviceDto): Promise<BiometricDevice>;
+    disconnect(deviceId: string): Promise<BiometricDevice>;
     
     // Device information methods
-    getDeviceInfo(deviceId: string): Promise<Record<string, any>>;
     getSerialNumber(deviceId: string): Promise<string>;
     getFirmwareVersion(deviceId: string): Promise<string>;
     getDeviceName(deviceId: string): Promise<string>;
@@ -74,10 +64,6 @@ export interface IBiometricService {
     clearAttendanceRecords(deviceId: string): Promise<boolean>;
     getAttendanceSize(deviceId: string): Promise<number>;
     
-    // Real-time monitoring methods
-    startRealTimeMonitoring(deviceId: string, callback: (record: AttendanceRecord) => void): string;
-    stopRealTimeMonitoring(monitoringId: string): boolean;
-    
     // Door control
     unlockDoor(deviceId: string): Promise<boolean>;
     
@@ -89,53 +75,11 @@ export interface IBiometricService {
  * Represents a standardized attendance record from a biometric device
  */
 export interface AttendanceRecord {
-    /**
-     * User ID associated with the attendance record
-     */
     userId: string;
-    
-    /**
-     * Date and time when the attendance was recorded
-     */
     timestamp: Date;
-    
-    /**
-     * Type of attendance event
-     * Common values:
-     * - 0: Check-in
-     * - 1: Check-out
-     * - 2: Break-out
-     * - 3: Break-in
-     * - 4: Overtime-in
-     * - 5: Overtime-out
-     */
-    type: number;
-    
-    /**
-     * ID of the device that recorded this attendance
-     */
+    punchType: PunchType;
+    punchMethod: PunchMethod;
     deviceId: string;
-    
-    /**
-     * Optional verification mode used (fingerprint, card, password, etc.)
-     * The meaning of values depends on the specific device model
-     */
-    verificationMode?: number;
-    
-    /**
-     * Optional status code returned by the device
-     */
-    status?: number;
-    
-    /**
-     * Optional workcode associated with the attendance record
-     */
-    workcode?: number;
-    
-    /**
-     * Additional custom data associated with the attendance record
-     */
-    data?: Record<string, any>;
 }
 
 /**

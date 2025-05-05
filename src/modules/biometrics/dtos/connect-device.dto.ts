@@ -1,6 +1,6 @@
+import { BiometricDeviceType } from '@/common/enums/biometrics-device-type.enum';
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEnum, IsIP, IsInt, IsOptional, Max, Min } from 'class-validator';
-import { BiometricDeviceType } from '../entities/biometric-device.entity';
+import { IsEnum, IsIP, IsInt, IsNotEmpty, Max, Min } from 'class-validator';
 
 export class ConnectDeviceDto {
     @ApiProperty({
@@ -27,6 +27,6 @@ export class ConnectDeviceDto {
         example: 'zkteco'
     })
     @IsEnum(BiometricDeviceType)
-    @IsOptional()
-    deviceType?: string;
+    @IsNotEmpty()
+    deviceType!: BiometricDeviceType;
 }

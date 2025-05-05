@@ -12,7 +12,6 @@ import rateLimit from 'express-rate-limit';
 import helmet from 'helmet';
 import { AppModule } from './app.module';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
-import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
 import { TransformInterceptor } from './common/interceptors/transform.interceptor';
 import { getLogLevels } from './common/utils/day.util';
 import { swaggerConfig, swaggerCustomOptions } from './config/swagger.config';
@@ -80,7 +79,7 @@ async function bootstrap() {
   app.useGlobalFilters(new HttpExceptionFilter());
   
   // Global logging interceptor (using our new logging interceptor)
-  app.useGlobalInterceptors(new LoggingInterceptor());
+  // app.useGlobalInterceptors(new LoggingInterceptor());
 
   // Global transform interceptor
   app.useGlobalInterceptors(new TransformInterceptor());

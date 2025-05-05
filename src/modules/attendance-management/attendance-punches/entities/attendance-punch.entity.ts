@@ -1,3 +1,5 @@
+import { PunchMethod } from '@/common/enums/punch-method.enum';
+import { PunchType } from '@/common/enums/punch-type.enum';
 import { BaseEntity } from '@/database/entities/base.entity';
 import { BiometricDevice } from '@/modules/biometrics/entities/biometric-device.entity';
 import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
@@ -12,9 +14,12 @@ export class AttendancePunch extends BaseEntity<AttendancePunch> {
     @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
     time!: Date;
 
-    @Column()
-    punchType!: string;
+    @Column({ type: 'enum', enum: PunchMethod })
+    punchMethod!: PunchMethod;
 
+    @Column({ type: 'enum', enum: PunchType })
+    punchType!: PunchType;
+    
     @Column()
     employeeNumber!: number;
 

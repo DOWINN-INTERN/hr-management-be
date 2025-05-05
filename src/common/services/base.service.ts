@@ -554,11 +554,10 @@ export abstract class BaseService<T extends BaseEntity<T>> {
     const paramBaseName = `${alias}_${field}_${this.queryState.paramCounter++}`;
     
     // Debug the incoming value object
-    console.log(`Applying operator to ${alias}.${field}:`, JSON.stringify(valueObj, null, 2));
+    // console.log(`Applying operator to ${alias}.${field}:`, JSON.stringify(valueObj, null, 2));
     
     // Handle TypeORM's internal operator objects (ILike, etc.)
     if (valueObj && valueObj._type && valueObj._value !== undefined) {
-      console.log(`Detected TypeORM operator: ${valueObj._type}`);
       const paramName = `${paramBaseName}_typeorm`;
       
       switch(valueObj._type) {
@@ -648,8 +647,7 @@ export abstract class BaseService<T extends BaseEntity<T>> {
           console.log(`Applied TypeORM IS NOT NULL: ${alias}.${field} IS NOT NULL`);
           break;
         default:
-          console.warn(`Unsupported TypeORM operator type: ${valueObj._type}`);
-          this.logger.warn(`Unsupported TypeORM operator type: ${valueObj._type}`);
+          // this.logger.warn(`Unsupported TypeORM operator type: ${valueObj._type}`);
       }
       return;
     }

@@ -1,3 +1,6 @@
+import { BiometricDeviceType } from '@/common/enums/biometrics-device-type.enum';
+import { PunchMethod } from '@/common/enums/punch-method.enum';
+import { PunchType } from '@/common/enums/punch-type.enum';
 import { ATTENDANCE_EVENTS, AttendanceRecordedEvent } from '@/common/events/attendance.event';
 import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
@@ -26,15 +29,15 @@ export class BiometricsPollingService implements OnModuleInit, OnModuleDestroy {
   }
 
   // Provide a way to register device connections
-  registerDeviceConnection(deviceId: string, zkDevice: any) {
-    this.connections.set(deviceId, zkDevice);
+  registerDeviceConnection(deviceId: string, device: any) {
+    this.connections.set(deviceId, device);
     // this.logger.log(`Registered device ${deviceId} for polling`);
   }
 
   // Start polling for a specific device
   startPolling(deviceId: string): boolean {
-    const zkDevice = this.connections.get(deviceId);
-    if (!zkDevice) {
+    const device = this.connections.get(deviceId);
+    if (!device) {
       this.logger.warn(`Cannot start polling for device ${deviceId}: Device not registered`);
       return false;
     }
@@ -60,12 +63,11 @@ export class BiometricsPollingService implements OnModuleInit, OnModuleDestroy {
     
       try {
         // Get current attendance size
-        const currentCount = await zkDevice.getAttendanceSize();
-        
+        const currentCount = await device.getAttendanceSize();
         // If there are new records
         if (currentCount > 0) {
           // Get all attendance records - returns { data: records, err: error }
-          const response = await zkDevice.getAttendances();
+          const response = await device.getAttendances();
       
           // Extract the records array from the response
           const records = response.data || [];
@@ -117,9 +119,9 @@ export class BiometricsPollingService implements OnModuleInit, OnModuleDestroy {
               const standardizedRecord: AttendanceRecord = {
                 userId: record.user_id.trim(), // Trim any whitespace
                 timestamp: new Date(record.record_time || Date.now()),
-                type: record.type ?? 0,
                 deviceId: deviceId,
-                status: record.state
+                punchMethod: this.getPunchMethod(record.status || 0, device.provider),
+                punchType: record.type as PunchType, // Default to 0 if not provided
               };
 
               // Add to the attendance list
@@ -151,6 +153,22 @@ export class BiometricsPollingService implements OnModuleInit, OnModuleDestroy {
     
     this.logger.log(`Started polling for device ${deviceId} at ${pollingInterval}ms intervals`);
     return true;
+  }
+
+  getPunchMethod(value: number, deviceType: BiometricDeviceType): PunchMethod {
+    if (deviceType === BiometricDeviceType.ZKTECO)
+    {
+      switch (value) {
+        case 0:
+          return PunchMethod.FINGERPRINT;
+        default:
+          return PunchMethod.UNKNOWN;
+      }
+    }
+    else
+    {
+      return PunchMethod.UNKNOWN;
+    }
   }
 
   // Stop polling for a specific device

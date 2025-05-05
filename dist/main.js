@@ -1,9 +1,9 @@
 /******/ (() => { // webpackBootstrap
-/******/ 	"use strict";
 /******/ 	var __webpack_modules__ = ([
 /* 0 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
@@ -55,12 +55,11 @@ const compression_1 = __importDefault(__webpack_require__(10));
 const express_rate_limit_1 = __importDefault(__webpack_require__(11));
 const helmet_1 = __importDefault(__webpack_require__(12));
 const app_module_1 = __webpack_require__(13);
-const http_exception_filter_1 = __webpack_require__(331);
-const logging_interceptor_1 = __webpack_require__(332);
-const transform_interceptor_1 = __webpack_require__(333);
+const http_exception_filter_1 = __webpack_require__(348);
+const transform_interceptor_1 = __webpack_require__(349);
 const day_util_1 = __webpack_require__(154);
-const swagger_config_1 = __webpack_require__(334);
-const system_logger_service_1 = __webpack_require__(291);
+const swagger_config_1 = __webpack_require__(350);
+const system_logger_service_1 = __webpack_require__(308);
 // process.env.TZ = 'UTC';
 async function bootstrap() {
     const isDevelopment = process.env.NODE_ENV !== 'production';
@@ -106,7 +105,7 @@ async function bootstrap() {
     // Global exception filter
     app.useGlobalFilters(new http_exception_filter_1.HttpExceptionFilter());
     // Global logging interceptor (using our new logging interceptor)
-    app.useGlobalInterceptors(new logging_interceptor_1.LoggingInterceptor());
+    // app.useGlobalInterceptors(new LoggingInterceptor());
     // Global transform interceptor
     app.useGlobalInterceptors(new transform_interceptor_1.TransformInterceptor());
     // Enable CORS with more secure settings
@@ -154,78 +153,91 @@ bootstrap();
 /* 1 */
 /***/ ((module) => {
 
+"use strict";
 module.exports = require("@bull-board/api");
 
 /***/ }),
 /* 2 */
 /***/ ((module) => {
 
+"use strict";
 module.exports = require("@bull-board/api/bullAdapter");
 
 /***/ }),
 /* 3 */
 /***/ ((module) => {
 
+"use strict";
 module.exports = require("@bull-board/express");
 
 /***/ }),
 /* 4 */
 /***/ ((module) => {
 
+"use strict";
 module.exports = require("@nestjs/bull");
 
 /***/ }),
 /* 5 */
 /***/ ((module) => {
 
+"use strict";
 module.exports = require("@nestjs/common");
 
 /***/ }),
 /* 6 */
 /***/ ((module) => {
 
+"use strict";
 module.exports = require("@nestjs/config");
 
 /***/ }),
 /* 7 */
 /***/ ((module) => {
 
+"use strict";
 module.exports = require("@nestjs/core");
 
 /***/ }),
 /* 8 */
 /***/ ((module) => {
 
+"use strict";
 module.exports = require("@nestjs/swagger");
 
 /***/ }),
 /* 9 */
 /***/ ((module) => {
 
+"use strict";
 module.exports = require("@scalar/nestjs-api-reference");
 
 /***/ }),
 /* 10 */
 /***/ ((module) => {
 
+"use strict";
 module.exports = require("compression");
 
 /***/ }),
 /* 11 */
 /***/ ((module) => {
 
+"use strict";
 module.exports = require("express-rate-limit");
 
 /***/ }),
 /* 12 */
 /***/ ((module) => {
 
+"use strict";
 module.exports = require("helmet");
 
 /***/ }),
 /* 13 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -243,14 +255,14 @@ const account_management_module_1 = __webpack_require__(175);
 const addresses_module_1 = __webpack_require__(218);
 const attendance_management_module_1 = __webpack_require__(220);
 const biometrics_module_1 = __webpack_require__(221);
-const documents_module_1 = __webpack_require__(261);
+const documents_module_1 = __webpack_require__(278);
 const emails_module_1 = __webpack_require__(177);
 const employee_management_module_1 = __webpack_require__(15);
-const files_module_1 = __webpack_require__(269);
-const logs_module_1 = __webpack_require__(285);
-const notifications_module_1 = __webpack_require__(295);
-const organization_management_module_1 = __webpack_require__(307);
-const payroll_management_module_1 = __webpack_require__(319);
+const files_module_1 = __webpack_require__(286);
+const logs_module_1 = __webpack_require__(302);
+const notifications_module_1 = __webpack_require__(312);
+const organization_management_module_1 = __webpack_require__(324);
+const payroll_management_module_1 = __webpack_require__(336);
 const shift_management_module_1 = __webpack_require__(133);
 let AppModule = class AppModule {
 };
@@ -285,6 +297,7 @@ exports.AppModule = AppModule = __decorate([
 /* 14 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -300,7 +313,7 @@ const shift_management_module_1 = __webpack_require__(133);
 const common_1 = __webpack_require__(5);
 const employee_group_assignement_listener_1 = __webpack_require__(166);
 const common_service_1 = __webpack_require__(167);
-const transaction_service_1 = __webpack_require__(85);
+const transaction_service_1 = __webpack_require__(88);
 let CommonModule = class CommonModule {
 };
 exports.CommonModule = CommonModule;
@@ -321,6 +334,7 @@ exports.CommonModule = CommonModule = __decorate([
 /* 15 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -379,12 +393,14 @@ exports.EmployeeManagementModule = EmployeeManagementModule = __decorate([
 /* 16 */
 /***/ ((module) => {
 
+"use strict";
 module.exports = require("@nestjs/typeorm");
 
 /***/ }),
 /* 17 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
+"use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.EmployeesController = void 0;
@@ -401,6 +417,7 @@ exports.EmployeesController = EmployeesController;
 /* 18 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
@@ -455,7 +472,7 @@ const pluralize_1 = __importStar(__webpack_require__(19));
 const base_controller_1 = __webpack_require__(20);
 const current_user_decorator_1 = __webpack_require__(97);
 const override_decorator_1 = __webpack_require__(98);
-const generalresponse_dto_1 = __webpack_require__(83);
+const generalresponse_dto_1 = __webpack_require__(86);
 const pagination_dto_1 = __webpack_require__(22);
 function createController(EntityClass, ServiceClass, getDtoClass, createDtoClass, updateDtoClass) {
     var _a, _b, _c, _d, _e, _f, _g, _h;
@@ -783,12 +800,14 @@ function createController(EntityClass, ServiceClass, getDtoClass, createDtoClass
 /* 19 */
 /***/ ((module) => {
 
+"use strict";
 module.exports = require("pluralize");
 
 /***/ }),
 /* 20 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -813,7 +832,7 @@ const class_transformer_1 = __webpack_require__(23);
 const authorize_decorator_1 = __webpack_require__(26);
 const current_user_decorator_1 = __webpack_require__(97);
 const action_enum_1 = __webpack_require__(40);
-const utility_helper_1 = __webpack_require__(84);
+const utility_helper_1 = __webpack_require__(87);
 class BaseController {
     constructor(baseService, getDtoClass, entityName) {
         this.baseService = baseService;
@@ -1113,6 +1132,7 @@ __decorate([
 /* 21 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -1154,6 +1174,7 @@ __decorate([
 /* 22 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -1427,43 +1448,45 @@ __decorate([
 /* 23 */
 /***/ ((module) => {
 
+"use strict";
 module.exports = require("class-transformer");
 
 /***/ }),
 /* 24 */
 /***/ ((module) => {
 
+"use strict";
 module.exports = require("class-validator");
 
 /***/ }),
 /* 25 */
 /***/ ((module) => {
 
+"use strict";
 module.exports = require("typeorm");
 
 /***/ }),
 /* 26 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
+"use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.PERMISSION_ENDPOINT_TYPE = exports.PERMISSIONS_FUNCTION_KEY = void 0;
 exports.Authorize = Authorize;
 const jwt_auth_guard_1 = __webpack_require__(27);
 const permissions_guard_1 = __webpack_require__(29);
-const roles_guard_1 = __webpack_require__(92);
+const roles_guard_1 = __webpack_require__(95);
 const common_1 = __webpack_require__(5);
 const swagger_1 = __webpack_require__(8);
-const scope_guard_1 = __webpack_require__(94);
-const scope_interceptor_1 = __webpack_require__(95);
-const permissions_decorator_1 = __webpack_require__(90);
-const roles_decorator_1 = __webpack_require__(93);
+const permissions_decorator_1 = __webpack_require__(93);
+const roles_decorator_1 = __webpack_require__(96);
 exports.PERMISSIONS_FUNCTION_KEY = 'permissions_function';
 exports.PERMISSION_ENDPOINT_TYPE = 'permission_endpoint_type';
 function Authorize(options) {
     const decorators = [
-        (0, common_1.UseInterceptors)(scope_interceptor_1.ScopeInterceptor),
-        (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard, permissions_guard_1.PermissionsGuard, scope_guard_1.ScopeGuard),
+        // UseInterceptors(ScopeInterceptor),
+        (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard, permissions_guard_1.PermissionsGuard),
         (0, roles_decorator_1.Roles)(options === null || options === void 0 ? void 0 : options.roles),
         (0, swagger_1.ApiBearerAuth)('access-token'),
     ];
@@ -1483,6 +1506,7 @@ function Authorize(options) {
 /* 27 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -1507,12 +1531,14 @@ exports.JwtAuthGuard = JwtAuthGuard = __decorate([
 /* 28 */
 /***/ ((module) => {
 
+"use strict";
 module.exports = require("@nestjs/passport");
 
 /***/ }),
 /* 29 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -1528,15 +1554,15 @@ var _a, _b, _c, _d;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.PermissionsGuard = void 0;
 const users_service_1 = __webpack_require__(30);
-const permissions_service_1 = __webpack_require__(87);
-const activity_logs_service_1 = __webpack_require__(89);
+const permissions_service_1 = __webpack_require__(90);
+const activity_logs_service_1 = __webpack_require__(92);
 const common_1 = __webpack_require__(5);
 const core_1 = __webpack_require__(7);
 const pluralize_1 = __webpack_require__(19);
 const authorize_decorator_1 = __webpack_require__(26);
-const permissions_decorator_1 = __webpack_require__(90);
+const permissions_decorator_1 = __webpack_require__(93);
 const action_enum_1 = __webpack_require__(40);
-const role_enum_1 = __webpack_require__(91);
+const role_enum_1 = __webpack_require__(94);
 let PermissionsGuard = PermissionsGuard_1 = class PermissionsGuard {
     constructor(reflector, usersService, permissionsService, activityLogsService) {
         this.reflector = reflector;
@@ -1713,6 +1739,7 @@ exports.PermissionsGuard = PermissionsGuard = PermissionsGuard_1 = __decorate([
 /* 30 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
@@ -1765,7 +1792,7 @@ exports.UsersService = void 0;
 const base_service_1 = __webpack_require__(31);
 const common_1 = __webpack_require__(5);
 const typeorm_1 = __webpack_require__(16);
-const bcrypt = __importStar(__webpack_require__(86));
+const bcrypt = __importStar(__webpack_require__(89));
 const typeorm_2 = __webpack_require__(25);
 const user_entity_1 = __webpack_require__(47);
 let UsersService = class UsersService extends base_service_1.BaseService {
@@ -1791,6 +1818,7 @@ exports.UsersService = UsersService = __decorate([
 /* 31 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -1810,10 +1838,10 @@ exports.BaseService = void 0;
 const common_1 = __webpack_require__(5);
 const typeorm_1 = __webpack_require__(25);
 const data_source_1 = __importDefault(__webpack_require__(32));
-const generalresponse_dto_1 = __webpack_require__(83);
+const generalresponse_dto_1 = __webpack_require__(86);
 const pagination_dto_1 = __webpack_require__(22);
-const utility_helper_1 = __webpack_require__(84);
-const transaction_service_1 = __webpack_require__(85);
+const utility_helper_1 = __webpack_require__(87);
+const transaction_service_1 = __webpack_require__(88);
 let BaseService = class BaseService {
     constructor(repository, usersService) {
         this.repository = repository;
@@ -2295,10 +2323,9 @@ let BaseService = class BaseService {
         // Create unique parameter name base
         const paramBaseName = `${alias}_${field}_${this.queryState.paramCounter++}`;
         // Debug the incoming value object
-        console.log(`Applying operator to ${alias}.${field}:`, JSON.stringify(valueObj, null, 2));
+        // console.log(`Applying operator to ${alias}.${field}:`, JSON.stringify(valueObj, null, 2));
         // Handle TypeORM's internal operator objects (ILike, etc.)
         if (valueObj && valueObj._type && valueObj._value !== undefined) {
-            console.log(`Detected TypeORM operator: ${valueObj._type}`);
             const paramName = `${paramBaseName}_typeorm`;
             switch (valueObj._type) {
                 case 'ilike':
@@ -2387,8 +2414,7 @@ let BaseService = class BaseService {
                     console.log(`Applied TypeORM IS NOT NULL: ${alias}.${field} IS NOT NULL`);
                     break;
                 default:
-                    console.warn(`Unsupported TypeORM operator type: ${valueObj._type}`);
-                    this.logger.warn(`Unsupported TypeORM operator type: ${valueObj._type}`);
+                // this.logger.warn(`Unsupported TypeORM operator type: ${valueObj._type}`);
             }
             return;
         }
@@ -3278,14 +3304,15 @@ exports.BaseService = BaseService = __decorate([
 /* 32 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
+"use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.dataSourceOptions = void 0;
 const profile_entity_1 = __webpack_require__(33);
 const address_entity_1 = __webpack_require__(35);
-const document_type_entity_1 = __webpack_require__(76);
+const document_type_entity_1 = __webpack_require__(79);
 const config_1 = __webpack_require__(6);
-const dotenv_1 = __webpack_require__(82);
+const dotenv_1 = __webpack_require__(85);
 const typeorm_1 = __webpack_require__(25);
 (0, dotenv_1.config)();
 const configService = new config_1.ConfigService();
@@ -3313,6 +3340,7 @@ exports["default"] = new typeorm_1.DataSource(exports.dataSourceOptions);
 /* 33 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -3409,6 +3437,7 @@ exports.Profile = Profile = __decorate([
 /* 34 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -3488,6 +3517,7 @@ __decorate([
 /* 35 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -3571,6 +3601,7 @@ exports.Address = Address = __decorate([
 /* 36 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -3640,6 +3671,7 @@ exports.Department = Department = __decorate([
 /* 37 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -3717,6 +3749,7 @@ exports.Role = Role = __decorate([
 /* 38 */
 /***/ ((__unused_webpack_module, exports) => {
 
+"use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.RoleScopeType = void 0;
@@ -3734,6 +3767,7 @@ var RoleScopeType;
 /* 39 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -3786,6 +3820,7 @@ exports.Permission = Permission = __decorate([
 /* 40 */
 /***/ ((__unused_webpack_module, exports) => {
 
+"use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Action = void 0;
@@ -3803,6 +3838,7 @@ var Action;
 /* 41 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -3877,6 +3913,7 @@ exports.Branch = Branch = __decorate([
 /* 42 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -3945,6 +3982,7 @@ exports.Organization = Organization = __decorate([
 /* 43 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -4083,6 +4121,7 @@ exports.Employee = Employee = __decorate([
 /* 44 */
 /***/ ((__unused_webpack_module, exports) => {
 
+"use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.EmploymentCondition = void 0;
@@ -4097,6 +4136,7 @@ var EmploymentCondition;
 /* 45 */
 /***/ ((__unused_webpack_module, exports) => {
 
+"use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.EmploymentStatus = void 0;
@@ -4118,6 +4158,7 @@ var EmploymentStatus;
 /* 46 */
 /***/ ((__unused_webpack_module, exports) => {
 
+"use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.EmploymentType = void 0;
@@ -4140,6 +4181,7 @@ var EmploymentType;
 /* 47 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -4155,12 +4197,12 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.User = void 0;
 const document_entity_1 = __webpack_require__(48);
 const employee_entity_1 = __webpack_require__(43);
-const activity_log_entity_1 = __webpack_require__(77);
-const notification_entity_1 = __webpack_require__(79);
+const activity_log_entity_1 = __webpack_require__(80);
+const notification_entity_1 = __webpack_require__(82);
 const typeorm_1 = __webpack_require__(25);
 const base_entity_1 = __webpack_require__(34);
 const profile_entity_1 = __webpack_require__(33);
-const session_entity_1 = __webpack_require__(81);
+const session_entity_1 = __webpack_require__(84);
 let User = class User extends base_entity_1.BaseEntity {
     constructor() {
         super(...arguments);
@@ -4259,6 +4301,7 @@ exports.User = User = __decorate([
 /* 48 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -4277,7 +4320,7 @@ const user_entity_1 = __webpack_require__(47);
 const work_time_request_entity_1 = __webpack_require__(49);
 const schedule_change_request_entity_1 = __webpack_require__(70);
 const typeorm_1 = __webpack_require__(25);
-const document_type_entity_1 = __webpack_require__(76);
+const document_type_entity_1 = __webpack_require__(79);
 let Document = class Document extends base_entity_1.BaseEntity {
 };
 exports.Document = Document;
@@ -4329,6 +4372,7 @@ exports.Document = Document = __decorate([
 /* 49 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -4350,7 +4394,7 @@ const employee_entity_1 = __webpack_require__(43);
 const typeorm_1 = __webpack_require__(25);
 const attendance_entity_1 = __webpack_require__(52);
 const final_work_hour_entity_1 = __webpack_require__(58);
-const work_time_response_entity_1 = __webpack_require__(75);
+const work_time_response_entity_1 = __webpack_require__(78);
 let WorkTimeRequest = class WorkTimeRequest extends base_entity_1.BaseEntity {
 };
 exports.WorkTimeRequest = WorkTimeRequest;
@@ -4406,6 +4450,7 @@ exports.WorkTimeRequest = WorkTimeRequest = __decorate([
 /* 50 */
 /***/ ((__unused_webpack_module, exports) => {
 
+"use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.AttendanceStatus = void 0;
@@ -4430,6 +4475,7 @@ var AttendanceStatus;
 /* 51 */
 /***/ ((__unused_webpack_module, exports) => {
 
+"use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.RequestStatus = void 0;
@@ -4445,6 +4491,7 @@ var RequestStatus;
 /* 52 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -4514,6 +4561,7 @@ exports.Attendance = Attendance = __decorate([
 /* 53 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -4609,6 +4657,7 @@ exports.Schedule = Schedule = __decorate([
 /* 54 */
 /***/ ((__unused_webpack_module, exports) => {
 
+"use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ScheduleStatus = void 0;
@@ -4625,6 +4674,7 @@ var ScheduleStatus;
 /* 55 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -4694,6 +4744,7 @@ exports.Cutoff = Cutoff = __decorate([
 /* 56 */
 /***/ ((__unused_webpack_module, exports) => {
 
+"use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.CutoffStatus = void 0;
@@ -4711,6 +4762,7 @@ var CutoffStatus;
 /* 57 */
 /***/ ((__unused_webpack_module, exports) => {
 
+"use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.CutoffType = void 0;
@@ -4731,6 +4783,7 @@ var CutoffType;
 /* 58 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -4891,6 +4944,7 @@ exports.FinalWorkHour = FinalWorkHour = __decorate([
 /* 59 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -4999,6 +5053,7 @@ exports.Shift = Shift = __decorate([
 /* 60 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -5045,6 +5100,7 @@ exports.Group = Group = __decorate([
 /* 61 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -5106,6 +5162,7 @@ exports.ShiftDay = ShiftDay = __decorate([
 /* 62 */
 /***/ ((__unused_webpack_module, exports) => {
 
+"use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Day = void 0;
@@ -5125,6 +5182,7 @@ var Day;
 /* 63 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -5424,6 +5482,7 @@ exports.Payroll = Payroll = __decorate([
 /* 64 */
 /***/ ((__unused_webpack_module, exports) => {
 
+"use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.PayrollStatus = void 0;
@@ -5442,6 +5501,7 @@ var PayrollStatus;
 /* 65 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -5548,6 +5608,7 @@ exports.PayrollItem = PayrollItem = __decorate([
 /* 66 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -5684,6 +5745,7 @@ exports.PayrollItemType = PayrollItemType = __decorate([
 /* 67 */
 /***/ ((__unused_webpack_module, exports) => {
 
+"use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.PayrollItemCategory = void 0;
@@ -5707,6 +5769,7 @@ var PayrollItemCategory;
 /* 68 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -5761,6 +5824,7 @@ exports.Holiday = Holiday = __decorate([
 /* 69 */
 /***/ ((__unused_webpack_module, exports) => {
 
+"use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.HolidayType = void 0;
@@ -5777,6 +5841,7 @@ var HolidayType;
 /* 70 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -5834,6 +5899,7 @@ exports.ScheduleChangeRequest = ScheduleChangeRequest = __decorate([
 /* 71 */
 /***/ ((__unused_webpack_module, exports) => {
 
+"use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ScheduleChangeRequestType = void 0;
@@ -5882,6 +5948,7 @@ var ScheduleChangeRequestType;
 /* 72 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -5923,6 +5990,7 @@ exports.ScheduleChangeResponse = ScheduleChangeResponse = __decorate([
 /* 73 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -5933,11 +6001,13 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
-var _a, _b, _c;
+var _a, _b, _c, _d, _e;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.AttendancePunch = void 0;
+const punch_method_enum_1 = __webpack_require__(74);
+const punch_type_enum_1 = __webpack_require__(75);
 const base_entity_1 = __webpack_require__(34);
-const biometric_device_entity_1 = __webpack_require__(74);
+const biometric_device_entity_1 = __webpack_require__(76);
 const typeorm_1 = __webpack_require__(25);
 const attendance_entity_1 = __webpack_require__(52);
 let AttendancePunch = class AttendancePunch extends base_entity_1.BaseEntity {
@@ -5953,8 +6023,12 @@ __decorate([
     __metadata("design:type", typeof (_b = typeof Date !== "undefined" && Date) === "function" ? _b : Object)
 ], AttendancePunch.prototype, "time", void 0);
 __decorate([
-    (0, typeorm_1.Column)(),
-    __metadata("design:type", String)
+    (0, typeorm_1.Column)({ type: 'enum', enum: punch_method_enum_1.PunchMethod }),
+    __metadata("design:type", typeof (_c = typeof punch_method_enum_1.PunchMethod !== "undefined" && punch_method_enum_1.PunchMethod) === "function" ? _c : Object)
+], AttendancePunch.prototype, "punchMethod", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'enum', enum: punch_type_enum_1.PunchType }),
+    __metadata("design:type", typeof (_d = typeof punch_type_enum_1.PunchType !== "undefined" && punch_type_enum_1.PunchType) === "function" ? _d : Object)
 ], AttendancePunch.prototype, "punchType", void 0);
 __decorate([
     (0, typeorm_1.Column)(),
@@ -5963,7 +6037,7 @@ __decorate([
 __decorate([
     (0, typeorm_1.ManyToOne)(() => biometric_device_entity_1.BiometricDevice, (biometricDevice) => biometricDevice.attendancePunches),
     (0, typeorm_1.JoinColumn)({ name: 'biometricDeviceId' }),
-    __metadata("design:type", typeof (_c = typeof biometric_device_entity_1.BiometricDevice !== "undefined" && biometric_device_entity_1.BiometricDevice) === "function" ? _c : Object)
+    __metadata("design:type", typeof (_e = typeof biometric_device_entity_1.BiometricDevice !== "undefined" && biometric_device_entity_1.BiometricDevice) === "function" ? _e : Object)
 ], AttendancePunch.prototype, "biometricDevice", void 0);
 exports.AttendancePunch = AttendancePunch = __decorate([
     (0, typeorm_1.Entity)('attendance-punches')
@@ -5972,8 +6046,49 @@ exports.AttendancePunch = AttendancePunch = __decorate([
 
 /***/ }),
 /* 74 */
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.PunchMethod = void 0;
+var PunchMethod;
+(function (PunchMethod) {
+    PunchMethod["FINGERPRINT"] = "fingerprint";
+    PunchMethod["RFID"] = "rfid";
+    PunchMethod["PASSWORD"] = "password";
+    PunchMethod["FACE"] = "face";
+    PunchMethod["QR_CODE"] = "qr_code";
+    PunchMethod["NFC"] = "nfc";
+    PunchMethod["MANUAL"] = "manual";
+    PunchMethod["UNKNOWN"] = "unknown";
+})(PunchMethod || (exports.PunchMethod = PunchMethod = {}));
+
+
+/***/ }),
+/* 75 */
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.PunchType = void 0;
+var PunchType;
+(function (PunchType) {
+    PunchType[PunchType["CHECK_IN"] = 0] = "CHECK_IN";
+    PunchType[PunchType["CHECK_OUT"] = 1] = "CHECK_OUT";
+    PunchType[PunchType["BREAK_OUT"] = 2] = "BREAK_OUT";
+    PunchType[PunchType["BREAK_IN"] = 3] = "BREAK_IN";
+    PunchType[PunchType["OVERTIME_IN"] = 4] = "OVERTIME_IN";
+    PunchType[PunchType["OVERTIME_OUT"] = 5] = "OVERTIME_OUT";
+})(PunchType || (exports.PunchType = PunchType = {}));
+
+
+/***/ }),
+/* 76 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -5986,18 +6101,22 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 var _a, _b;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.BiometricDevice = exports.BiometricDeviceType = void 0;
+exports.BiometricDevice = void 0;
+const biometrics_device_type_enum_1 = __webpack_require__(77);
 const base_entity_1 = __webpack_require__(34);
 const attendance_punch_entity_1 = __webpack_require__(73);
 const typeorm_1 = __webpack_require__(25);
-var BiometricDeviceType;
-(function (BiometricDeviceType) {
-    BiometricDeviceType["ZKTECO"] = "zkteco";
-    BiometricDeviceType["ANVIZ"] = "anviz";
-})(BiometricDeviceType || (exports.BiometricDeviceType = BiometricDeviceType = {}));
 let BiometricDevice = class BiometricDevice extends base_entity_1.BaseEntity {
 };
 exports.BiometricDevice = BiometricDevice;
+__decorate([
+    (0, typeorm_1.Column)({ unique: true }),
+    __metadata("design:type", String)
+], BiometricDevice.prototype, "name", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ unique: true }),
+    __metadata("design:type", String)
+], BiometricDevice.prototype, "deviceId", void 0);
 __decorate([
     (0, typeorm_1.Column)(),
     __metadata("design:type", String)
@@ -6017,10 +6136,10 @@ __decorate([
 __decorate([
     (0, typeorm_1.Column)({
         type: 'enum',
-        enum: BiometricDeviceType,
-        default: BiometricDeviceType.ZKTECO
+        enum: biometrics_device_type_enum_1.BiometricDeviceType,
+        default: biometrics_device_type_enum_1.BiometricDeviceType.ZKTECO
     }),
-    __metadata("design:type", String)
+    __metadata("design:type", typeof (_a = typeof biometrics_device_type_enum_1.BiometricDeviceType !== "undefined" && biometrics_device_type_enum_1.BiometricDeviceType) === "function" ? _a : Object)
 ], BiometricDevice.prototype, "provider", void 0);
 __decorate([
     (0, typeorm_1.Column)({ nullable: true }),
@@ -6043,30 +6162,42 @@ __decorate([
     __metadata("design:type", Boolean)
 ], BiometricDevice.prototype, "isConnected", void 0);
 __decorate([
+    (0, typeorm_1.Column)(),
+    __metadata("design:type", Boolean)
+], BiometricDevice.prototype, "isOffline", void 0);
+__decorate([
     (0, typeorm_1.Column)({ type: 'timestamp', nullable: true }),
-    __metadata("design:type", typeof (_a = typeof Date !== "undefined" && Date) === "function" ? _a : Object)
+    __metadata("design:type", typeof (_b = typeof Date !== "undefined" && Date) === "function" ? _b : Object)
 ], BiometricDevice.prototype, "lastSync", void 0);
 __decorate([
     (0, typeorm_1.OneToMany)(() => attendance_punch_entity_1.AttendancePunch, (attendancePunch) => attendancePunch.biometricDevice, { nullable: true }),
     __metadata("design:type", Array)
 ], BiometricDevice.prototype, "attendancePunches", void 0);
-__decorate([
-    (0, typeorm_1.Column)({ nullable: true }),
-    __metadata("design:type", String)
-], BiometricDevice.prototype, "manufacturer", void 0);
-__decorate([
-    (0, typeorm_1.Column)({ nullable: true, type: 'json' }),
-    __metadata("design:type", typeof (_b = typeof Record !== "undefined" && Record) === "function" ? _b : Object)
-], BiometricDevice.prototype, "deviceCapacity", void 0);
 exports.BiometricDevice = BiometricDevice = __decorate([
     (0, typeorm_1.Entity)('biometric_devices')
 ], BiometricDevice);
 
 
 /***/ }),
-/* 75 */
+/* 77 */
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.BiometricDeviceType = void 0;
+var BiometricDeviceType;
+(function (BiometricDeviceType) {
+    BiometricDeviceType["ZKTECO"] = "zkteco";
+    BiometricDeviceType["ANVIZ"] = "anviz";
+})(BiometricDeviceType || (exports.BiometricDeviceType = BiometricDeviceType = {}));
+
+
+/***/ }),
+/* 78 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -6105,9 +6236,10 @@ exports.WorkTimeResponse = WorkTimeResponse = __decorate([
 
 
 /***/ }),
-/* 76 */
+/* 79 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -6171,9 +6303,10 @@ exports.DocumentType = DocumentType = __decorate([
 
 
 /***/ }),
-/* 77 */
+/* 80 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -6188,7 +6321,7 @@ var _a, _b, _c;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ActivityLog = void 0;
 const action_enum_1 = __webpack_require__(40);
-const log_level_enum_1 = __webpack_require__(78);
+const log_level_enum_1 = __webpack_require__(81);
 const base_entity_1 = __webpack_require__(34);
 const user_entity_1 = __webpack_require__(47);
 const typeorm_1 = __webpack_require__(25);
@@ -6236,9 +6369,10 @@ exports.ActivityLog = ActivityLog = __decorate([
 
 
 /***/ }),
-/* 78 */
+/* 81 */
 /***/ ((__unused_webpack_module, exports) => {
 
+"use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.LogLevel = void 0;
@@ -6253,9 +6387,10 @@ var LogLevel;
 
 
 /***/ }),
-/* 79 */
+/* 82 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -6269,7 +6404,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var _a, _b, _c, _d;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Notification = void 0;
-const notification_type_enum_1 = __webpack_require__(80);
+const notification_type_enum_1 = __webpack_require__(83);
 const base_entity_1 = __webpack_require__(34);
 const user_entity_1 = __webpack_require__(47);
 const typeorm_1 = __webpack_require__(25);
@@ -6285,7 +6420,7 @@ __decorate([
     __metadata("design:type", String)
 ], Notification.prototype, "message", void 0);
 __decorate([
-    (0, typeorm_1.Column)(),
+    (0, typeorm_1.Column)({ nullable: true }),
     __metadata("design:type", String)
 ], Notification.prototype, "iconOrImage", void 0);
 __decorate([
@@ -6327,9 +6462,10 @@ exports.Notification = Notification = __decorate([
 
 
 /***/ }),
-/* 80 */
+/* 83 */
 /***/ ((__unused_webpack_module, exports) => {
 
+"use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.NotificationType = void 0;
@@ -6343,9 +6479,10 @@ var NotificationType;
 
 
 /***/ }),
-/* 81 */
+/* 84 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -6400,15 +6537,17 @@ exports.Session = Session = __decorate([
 
 
 /***/ }),
-/* 82 */
+/* 85 */
 /***/ ((module) => {
 
+"use strict";
 module.exports = require("dotenv");
 
 /***/ }),
-/* 83 */
+/* 86 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -6479,9 +6618,10 @@ __decorate([
 
 
 /***/ }),
-/* 84 */
+/* 87 */
 /***/ ((__unused_webpack_module, exports) => {
 
+"use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.UtilityHelper = void 0;
@@ -6615,9 +6755,10 @@ exports.UtilityHelper = UtilityHelper;
 
 
 /***/ }),
-/* 85 */
+/* 88 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -6663,15 +6804,17 @@ exports.TransactionService = TransactionService = __decorate([
 
 
 /***/ }),
-/* 86 */
+/* 89 */
 /***/ ((module) => {
 
+"use strict";
 module.exports = require("bcryptjs");
 
 /***/ }),
-/* 87 */
+/* 90 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -6693,7 +6836,7 @@ const common_1 = __webpack_require__(5);
 const typeorm_1 = __webpack_require__(16);
 const typeorm_2 = __webpack_require__(25);
 const users_service_1 = __webpack_require__(30);
-const roles_service_1 = __webpack_require__(88);
+const roles_service_1 = __webpack_require__(91);
 const permission_entity_1 = __webpack_require__(39);
 let PermissionsService = class PermissionsService extends base_service_1.BaseService {
     constructor(permissionsRepository, usersService, rolesService) {
@@ -6854,9 +6997,10 @@ exports.PermissionsService = PermissionsService = __decorate([
 
 
 /***/ }),
-/* 88 */
+/* 91 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -6908,9 +7052,10 @@ exports.RolesService = RolesService = __decorate([
 
 
 /***/ }),
-/* 89 */
+/* 92 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -6932,7 +7077,7 @@ const users_service_1 = __webpack_require__(30);
 const common_1 = __webpack_require__(5);
 const typeorm_1 = __webpack_require__(16);
 const typeorm_2 = __webpack_require__(25);
-const activity_log_entity_1 = __webpack_require__(77);
+const activity_log_entity_1 = __webpack_require__(80);
 let ActivityLogsService = class ActivityLogsService extends base_service_1.BaseService {
     constructor(activityLogsRepository, usersService) {
         super(activityLogsRepository, usersService);
@@ -6949,9 +7094,10 @@ exports.ActivityLogsService = ActivityLogsService = __decorate([
 
 
 /***/ }),
-/* 90 */
+/* 93 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
+"use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Permissions = exports.PERMISSIONS_KEY = void 0;
@@ -6983,9 +7129,10 @@ exports.Permissions = Permissions;
 
 
 /***/ }),
-/* 91 */
+/* 94 */
 /***/ ((__unused_webpack_module, exports) => {
 
+"use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Role = void 0;
@@ -6998,9 +7145,10 @@ var Role;
 
 
 /***/ }),
-/* 92 */
+/* 95 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -7018,8 +7166,8 @@ exports.RolesGuard = void 0;
 const users_service_1 = __webpack_require__(30);
 const common_1 = __webpack_require__(5);
 const core_1 = __webpack_require__(7);
-const roles_decorator_1 = __webpack_require__(93);
-const role_enum_1 = __webpack_require__(91);
+const roles_decorator_1 = __webpack_require__(96);
+const role_enum_1 = __webpack_require__(94);
 let RolesGuard = RolesGuard_1 = class RolesGuard {
     constructor(reflector, usersService) {
         this.reflector = reflector;
@@ -7072,9 +7220,10 @@ exports.RolesGuard = RolesGuard = RolesGuard_1 = __decorate([
 
 
 /***/ }),
-/* 93 */
+/* 96 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
+"use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Roles = exports.ROLES_KEY = void 0;
@@ -7110,433 +7259,10 @@ exports.Roles = Roles;
 
 
 /***/ }),
-/* 94 */
-/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
-
-
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-var __metadata = (this && this.__metadata) || function (k, v) {
-    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
-};
-var ScopeGuard_1;
-var _a;
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.ScopeGuard = void 0;
-const common_1 = __webpack_require__(5);
-const core_1 = __webpack_require__(7);
-const role_scope_type_enum_1 = __webpack_require__(38);
-const role_enum_1 = __webpack_require__(91);
-let ScopeGuard = ScopeGuard_1 = class ScopeGuard {
-    constructor(reflector) {
-        this.reflector = reflector;
-        this.logger = new common_1.Logger(ScopeGuard_1.name);
-    }
-    async canActivate(context) {
-        var _a;
-        try {
-            const request = context.switchToHttp().getRequest();
-            const user = request.user;
-            const { resourceScope } = request;
-            const method = request.method;
-            const path = request.path;
-            // Log access attempt
-            this.logger.debug(`Access attempt: ${method} ${path}`);
-            // Check if role is super admin
-            const hasSuperAdminRole = (_a = user.roles) === null || _a === void 0 ? void 0 : _a.some(role => role.name === role_enum_1.Role.SUPERADMIN);
-            if (hasSuperAdminRole) {
-                return true;
-            }
-            // Check if resourceScope exists
-            if (!resourceScope) {
-                this.logger.warn(`Missing resourceScope in request`);
-                // For GET requests, allow access without resourceScope
-                // This fixes the issue with listing endpoints
-                if (method === 'GET') {
-                    this.logger.debug(`Allowing GET request without resourceScope: ${path}`);
-                    return true;
-                }
-                throw new common_1.InternalServerErrorException('Resource scope not defined');
-            }
-            // Check if the method is POST (creation) or PUT (update)
-            if (method !== 'POST' && method !== 'PUT') {
-                this.logger.debug(`Method ${method} allowed without scope check`);
-                return true; // Allow other methods
-            }
-            const body = request.body;
-            // Log the attempt with scope information
-            this.logger.debug(`Checking permissions for ${method} with scope type: ${resourceScope.type}`);
-            // Check creation permissions based on scope
-            if (!this.canDoInScope(body, resourceScope)) {
-                const errorMessage = this.generateErrorMessage(resourceScope.type, body);
-                this.logger.warn(`Permission denied: ${errorMessage} for user with scope ${resourceScope.type}`);
-                throw new common_1.ForbiddenException(errorMessage);
-            }
-            this.logger.debug('Permission check passed');
-            return true;
-        }
-        catch (error) {
-            // Handle and log any unexpected errors
-            if (!(error instanceof common_1.ForbiddenException) && !(error instanceof common_1.InternalServerErrorException)) {
-                this.logger.error(`Unexpected error in scope guard: ${error.message}`, error.stack);
-                throw new common_1.InternalServerErrorException('An error occurred while checking permissions');
-            }
-            throw error;
-        }
-    }
-    canDoInScope(data, resourceScope) {
-        var _a, _b, _c, _d, _e, _f;
-        try {
-            switch (resourceScope.type) {
-                case role_scope_type_enum_1.RoleScopeType.GLOBAL:
-                    // Global scope can create anywhere
-                    return true;
-                case role_scope_type_enum_1.RoleScopeType.ORGANIZATION:
-                    // Can only create within their organizations
-                    if (data.organizationId) {
-                        const hasAccess = (_b = (_a = resourceScope.organizations) === null || _a === void 0 ? void 0 : _a.includes(data.organizationId)) !== null && _b !== void 0 ? _b : false;
-                        if (!hasAccess) {
-                            this.logger.debug(`Organization access denied: user tried to access org ${data.organizationId}`);
-                        }
-                        return hasAccess;
-                    }
-                    return true;
-                case role_scope_type_enum_1.RoleScopeType.BRANCH:
-                    // Can only create within their branches
-                    if (data.branchId) {
-                        const hasAccess = (_d = (_c = resourceScope.branches) === null || _c === void 0 ? void 0 : _c.includes(data.branchId)) !== null && _d !== void 0 ? _d : false;
-                        if (!hasAccess) {
-                            this.logger.debug(`Branch access denied: user tried to access branch ${data.branchId}`);
-                        }
-                        return hasAccess;
-                    }
-                    return true;
-                case role_scope_type_enum_1.RoleScopeType.DEPARTMENT:
-                    // Can only create within their departments
-                    if (data.departmentId) {
-                        const hasAccess = (_f = (_e = resourceScope.departments) === null || _e === void 0 ? void 0 : _e.includes(data.departmentId)) !== null && _f !== void 0 ? _f : false;
-                        if (!hasAccess) {
-                            this.logger.debug(`Department access denied: user tried to access dept ${data.departmentId}`);
-                        }
-                        return hasAccess;
-                    }
-                    return true;
-                case role_scope_type_enum_1.RoleScopeType.OWNED:
-                    // Usually can't create resources for others
-                    if (data.userId) {
-                        const hasAccess = resourceScope.userId === data.userId;
-                        if (!hasAccess) {
-                            this.logger.debug(`User resource access denied: user tried to access another user's resource`);
-                        }
-                        return hasAccess;
-                    }
-                    // If no userId is provided, allow creation
-                    return true;
-                default:
-                    this.logger.warn(`Unknown scope type encountered: ${resourceScope.type}`);
-                    return false;
-            }
-        }
-        catch (error) {
-            this.logger.error(`Error in canDoInScope: ${error.message}`, error.stack);
-            return false;
-        }
-    }
-    generateErrorMessage(scopeType, data) {
-        switch (scopeType) {
-            case role_scope_type_enum_1.RoleScopeType.ORGANIZATION:
-                return data.organizationId
-                    ? `You don't have permission to manage resources in organization ${data.organizationId}`
-                    : `You don't have permission to manage organization resources`;
-            case role_scope_type_enum_1.RoleScopeType.BRANCH:
-                return data.branchId
-                    ? `You don't have permission to manage resources in branch ${data.branchId}`
-                    : `You don't have permission to manage branch resources`;
-            case role_scope_type_enum_1.RoleScopeType.DEPARTMENT:
-                return data.departmentId
-                    ? `You don't have permission to manage resources in department ${data.departmentId}`
-                    : `You don't have permission to manage department resources`;
-            case role_scope_type_enum_1.RoleScopeType.OWNED:
-                return data.userId
-                    ? `You don't have permission to manage resources for user ${data.userId}`
-                    : `You don't have permission to manage user resources`;
-            default:
-                return `You don't have permission to manage this resource`;
-        }
-    }
-};
-exports.ScopeGuard = ScopeGuard;
-exports.ScopeGuard = ScopeGuard = ScopeGuard_1 = __decorate([
-    (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [typeof (_a = typeof core_1.Reflector !== "undefined" && core_1.Reflector) === "function" ? _a : Object])
-], ScopeGuard);
-
-
-/***/ }),
-/* 95 */
-/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
-
-
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-var ScopeInterceptor_1;
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.ScopeInterceptor = void 0;
-const common_1 = __webpack_require__(5);
-const operators_1 = __webpack_require__(96);
-const role_scope_type_enum_1 = __webpack_require__(38);
-let ScopeInterceptor = ScopeInterceptor_1 = class ScopeInterceptor {
-    constructor() {
-        this.logger = new common_1.Logger(ScopeInterceptor_1.name);
-    }
-    intercept(context, next) {
-        var _a, _b, _c;
-        try {
-            const request = context.switchToHttp().getRequest();
-            const user = request.user;
-            const method = request.method;
-            const path = request.path;
-            this.logger.debug(`Processing ${method} request to ${path}`);
-            if (!user) {
-                this.logger.debug('No authenticated user found in request');
-                return next.handle();
-            }
-            this.logger.debug(`Setting resource scope for user: ${user.sub}`);
-            try {
-                // Determine effective scope
-                const roleScope = this.determineEffectiveScope(user.roles || []);
-                this.logger.debug(`Determined effective scope: ${roleScope.scopeType}`);
-                // Store scope information with correct property names
-                const resourceScope = {
-                    type: roleScope.scopeType,
-                    userId: user.sub,
-                    departments: ((_a = user.roles) === null || _a === void 0 ? void 0 : _a.flatMap(role => role.departmentId).filter((id) => id !== undefined && id !== null)) || [],
-                    branches: ((_b = user.roles) === null || _b === void 0 ? void 0 : _b.flatMap(role => role.branchId).filter((id) => id !== undefined && id !== null)) || [],
-                    organizations: ((_c = user.roles) === null || _c === void 0 ? void 0 : _c.flatMap(role => role.organizationId).filter((id) => id !== undefined && id !== null)) || [],
-                };
-                request.resourceScope = resourceScope;
-                // Apply TypeORM-compatible filters based on scope
-                request.filters = this.createTypeOrmFilters(resourceScope);
-                this.logger.debug(`Applied filters for scope type: ${resourceScope.type}`);
-            }
-            catch (error) {
-                this.logger.error(`Error setting up resource scope: ${error.message}`, error.stack);
-                throw new common_1.InternalServerErrorException('Failed to process authorization scope');
-            }
-            // Process the response to filter data
-            return next.handle().pipe((0, operators_1.map)(data => {
-                try {
-                    // Skip non-GET requests or if no scope defined
-                    if (request.method !== 'GET' || !request.resourceScope) {
-                        return data;
-                    }
-                    this.logger.debug(`Filtering GET response data by scope: ${request.resourceScope.type}`);
-                    // If data is an array, filter it based on scope
-                    if (Array.isArray(data)) {
-                        const filteredCount = data.length;
-                        const result = this.filterDataByScope(data, request.resourceScope);
-                        this.logger.debug(`Filtered data: ${result.length}/${filteredCount} items passed scope filter`);
-                        return result;
-                    }
-                    return data;
-                }
-                catch (error) {
-                    this.logger.error(`Error filtering response data: ${error.message}`, error.stack);
-                    throw new common_1.InternalServerErrorException('Failed to process response data');
-                }
-            }), (0, operators_1.catchError)(error => {
-                this.logger.error(`Interceptor pipeline error: ${error.message}`, error.stack);
-                throw error;
-            }));
-        }
-        catch (error) {
-            this.logger.error(`ScopeInterceptor error: ${error.message}`, error.stack);
-            throw error;
-        }
-    }
-    createTypeOrmFilters(resourceScope) {
-        var _a, _b, _c;
-        try {
-            const filters = {};
-            switch (resourceScope.type) {
-                case role_scope_type_enum_1.RoleScopeType.GLOBAL:
-                    this.logger.debug('Global scope: no filters applied');
-                    break;
-                case role_scope_type_enum_1.RoleScopeType.ORGANIZATION:
-                    if ((_a = resourceScope.organizations) === null || _a === void 0 ? void 0 : _a.length) {
-                        filters.organizations = resourceScope.organizations;
-                        this.logger.debug(`Organization filter applied with ${filters.organizations.length} organizations`);
-                    }
-                    else {
-                        this.logger.warn('Organization scope set but no organization IDs available');
-                    }
-                    break;
-                case role_scope_type_enum_1.RoleScopeType.BRANCH:
-                    if ((_b = resourceScope.branches) === null || _b === void 0 ? void 0 : _b.length) {
-                        filters.branches = resourceScope.branches;
-                        this.logger.debug(`Branch filter applied with ${filters.branches.length} branches`);
-                    }
-                    else {
-                        this.logger.warn('Branch scope set but no branch IDs available');
-                    }
-                    break;
-                case role_scope_type_enum_1.RoleScopeType.DEPARTMENT:
-                    if ((_c = resourceScope.departments) === null || _c === void 0 ? void 0 : _c.length) {
-                        filters.departments = resourceScope.departments;
-                        this.logger.debug(`Department filter applied with ${filters.departments.length} departments`);
-                    }
-                    else {
-                        this.logger.warn('Department scope set but no department IDs available');
-                    }
-                    break;
-                case role_scope_type_enum_1.RoleScopeType.OWNED:
-                    filters.userId = resourceScope.userId;
-                    this.logger.debug(`User-owned filter applied for user ID: ${filters.userId}`);
-                    break;
-                default:
-                    this.logger.warn(`Unknown scope type: ${resourceScope.type}`);
-            }
-            return filters;
-        }
-        catch (error) {
-            this.logger.error(`Error creating TypeORM filters: ${error.message}`, error.stack);
-            throw new common_1.InternalServerErrorException('Failed to create data filters');
-        }
-    }
-    filterDataByScope(data, resourceScope) {
-        var _a, _b, _c;
-        try {
-            if (!data.length) {
-                return data;
-            }
-            switch (resourceScope.type) {
-                case role_scope_type_enum_1.RoleScopeType.GLOBAL:
-                    this.logger.debug('Global scope: returning all data');
-                    return data;
-                case role_scope_type_enum_1.RoleScopeType.ORGANIZATION:
-                    if (!((_a = resourceScope.organizations) === null || _a === void 0 ? void 0 : _a.length)) {
-                        this.logger.warn('No organizations to filter by, returning empty set');
-                        return [];
-                    }
-                    return data.filter(item => {
-                        var _a;
-                        const result = (_a = resourceScope.organizations) === null || _a === void 0 ? void 0 : _a.includes(item.organizationId);
-                        if (!result) {
-                            this.logger.debug(`Filtered out item with organizationId: ${item.organizationId}`);
-                        }
-                        return result;
-                    });
-                case role_scope_type_enum_1.RoleScopeType.BRANCH:
-                    if (!((_b = resourceScope.branches) === null || _b === void 0 ? void 0 : _b.length)) {
-                        this.logger.warn('No branches to filter by, returning empty set');
-                        return [];
-                    }
-                    return data.filter(item => {
-                        var _a;
-                        const result = (_a = resourceScope.branches) === null || _a === void 0 ? void 0 : _a.includes(item.branchId);
-                        if (!result) {
-                            this.logger.debug(`Filtered out item with branchId: ${item.branchId}`);
-                        }
-                        return result;
-                    });
-                case role_scope_type_enum_1.RoleScopeType.DEPARTMENT:
-                    if (!((_c = resourceScope.departments) === null || _c === void 0 ? void 0 : _c.length)) {
-                        this.logger.warn('No departments to filter by, returning empty set');
-                        return [];
-                    }
-                    return data.filter(item => {
-                        var _a;
-                        const result = (_a = resourceScope.departments) === null || _a === void 0 ? void 0 : _a.includes(item.departmentId);
-                        if (!result) {
-                            this.logger.debug(`Filtered out item with departmentId: ${item.departmentId}`);
-                        }
-                        return result;
-                    });
-                case role_scope_type_enum_1.RoleScopeType.OWNED:
-                    return data.filter(item => {
-                        const result = item.userId === resourceScope.userId;
-                        if (!result) {
-                            this.logger.debug(`Filtered out item not owned by user: ${resourceScope.userId}`);
-                        }
-                        return result;
-                    });
-                default:
-                    this.logger.warn(`Unknown scope type for filtering: ${resourceScope.type}, returning all data`);
-                    return data;
-            }
-        }
-        catch (error) {
-            this.logger.error(`Error filtering data by scope: ${error.message}`, error.stack);
-            throw new common_1.InternalServerErrorException('Failed to filter response data');
-        }
-    }
-    determineEffectiveScope(roles) {
-        try {
-            if (!roles.length) {
-                this.logger.debug('No roles provided, using OWNED scope by default');
-                return { scopeType: role_scope_type_enum_1.RoleScopeType.OWNED };
-            }
-            let effectiveScopeType = role_scope_type_enum_1.RoleScopeType.OWNED;
-            for (const role of roles) {
-                const roleScope = role.scope || role_scope_type_enum_1.RoleScopeType.OWNED;
-                if (roleScope === role_scope_type_enum_1.RoleScopeType.GLOBAL) {
-                    this.logger.debug('Found GLOBAL role - assigning highest scope privilege');
-                    return { scopeType: role_scope_type_enum_1.RoleScopeType.GLOBAL };
-                }
-                if (this.isBroaderScope(roleScope, effectiveScopeType)) {
-                    this.logger.debug(`Upgrading scope from ${effectiveScopeType} to broader scope ${roleScope}`);
-                    effectiveScopeType = roleScope;
-                }
-            }
-            this.logger.debug(`Final determined scope: ${effectiveScopeType}`);
-            return { scopeType: effectiveScopeType };
-        }
-        catch (error) {
-            this.logger.error(`Error determining effective scope: ${error.message}`, error.stack);
-            throw new common_1.InternalServerErrorException('Failed to determine user access scope');
-        }
-    }
-    isBroaderScope(scopeA, scopeB) {
-        try {
-            const scopePriority = {
-                [role_scope_type_enum_1.RoleScopeType.GLOBAL]: 4,
-                [role_scope_type_enum_1.RoleScopeType.ORGANIZATION]: 3,
-                [role_scope_type_enum_1.RoleScopeType.BRANCH]: 2,
-                [role_scope_type_enum_1.RoleScopeType.DEPARTMENT]: 1,
-                [role_scope_type_enum_1.RoleScopeType.OWNED]: 0
-            };
-            return scopePriority[scopeA] > scopePriority[scopeB];
-        }
-        catch (error) {
-            this.logger.error(`Error comparing scopes: ${error.message}`, error.stack);
-            return false;
-        }
-    }
-};
-exports.ScopeInterceptor = ScopeInterceptor;
-exports.ScopeInterceptor = ScopeInterceptor = ScopeInterceptor_1 = __decorate([
-    (0, common_1.Injectable)()
-], ScopeInterceptor);
-
-
-/***/ }),
-/* 96 */
-/***/ ((module) => {
-
-module.exports = require("rxjs/operators");
-
-/***/ }),
 /* 97 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
+"use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.CurrentUser = void 0;
@@ -7581,6 +7307,7 @@ exports.CurrentUser = (0, common_1.createParamDecorator)((data, context) => {
 /* 98 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
+"use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Override = Override;
@@ -7632,12 +7359,14 @@ function Override() {
 /* 99 */
 /***/ ((module) => {
 
+"use strict";
 module.exports = require("reflect-metadata");
 
 /***/ }),
 /* 100 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -7756,6 +7485,7 @@ exports.GetEmployeeDto = GetEmployeeDto;
 /* 101 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -7835,6 +7565,7 @@ __decorate([
 /* 102 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -7866,6 +7597,7 @@ __decorate([
 /* 103 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -8010,6 +7742,7 @@ function createGetDto(dto, entity = "entity") {
 /* 104 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -8026,14 +7759,14 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 var _a, _b, _c;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.EmployeesService = void 0;
-const role_enum_1 = __webpack_require__(91);
+const role_enum_1 = __webpack_require__(94);
 const base_service_1 = __webpack_require__(31);
 const users_service_1 = __webpack_require__(30);
 const common_1 = __webpack_require__(5);
 const typeorm_1 = __webpack_require__(16);
 const typeorm_2 = __webpack_require__(25);
 const employee_entity_1 = __webpack_require__(43);
-const roles_service_1 = __webpack_require__(88);
+const roles_service_1 = __webpack_require__(91);
 let EmployeesService = class EmployeesService extends base_service_1.BaseService {
     constructor(employeesRepository, usersService, rolesService) {
         super(employeesRepository, usersService);
@@ -8098,6 +7831,7 @@ exports.EmployeesService = EmployeesService = __decorate([
 /* 105 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -8112,7 +7846,7 @@ const typeorm_1 = __webpack_require__(16);
 const roles_module_1 = __webpack_require__(106);
 const permission_entity_1 = __webpack_require__(39);
 const permissions_controller_1 = __webpack_require__(122);
-const permissions_service_1 = __webpack_require__(87);
+const permissions_service_1 = __webpack_require__(90);
 const permission_seeder_service_1 = __webpack_require__(124);
 let PermissionsModule = class PermissionsModule {
 };
@@ -8132,6 +7866,7 @@ exports.PermissionsModule = PermissionsModule = __decorate([
 /* 106 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -8146,7 +7881,7 @@ const common_1 = __webpack_require__(5);
 const typeorm_1 = __webpack_require__(16);
 const role_entity_1 = __webpack_require__(37);
 const roles_controller_1 = __webpack_require__(120);
-const roles_service_1 = __webpack_require__(88);
+const roles_service_1 = __webpack_require__(91);
 let RolesModule = class RolesModule {
 };
 exports.RolesModule = RolesModule;
@@ -8164,6 +7899,7 @@ exports.RolesModule = RolesModule = __decorate([
 /* 107 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -8197,6 +7933,7 @@ exports.UsersModule = UsersModule = __decorate([
 /* 108 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
+"use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.UsersGateway = void 0;
@@ -8210,6 +7947,7 @@ exports.UsersGateway = UsersGateway;
 /* 109 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -8249,6 +7987,7 @@ function createGateway(namespace) {
 /* 110 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -8432,24 +8171,28 @@ exports.JwtService = JwtService = JwtService_1 = __decorate([
 /* 111 */
 /***/ ((module) => {
 
+"use strict";
 module.exports = require("@nestjs/jwt");
 
 /***/ }),
 /* 112 */
 /***/ ((module) => {
 
+"use strict";
 module.exports = require("uuid");
 
 /***/ }),
 /* 113 */
 /***/ ((module) => {
 
+"use strict";
 module.exports = require("@nestjs/websockets");
 
 /***/ }),
 /* 114 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -8951,12 +8694,14 @@ __decorate([
 /* 115 */
 /***/ ((module) => {
 
+"use strict";
 module.exports = require("socket.io");
 
 /***/ }),
 /* 116 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
+"use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.UsersController = void 0;
@@ -8979,6 +8724,7 @@ exports.UsersController = UsersController;
 /* 117 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -9121,6 +8867,7 @@ exports.GetUserDto = GetUserDto;
 /* 118 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -9246,6 +8993,7 @@ exports.GetProfileDto = GetProfileDto;
 /* 119 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -9336,13 +9084,14 @@ exports.GetAddressDto = GetAddressDto;
 /* 120 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
+"use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.RolesController = void 0;
 const create_controller_factory_1 = __webpack_require__(18);
 const role_dto_1 = __webpack_require__(121);
 const role_entity_1 = __webpack_require__(37);
-const roles_service_1 = __webpack_require__(88);
+const roles_service_1 = __webpack_require__(91);
 class RolesController extends (0, create_controller_factory_1.createController)(role_entity_1.Role, roles_service_1.RolesService, role_dto_1.GetRoleDto, role_dto_1.RoleDto, role_dto_1.UpdateRoleDto) {
 }
 exports.RolesController = RolesController;
@@ -9352,6 +9101,7 @@ exports.RolesController = RolesController;
 /* 121 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -9444,13 +9194,14 @@ exports.GetRoleDto = GetRoleDto;
 /* 122 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
+"use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.PermissionsController = void 0;
 const create_controller_factory_1 = __webpack_require__(18);
 const permission_dto_1 = __webpack_require__(123);
 const permission_entity_1 = __webpack_require__(39);
-const permissions_service_1 = __webpack_require__(87);
+const permissions_service_1 = __webpack_require__(90);
 class PermissionsController extends (0, create_controller_factory_1.createController)(permission_entity_1.Permission, permissions_service_1.PermissionsService, permission_dto_1.GetPermissionDto) {
     async findOne(id, relations, select) {
         return await super.findOne(id, relations, select);
@@ -9475,6 +9226,7 @@ exports.PermissionsController = PermissionsController;
 /* 123 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -9526,6 +9278,7 @@ exports.GetPermissionDto = GetPermissionDto;
 /* 124 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
@@ -9844,24 +9597,28 @@ exports.PermissionSeederService = PermissionSeederService = PermissionSeederServ
 /* 125 */
 /***/ ((module) => {
 
+"use strict";
 module.exports = require("fs");
 
 /***/ }),
 /* 126 */
 /***/ ((module) => {
 
+"use strict";
 module.exports = require("glob");
 
 /***/ }),
 /* 127 */
 /***/ ((module) => {
 
+"use strict";
 module.exports = require("path");
 
 /***/ }),
 /* 128 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -9895,6 +9652,7 @@ exports.CutoffsModule = CutoffsModule = __decorate([
 /* 129 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
+"use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.CutoffsController = void 0;
@@ -9911,6 +9669,7 @@ exports.CutoffsController = CutoffsController;
 /* 130 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -9930,7 +9689,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.CutoffsService = void 0;
 const cutoff_status_enum_1 = __webpack_require__(56);
 const cutoff_type_enum_1 = __webpack_require__(57);
-const utility_helper_1 = __webpack_require__(84);
+const utility_helper_1 = __webpack_require__(87);
 const base_service_1 = __webpack_require__(31);
 const users_service_1 = __webpack_require__(30);
 const common_1 = __webpack_require__(5);
@@ -10195,12 +9954,14 @@ exports.CutoffsService = CutoffsService = CutoffsService_1 = __decorate([
 /* 131 */
 /***/ ((module) => {
 
+"use strict";
 module.exports = require("@nestjs/schedule");
 
 /***/ }),
 /* 132 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -10292,6 +10053,7 @@ exports.GetCutoffDto = GetCutoffDto;
 /* 133 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -10375,6 +10137,7 @@ exports.ShiftManagementModule = ShiftManagementModule = __decorate([
 /* 134 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -10410,6 +10173,7 @@ exports.GroupsModule = GroupsModule = __decorate([
 /* 135 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
+"use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.GroupsController = void 0;
@@ -10426,6 +10190,7 @@ exports.GroupsController = GroupsController;
 /* 136 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -10499,6 +10264,7 @@ exports.GetGroupDto = GetGroupDto;
 /* 137 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -10587,6 +10353,7 @@ exports.GroupsService = GroupsService = GroupsService_1 = __decorate([
 /* 138 */
 /***/ ((__unused_webpack_module, exports) => {
 
+"use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.EmployeeAssignedEvent = exports.SCHEDULE_EVENTS = exports.GROUP_EVENTS = void 0;
@@ -10613,12 +10380,14 @@ exports.EmployeeAssignedEvent = EmployeeAssignedEvent;
 /* 139 */
 /***/ ((module) => {
 
+"use strict";
 module.exports = require("@nestjs/event-emitter");
 
 /***/ }),
 /* 140 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -10654,6 +10423,7 @@ exports.HolidaysModule = HolidaysModule = __decorate([
 /* 141 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -10707,6 +10477,7 @@ exports.SchedulesModule = SchedulesModule = __decorate([
 /* 142 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -10745,6 +10516,7 @@ exports.ScheduleChangeRequestsModule = ScheduleChangeRequestsModule = __decorate
 /* 143 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
+"use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ScheduleChangeRequestsController = void 0;
@@ -10764,6 +10536,7 @@ exports.ScheduleChangeRequestsController = ScheduleChangeRequestsController;
 /* 144 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -10847,6 +10620,7 @@ exports.GetScheduleChangeRequestDto = GetScheduleChangeRequestDto;
 /* 145 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -10888,6 +10662,7 @@ exports.ScheduleChangeRequestsService = ScheduleChangeRequestsService = __decora
 /* 146 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -10921,6 +10696,7 @@ exports.ScheduleChangeResponsesModule = ScheduleChangeResponsesModule = __decora
 /* 147 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
+"use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ScheduleChangeResponsesController = void 0;
@@ -10940,6 +10716,7 @@ exports.ScheduleChangeResponsesController = ScheduleChangeResponsesController;
 /* 148 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -10998,6 +10775,7 @@ exports.GetScheduleChangeResponseDto = GetScheduleChangeResponseDto;
 /* 149 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -11039,6 +10817,7 @@ exports.ScheduleChangeResponsesService = ScheduleChangeResponsesService = __deco
 /* 150 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
+"use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.SchedulesController = void 0;
@@ -11055,6 +10834,7 @@ exports.SchedulesController = SchedulesController;
 /* 151 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -11162,6 +10942,7 @@ exports.GetScheduleDto = GetScheduleDto;
 /* 152 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
+"use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.IsTimeString = IsTimeString;
@@ -11194,6 +10975,7 @@ function IsTimeString(validationOptions) {
 /* 153 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -11383,6 +11165,7 @@ exports.SchedulesService = SchedulesService = __decorate([
 /* 154 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
+"use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.getLogLevels = exports.DayUtils = void 0;
@@ -11409,12 +11192,14 @@ exports.getLogLevels = getLogLevels;
 /* 155 */
 /***/ ((module) => {
 
+"use strict";
 module.exports = require("date-fns");
 
 /***/ }),
 /* 156 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -11516,6 +11301,7 @@ exports.HolidaysService = HolidaysService = __decorate([
 /* 157 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -11620,12 +11406,14 @@ exports.ScheduleGenerationProcessor = ScheduleGenerationProcessor = ScheduleGene
 /* 158 */
 /***/ ((module) => {
 
+"use strict";
 module.exports = require("bull");
 
 /***/ }),
 /* 159 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
+"use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.HolidaysController = void 0;
@@ -11642,6 +11430,7 @@ exports.HolidaysController = HolidaysController;
 /* 160 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -11728,6 +11517,7 @@ exports.GetHolidayDto = GetHolidayDto;
 /* 161 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -11963,6 +11753,7 @@ exports.DefaultShiftsSeeder = DefaultShiftsSeeder = DefaultShiftsSeeder_1 = __de
 /* 162 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -12004,6 +11795,7 @@ exports.ShiftsService = ShiftsService = __decorate([
 /* 163 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
+"use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ShiftsController = void 0;
@@ -12020,6 +11812,7 @@ exports.ShiftsController = ShiftsController;
 /* 164 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -12161,6 +11954,7 @@ exports.GetShiftDto = GetShiftDto;
 /* 165 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -12267,6 +12061,7 @@ __decorate([
 /* 166 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -12359,6 +12154,7 @@ exports.EmployeeGroupAssignmentListener = EmployeeGroupAssignmentListener = Empl
 /* 167 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -12396,6 +12192,7 @@ exports.CommonService = CommonService = __decorate([
 /* 168 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -12435,6 +12232,7 @@ exports.ConfigModule = ConfigModule = __decorate([
 /* 169 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -12492,6 +12290,7 @@ exports.BullModule = BullModule = BullModule_1 = __decorate([
 /* 170 */
 /***/ ((__unused_webpack_module, exports) => {
 
+"use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.queues = void 0;
@@ -12535,6 +12334,7 @@ exports.queues = [
 /* 171 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -12586,6 +12386,7 @@ exports.QueueFactoryService = QueueFactoryService = __decorate([
 /* 172 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
@@ -12657,12 +12458,14 @@ exports.configValidationSchema = Joi.object({
 /* 173 */
 /***/ ((module) => {
 
+"use strict";
 module.exports = require("joi");
 
 /***/ }),
 /* 174 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -12696,6 +12499,7 @@ exports.DatabaseModule = DatabaseModule = __decorate([
 /* 175 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -12755,6 +12559,7 @@ exports.AccountManagementModule = AccountManagementModule = __decorate([
 /* 176 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -12772,7 +12577,7 @@ const jwt_1 = __webpack_require__(111);
 const passport_1 = __webpack_require__(28);
 const jwt_auth_guard_1 = __webpack_require__(27);
 const permissions_guard_1 = __webpack_require__(29);
-const roles_guard_1 = __webpack_require__(92);
+const roles_guard_1 = __webpack_require__(95);
 const sessions_module_1 = __webpack_require__(199);
 const auth_controller_1 = __webpack_require__(203);
 const auth_service_1 = __webpack_require__(207);
@@ -12809,6 +12614,7 @@ exports.AuthModule = AuthModule = __decorate([
 /* 177 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -12858,6 +12664,7 @@ exports.EmailsModule = EmailsModule = __decorate([
 /* 178 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -12897,12 +12704,14 @@ exports.EmailConfigurationsModule = EmailConfigurationsModule = __decorate([
 /* 179 */
 /***/ ((module) => {
 
+"use strict";
 module.exports = require("@nestjs-modules/mailer");
 
 /***/ }),
 /* 180 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
+"use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.EmailConfigurationsController = void 0;
@@ -12919,6 +12728,7 @@ exports.EmailConfigurationsController = EmailConfigurationsController;
 /* 181 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -13043,6 +12853,7 @@ exports.GetEmailConfigurationDto = GetEmailConfigurationDto;
 /* 182 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
@@ -13212,12 +13023,14 @@ exports.EmailConfigurationsService = EmailConfigurationsService = __decorate([
 /* 183 */
 /***/ ((module) => {
 
+"use strict";
 module.exports = require("nodemailer");
 
 /***/ }),
 /* 184 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -13289,6 +13102,7 @@ exports.EmailConfiguration = EmailConfiguration = __decorate([
 /* 185 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -13363,6 +13177,7 @@ exports.Email = Email = __decorate([
 /* 186 */
 /***/ ((__unused_webpack_module, exports) => {
 
+"use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.EmailStatus = void 0;
@@ -13389,6 +13204,7 @@ var EmailStatus;
 /* 187 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -13453,12 +13269,14 @@ exports.DynamicMailerConfigService = DynamicMailerConfigService = __decorate([
 /* 188 */
 /***/ ((module) => {
 
+"use strict";
 module.exports = require("@nestjs-modules/mailer/dist/adapters/handlebars.adapter");
 
 /***/ }),
 /* 189 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -13492,6 +13310,7 @@ exports.EmailTemplatesModule = EmailTemplatesModule = __decorate([
 /* 190 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -13534,6 +13353,7 @@ __decorate([
 /* 191 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -13572,6 +13392,7 @@ exports.GetEmailTemplateDto = GetEmailTemplateDto;
 /* 192 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
@@ -13695,12 +13516,14 @@ exports.EmailTemplatesService = EmailTemplatesService = __decorate([
 /* 193 */
 /***/ ((module) => {
 
+"use strict";
 module.exports = require("handlebars");
 
 /***/ }),
 /* 194 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -13759,6 +13582,7 @@ exports.EmailTemplate = EmailTemplate = __decorate([
 /* 195 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -13828,6 +13652,7 @@ __decorate([
 /* 196 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -13866,6 +13691,7 @@ exports.GetEmailDto = GetEmailDto;
 /* 197 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -14095,6 +13921,7 @@ exports.EmailsService = EmailsService = __decorate([
 /* 198 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -14314,6 +14141,7 @@ exports.EmailSeederService = EmailSeederService = EmailSeederService_1 = __decor
 /* 199 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -14325,7 +14153,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.SessionsModule = void 0;
 const common_1 = __webpack_require__(5);
 const typeorm_1 = __webpack_require__(16);
-const session_entity_1 = __webpack_require__(81);
+const session_entity_1 = __webpack_require__(84);
 const sessions_controller_1 = __webpack_require__(200);
 const sessions_service_1 = __webpack_require__(202);
 let SessionsModule = class SessionsModule {
@@ -14345,12 +14173,13 @@ exports.SessionsModule = SessionsModule = __decorate([
 /* 200 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
+"use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.SessionsController = void 0;
 const create_controller_factory_1 = __webpack_require__(18);
 const session_dto_1 = __webpack_require__(201);
-const session_entity_1 = __webpack_require__(81);
+const session_entity_1 = __webpack_require__(84);
 const sessions_service_1 = __webpack_require__(202);
 class SessionsController extends (0, create_controller_factory_1.createController)(session_entity_1.Session, sessions_service_1.SessionsService, session_dto_1.GetSessionDto, undefined, session_dto_1.UpdateSessionDto) {
     async create(entityDto, createdById) {
@@ -14367,6 +14196,7 @@ exports.SessionsController = SessionsController;
 /* 201 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -14410,6 +14240,7 @@ exports.GetSessionDto = GetSessionDto;
 /* 202 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -14431,7 +14262,7 @@ const common_1 = __webpack_require__(5);
 const typeorm_1 = __webpack_require__(16);
 const typeorm_2 = __webpack_require__(25);
 const users_service_1 = __webpack_require__(30);
-const session_entity_1 = __webpack_require__(81);
+const session_entity_1 = __webpack_require__(84);
 let SessionsService = class SessionsService extends base_service_1.BaseService {
     constructor(sessionsRepository, usersService) {
         super(sessionsRepository, usersService);
@@ -14451,6 +14282,7 @@ exports.SessionsService = SessionsService = __decorate([
 /* 203 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -14714,6 +14546,7 @@ exports.AuthController = AuthController = __decorate([
 /* 204 */
 /***/ ((__unused_webpack_module, exports) => {
 
+"use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 
@@ -14722,12 +14555,14 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 /* 205 */
 /***/ ((module) => {
 
+"use strict";
 module.exports = require("express");
 
 /***/ }),
 /* 206 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -14751,6 +14586,7 @@ exports.GoogleAuthGuard = GoogleAuthGuard = __decorate([
 /* 207 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
@@ -14798,7 +14634,7 @@ var AuthService_1;
 var _a, _b, _c, _d, _e, _f;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.AuthService = void 0;
-const utility_helper_1 = __webpack_require__(84);
+const utility_helper_1 = __webpack_require__(87);
 const common_service_1 = __webpack_require__(167);
 const emails_service_1 = __webpack_require__(197);
 const common_1 = __webpack_require__(5);
@@ -15150,12 +14986,14 @@ exports.AuthService = AuthService = AuthService_1 = __decorate([
 /* 208 */
 /***/ ((module) => {
 
+"use strict";
 module.exports = require("bcrypt");
 
 /***/ }),
 /* 209 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -15192,6 +15030,7 @@ __decorate([
 /* 210 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -15257,6 +15096,7 @@ __decorate([
 /* 211 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -15291,6 +15131,7 @@ __decorate([
 /* 212 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -15352,12 +15193,14 @@ exports.AccessTokenStrategy = AccessTokenStrategy = __decorate([
 /* 213 */
 /***/ ((module) => {
 
+"use strict";
 module.exports = require("passport-jwt");
 
 /***/ }),
 /* 214 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -15389,6 +15232,7 @@ exports.ProfilesModule = ProfilesModule = __decorate([
 /* 215 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
+"use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ProfilesController = void 0;
@@ -15420,6 +15264,7 @@ exports.ProfilesController = ProfilesController;
 /* 216 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -15461,6 +15306,7 @@ exports.ProfilesService = ProfilesService = __decorate([
 /* 217 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
@@ -15512,10 +15358,10 @@ const employment_condition_enum_1 = __webpack_require__(44);
 const employment_status_enum_1 = __webpack_require__(45);
 const employment_type_enum_1 = __webpack_require__(46);
 const role_scope_type_enum_1 = __webpack_require__(38);
-const role_enum_1 = __webpack_require__(91);
+const role_enum_1 = __webpack_require__(94);
 const auth_service_1 = __webpack_require__(207);
 const employees_service_1 = __webpack_require__(104);
-const roles_service_1 = __webpack_require__(88);
+const roles_service_1 = __webpack_require__(91);
 const common_1 = __webpack_require__(5);
 const config_1 = __webpack_require__(6);
 const bcrypt = __importStar(__webpack_require__(208));
@@ -15682,6 +15528,7 @@ exports.UserSeederService = UserSeederService = UserSeederService_1 = __decorate
 /* 218 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -15711,6 +15558,7 @@ exports.AddressesModule = AddressesModule = __decorate([
 /* 219 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -15752,6 +15600,7 @@ exports.AddressesService = AddressesService = __decorate([
 /* 220 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -15767,14 +15616,14 @@ const typeorm_1 = __webpack_require__(16);
 const biometrics_module_1 = __webpack_require__(221);
 const employee_management_module_1 = __webpack_require__(15);
 const shift_management_module_1 = __webpack_require__(133);
-const attendance_punches_module_1 = __webpack_require__(239);
-const attendances_controller_1 = __webpack_require__(243);
-const attendances_service_1 = __webpack_require__(244);
+const attendance_punches_module_1 = __webpack_require__(256);
+const attendances_controller_1 = __webpack_require__(260);
+const attendances_service_1 = __webpack_require__(261);
 const attendance_entity_1 = __webpack_require__(52);
-const final_work_hours_module_1 = __webpack_require__(249);
-const attendance_listener_1 = __webpack_require__(253);
-const work_time_requests_module_1 = __webpack_require__(254);
-const work_time_responses_module_1 = __webpack_require__(257);
+const final_work_hours_module_1 = __webpack_require__(266);
+const attendance_listener_1 = __webpack_require__(270);
+const work_time_requests_module_1 = __webpack_require__(271);
+const work_time_responses_module_1 = __webpack_require__(274);
 let AttendanceManagementModule = class AttendanceManagementModule {
 };
 exports.AttendanceManagementModule = AttendanceManagementModule;
@@ -15833,6 +15682,7 @@ exports.AttendanceManagementModule = AttendanceManagementModule = __decorate([
 /* 221 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -15846,16 +15696,17 @@ const attendance_punch_entity_1 = __webpack_require__(73);
 const common_1 = __webpack_require__(5);
 const core_1 = __webpack_require__(7);
 const typeorm_1 = __webpack_require__(16);
-const biometrics_controller_1 = __webpack_require__(222);
-const biometric_device_entity_1 = __webpack_require__(74);
-const biometric_template_entity_1 = __webpack_require__(229);
-const timeout_interceptor_1 = __webpack_require__(224);
-const attendance_tracking_service_1 = __webpack_require__(230);
-const biometric_devices_service_1 = __webpack_require__(227);
-const biometrics_factory_service_1 = __webpack_require__(228);
-const biometrics_polling_service_1 = __webpack_require__(231);
-const zkteco_biometrics_service_1 = __webpack_require__(233);
-const anvis_biometrics_service_1 = __webpack_require__(236);
+const biometric_devices_controller_1 = __webpack_require__(222);
+const biometrics_controller_1 = __webpack_require__(229);
+const biometric_device_entity_1 = __webpack_require__(76);
+const biometric_template_entity_1 = __webpack_require__(234);
+const timeout_interceptor_1 = __webpack_require__(231);
+const anvis_biometrics_service_1 = __webpack_require__(235);
+const attendance_tracking_service_1 = __webpack_require__(252);
+const biometric_devices_service_1 = __webpack_require__(226);
+const biometrics_factory_service_1 = __webpack_require__(227);
+const biometrics_polling_service_1 = __webpack_require__(253);
+const zkteco_biometrics_service_1 = __webpack_require__(254);
 let BiometricsModule = class BiometricsModule {
 };
 exports.BiometricsModule = BiometricsModule;
@@ -15868,7 +15719,7 @@ exports.BiometricsModule = BiometricsModule = __decorate([
                     module: BiometricsModule,
                 }]),
         ],
-        controllers: [biometrics_controller_1.BiometricsController],
+        controllers: [biometrics_controller_1.BiometricsController, biometric_devices_controller_1.BiometricDevicesController],
         providers: [
             // Register ZKTeco service
             {
@@ -15878,7 +15729,7 @@ exports.BiometricsModule = BiometricsModule = __decorate([
             // Register Anviz service
             {
                 provide: 'ANVIZ_SERVICE',
-                useClass: anvis_biometrics_service_1.AnvizBiometricService,
+                useClass: anvis_biometrics_service_1.AnvizBiometricsService,
             },
             // Register the legacy token for backward compatibility
             {
@@ -15910,6 +15761,7 @@ exports.BiometricsModule = BiometricsModule = __decorate([
 /* 222 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -15923,24 +15775,319 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q;
+var _a, _b, _c, _d, _e;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.BiometricsController = void 0;
+exports.BiometricDevicesController = void 0;
+const generalresponse_dto_1 = __webpack_require__(86);
+const create_controller_factory_1 = __webpack_require__(18);
 const common_1 = __webpack_require__(5);
 const swagger_1 = __webpack_require__(8);
+const bson_typings_1 = __webpack_require__(223);
+const biometric_device_dto_1 = __webpack_require__(224);
+const connect_device_dto_1 = __webpack_require__(225);
+const biometric_device_entity_1 = __webpack_require__(76);
+const biometric_devices_service_1 = __webpack_require__(226);
+const biometrics_factory_service_1 = __webpack_require__(227);
+let BiometricDevicesController = class BiometricDevicesController extends (0, create_controller_factory_1.createController)(biometric_device_entity_1.BiometricDevice, biometric_devices_service_1.BiometricDevicesService, biometric_device_dto_1.GetBiometricDeviceDto, undefined, biometric_device_dto_1.UpdateBiometricDeviceDto) {
+    constructor(biometricsFactory, biometricDevicesService) {
+        super(biometricDevicesService);
+        this.biometricsFactory = biometricsFactory;
+        this.biometricDevicesService = biometricDevicesService;
+    }
+    async create(entityDto, createdById) {
+        return await super.create(entityDto, createdById);
+    }
+    async delete(id) {
+        return await super.delete(id);
+    }
+    async deleteMany(ids, hardDelete) {
+        await super.deleteMany(ids, hardDelete);
+    }
+    async connectDevice(connectDeviceDto) {
+        const service = this.biometricsFactory.getService(connectDeviceDto.deviceType);
+        return await service.connect(connectDeviceDto);
+    }
+    async disconnectDevice(deviceId) {
+        // Get the appropriate service based on the device ID
+        const service = await this.biometricsFactory.getServiceByDeviceId(deviceId);
+        return await service.disconnect(deviceId);
+    }
+};
+exports.BiometricDevicesController = BiometricDevicesController;
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Connect to a biometric device' }),
+    (0, swagger_1.ApiResponse)({
+        status: common_1.HttpStatus.CREATED,
+        description: 'Device connected successfully',
+        type: biometric_device_dto_1.GetBiometricDeviceDto
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: common_1.HttpStatus.BAD_REQUEST,
+        description: 'Invalid input data',
+        type: generalresponse_dto_1.GeneralResponseDto
+    }),
+    (0, swagger_1.ApiBody)({
+        description: 'Device connection parameters',
+        type: connect_device_dto_1.ConnectDeviceDto
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: common_1.HttpStatus.INTERNAL_SERVER_ERROR,
+        description: 'Connection error',
+        type: generalresponse_dto_1.GeneralResponseDto
+    }),
+    (0, common_1.Post)('devices/connect'),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [typeof (_c = typeof connect_device_dto_1.ConnectDeviceDto !== "undefined" && connect_device_dto_1.ConnectDeviceDto) === "function" ? _c : Object]),
+    __metadata("design:returntype", typeof (_d = typeof Promise !== "undefined" && Promise) === "function" ? _d : Object)
+], BiometricDevicesController.prototype, "connectDevice", null);
+__decorate([
+    (0, swagger_1.ApiOperation)({ summary: 'Disconnect from a biometric device' }),
+    (0, swagger_1.ApiResponse)({
+        status: common_1.HttpStatus.OK,
+        description: 'Device disconnected successfully',
+        type: biometric_device_dto_1.GetBiometricDeviceDto
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: common_1.HttpStatus.NOT_FOUND,
+        description: 'Device not found',
+        type: generalresponse_dto_1.GeneralResponseDto
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: common_1.HttpStatus.INTERNAL_SERVER_ERROR,
+        description: 'Error disconnecting device',
+        type: generalresponse_dto_1.GeneralResponseDto
+    }),
+    (0, swagger_1.ApiParam)({
+        name: 'deviceId', description: 'Device ID to disconnect from',
+        type: bson_typings_1.UUID
+    }),
+    (0, common_1.Post)('devices/:deviceId/disconnect'),
+    __param(0, (0, common_1.Param)('deviceId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", typeof (_e = typeof Promise !== "undefined" && Promise) === "function" ? _e : Object)
+], BiometricDevicesController.prototype, "disconnectDevice", null);
+exports.BiometricDevicesController = BiometricDevicesController = __decorate([
+    __param(0, (0, common_1.Inject)(biometrics_factory_service_1.BiometricsFactoryService)),
+    __metadata("design:paramtypes", [typeof (_a = typeof biometrics_factory_service_1.BiometricsFactoryService !== "undefined" && biometrics_factory_service_1.BiometricsFactoryService) === "function" ? _a : Object, typeof (_b = typeof biometric_devices_service_1.BiometricDevicesService !== "undefined" && biometric_devices_service_1.BiometricDevicesService) === "function" ? _b : Object])
+], BiometricDevicesController);
+
+
+/***/ }),
+/* 223 */
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("typeorm/driver/mongodb/bson.typings");
+
+/***/ }),
+/* 224 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+"use strict";
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var _a, _b;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.GetBiometricDeviceDto = exports.UpdateBiometricDeviceDto = exports.BiometricDeviceDto = void 0;
+const base_dto_1 = __webpack_require__(101);
+const biometrics_device_type_enum_1 = __webpack_require__(77);
+const create_get_dto_factory_1 = __webpack_require__(103);
+const swagger_1 = __webpack_require__(8);
 const class_validator_1 = __webpack_require__(24);
-const error_response_dto_1 = __webpack_require__(223);
-const biometric_device_entity_1 = __webpack_require__(74);
-const timeout_interceptor_1 = __webpack_require__(224);
-const biometric_interface_1 = __webpack_require__(226);
-const biometric_devices_service_1 = __webpack_require__(227);
-const biometrics_factory_service_1 = __webpack_require__(228);
+class BiometricDeviceDto extends (0, swagger_1.PartialType)(base_dto_1.BaseDto) {
+}
+exports.BiometricDeviceDto = BiometricDeviceDto;
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Name of the biometric device',
+        example: 'Main Entrance Scanner',
+        required: true
+    }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.MaxLength)(255),
+    __metadata("design:type", String)
+], BiometricDeviceDto.prototype, "name", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Unique identifier for the device (assigned by manufacturer)',
+        example: 'ZK-123456',
+        required: true
+    }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsNotEmpty)(),
+    __metadata("design:type", String)
+], BiometricDeviceDto.prototype, "deviceId", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'IP address of the biometric device',
+        example: '192.168.1.100',
+        required: true
+    }),
+    (0, class_validator_1.IsIP)(),
+    (0, class_validator_1.IsNotEmpty)(),
+    __metadata("design:type", String)
+], BiometricDeviceDto.prototype, "ipAddress", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Port number the device is accessible on',
+        example: 4370,
+        required: true
+    }),
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.IsPort)(),
+    __metadata("design:type", Number)
+], BiometricDeviceDto.prototype, "port", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Model of the biometric device',
+        example: 'F18',
+        required: false,
+        nullable: true
+    }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], BiometricDeviceDto.prototype, "model", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Serial number of the device',
+        example: 'SN12345678',
+        required: false,
+        nullable: true
+    }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], BiometricDeviceDto.prototype, "serialNumber", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Provider/manufacturer of the biometric device',
+        enum: biometrics_device_type_enum_1.BiometricDeviceType,
+        default: biometrics_device_type_enum_1.BiometricDeviceType.ZKTECO,
+        example: biometrics_device_type_enum_1.BiometricDeviceType.ZKTECO
+    }),
+    (0, class_validator_1.IsEnum)(biometrics_device_type_enum_1.BiometricDeviceType),
+    __metadata("design:type", typeof (_a = typeof biometrics_device_type_enum_1.BiometricDeviceType !== "undefined" && biometrics_device_type_enum_1.BiometricDeviceType) === "function" ? _a : Object)
+], BiometricDeviceDto.prototype, "provider", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Firmware version of the device',
+        example: '1.2.5',
+        required: false,
+        nullable: true
+    }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], BiometricDeviceDto.prototype, "firmware", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Platform information of the device',
+        example: 'ZKTeco Biometric Platform',
+        required: false,
+        nullable: true
+    }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], BiometricDeviceDto.prototype, "platform", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Version of the device',
+        example: 'V1.0',
+        required: false,
+        nullable: true
+    }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], BiometricDeviceDto.prototype, "deviceVersion", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Operating system of the device',
+        example: 'Linux Embedded',
+        required: false,
+        nullable: true
+    }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], BiometricDeviceDto.prototype, "os", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Whether the device is currently connected',
+        example: false,
+        default: false
+    }),
+    (0, class_validator_1.IsBoolean)(),
+    __metadata("design:type", Boolean)
+], BiometricDeviceDto.prototype, "isConnected", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Whether the device is in offline mode',
+        example: false,
+        required: true
+    }),
+    (0, class_validator_1.IsBoolean)(),
+    __metadata("design:type", Boolean)
+], BiometricDeviceDto.prototype, "isOffline", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Date and time of the last synchronization',
+        example: '2023-09-15T10:30:00Z',
+        required: false,
+        nullable: true
+    }),
+    (0, class_validator_1.IsDateString)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", typeof (_b = typeof Date !== "undefined" && Date) === "function" ? _b : Object)
+], BiometricDeviceDto.prototype, "lastSync", void 0);
+class UpdateBiometricDeviceDto extends (0, swagger_1.PartialType)(BiometricDeviceDto) {
+}
+exports.UpdateBiometricDeviceDto = UpdateBiometricDeviceDto;
+class GetBiometricDeviceDto extends (0, create_get_dto_factory_1.createGetDto)(UpdateBiometricDeviceDto, 'biometric device') {
+}
+exports.GetBiometricDeviceDto = GetBiometricDeviceDto;
+
+
+/***/ }),
+/* 225 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+"use strict";
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var _a;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.ConnectDeviceDto = void 0;
+const biometrics_device_type_enum_1 = __webpack_require__(77);
+const swagger_1 = __webpack_require__(8);
+const class_validator_1 = __webpack_require__(24);
 class ConnectDeviceDto {
     constructor() {
         this.port = 4370;
-        this.deviceType = biometric_device_entity_1.BiometricDeviceType.ZKTECO;
     }
 }
+exports.ConnectDeviceDto = ConnectDeviceDto;
 __decorate([
     (0, swagger_1.ApiProperty)({
         description: 'Device IP address',
@@ -15963,14 +16110,158 @@ __decorate([
 __decorate([
     (0, swagger_1.ApiProperty)({
         description: 'Device type/manufacturer',
-        enum: biometric_device_entity_1.BiometricDeviceType,
-        default: biometric_device_entity_1.BiometricDeviceType.ZKTECO,
+        enum: biometrics_device_type_enum_1.BiometricDeviceType,
+        default: biometrics_device_type_enum_1.BiometricDeviceType.ZKTECO,
         example: 'zkteco'
     }),
-    (0, class_validator_1.IsEnum)(biometric_device_entity_1.BiometricDeviceType),
-    (0, class_validator_1.IsOptional)(),
-    __metadata("design:type", String)
+    (0, class_validator_1.IsEnum)(biometrics_device_type_enum_1.BiometricDeviceType),
+    (0, class_validator_1.IsNotEmpty)(),
+    __metadata("design:type", typeof (_a = typeof biometrics_device_type_enum_1.BiometricDeviceType !== "undefined" && biometrics_device_type_enum_1.BiometricDeviceType) === "function" ? _a : Object)
 ], ConnectDeviceDto.prototype, "deviceType", void 0);
+
+
+/***/ }),
+/* 226 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+"use strict";
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
+var _a, _b;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.BiometricDevicesService = void 0;
+const base_service_1 = __webpack_require__(31);
+const users_service_1 = __webpack_require__(30);
+const common_1 = __webpack_require__(5);
+const typeorm_1 = __webpack_require__(16);
+const typeorm_2 = __webpack_require__(25);
+const biometric_device_entity_1 = __webpack_require__(76);
+let BiometricDevicesService = class BiometricDevicesService extends base_service_1.BaseService {
+    constructor(biometricDevicesRepository, usersService) {
+        super(biometricDevicesRepository, usersService);
+        this.biometricDevicesRepository = biometricDevicesRepository;
+        this.usersService = usersService;
+    }
+};
+exports.BiometricDevicesService = BiometricDevicesService;
+exports.BiometricDevicesService = BiometricDevicesService = __decorate([
+    (0, common_1.Injectable)(),
+    __param(0, (0, typeorm_1.InjectRepository)(biometric_device_entity_1.BiometricDevice)),
+    __metadata("design:paramtypes", [typeof (_a = typeof typeorm_2.Repository !== "undefined" && typeorm_2.Repository) === "function" ? _a : Object, typeof (_b = typeof users_service_1.UsersService !== "undefined" && users_service_1.UsersService) === "function" ? _b : Object])
+], BiometricDevicesService);
+
+
+/***/ }),
+/* 227 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+"use strict";
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
+var _a, _b, _c;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.BiometricsFactoryService = void 0;
+const common_1 = __webpack_require__(5);
+const biometric_interface_1 = __webpack_require__(228);
+const biometric_devices_service_1 = __webpack_require__(226);
+let BiometricsFactoryService = class BiometricsFactoryService {
+    constructor(zktecoService, anvizService, biometricDevicesService) {
+        this.zktecoService = zktecoService;
+        this.anvizService = anvizService;
+        this.biometricDevicesService = biometricDevicesService;
+    }
+    /**
+     * Get the appropriate biometric service based on device type
+     * @param deviceType Type of biometric device (zkteco or anviz)
+     */
+    getService(deviceType) {
+        switch (deviceType.toLowerCase()) {
+            case 'anviz':
+                return this.anvizService;
+            case 'zkteco':
+            default:
+                return this.zktecoService;
+        }
+    }
+    /**
+     * Get the appropriate biometric service for an existing device
+     * @param deviceId Device identifier
+     */
+    async getServiceByDeviceId(deviceId) {
+        // Look up the device in the database
+        const device = await this.biometricDevicesService.findOneByOrFail({ deviceId });
+        // Return the appropriate service based on the provider
+        return this.getService(device.provider);
+    }
+};
+exports.BiometricsFactoryService = BiometricsFactoryService;
+exports.BiometricsFactoryService = BiometricsFactoryService = __decorate([
+    (0, common_1.Injectable)(),
+    __param(0, (0, common_1.Inject)('ZKTECO_SERVICE')),
+    __param(1, (0, common_1.Inject)('ANVIZ_SERVICE')),
+    __metadata("design:paramtypes", [typeof (_a = typeof biometric_interface_1.IBiometricService !== "undefined" && biometric_interface_1.IBiometricService) === "function" ? _a : Object, typeof (_b = typeof biometric_interface_1.IBiometricService !== "undefined" && biometric_interface_1.IBiometricService) === "function" ? _b : Object, typeof (_c = typeof biometric_devices_service_1.BiometricDevicesService !== "undefined" && biometric_devices_service_1.BiometricDevicesService) === "function" ? _c : Object])
+], BiometricsFactoryService);
+
+
+/***/ }),
+/* 228 */
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+
+
+/***/ }),
+/* 229 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+"use strict";
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
+var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.BiometricsController = void 0;
+const common_1 = __webpack_require__(5);
+const swagger_1 = __webpack_require__(8);
+const class_validator_1 = __webpack_require__(24);
+const error_response_dto_1 = __webpack_require__(230);
+const timeout_interceptor_1 = __webpack_require__(231);
+const biometric_devices_service_1 = __webpack_require__(226);
+const biometrics_factory_service_1 = __webpack_require__(227);
 class SetUserDto {
 }
 __decorate([
@@ -16050,8 +16341,7 @@ __decorate([
     __metadata("design:type", Number)
 ], GetFingerprintDto.prototype, "fingerId", void 0);
 let BiometricsController = class BiometricsController {
-    constructor(defaultBiometricService, biometricsFactory, biometricDevicesService) {
-        this.defaultBiometricService = defaultBiometricService;
+    constructor(biometricsFactory, biometricDevicesService) {
         this.biometricsFactory = biometricsFactory;
         this.biometricDevicesService = biometricDevicesService;
     }
@@ -16103,73 +16393,6 @@ let BiometricsController = class BiometricsController {
         }
         catch (error) {
             return this.handleError(error, 'Failed to register user', 'User registration not supported by this device type');
-        }
-    }
-    async connectDevice(connectDeviceDto) {
-        try {
-            // Use the appropriate service based on device type
-            const service = this.biometricsFactory.getService(connectDeviceDto.deviceType || biometric_device_entity_1.BiometricDeviceType.ZKTECO);
-            const device = await service.connect(connectDeviceDto.ipAddress, connectDeviceDto.port);
-            // If connection was successful, update or create device in database
-            if (device) {
-                // Create a BiometricDevice entity instance
-                const biometricDevice = new biometric_device_entity_1.BiometricDevice({});
-                // Set properties from device object
-                Object.assign(biometricDevice, Object.assign(Object.assign({}, device), { provider: connectDeviceDto.deviceType || biometric_device_entity_1.BiometricDeviceType.ZKTECO }));
-                // Save additional info to database
-                await this.biometricDevicesService.save(biometricDevice);
-            }
-            return device;
-        }
-        catch (error) {
-            if (error instanceof common_1.HttpException) {
-                throw error;
-            }
-            throw new common_1.HttpException(`Failed to connect to device: ${this.getErrorMessage(error)}`, common_1.HttpStatus.SERVICE_UNAVAILABLE);
-        }
-    }
-    async disconnectDevice(deviceId) {
-        try {
-            // Get the appropriate service based on the device ID
-            const service = await this.biometricsFactory.getServiceByDeviceId(deviceId);
-            const result = await service.disconnect(deviceId);
-            // Update database record
-            if (result) {
-                await this.biometricDevicesService.update(deviceId, {
-                    isConnected: false
-                });
-            }
-            return {
-                success: result,
-                message: result
-                    ? 'Device disconnected successfully'
-                    : 'Device disconnect failed'
-            };
-        }
-        catch (error) {
-            return this.handleError(error, 'Failed to disconnect device', 'Device disconnection failed');
-        }
-    }
-    async getConnectedDevices() {
-        try {
-            // Get all devices from database
-            const devices = await this.biometricDevicesService.getRepository().find({
-                where: { isConnected: true }
-            });
-            return devices;
-        }
-        catch (error) {
-            throw new common_1.HttpException(`Failed to get connected devices: ${this.getErrorMessage(error)}`, common_1.HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-    }
-    async getDeviceInfo(deviceId) {
-        try {
-            // Get the appropriate service based on the device ID
-            const service = await this.biometricsFactory.getServiceByDeviceId(deviceId);
-            return await service.getDeviceInfo(deviceId);
-        }
-        catch (error) {
-            return this.handleError(error, 'Failed to get device information', 'Device information retrieval not supported by this device type');
         }
     }
     async setTime(deviceId, body) {
@@ -16292,7 +16515,7 @@ __decorate([
     __param(0, (0, common_1.Query)(new common_1.ValidationPipe({ transform: true }))),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [GetFingerprintDto]),
-    __metadata("design:returntype", typeof (_d = typeof Promise !== "undefined" && Promise) === "function" ? _d : Object)
+    __metadata("design:returntype", typeof (_c = typeof Promise !== "undefined" && Promise) === "function" ? _c : Object)
 ], BiometricsController.prototype, "getUserFingerprint", null);
 __decorate([
     (0, swagger_1.ApiOperation)({ summary: 'Register a new user on a biometric device' }),
@@ -16315,77 +16538,8 @@ __decorate([
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [SetUserDto]),
-    __metadata("design:returntype", typeof (_e = typeof Promise !== "undefined" && Promise) === "function" ? _e : Object)
+    __metadata("design:returntype", typeof (_d = typeof Promise !== "undefined" && Promise) === "function" ? _d : Object)
 ], BiometricsController.prototype, "registerUser", null);
-__decorate([
-    (0, swagger_1.ApiOperation)({ summary: 'Connect to a biometric device' }),
-    (0, swagger_1.ApiResponse)({
-        status: common_1.HttpStatus.CREATED,
-        description: 'Device connected successfully',
-        type: Object
-    }),
-    (0, swagger_1.ApiResponse)({
-        status: common_1.HttpStatus.BAD_REQUEST,
-        description: 'Invalid input data',
-        type: error_response_dto_1.ErrorResponseDto
-    }),
-    (0, swagger_1.ApiResponse)({
-        status: common_1.HttpStatus.SERVICE_UNAVAILABLE,
-        description: 'Device connection failed',
-        type: error_response_dto_1.ErrorResponseDto
-    }),
-    (0, swagger_1.ApiBody)({
-        type: ConnectDeviceDto,
-        description: 'Device connection parameters'
-    }),
-    (0, common_1.Post)('devices/connect'),
-    __param(0, (0, common_1.Body)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [ConnectDeviceDto]),
-    __metadata("design:returntype", typeof (_f = typeof Promise !== "undefined" && Promise) === "function" ? _f : Object)
-], BiometricsController.prototype, "connectDevice", null);
-__decorate([
-    (0, swagger_1.ApiOperation)({ summary: 'Disconnect from a biometric device' }),
-    (0, swagger_1.ApiResponse)({ status: common_1.HttpStatus.OK, description: 'Device disconnected successfully' }),
-    (0, swagger_1.ApiResponse)({
-        status: common_1.HttpStatus.NOT_FOUND,
-        description: 'Device not found',
-        type: error_response_dto_1.ErrorResponseDto
-    }),
-    (0, swagger_1.ApiParam)({ name: 'deviceId', description: 'Device ID to disconnect from' }),
-    (0, common_1.Post)('devices/:deviceId/disconnect'),
-    __param(0, (0, common_1.Param)('deviceId')),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
-    __metadata("design:returntype", typeof (_g = typeof Promise !== "undefined" && Promise) === "function" ? _g : Object)
-], BiometricsController.prototype, "disconnectDevice", null);
-__decorate([
-    (0, swagger_1.ApiOperation)({ summary: 'Get all connected biometric devices' }),
-    (0, swagger_1.ApiResponse)({
-        status: common_1.HttpStatus.OK,
-        description: 'List of connected devices',
-        type: [Object]
-    }),
-    (0, common_1.Get)('devices'),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", []),
-    __metadata("design:returntype", typeof (_h = typeof Promise !== "undefined" && Promise) === "function" ? _h : Object)
-], BiometricsController.prototype, "getConnectedDevices", null);
-__decorate([
-    (0, swagger_1.ApiOperation)({ summary: 'Get device information' }),
-    (0, swagger_1.ApiResponse)({ status: common_1.HttpStatus.OK, description: 'Device information' }),
-    (0, swagger_1.ApiResponse)({
-        status: common_1.HttpStatus.NOT_FOUND,
-        description: 'Device not found',
-        type: error_response_dto_1.ErrorResponseDto
-    }),
-    (0, swagger_1.ApiParam)({ name: 'deviceId', description: 'Target device ID' }),
-    (0, common_1.Get)('devices/:deviceId/info'),
-    __param(0, (0, common_1.Param)('deviceId')),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
-    __metadata("design:returntype", typeof (_j = typeof Promise !== "undefined" && Promise) === "function" ? _j : Object)
-], BiometricsController.prototype, "getDeviceInfo", null);
 __decorate([
     (0, swagger_1.ApiOperation)({ summary: 'Set device time' }),
     (0, swagger_1.ApiResponse)({ status: common_1.HttpStatus.OK, description: 'Device time set successfully' }),
@@ -16410,7 +16564,7 @@ __decorate([
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, Object]),
-    __metadata("design:returntype", typeof (_k = typeof Promise !== "undefined" && Promise) === "function" ? _k : Object)
+    __metadata("design:returntype", typeof (_e = typeof Promise !== "undefined" && Promise) === "function" ? _e : Object)
 ], BiometricsController.prototype, "setTime", null);
 __decorate([
     (0, swagger_1.ApiOperation)({ summary: 'Delete a user from a device' }),
@@ -16437,7 +16591,7 @@ __decorate([
     __param(1, (0, common_1.Param)('userId')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, String]),
-    __metadata("design:returntype", typeof (_l = typeof Promise !== "undefined" && Promise) === "function" ? _l : Object)
+    __metadata("design:returntype", typeof (_f = typeof Promise !== "undefined" && Promise) === "function" ? _f : Object)
 ], BiometricsController.prototype, "deleteUser", null);
 __decorate([
     (0, swagger_1.ApiOperation)({ summary: 'Get users registered on a device' }),
@@ -16461,7 +16615,7 @@ __decorate([
     __param(0, (0, common_1.Param)('deviceId')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
-    __metadata("design:returntype", typeof (_m = typeof Promise !== "undefined" && Promise) === "function" ? _m : Object)
+    __metadata("design:returntype", typeof (_g = typeof Promise !== "undefined" && Promise) === "function" ? _g : Object)
 ], BiometricsController.prototype, "getUsers", null);
 __decorate([
     (0, swagger_1.ApiOperation)({ summary: 'Get attendance records from a device' }),
@@ -16489,7 +16643,7 @@ __decorate([
     __param(2, (0, common_1.Query)('endDate')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, String, String]),
-    __metadata("design:returntype", typeof (_o = typeof Promise !== "undefined" && Promise) === "function" ? _o : Object)
+    __metadata("design:returntype", typeof (_h = typeof Promise !== "undefined" && Promise) === "function" ? _h : Object)
 ], BiometricsController.prototype, "getAttendanceRecords", null);
 __decorate([
     (0, swagger_1.ApiOperation)({ summary: 'Get attendance records size' }),
@@ -16513,7 +16667,7 @@ __decorate([
     __param(0, (0, common_1.Param)('deviceId')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
-    __metadata("design:returntype", typeof (_p = typeof Promise !== "undefined" && Promise) === "function" ? _p : Object)
+    __metadata("design:returntype", typeof (_j = typeof Promise !== "undefined" && Promise) === "function" ? _j : Object)
 ], BiometricsController.prototype, "getAttendanceSize", null);
 __decorate([
     (0, swagger_1.ApiOperation)({ summary: 'Clear attendance records from a device' }),
@@ -16533,21 +16687,21 @@ __decorate([
     __param(0, (0, common_1.Param)('deviceId')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
-    __metadata("design:returntype", typeof (_q = typeof Promise !== "undefined" && Promise) === "function" ? _q : Object)
+    __metadata("design:returntype", typeof (_k = typeof Promise !== "undefined" && Promise) === "function" ? _k : Object)
 ], BiometricsController.prototype, "clearAttendanceRecords", null);
 exports.BiometricsController = BiometricsController = __decorate([
     (0, swagger_1.ApiTags)('Biometrics'),
     (0, common_1.Controller)(),
     (0, common_1.UseInterceptors)(new timeout_interceptor_1.TimeoutInterceptor(30)),
-    __param(0, (0, common_1.Inject)('BIOMETRIC_SERVICE')),
-    __metadata("design:paramtypes", [typeof (_a = typeof biometric_interface_1.IBiometricService !== "undefined" && biometric_interface_1.IBiometricService) === "function" ? _a : Object, typeof (_b = typeof biometrics_factory_service_1.BiometricsFactoryService !== "undefined" && biometrics_factory_service_1.BiometricsFactoryService) === "function" ? _b : Object, typeof (_c = typeof biometric_devices_service_1.BiometricDevicesService !== "undefined" && biometric_devices_service_1.BiometricDevicesService) === "function" ? _c : Object])
+    __metadata("design:paramtypes", [typeof (_a = typeof biometrics_factory_service_1.BiometricsFactoryService !== "undefined" && biometrics_factory_service_1.BiometricsFactoryService) === "function" ? _a : Object, typeof (_b = typeof biometric_devices_service_1.BiometricDevicesService !== "undefined" && biometric_devices_service_1.BiometricDevicesService) === "function" ? _b : Object])
 ], BiometricsController);
 
 
 /***/ }),
-/* 223 */
+/* 230 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -16606,9 +16760,10 @@ __decorate([
 
 
 /***/ }),
-/* 224 */
+/* 231 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -16622,8 +16777,8 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.TimeoutInterceptor = void 0;
 const common_1 = __webpack_require__(5);
-const rxjs_1 = __webpack_require__(225);
-const operators_1 = __webpack_require__(96);
+const rxjs_1 = __webpack_require__(232);
+const operators_1 = __webpack_require__(233);
 let TimeoutInterceptor = class TimeoutInterceptor {
     constructor(timeoutSeconds = 30) {
         this.timeoutSeconds = timeoutSeconds;
@@ -16645,129 +16800,24 @@ exports.TimeoutInterceptor = TimeoutInterceptor = __decorate([
 
 
 /***/ }),
-/* 225 */
+/* 232 */
 /***/ ((module) => {
 
+"use strict";
 module.exports = require("rxjs");
 
 /***/ }),
-/* 226 */
-/***/ ((__unused_webpack_module, exports) => {
+/* 233 */
+/***/ ((module) => {
 
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-
-
-/***/ }),
-/* 227 */
-/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
-
-
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-var __metadata = (this && this.__metadata) || function (k, v) {
-    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
-};
-var __param = (this && this.__param) || function (paramIndex, decorator) {
-    return function (target, key) { decorator(target, key, paramIndex); }
-};
-var _a, _b;
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.BiometricDevicesService = void 0;
-const base_service_1 = __webpack_require__(31);
-const users_service_1 = __webpack_require__(30);
-const common_1 = __webpack_require__(5);
-const typeorm_1 = __webpack_require__(16);
-const typeorm_2 = __webpack_require__(25);
-const biometric_device_entity_1 = __webpack_require__(74);
-let BiometricDevicesService = class BiometricDevicesService extends base_service_1.BaseService {
-    constructor(biometricDevicesRepository, usersService) {
-        super(biometricDevicesRepository, usersService);
-        this.biometricDevicesRepository = biometricDevicesRepository;
-        this.usersService = usersService;
-    }
-};
-exports.BiometricDevicesService = BiometricDevicesService;
-exports.BiometricDevicesService = BiometricDevicesService = __decorate([
-    (0, common_1.Injectable)(),
-    __param(0, (0, typeorm_1.InjectRepository)(biometric_device_entity_1.BiometricDevice)),
-    __metadata("design:paramtypes", [typeof (_a = typeof typeorm_2.Repository !== "undefined" && typeorm_2.Repository) === "function" ? _a : Object, typeof (_b = typeof users_service_1.UsersService !== "undefined" && users_service_1.UsersService) === "function" ? _b : Object])
-], BiometricDevicesService);
-
+"use strict";
+module.exports = require("rxjs/operators");
 
 /***/ }),
-/* 228 */
+/* 234 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
-
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-var __metadata = (this && this.__metadata) || function (k, v) {
-    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
-};
-var __param = (this && this.__param) || function (paramIndex, decorator) {
-    return function (target, key) { decorator(target, key, paramIndex); }
-};
-var _a, _b, _c;
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.BiometricsFactoryService = void 0;
-const common_1 = __webpack_require__(5);
-const biometric_interface_1 = __webpack_require__(226);
-const biometric_devices_service_1 = __webpack_require__(227);
-let BiometricsFactoryService = class BiometricsFactoryService {
-    constructor(zktecoService, anvizService, biometricDevicesService) {
-        this.zktecoService = zktecoService;
-        this.anvizService = anvizService;
-        this.biometricDevicesService = biometricDevicesService;
-    }
-    /**
-     * Get the appropriate biometric service based on device type
-     * @param deviceType Type of biometric device (zkteco or anviz)
-     */
-    getService(deviceType) {
-        switch (deviceType.toLowerCase()) {
-            case 'anviz':
-                return this.anvizService;
-            case 'zkteco':
-            default:
-                return this.zktecoService;
-        }
-    }
-    /**
-     * Get the appropriate biometric service for an existing device
-     * @param deviceId Device identifier
-     */
-    async getServiceByDeviceId(deviceId) {
-        // Look up the device in the database
-        const device = await this.biometricDevicesService.findOneBy({ id: deviceId });
-        if (!device) {
-            throw new Error(`Device with ID ${deviceId} not found`);
-        }
-        // Return the appropriate service based on the provider
-        return this.getService(device.provider);
-    }
-};
-exports.BiometricsFactoryService = BiometricsFactoryService;
-exports.BiometricsFactoryService = BiometricsFactoryService = __decorate([
-    (0, common_1.Injectable)(),
-    __param(0, (0, common_1.Inject)('ZKTECO_SERVICE')),
-    __param(1, (0, common_1.Inject)('ANVIZ_SERVICE')),
-    __metadata("design:paramtypes", [typeof (_a = typeof biometric_interface_1.IBiometricService !== "undefined" && biometric_interface_1.IBiometricService) === "function" ? _a : Object, typeof (_b = typeof biometric_interface_1.IBiometricService !== "undefined" && biometric_interface_1.IBiometricService) === "function" ? _b : Object, typeof (_c = typeof biometric_devices_service_1.BiometricDevicesService !== "undefined" && biometric_devices_service_1.BiometricDevicesService) === "function" ? _c : Object])
-], BiometricsFactoryService);
-
-
-/***/ }),
-/* 229 */
-/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
-
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -16808,9 +16858,2224 @@ exports.BiometricTemplate = BiometricTemplate = __decorate([
 
 
 /***/ }),
-/* 230 */
+/* 235 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
+var AnvizBiometricsService_1;
+var _a, _b, _c;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.AnvizBiometricsService = void 0;
+const biometrics_device_type_enum_1 = __webpack_require__(77);
+const punch_method_enum_1 = __webpack_require__(74);
+const attendance_event_1 = __webpack_require__(236);
+const common_1 = __webpack_require__(5);
+const event_emitter_1 = __webpack_require__(139);
+const typeorm_1 = __webpack_require__(16);
+const typeorm_2 = __webpack_require__(25);
+const biometric_device_entity_1 = __webpack_require__(76);
+const biometric_template_entity_1 = __webpack_require__(234);
+const base_biometrics_service_1 = __webpack_require__(237);
+// Import the Anviz protocol library
+const { Device, Record, RecordInformation, DeviceInfo1, DeviceInfo2 } = __webpack_require__(238);
+let AnvizBiometricsService = AnvizBiometricsService_1 = class AnvizBiometricsService extends base_biometrics_service_1.BaseBiometricsService {
+    constructor(templateRepository, deviceRepository, eventEmitter) {
+        super(deviceRepository, eventEmitter);
+        this.templateRepository = templateRepository;
+        this.deviceRepository = deviceRepository;
+        this.eventEmitter = eventEmitter;
+        this.logger = new common_1.Logger(AnvizBiometricsService_1.name);
+        this.pollingIntervals = new Map();
+        // Add to your class properties
+        this.reconnectionTimers = new Map();
+        this.MAX_RECONNECT_DELAY = 30000; // 1 minute maximum delay
+        this.biometricDeviceType = biometrics_device_type_enum_1.BiometricDeviceType.ANVIZ;
+    }
+    /**
+     * Connect to an Anviz device with robust retry logic
+     * @param deviceId Unique identifier for the device
+     * @param ipAddress Device IP address
+     * @param port Device port (default: 5010)
+     * @param maxAttempts Maximum connection attempts (default: 3)
+     * @returns Connected device information
+     */
+    async connectWithRetry(dto, deviceId) {
+        let maxAttempts = 3;
+        const { ipAddress, port } = dto;
+        // Cancel any previous reconnection attempts for this device
+        if (this.reconnectionTimers.has(deviceId)) {
+            clearTimeout(this.reconnectionTimers.get(deviceId));
+            this.reconnectionTimers.delete(deviceId);
+        }
+        // Check if already connected
+        if (this.connections.has(deviceId)) {
+            this.logger.warn(`Device ${deviceId} is already connected. Disconnecting first...`);
+            await this.disconnect(deviceId, true);
+        }
+        let attemptCount = 0;
+        // Try to connect with retry logic
+        while (attemptCount < maxAttempts) {
+            attemptCount++;
+            this.logger.log(`Connection attempt ${attemptCount}/${maxAttempts} to Anviz device at ${ipAddress}:${port}`);
+            try {
+                // Create a new Anviz device connection
+                const anvizDevice = new Device(ipAddress, port);
+                // Set up connection events with proper reconnection handling
+                anvizDevice.listener = {
+                    onConnected: () => {
+                        this.logger.log(`Successfully connected to Anviz device ${deviceId} at ${ipAddress}:${port}`);
+                    },
+                    onDisconnected: () => {
+                        if (anvizDevice._heartbeatInterval) {
+                            clearInterval(anvizDevice._heartbeatInterval);
+                            anvizDevice._heartbeatInterval = null;
+                        }
+                    },
+                    onConnectionLost: async () => {
+                        this.logger.warn(`Connection lost to Anviz device ${deviceId}`);
+                        // Clear any heartbeat interval
+                        if (anvizDevice._heartbeatInterval) {
+                            clearInterval(anvizDevice._heartbeatInterval);
+                            anvizDevice._heartbeatInterval = null;
+                        }
+                        // Update device status to disconnected but not offline
+                        await this.updateDeviceStatus(deviceId, false, false);
+                        // Schedule automatic reconnection
+                        this.scheduleReconnect(deviceId);
+                    },
+                    onError: async (error) => {
+                        const errorMessage = error instanceof Error ? error.message : String(error);
+                        this.logger.error(`Anviz device ${deviceId} error: ${errorMessage}`);
+                        // For serious errors, update status and attempt reconnection
+                        if (errorMessage.includes("timeout") ||
+                            errorMessage.includes("network") ||
+                            errorMessage.includes("connection")) {
+                            // Update device status to offline
+                            await this.updateDeviceStatus(deviceId, false, true);
+                            // Schedule reconnection attempt
+                            this.scheduleReconnect(deviceId);
+                        }
+                    },
+                    onRecord: (record) => {
+                        // Validate and standardize the record
+                        if (!record || typeof record.userId === 'undefined' || !record.dateTime) {
+                            this.logger.warn(`Received invalid record from device ${deviceId}`);
+                            return;
+                        }
+                        const standardizedRecord = {
+                            userId: record.userId.toString(),
+                            timestamp: new Date(record.dateTime),
+                            punchType: record.backupCode,
+                            punchMethod: this.getPunchMethod(record.type),
+                            deviceId: deviceId,
+                        };
+                        // Emit the attendance event
+                        this.eventEmitter.emit(attendance_event_1.ATTENDANCE_EVENTS.ATTENDANCE_RECORDED, new attendance_event_1.AttendanceRecordedEvent([standardizedRecord], deviceId));
+                    }
+                };
+                anvizDevice.connect();
+                // Connection successful - configure device
+                anvizDevice.getDeviceInfo2((info) => {
+                    info.realTimeModeSetting = 1; // enable real time mode
+                    info.relayMode = 3; // 0 control lock, 1 scheduled bell, 3 disabled
+                    info.lockDelay = 2; // 2 seconds
+                    anvizDevice.setDeviceInfo2(info);
+                    // Fetch and process any pending records
+                    anvizDevice.getNewRecords((records) => {
+                        if (records && records.length > 0) {
+                            for (let i = 0; i < records.length; ++i) {
+                                anvizDevice.listener.onRecord(records[i]);
+                            }
+                            anvizDevice.clearAllRecordsSign();
+                        }
+                    });
+                });
+                // Store the connection
+                this.connections.set(deviceId, anvizDevice);
+                // Fetch device information
+                const deviceInfo = await this.getAnvizDeviceInfo(deviceId);
+                // check if device Id alreayd exist
+                const existingDevice = await this.deviceRepository.findOne({ where: { deviceId } });
+                // Create a standardized device object
+                let device = {
+                    id: existingDevice === null || existingDevice === void 0 ? void 0 : existingDevice.id,
+                    deviceId,
+                    ipAddress,
+                    port,
+                    serialNumber: deviceInfo.serialNumber || 'Unknown',
+                    firmware: deviceInfo.firmwareVersion || 'Unknown',
+                    isConnected: true,
+                    isOffline: false,
+                    provider: biometrics_device_type_enum_1.BiometricDeviceType.ANVIZ,
+                    lastSync: new Date(),
+                };
+                // Update or create device in database
+                return await this.deviceRepository.save(device);
+            }
+            catch (error) {
+                const errorMessage = error instanceof Error ? error.message : String(error);
+                this.logger.error(`Connection attempt ${attemptCount} failed: ${errorMessage}`);
+                // If we've reached max attempts, update device status and throw error
+                if (attemptCount >= maxAttempts) {
+                    // Update device as offline in database
+                    throw new base_biometrics_service_1.BiometricException(`Failed to connect to device after ${maxAttempts} attempts: ${errorMessage}`, common_1.HttpStatus.BAD_REQUEST);
+                }
+                // Wait before next attempt
+                this.logger.log(`Waiting 2 seconds before retry...`);
+                await new Promise(resolve => setTimeout(resolve, 2000));
+            }
+        }
+        // This should not be reached due to the throw above
+        throw new base_biometrics_service_1.BiometricException('Failed to connect: Maximum retry attempts reached', common_1.HttpStatus.BAD_REQUEST);
+    }
+    /**
+     * Schedule a reconnection attempt with exponential backoff
+     * @param deviceId Device identifier
+     * @param attempt Current attempt number (default: 0)
+     */
+    scheduleReconnect(deviceId, attempt = 0) {
+        // Clear any existing reconnection timer
+        if (this.reconnectionTimers.has(deviceId)) {
+            clearTimeout(this.reconnectionTimers.get(deviceId));
+        }
+        const initialReconnectDelay = 5000; // 5 seconds
+        // Calculate delay with exponential backoff but cap maximum delay
+        const delay = Math.min(this.MAX_RECONNECT_DELAY, initialReconnectDelay * Math.pow(1.5, attempt));
+        this.logger.log(`Scheduling reconnection to device ${deviceId} in ${Math.round(delay / 1000)} seconds (attempt #${attempt + 1})`);
+        // Create new timer
+        const timer = setTimeout(async () => {
+            try {
+                // Check if device still exists in our system
+                if (!this.connections.has(deviceId)) {
+                    // Device was removed entirely, stop reconnecting
+                    this.reconnectionTimers.delete(deviceId);
+                    return;
+                }
+                // Check if device is already connected
+                const device = this.connections.get(deviceId);
+                if (device && device.isConnected && device.isConnected()) {
+                    // Already connected
+                    this.reconnectionTimers.delete(deviceId);
+                    return;
+                }
+                this.logger.log(`Attempting to reconnect to device ${deviceId} (attempt #${attempt + 1})`);
+                // Attempt reconnection
+                const deviceInfo = await this.deviceRepository.findOne({ where: { deviceId } });
+                if (deviceInfo) {
+                    try {
+                        await this.connectWithRetry({ ipAddress: deviceInfo.ipAddress, port: deviceInfo.port }, deviceId);
+                        this.logger.log(`Successfully reconnected to device ${deviceId}`);
+                        this.reconnectionTimers.delete(deviceId);
+                    }
+                    catch (reconnectError) {
+                        // Reconnection failed, schedule next attempt
+                        this.scheduleReconnect(deviceId, attempt + 1);
+                    }
+                }
+            }
+            catch (error) {
+                const errorMessage = error instanceof Error ? error.message : String(error);
+                this.logger.error(`Failed to reconnect to device ${deviceId}: ${errorMessage}`);
+                // Schedule next reconnection attempt
+                this.scheduleReconnect(deviceId, attempt + 1);
+            }
+        }, delay);
+        this.reconnectionTimers.set(deviceId, timer);
+    }
+    /**
+     * Verify device connection is still active and responsive
+     * @param device Anviz device instance
+     * @param deviceId Device identifier
+     */
+    verifyDeviceConnection(device, deviceId) {
+        return new Promise((resolve, reject) => {
+            const timeoutId = setTimeout(() => {
+                reject(new Error(`Device ${deviceId} connection verification timeout`));
+            }, 5000);
+            try {
+                device.getSerialNumber((serialNumber) => {
+                    clearTimeout(timeoutId);
+                    resolve();
+                });
+            }
+            catch (error) {
+                clearTimeout(timeoutId);
+                reject(error);
+            }
+        });
+    }
+    /**
+     * Disconnect from an Anviz device
+     * @param deviceId Device identifier
+     * @param isManual Whether this is a manual disconnect (if false, may trigger reconnection)
+     * @returns True if disconnected successfully
+     */
+    async disconnect(deviceId, isManual = true) {
+        // If this is a manual disconnect, clear any pending reconnection attempts
+        if (isManual && this.reconnectionTimers.has(deviceId)) {
+            clearTimeout(this.reconnectionTimers.get(deviceId));
+            this.reconnectionTimers.delete(deviceId);
+        }
+        const anvizDevice = this.connections.get(deviceId);
+        if (!anvizDevice) {
+            throw new common_1.BadRequestException(`Device ${deviceId} is not connected`);
+        }
+        // Clear heartbeat interval
+        if (anvizDevice._heartbeatInterval) {
+            clearInterval(anvizDevice._heartbeatInterval);
+            anvizDevice._heartbeatInterval = null;
+        }
+        anvizDevice.disconnect();
+        this.connections.delete(deviceId);
+        // Update device status
+        let device = await this.updateDeviceStatus(deviceId, false, isManual ? false : true);
+        // If this was not a manual disconnect and reconnection is desired, schedule reconnect
+        if (!isManual) {
+            this.scheduleReconnect(deviceId);
+        }
+        this.logger.log(`Disconnected from Anviz device ${deviceId}`);
+        return device;
+    }
+    getPunchMethod(value) {
+        switch (value) {
+            case 0:
+                return punch_method_enum_1.PunchMethod.FINGERPRINT;
+            case 1:
+                return punch_method_enum_1.PunchMethod.RFID;
+            case 2:
+                return punch_method_enum_1.PunchMethod.PASSWORD;
+            default:
+                return punch_method_enum_1.PunchMethod.UNKNOWN;
+        }
+    }
+    /**
+     * Get device information from Anviz device
+     * @param deviceId Device identifier
+     */
+    getAnvizDeviceInfo(deviceId) {
+        return new Promise((resolve, reject) => {
+            const anvizDevice = this.getAnvizDevice(deviceId);
+            // Get device information (DeviceInfo1 and DeviceInfo2)
+            anvizDevice.getDeviceInfo1((deviceInfo1) => {
+                anvizDevice.getDeviceInfo2((deviceInfo2) => {
+                    // Get serial number
+                    anvizDevice.getSerialNumber((serialNumber) => {
+                        const info = {
+                            serialNumber,
+                            firmwareVersion: deviceInfo1.firmwareVersion,
+                            deviceType: 'Anviz',
+                            attendanceState: deviceInfo1.attendanceState,
+                            language: deviceInfo1.language,
+                            timeFormat: deviceInfo1.timeFormat,
+                            dateFormat: deviceInfo1.dateFormat,
+                            fingerprintPrecision: deviceInfo2.fingerprintPrecision,
+                            workCodePermission: deviceInfo2.workCodePermission
+                        };
+                        resolve(info);
+                    });
+                });
+            });
+        });
+    }
+    /**
+     * Get device information
+     * @param deviceId Device identifier
+     */
+    async getDeviceInfo(deviceId) {
+        try {
+            this.checkDeviceConnection(deviceId);
+            this.logger.log(`Getting device info for ${deviceId}`);
+            const info = await this.getAnvizDeviceInfo(deviceId);
+            // Update device in database with latest information
+            await this.deviceRepository.update({ id: deviceId }, {
+                serialNumber: info.serialNumber,
+                firmware: info.firmwareVersion,
+                lastSync: new Date()
+            });
+            return info;
+        }
+        catch (error) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            this.logger.error(`Error getting device info for ${deviceId}: ${errorMessage}`);
+            throw new base_biometrics_service_1.BiometricException(`Failed to get device info: ${errorMessage}`);
+        }
+    }
+    /**
+     * Get device time
+     * @param deviceId Device identifier
+     */
+    async getTime(deviceId) {
+        try {
+            this.checkDeviceConnection(deviceId);
+            return new Promise((resolve, reject) => {
+                const anvizDevice = this.getAnvizDevice(deviceId);
+                anvizDevice.getDateTime((date) => {
+                    resolve(date);
+                });
+            });
+        }
+        catch (error) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            this.logger.error(`Error getting device time: ${errorMessage}`);
+            throw new base_biometrics_service_1.BiometricException(`Failed to get device time: ${errorMessage}`);
+        }
+    }
+    /**
+     * Set device time
+     * @param deviceId Device identifier
+     * @param time Date to set
+     */
+    async setTime(deviceId, time) {
+        try {
+            this.checkDeviceConnection(deviceId);
+            const anvizDevice = this.getAnvizDevice(deviceId);
+            anvizDevice.setDateTime(time);
+            return true;
+        }
+        catch (error) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            this.logger.error(`Error setting device time: ${errorMessage}`);
+            throw new base_biometrics_service_1.BiometricException(`Failed to set device time: ${errorMessage}`);
+        }
+    }
+    /**
+     * Get users from Anviz device
+     * @param deviceId Device identifier
+     */
+    async getUsers(deviceId) {
+        try {
+            this.checkDeviceConnection(deviceId);
+            this.logger.log(`Getting users from device ${deviceId}`);
+            return new Promise((resolve, reject) => {
+                const anvizDevice = this.getAnvizDevice(deviceId);
+                anvizDevice.getUserInfos((userInfos) => {
+                    try {
+                        // Convert Anviz user format to system format
+                        const users = userInfos.map((user) => {
+                            var _a, _b;
+                            return ({
+                                userId: user.userId.toString(),
+                                name: user.name || '',
+                                password: ((_a = user.password) === null || _a === void 0 ? void 0 : _a.toString()) || '',
+                                cardNumber: ((_b = user.card) === null || _b === void 0 ? void 0 : _b.toString()) || '',
+                                role: user.group || 0,
+                                enrolledFingerprints: []
+                            });
+                        });
+                        resolve(users);
+                    }
+                    catch (error) {
+                        reject(error);
+                    }
+                });
+            });
+        }
+        catch (error) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            this.logger.error(`Error getting users from device ${deviceId}: ${errorMessage}`);
+            throw new base_biometrics_service_1.BiometricException(`Failed to get users: ${errorMessage}`);
+        }
+    }
+    /**
+     * Get fingerprint template for a user
+     * @param deviceId Device identifier
+     * @param userId User ID
+     * @param fingerId Finger ID (default: 1 for Anviz devices)
+     */
+    async getUserFingerprint(deviceId, userId, fingerId = 1) {
+        try {
+            this.checkDeviceConnection(deviceId);
+            this.logger.log(`Getting fingerprint for user ${userId} (finger ${fingerId}) from device ${deviceId}`);
+            // First check database for cached template
+            try {
+                const existingTemplate = await this.templateRepository.findOne({
+                    where: {
+                        userId,
+                        fingerId,
+                        provider: 'anviz'
+                    }
+                });
+                if (existingTemplate && existingTemplate.template) {
+                    this.logger.log(`Found existing template in database for user ${userId} (finger ${fingerId})`);
+                    return {
+                        id: `${userId}-${fingerId}`,
+                        userId,
+                        fingerId,
+                        template: existingTemplate.template,
+                        provider: 'anviz'
+                    };
+                }
+            }
+            catch (dbError) {
+                this.logger.warn(`Database lookup failed: ${dbError instanceof Error ? dbError.message : String(dbError)}`);
+            }
+            return new Promise((resolve, reject) => {
+                const anvizDevice = this.getAnvizDevice(deviceId);
+                anvizDevice.getFpTemplate(parseInt(userId), fingerId, (templateData) => {
+                    try {
+                        if (!templateData || templateData.length === 0) {
+                            resolve(null);
+                            return;
+                        }
+                        // Create template object
+                        const template = {
+                            id: `${userId}-${fingerId}`,
+                            userId,
+                            fingerId,
+                            template: Buffer.from(templateData),
+                            provider: 'anviz'
+                        };
+                        // Cache template in database
+                        this.templateRepository.save({
+                            userId,
+                            fingerId,
+                            template: Buffer.isBuffer(template.template) ? template.template : Buffer.from(template.template),
+                            provider: 'anviz'
+                        }).catch(err => {
+                            this.logger.warn(`Failed to cache template in database: ${err.message}`);
+                        });
+                        resolve(template);
+                    }
+                    catch (error) {
+                        reject(error);
+                    }
+                });
+            });
+        }
+        catch (error) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            this.logger.error(`Error getting fingerprint from device ${deviceId}: ${errorMessage}`);
+            if (errorMessage.includes('not found') || errorMessage.includes('No Record')) {
+                return null;
+            }
+            throw new base_biometrics_service_1.BiometricException(`Failed to get fingerprint: ${errorMessage}`);
+        }
+    }
+    /**
+     * Register a new user on Anviz device
+     * @param deviceId Device identifier
+     * @param userData User data
+     */
+    async registerUser(deviceId, userData) {
+        try {
+            this.checkDeviceConnection(deviceId);
+            this.logger.log(`Registering user ${userData.userId} on device ${deviceId}`);
+            const anvizDevice = this.getAnvizDevice(deviceId);
+            // Create Anviz user object
+            const userInfo = {
+                userId: parseInt(userData.userId),
+                name: userData.name,
+                password: userData.password ? parseInt(userData.password) : 0,
+                passwordLength: userData.password ? userData.password.length : 0,
+                card: userData.cardNumber ? parseInt(userData.cardNumber) : 0,
+                group: userData.role || 0,
+                dpt: 1, // Department (default: 1)
+                attendanceMode: 0 // Default mode
+            };
+            // Set user on device
+            await new Promise((resolve, reject) => {
+                try {
+                    anvizDevice.setUserInfo(userInfo);
+                    resolve();
+                }
+                catch (error) {
+                    reject(error);
+                }
+            });
+            // Return standardized user object
+            return {
+                userId: userData.userId,
+                name: userData.name,
+                password: userData.password || '', // Provide a default empty string if password is undefined
+                cardNumber: userData.cardNumber,
+                role: userData.role || 0
+            };
+        }
+        catch (error) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            this.logger.error(`Error registering user on device ${deviceId}: ${errorMessage}`);
+            throw new base_biometrics_service_1.BiometricException(`Failed to register user: ${errorMessage}`);
+        }
+    }
+    /**
+     * Delete a user from Anviz device
+     * @param deviceId Device identifier
+     * @param userId User ID to delete
+     */
+    async deleteUser(deviceId, userId) {
+        try {
+            this.checkDeviceConnection(deviceId);
+            this.logger.log(`Deleting user ${userId} from device ${deviceId}`);
+            const anvizDevice = this.getAnvizDevice(deviceId);
+            // Delete user
+            anvizDevice.deleteUser(parseInt(userId));
+            return true;
+        }
+        catch (error) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            this.logger.error(`Error deleting user ${userId} from device ${deviceId}: ${errorMessage}`);
+            throw new base_biometrics_service_1.BiometricException(`Failed to delete user: ${errorMessage}`);
+        }
+    }
+    /**
+     * Get attendance records from Anviz device
+     * @param deviceId Device identifier
+     * @param startDate Start date for filtering (optional)
+     * @param endDate End date for filtering (optional)
+     */
+    async getAttendanceRecords(deviceId, startDate, endDate) {
+        try {
+            this.checkDeviceConnection(deviceId);
+            this.logger.log(`Getting attendance records from device ${deviceId}`);
+            return new Promise((resolve, reject) => {
+                const anvizDevice = this.getAnvizDevice(deviceId);
+                // Get all records
+                anvizDevice.getAllRecords((records) => {
+                    try {
+                        // Convert Anviz records to system format
+                        let attendanceRecords = records.map((record) => {
+                            const timestamp = new Date(record.dateTime);
+                            // Filter by date if provided
+                            if ((startDate && timestamp < startDate) ||
+                                (endDate && timestamp > endDate)) {
+                                return null;
+                            }
+                            return {
+                                userId: record.userId.toString(),
+                                timestamp: timestamp,
+                                type: record.type || 0,
+                                deviceId: deviceId,
+                                status: record.workTypes ? record.workTypes[0] : 0
+                            };
+                        });
+                        // Filter out null records (those outside date range)
+                        attendanceRecords = attendanceRecords.filter(record => record !== null);
+                        resolve(attendanceRecords);
+                    }
+                    catch (error) {
+                        reject(error);
+                    }
+                });
+            });
+        }
+        catch (error) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            this.logger.error(`Error getting attendance records from device ${deviceId}: ${errorMessage}`);
+            throw new base_biometrics_service_1.BiometricException(`Failed to get attendance records: ${errorMessage}`);
+        }
+    }
+    /**
+     * Get attendance records size
+     * @param deviceId Device identifier
+     */
+    async getAttendanceSize(deviceId) {
+        try {
+            this.checkDeviceConnection(deviceId);
+            return new Promise((resolve, reject) => {
+                const anvizDevice = this.getAnvizDevice(deviceId);
+                anvizDevice.getRecordInformation((info) => {
+                    try {
+                        resolve(info.allRecordAmount || 0);
+                    }
+                    catch (error) {
+                        reject(error);
+                    }
+                });
+            });
+        }
+        catch (error) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            this.logger.error(`Error getting attendance size from device ${deviceId}: ${errorMessage}`);
+            throw new base_biometrics_service_1.BiometricException(`Failed to get attendance size: ${errorMessage}`);
+        }
+    }
+    /**
+     * Clear attendance records from device
+     * @param deviceId Device identifier
+     */
+    async clearAttendanceRecords(deviceId) {
+        try {
+            this.checkDeviceConnection(deviceId);
+            this.logger.log(`Clearing attendance records from device ${deviceId}`);
+            return new Promise((resolve, reject) => {
+                const anvizDevice = this.getAnvizDevice(deviceId);
+                anvizDevice.clearAllRecords((result) => {
+                    try {
+                        resolve(true);
+                    }
+                    catch (error) {
+                        reject(error);
+                    }
+                });
+            });
+        }
+        catch (error) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            this.logger.error(`Error clearing attendance records from device ${deviceId}: ${errorMessage}`);
+            throw new base_biometrics_service_1.BiometricException(`Failed to clear attendance records: ${errorMessage}`);
+        }
+    }
+    /**
+     * Unlock door of Anviz device
+     * @param deviceId Device identifier
+     */
+    async unlockDoor(deviceId) {
+        try {
+            this.checkDeviceConnection(deviceId);
+            this.logger.log(`Unlocking door for device ${deviceId}`);
+            const anvizDevice = this.getAnvizDevice(deviceId);
+            anvizDevice.openLock();
+            return true;
+        }
+        catch (error) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
+            this.logger.error(`Error unlocking door for device ${deviceId}: ${errorMessage}`);
+            throw new base_biometrics_service_1.BiometricException(`Failed to unlock door: ${errorMessage}`);
+        }
+    }
+    /**
+     * Get the Anviz device connection, throwing an exception if not connected
+     * @param deviceId Device identifier
+     */
+    getAnvizDevice(deviceId) {
+        const anvizDevice = this.connections.get(deviceId);
+        if (!anvizDevice) {
+            throw new base_biometrics_service_1.BiometricException(`Device ${deviceId} not connected`, common_1.HttpStatus.NOT_FOUND);
+        }
+        return anvizDevice;
+    }
+    /**
+     * Check if device is connected
+     * @param deviceId Device identifier
+     */
+    checkDeviceConnection(deviceId) {
+        if (!this.connections.has(deviceId)) {
+            throw new base_biometrics_service_1.BiometricException(`Device ${deviceId} not connected`, common_1.HttpStatus.NOT_FOUND);
+        }
+    }
+};
+exports.AnvizBiometricsService = AnvizBiometricsService;
+exports.AnvizBiometricsService = AnvizBiometricsService = AnvizBiometricsService_1 = __decorate([
+    (0, common_1.Injectable)(),
+    __param(0, (0, typeorm_1.InjectRepository)(biometric_template_entity_1.BiometricTemplate)),
+    __param(1, (0, typeorm_1.InjectRepository)(biometric_device_entity_1.BiometricDevice)),
+    __metadata("design:paramtypes", [typeof (_a = typeof typeorm_2.Repository !== "undefined" && typeorm_2.Repository) === "function" ? _a : Object, typeof (_b = typeof typeorm_2.Repository !== "undefined" && typeorm_2.Repository) === "function" ? _b : Object, typeof (_c = typeof event_emitter_1.EventEmitter2 !== "undefined" && event_emitter_1.EventEmitter2) === "function" ? _c : Object])
+], AnvizBiometricsService);
+
+
+/***/ }),
+/* 236 */
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.FinalWorkHoursCalculationEvent = exports.AttendanceProcessedEvent = exports.AttendanceRecordedEvent = exports.ATTENDANCE_EVENTS = void 0;
+exports.ATTENDANCE_EVENTS = {
+    ATTENDANCE_RECORDED: 'attendance.recorded',
+    ATTENDANCE_PROCESSED: 'attendance.processed',
+    FINAL_WORK_HOURS_CALCULATION: 'attendance.final_work_hours_calculation'
+};
+class AttendanceRecordedEvent {
+    constructor(attendances, deviceId) {
+        this.attendances = attendances;
+        this.deviceId = deviceId;
+    }
+}
+exports.AttendanceRecordedEvent = AttendanceRecordedEvent;
+class AttendanceProcessedEvent {
+    constructor(attendances) {
+        this.attendances = attendances;
+    }
+}
+exports.AttendanceProcessedEvent = AttendanceProcessedEvent;
+class FinalWorkHoursCalculationEvent {
+    constructor(attendanceIds, batchId, processedBy) {
+        this.attendanceIds = attendanceIds;
+        this.batchId = batchId;
+        this.processedBy = processedBy;
+    }
+}
+exports.FinalWorkHoursCalculationEvent = FinalWorkHoursCalculationEvent;
+
+
+/***/ }),
+/* 237 */
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.BaseBiometricsService = exports.BiometricException = void 0;
+const common_1 = __webpack_require__(5);
+/**
+ * Base exception class for biometric-related errors
+ */
+class BiometricException extends common_1.HttpException {
+    constructor(message, statusCode = common_1.HttpStatus.INTERNAL_SERVER_ERROR) {
+        super(message, statusCode);
+    }
+}
+exports.BiometricException = BiometricException;
+/**
+ * Abstract base class for all biometric service implementations
+ * Provides common functionality and defines the interface that all biometric services must implement
+ */
+class BaseBiometricsService {
+    constructor(deviceRepository, eventEmitter) {
+        this.deviceRepository = deviceRepository;
+        this.eventEmitter = eventEmitter;
+        // Make logger protected so it can be inherited by derived classes
+        this.logger = new common_1.Logger(this.constructor.name);
+        this.connections = new Map();
+        this.activeMonitoring = new Map();
+        this.initializeFromDatabase();
+    }
+    /**
+     * Load previously connected devices from database on service startup
+     */
+    async initializeFromDatabase() {
+        try {
+            const savedDevices = await this.deviceRepository.find();
+            if (savedDevices.length > 0) {
+                // Try to reconnect to devices in parallel
+                await Promise.allSettled(savedDevices.map(device => 
+                // convert device to ConnectDeviceDto using class transformer
+                this.connect({
+                    deviceId: device.deviceId,
+                    ipAddress: device.ipAddress,
+                    port: device.port,
+                    deviceType: device.provider
+                })
+                    .catch(err => {
+                    const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+                    this.logger.warn(`Failed to reconnect to device ${device.id}: ${errorMessage}`);
+                })));
+            }
+        }
+        catch (error) {
+            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+            this.logger.error(`Error initializing devices from database: ${errorMessage}`);
+        }
+    }
+    emitAttendanceEvent(record) {
+        try {
+            this.eventEmitter.emit('biometric.attendance', record);
+        }
+        catch (error) {
+            this.logger.error(`Error emitting attendance event: ${error instanceof Error ? error.message : String(error)}`);
+        }
+    }
+    /**
+     * Connect to a Biometric device
+     * @param ipAddress Device IP address
+     * @param port Device port
+     * @returns Connected device information
+     */
+    async connect(dto) {
+        if (this.biometricDeviceType !== dto.deviceType) {
+            throw new common_1.InternalServerErrorException(`Device type mismatch: expected ${this.biometricDeviceType}, got ${dto.deviceType}`);
+        }
+        const deviceId = this.generateDeviceId(dto.ipAddress, dto.port);
+        // Create new connection with retry logic
+        return this.connectWithRetry(dto, deviceId);
+    }
+    /**
+     * Update device connection status in memory and database
+     * @param deviceId Device identifier
+     * @param isConnected Connection status
+     * @param isOffline Offline status
+     */
+    async updateDeviceStatus(deviceId, isConnected, isOffline) {
+        const device = await this.deviceRepository.findOne({ where: { deviceId } });
+        if (!device) {
+            throw new common_1.BadRequestException(`Device ${deviceId} not found`);
+        }
+        device.isConnected = isConnected;
+        device.isOffline = isOffline;
+        return await this.deviceRepository.save(device);
+    }
+    // Device information methods (optional with default implementation)
+    async getDeviceInfo(deviceId) {
+        throw new BiometricException('Method not implemented', common_1.HttpStatus.NOT_IMPLEMENTED);
+    }
+    async getSerialNumber(deviceId) {
+        throw new BiometricException('Method not implemented', common_1.HttpStatus.NOT_IMPLEMENTED);
+    }
+    async getFirmwareVersion(deviceId) {
+        throw new BiometricException('Method not implemented', common_1.HttpStatus.NOT_IMPLEMENTED);
+    }
+    async getDeviceName(deviceId) {
+        throw new BiometricException('Method not implemented', common_1.HttpStatus.NOT_IMPLEMENTED);
+    }
+    async restartDevice(deviceId) {
+        throw new BiometricException('Method not implemented', common_1.HttpStatus.NOT_IMPLEMENTED);
+    }
+    // Time management methods (optional)
+    async getTime(deviceId) {
+        throw new BiometricException('Method not implemented', common_1.HttpStatus.NOT_IMPLEMENTED);
+    }
+    async setTime(deviceId, time) {
+        throw new BiometricException('Method not implemented', common_1.HttpStatus.NOT_IMPLEMENTED);
+    }
+    // User management methods (optional)
+    async enrollUser(deviceId, userId, fingerId) {
+        throw new BiometricException('Method not implemented', common_1.HttpStatus.NOT_IMPLEMENTED);
+    }
+    async deleteUser(deviceId, userId) {
+        throw new BiometricException('Method not implemented', common_1.HttpStatus.NOT_IMPLEMENTED);
+    }
+    async verifyFingerprint(deviceId, template) {
+        throw new BiometricException('Method not implemented', common_1.HttpStatus.NOT_IMPLEMENTED);
+    }
+    async getUsers(deviceId) {
+        throw new BiometricException('Method not implemented', common_1.HttpStatus.NOT_IMPLEMENTED);
+    }
+    async getUserDetails(deviceId) {
+        throw new BiometricException('Method not implemented', common_1.HttpStatus.NOT_IMPLEMENTED);
+    }
+    async setUser(deviceId, uid, userId, name, password, role, cardno) {
+        throw new BiometricException('Method not implemented', common_1.HttpStatus.NOT_IMPLEMENTED);
+    }
+    async syncUsers(sourceDeviceId, targetDeviceId) {
+        throw new BiometricException('Method not implemented', common_1.HttpStatus.NOT_IMPLEMENTED);
+    }
+    // Attendance management methods (optional)
+    async getAttendanceRecords(deviceId, startDate, endDate) {
+        throw new BiometricException('Method not implemented', common_1.HttpStatus.NOT_IMPLEMENTED);
+    }
+    async clearAttendanceRecords(deviceId) {
+        throw new BiometricException('Method not implemented', common_1.HttpStatus.NOT_IMPLEMENTED);
+    }
+    async getAttendanceSize(deviceId) {
+        throw new BiometricException('Method not implemented', common_1.HttpStatus.NOT_IMPLEMENTED);
+    }
+    // Real-time monitoring methods (optional)
+    startRealTimeMonitoring(deviceId, callback) {
+        throw new BiometricException('Method not implemented', common_1.HttpStatus.NOT_IMPLEMENTED);
+    }
+    stopRealTimeMonitoring(monitoringId) {
+        throw new BiometricException('Method not implemented', common_1.HttpStatus.NOT_IMPLEMENTED);
+    }
+    // Door control (optional)
+    async unlockDoor(deviceId) {
+        throw new BiometricException('Method not implemented', common_1.HttpStatus.NOT_IMPLEMENTED);
+    }
+    // Command execution (optional)
+    async executeCommand(deviceId, command, data) {
+        throw new BiometricException('Method not implemented', common_1.HttpStatus.NOT_IMPLEMENTED);
+    }
+    /**
+     * Generate a unique device ID from IP address and port
+     * @param ipAddress Device IP address
+     * @param port Device port
+     * @returns Unique device identifier
+     */
+    generateDeviceId(ipAddress, port) {
+        return `${ipAddress}:${port}`;
+    }
+    /**
+     * Safely handle errors by ensuring proper type conversion
+     * @param error The error to process
+     * @returns Standardized error message string
+     */
+    formatErrorMessage(error) {
+        return error instanceof Error ? error.message : String(error);
+    }
+}
+exports.BaseBiometricsService = BaseBiometricsService;
+
+
+/***/ }),
+/* 238 */
+/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
+
+const { Device } = __webpack_require__(239);
+const { Record } = __webpack_require__(243);
+const { RecordInformation } = __webpack_require__(250);
+const { DeviceInfo1 } = __webpack_require__(248);
+const { DeviceInfo2 } = __webpack_require__(249);
+
+module.exports = { Device, Record, RecordInformation, DeviceInfo1, DeviceInfo2 };
+
+/***/ }),
+/* 239 */
+/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
+
+/*
+ * Copyright (c) 2022, Sergio S.- sergi.ss4@gmail.com http://sergiosoriano.com
+ * All rights reserved.
+ * 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ * 
+ * 1. Redistributions of source code must retain the above copyright notice, this
+ *    list of conditions and the following disclaimer.
+ * 
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions and the following disclaimer in the documentation
+ *    and/or other materials provided with the distribution.
+ * 
+ * 3. Neither the name of the copyright holder nor the names of its
+ *    contributors may be used to endorse or promote products derived from
+ *    this software without specific prior written permission.
+ *    	
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
+ */
+
+const { Connection } = __webpack_require__(240);
+const { Message } = __webpack_require__(242);
+const { DeviceInfo1 } = __webpack_require__(248);
+const { DeviceInfo2 } = __webpack_require__(249);
+const { Record } = __webpack_require__(243);
+const { RecordInformation } = __webpack_require__(250);
+const { UserInfo } = __webpack_require__(251);
+const { setInt32BigEndian, setLong40BigEndian } = __webpack_require__(244);
+
+class Device extends Connection {
+
+    constructor(host, port = 5010, deviceId = 0) { // When deviceId (CH) is 0，all devices connected will response to this command.
+        super(host, port);
+        this.deviceId = deviceId;
+    }
+
+    handleResponse = (cmd, callback)=> {
+        cmd.onResponse = (response) => {
+            if (response.command != cmd.command) {
+                let message = `Command code mismatch, expected: ${cmd.command}, received: ${response.command}`;
+                throw new Error(message);
+            }
+            if(response.returnValue != Connection.ACK_SUCCESS) {
+                throw new Error("ACK Error: " + response.returnValue);
+            }
+            return callback(response);
+        };
+        this.send(cmd);
+    }
+
+    setDeviceId = (id) => {
+        const cmd = new Message();
+        cmd.info = 'setDeviceId';
+		cmd.deviceCode = this.deviceId;
+		cmd.command = Message.SET_DEVICE_ID;
+        const data = Buffer.alloc(4);
+        setInt32BigEndian(data, 0, id);
+        cmd.data = data;
+        this.handleResponse(cmd, (response)=> {
+            this.deviceId = id;
+        });
+    }
+
+    getDeviceId = (callback)=> { // FIXME: there's no answer
+		/*const cmd = new Message();
+		cmd.deviceCode = this.deviceId;
+		cmd.command = Message.GET_DEVICE_ID;
+        this.handleResponse(cmd, (response)=> {
+            callback(getInt32BigEndian(response.data, 0));
+        });*/
+        if(callback) callback(this.deviceId);
+        return this.deviceId;
+    }
+
+    getDeviceInfo1 = (callback) => {
+		const cmd = new Message();
+        cmd.info = 'getDeviceInfo1';
+		cmd.deviceCode = this.deviceId;
+		cmd.command = Message.GET_DEVICE_INFO1;
+        this.handleResponse(cmd, (response)=> {
+            callback(DeviceInfo1.valueOf(response.data));
+        });
+	}
+
+    setDeviceInfo1 = (deviceInfo) => {
+        const cmd = new Message();
+        cmd.info = 'setDeviceInfo1';
+		cmd.deviceCode = this.deviceId;
+        const data = Buffer.alloc(12);
+        deviceInfo.getBytes(data, 0);
+        cmd.data = data;
+		cmd.command = Message.SET_DEVICE_INFO1;
+        this.handleResponse(cmd, (response)=> {});
+    }
+
+    getDeviceInfo2 = (callback) => {
+		const cmd = new Message();
+        cmd.info = 'getDeviceInfo2';
+		cmd.deviceCode = this.deviceId;
+		cmd.command = Message.GET_DEVICE_INFO2;
+        this.handleResponse(cmd, (response)=> {
+            callback(DeviceInfo2.valueOf(response.data));
+        });
+	}
+
+    setDeviceInfo2 = (deviceInfo) => {
+        const cmd = new Message();
+        cmd.info = 'setDeviceInfo2';
+		cmd.deviceCode = this.deviceId;
+        const data = Buffer.alloc(15);
+        deviceInfo.getBytes(data, 0);
+        cmd.data = data;
+		cmd.command = Message.SET_DEVICE_INFO2;
+        this.handleResponse(cmd, (response)=> {});
+    }
+
+    getRecordInformation = (callback)=> {
+        const cmd = new Message();
+        cmd.info = 'getRecordInformation';
+		cmd.deviceCode = this.deviceId;
+		cmd.command = Message.GET_RECORD_INFORMATION;
+        this.handleResponse(cmd, (response)=> {
+            callback(RecordInformation.valueOf(response.data));
+        });
+    }
+
+    getAllRecords(callback) {
+        this.getRecordInformation((info)=> {
+            this._getRecords(0x1, info.allRecordAmount, callback);
+        });
+    }
+
+    getNewRecords(callback) {
+        this.getRecordInformation((info)=> {
+            this._getRecords(0x2, info.newRecordAmount, callback);
+        });
+    }
+
+    _getRecords = (mode, amount, callback)=> {
+        
+        const cmd = new Message();
+        cmd.info = '_getRecords';
+        cmd.deviceCode = this.deviceId;
+        cmd.command = Message.GET_RECORDS;
+        cmd.data = Buffer.from([mode, Math.min(amount, Message.MAX_RESULTS)]);
+        
+        let retries = 2;
+        let records = [];
+
+        const handler = (response)=> { 
+            try {
+                const count = response.data[0] & 0xFF; // valid records
+                for(let i = 0; i < count; ++i) {
+                    let offset = i * 14 + 1;
+                    const record = Record.valueOf(response.data, offset);
+                    record.deviceCode = response.deviceCode;
+                    records.push(record);
+                }
+                amount -= count;
+                if(count > 0 && amount > 0) {
+                    retries = 2;
+                    cmd.data[0] = 0x0; // Download normal;
+                    cmd.data[1] = Math.min(amount, Message.MAX_RESULTS); 
+                } else {
+                    callback(records);
+                    return null;
+                }
+            } catch(e) {
+                if(retries === 0) throw e;
+                retries--;
+                cmd.data[0] = 0x10; // Send last packet again
+            }
+            // this.handleResponse(cmd, handler);
+            return cmd;
+        }
+        this.handleResponse(cmd, handler);
+  
+    }
+
+    clearAllRecords = (callback)=> {
+        const cmd = new Message();
+        cmd.info = 'clearAllRecords';
+		cmd.deviceCode = this.deviceId;
+		cmd.command = Message.CLEAR_RECORDS;
+        cmd.data = Buffer.from([0, 0, 0, 0]);
+        this.handleResponse(cmd, (response)=> {
+            const data = response.data;
+            if(callback) callback(data[0] << 16 | (data[1] & 0xFF) << 8 | (data[2] & 0xFF));
+        });
+    }
+
+    clearAllRecordsSign = (callback)=> {
+        this.clearRecordsSign(0, callback);
+    }
+
+    /**
+	 * Cancel all records, or cancel all/part new records sign
+	 * @param amount 0 = all redords sign
+	 */
+    clearRecordsSign = (amount, callback)=>{
+        let code;
+		if(amount < 1) {
+			amount = 0;
+			code = 0x1; // all sign
+		} else {
+			code = 0x2; // amount sign
+		}
+		const cmd = new Message();
+        cmd.info = 'clearRecordSign';
+		cmd.deviceCode = this.deviceId;
+		cmd.command = Message.CLEAR_RECORDS;
+        cmd.data = Buffer.from([code, (amount >> 16) & 0xFF, (amount >> 8) & 0xFF, amount & 0xFF]);
+
+        this.handleResponse(cmd, (response)=> {
+            const data = response.data;
+            if(callback) callback(data[0] << 16 | (data[1] & 0xFF) << 8 | (data[2] & 0xFF));
+        })
+    }
+
+    getSerialNumber = (callback) => {
+		const cmd = new Message();
+        cmd.info = 'getSerialNumber';
+		cmd.deviceCode = this.deviceId;
+		cmd.command = Message.GET_SERIAL_NUMBER;
+        this.handleResponse(cmd, (response)=> {
+            callback(response.data.toString('utf8', 0, 16));
+        });
+	}
+
+    openLock = ()=> {
+        const cmd = new Message();
+        cmd.info = 'openLock';
+		cmd.deviceCode = this.deviceId;
+		cmd.command = Message.OPEN_LOCK;
+        this.handleResponse(cmd, (response)=> {});
+    }
+
+    getDateTime = (callback) => {
+		const cmd = new Message();
+        cmd.info = 'getDateTime';
+		cmd.deviceCode = this.deviceId;
+		cmd.command = Message.GET_DATE_TIME;
+        this.handleResponse(cmd, (response)=> {
+            const data = response.data;
+            const millis = Date.UTC(
+                (data[0] & 0xFF) + 2000, // YEAR
+                data[1], // MONTH
+                data[2], // DAY_OF_MONTH
+                data[3], // HOUR_OF_DAY
+                data[4], // MINUTE
+                data[5], // SECOND
+                0 // MILLISECOND
+            );
+            const date = new Date(millis);
+            callback(date);
+        });
+    }
+
+    setDateTime = (date) => {
+        const cmd = new Message();
+        cmd.info = 'setDateTime';
+		cmd.deviceCode = this.deviceId;
+		cmd.command = Message.SET_DATE_TIME;
+        const data = Buffer.alloc(6);
+        data[0] = date.getFullYear() - 2000;
+		data[1] = date.getMonth() + 1;
+		data[2] = date.getDate();
+		data[3] = date.getHours();
+		data[4] = date.getMinutes();
+		data[5] = date.getSeconds();
+        cmd.data = data;
+        this.handleResponse(cmd, (response)=> {});
+    }
+
+    /**
+	 * Download fingerprint/face template from T&A device
+	 * Note: The template information contains the userId, and cannot be used with a different id (setFpTemplate)
+	 * @param userId
+	 * @param backupCode 11 -> Facepass 7, 1 -> fingerprint
+     */
+    getFpTemplate = (userId, backupCode, callback)=> {
+        const cmd = new Message();
+        cmd.info = 'getFpTemplate';
+		cmd.deviceCode = this.deviceId;
+		cmd.command = Message.GET_FP_TEMPLATE;
+        const data = Buffer.alloc(6);
+        setLong40BigEndian(data, 0, userId);
+		data[5] = backupCode;
+        cmd.data = data;
+        this.handleResponse(cmd, (response)=> {
+            callback(response.data);
+        });
+    }
+
+    /**
+	 * Upload fingerprint/face template to the T&A device
+	 * Note: The template information contains the userId, and cannot be used with a different id.
+	 * @param userId
+	 * @param backupCode 11 -> Facepass 7, 1 -> fingerprint
+	 * @param ftTemplate
+     */
+    setFpTemplate = (userId, backupCode, ftTemplate) => {
+        const cmd = new Message();
+        cmd.info = 'setFpTemplate';
+		cmd.deviceCode = this.deviceId;
+		cmd.command = Message.SET_FP_TEMPLATE;
+        const data = Buffer.alloc(6);
+        setLong40BigEndian(data, 0, userId);
+		data[5] = backupCode;
+        cmd.data = Buffer.concat([data, ftTemplate]);
+        this.handleResponse(cmd, (response)=> { });
+    }
+
+    getUserInfos = (callback)=> {
+
+        const cmd = new Message();
+        cmd.info = 'getUserInfos';
+        cmd.deviceCode = this.deviceId;
+        cmd.command = Message.GET_USER_INFO;
+        cmd.data = Buffer.from([0x1, Message.MAX_RESULTS]); // 0x1 = Download Start
+        
+        let retries = 2;
+        let records = [];
+
+        const handler = (response)=> {
+            try {
+                const count = response.data[0] & 0xFF;
+                for(let i = 0; i < count; ++i) {
+                    let offset = i * 40 + 1;
+                    const userInfo = UserInfo.valueOf(response.data, offset);
+                    userInfo.deviceCode = response.deviceCode;
+                    records.push(userInfo);
+                }
+                if(count > 0) {
+                    retries = 2;
+                    cmd.data[0] = 0x0; // Download normal;
+                } else {
+                    callback(records);
+                    return null;
+                }
+            } catch(e) {
+                if(retries === 0) throw e;
+                retries--;
+                cmd.data[0] = 0x10; // Send last packet again
+            }
+            // this.handleResponse(cmd, handler);
+            return cmd;
+        }
+        this.handleResponse(cmd, handler);
+
+    }
+
+    deleteUser = (userId) => {
+        const cmd = new Message();
+        cmd.info = 'deleteUser';
+        cmd.deviceCode = this.deviceId;
+        cmd.command = Message.DELETE_USER;
+        var data = Buffer.alloc(6); 
+        setLong40BigEndian(data, 0, userId);
+        data[5] = 0xFF;
+        cmd.data = data;
+        this.handleResponse(cmd, (response) => {});
+    }
+
+    setUserInfo = (userInfo) => {
+        this.setUserInfos([userInfo]);
+    }
+
+    setUserInfos = (userInfos) => {
+        for(let i = 0; i < userInfos.length;) {
+			let j = Math.min(userInfos.length, i + 12); // sub list max 12 items
+			this._setUserInfos(userInfos.slice(i, j));
+			i = j;
+		}
+    }
+
+    _setUserInfos(userInfos) {
+        const cmd = new Message();
+        cmd.info = '_setUserInfos';
+		cmd.deviceCode = this.deviceId;
+		cmd.command = Message.SET_USER_INFO;
+        const n = userInfos.length;
+		const data = Buffer.alloc(1 + n * 40);
+		data[0] = n; // Information Num
+		for (let i = 0; i < n; ++i) {
+			const userInfo = userInfos[i];
+			userInfo.getBytes(data, i * 40 + 1);
+		}
+		cmd.data = data;
+        this.handleResponse(cmd, (response) => {});
+    }
+
+}
+
+module.exports = { Device };
+
+/***/ }),
+/* 240 */
+/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
+
+/*
+ * Copyright (c) 2022, Sergio S.- sergi.ss4@gmail.com http://sergiosoriano.com
+ * All rights reserved.
+ * 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ * 
+ * 1. Redistributions of source code must retain the above copyright notice, this
+ *    list of conditions and the following disclaimer.
+ * 
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions and the following disclaimer in the documentation
+ *    and/or other materials provided with the distribution.
+ * 
+ * 3. Neither the name of the copyright holder nor the names of its
+ *    contributors may be used to endorse or promote products derived from
+ *    this software without specific prior written permission.
+ *    	
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
+ */
+
+const net = __webpack_require__(241);
+const { Message } = __webpack_require__(242);
+const { Record } = __webpack_require__(243);
+const { getInt16BigEndian, getInt32BigEndian, getInt16LittleEndian, setInt32BigEndian, setInt16BigEndian, setInt16LittleEndian } = __webpack_require__(244);
+const { calculateChecksum } = __webpack_require__(245);
+const {toString} = __webpack_require__(246);
+const { connected } = __webpack_require__(247);
+
+class Connection {
+
+    static STX = 0xA5; // START TEXT
+
+    static ACK_SUCCESS = 0x0;
+
+    constructor(host, port) {
+        this.host = host;
+        this.port = port;
+
+        this.buffer = Buffer.from([]);
+    }
+
+    connect = ()=> {
+        
+        this.disconnect();
+
+        this.queue = [];
+
+        this.busy = false;
+
+        const socket = new net.Socket();
+        socket.on('error', (e) => {
+            if(this.isConnected()) {
+                this.disconnect();
+                this.listener.onError(e);
+            }
+        });
+
+        socket.on('close', ()=> {
+            if(this.isConnected()) {
+                this.disconnect();
+                this.listener.onConnectionLost();
+            }
+        });
+
+        socket.on("data", (data)=> {
+            try {
+                this.buffer = this.handleData(Buffer.concat([this.buffer, data]));
+            } catch (e) { // Unhandled exception
+                console.log(e);
+            }
+        });
+
+        socket.connect({ port: this.port, host: this.host });
+
+        this.socket = socket;
+        this.listener.onConnected()
+
+    }
+
+    handleData = (buffer)=> {
+
+        while(buffer.length > 9) {
+            if(buffer[0] != Connection.STX ) {
+                buffer = buffer.slice(1); // ignore byte index 0
+            } else {
+                // LEN （data length） 2 Byte
+                const len = getInt16BigEndian(buffer, 7) + 11; 
+                if(buffer.length  < len) {
+                    break; // wait for data
+                }
+                this._handleResponse(buffer.slice(0, len));
+                buffer = buffer.slice(len, buffer.length); // remove frame
+            }
+        }
+
+        return buffer; // return data
+    }
+
+    _handleResponse = (data)=> {
+
+        const n = data.length - 2;
+        let crc1 = calculateChecksum(data, n);
+		let crc2 = getInt16LittleEndian(data, n) & 0xFFFF;
+		if(crc1 != crc2) {
+			const message = "Invalid Checksum: " + toString(data, 0, data.length);
+			this.listener.onError(new Error(message));
+		} else {
+
+            const message = new Message();
+            message.deviceCode = getInt32BigEndian(data, 1);
+            message.command = data[5] - 0x80;
+            message.returnValue = data[6];
+            message.data = data.slice(9, n);
+
+            if((message.command & 0xFF) == 0x13) { // it only happens when the device starts up
+                // Message data:
+                // 05 00 01 00 00 00 00 00 2a 47 53 c4 00 05 00 00
+            } else if((message.command & 0xFF) == 0x5F) { // RealTime mode
+                const record = Record.valueOf(message.data, 0);
+                record.deviceCode = message.deviceCode;
+                this.listener.onRecord(record);
+            } else {
+                const cmd = this.queue.shift();
+                const next = cmd.onResponse(message);
+                if(next) {
+                    this.queue.unshift(next);
+                    this.socket.write(this.toBuffer(next));
+                } else if(this.queue.length > 0) {
+                    this.socket.write(this.toBuffer(this.queue[0]));
+                } else {
+                    this.busy = false;
+                }
+            }
+
+        }
+
+    }
+
+    isConnected = ()=> {
+        return this.socket != null; 
+    }
+
+    disconnect = ()=> {
+        if(this.socket != null) {
+            try {
+                this.socket.destroy();
+            } catch(e) { // ignore
+            } finally {
+                this.socket = null;
+            }
+            this.listener.onDisconnected()
+        }
+    }
+
+    send = (cmd) => {
+       this.queue.push(cmd);
+       if(!this.busy) {
+           this.busy = true;
+           this.socket.write(this.toBuffer(cmd));
+       }
+    }
+
+    getQueueInfo() {
+        let value = [];
+        for(let i = 0; i < this.queue.length; ++i) {
+            value.push(this.getInfo(this.queue[i]));
+        }
+        return value;
+    }
+
+    getInfo(cmd) {
+        return cmd.info + ':' + cmd.command;
+    }
+
+    toBuffer(cmd) {
+		const data = cmd.data;
+		const dataLen = data != null ? data.length : 0;
+		const cmdData = Buffer.alloc(10 + dataLen);
+		// STX
+		cmdData[0] = Connection.STX;
+		// CH （device code)
+		setInt32BigEndian(cmdData, 1, cmd.deviceCode);
+		// CMD （command)
+		cmdData[5] = cmd.command;
+		if(dataLen > 0) {
+			// LEN (data length)
+			setInt16BigEndian(cmdData, 6, dataLen);
+			// DATA
+            data.copy(cmdData, 8, 0, dataLen);
+		}
+		// CRC16
+		const crc = calculateChecksum(cmdData, cmdData.length - 2); 
+		setInt16LittleEndian(cmdData, cmdData.length - 2, crc);
+		return cmdData;
+	}
+
+    /*print(b) {
+        let str = "";
+        for(let i = 0; i < b.length; ++i) {
+            str += b[i] + ", ";
+        }
+        console.log(str);
+    }*/
+
+}
+
+module.exports = { Connection };
+
+
+/***/ }),
+/* 241 */
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("net");
+
+/***/ }),
+/* 242 */
+/***/ ((module) => {
+
+/*
+ * Copyright (c) 2022, Sergio S.- sergi.ss4@gmail.com http://sergiosoriano.com
+ * All rights reserved.
+ * 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ * 
+ * 1. Redistributions of source code must retain the above copyright notice, this
+ *    list of conditions and the following disclaimer.
+ * 
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions and the following disclaimer in the documentation
+ *    and/or other materials provided with the distribution.
+ * 
+ * 3. Neither the name of the copyright holder nor the names of its
+ *    contributors may be used to endorse or promote products derived from
+ *    this software without specific prior written permission.
+ *    	
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
+ */
+
+class Message {
+
+    static MAX_RESULTS = 0x8;
+	
+	static GET_DEVICE_ID = 0x74;
+	static SET_DEVICE_ID = 0x75;
+	
+	static GET_DEVICE_INFO1  = 0x30; // Get the information of T&A device 1
+	static SET_DEVICE_INFO1  = 0x31; // Set the configure information of T&A 1
+	static GET_DEVICE_INFO2  = 0x32; // Get the information of T&A device 2
+	static SET_DEVICE_INFO2  = 0x33; // Set the configure information of T&A 2
+	static GET_SERIAL_NUMBER = 0x24;
+	
+	static GET_DATE_TIME = 0x38; // Get the date and time of T&A
+	static SET_DATE_TIME = 0x39; // Set the date and time of T&A
+	
+	static GET_RECORD_INFORMATION = 0x3C;
+	
+	static GET_RECORDS   = 0x40;
+	static CLEAR_RECORDS = 0x4E;
+
+	static GET_USER_INFO = 0x72;
+	static SET_USER_INFO = 0x73;
+	static DELETE_USER   = 0x4C;
+	
+	static GET_FP_TEMPLATE = 0x44;
+	static SET_FP_TEMPLATE = 0x45;
+		
+	static OPEN_LOCK = 0x5E;
+
+    constructor() {
+
+    }
+
+}
+
+module.exports = { Message };
+
+/***/ }),
+/* 243 */
+/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
+
+/*
+ * Copyright (c) 2022, Sergio S.- sergi.ss4@gmail.com http://sergiosoriano.com
+ * All rights reserved.
+ * 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ * 
+ * 1. Redistributions of source code must retain the above copyright notice, this
+ *    list of conditions and the following disclaimer.
+ * 
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions and the following disclaimer in the documentation
+ *    and/or other materials provided with the distribution.
+ * 
+ * 3. Neither the name of the copyright holder nor the names of its
+ *    contributors may be used to endorse or promote products derived from
+ *    this software without specific prior written permission.
+ *    	
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
+ */
+
+const { getInt32BigEndian, getLong40BigEndian } = __webpack_require__(244);
+
+class Record {
+
+    static MILLIS_INC = 946771200000; // 01/02/2000 in milliseconds since 01/01/1970
+
+    static valueOf(data, offset) {
+		const result = new Record();
+		result.userId = getLong40BigEndian(data, offset);
+		result.dateTime = Record.toDateTime(getInt32BigEndian(data, offset + 5));
+		result.backupCode = data[offset + 9];
+		result.type = data[offset + 10];
+		result.workTypes = [data[offset + 11], data[offset + 12], data[offset + 13]];
+		return result;
+	}
+
+	static toDateTime(seconds) {
+		const time = seconds * 1000 + Record.MILLIS_INC;
+		return time; /* time - TimeZone.getDefault().getOffset(time); */
+	}
+
+}
+
+module.exports = {Record};
+
+/***/ }),
+/* 244 */
+/***/ ((module) => {
+
+/*
+ * Copyright (c) 2022, Sergio S.- sergi.ss4@gmail.com http://sergiosoriano.com
+ * All rights reserved.
+ * 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ * 
+ * 1. Redistributions of source code must retain the above copyright notice, this
+ *    list of conditions and the following disclaimer.
+ * 
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions and the following disclaimer in the documentation
+ *    and/or other materials provided with the distribution.
+ * 
+ * 3. Neither the name of the copyright holder nor the names of its
+ *    contributors may be used to endorse or promote products derived from
+ *    this software without specific prior written permission.
+ *    	
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
+ */
+
+const setLong40BigEndian = (data, offset, value) => {
+    data[offset    ] = Number(BigInt(value) >> 32n);
+    data[offset + 1] = value >> 24;
+    data[offset + 2] = value >> 16;
+    data[offset + 3] = value >> 8 ;
+    data[offset + 4] = value;
+}
+
+const getLong40BigEndian = (data, offset) => {
+    return data[offset] << 32 
+        | (data[offset + 1] & 0xFF) << 24
+        | (data[offset + 2] & 0xFF) << 16
+        | (data[offset + 3] & 0xFF) << 8 
+        | (data[offset + 4] & 0xFF);
+}
+
+const getInt32BigEndian = (data, offset) => {
+    return data[offset] << 24 
+        | (data[offset + 1] & 0xFF) << 16
+        | (data[offset + 2] & 0xFF) << 8 
+        | (data[offset + 3] & 0xFF);
+}
+
+const setInt32BigEndian = (data, offset, value) => {
+    data[offset    ] = value >> 24;
+    data[offset + 1] = value >> 16;
+    data[offset + 2] = value >> 8;
+    data[offset + 3] = value;
+}
+
+const getInt24BigEndian = (data, offset) => {
+    return data[offset] << 16 
+        | (data[offset + 1] & 0xFF) << 8 
+        | (data[offset + 2] & 0xFF);
+}
+
+const setInt24BigEndian = (data, offset, value) => {
+    data[offset    ] = value >> 16;
+    data[offset + 1] = value >> 8;
+    data[offset + 2] = value;
+}
+
+const getInt16BigEndian = (data, offset) => {
+    return data[offset] << 8 | (data[offset + 1] & 0xFF);
+}
+
+const setInt16BigEndian = (data, offset, value) => {
+    data[offset    ] = value >> 8;
+    data[offset + 1] = value;
+}
+
+const getInt16LittleEndian = (data, offset) => {
+    return (data[offset] & 0XFF) | (data[offset + 1] << 8);
+}
+
+const setInt16LittleEndian = (data, offset, value) => {
+    data[offset    ] = value;
+    data[offset + 1] = value >> 8;
+}
+
+module.exports = {getLong40BigEndian, setLong40BigEndian, getInt32BigEndian, setInt32BigEndian, getInt24BigEndian, setInt24BigEndian, getInt16BigEndian, setInt16BigEndian, getInt16LittleEndian, setInt16LittleEndian};
+
+/***/ }),
+/* 245 */
+/***/ ((module) => {
+
+const table = [];
+const polynomial = 0x8408;
+for (let b = 0; b < 256; b++) {
+    let crc = b;
+    for (let i = 0; i < 8; i++) {
+        crc = (crc >> 1) ^ ((crc & 1) == 1 ? polynomial : 0);
+    }
+    table[b] = 0xFFFF & crc;
+}
+
+const calculateChecksum = (data, len) => {
+    let crc = 0xFFFF;
+    for(let i = 0; i < len; ++i) {
+        let b = data[i];
+        crc = (crc >> 8) ^ table[(crc ^ b) & 0xFF];
+    }
+    return crc & 0xFFFF;
+}
+
+module.exports = {calculateChecksum};
+
+/***/ }),
+/* 246 */
+/***/ ((module) => {
+
+/*
+ * Copyright (c) 2022, Sergio S.- sergi.ss4@gmail.com http://sergiosoriano.com
+ * All rights reserved.
+ * 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ * 
+ * 1. Redistributions of source code must retain the above copyright notice, this
+ *    list of conditions and the following disclaimer.
+ * 
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions and the following disclaimer in the documentation
+ *    and/or other materials provided with the distribution.
+ * 
+ * 3. Neither the name of the copyright holder nor the names of its
+ *    contributors may be used to endorse or promote products derived from
+ *    this software without specific prior written permission.
+ *    	
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
+ */
+
+const toString = (data, start, end) => {
+    let result = "";
+    for(var i = start; i < end; i++) {
+        let code = String.fromCharCode(data[i]);
+        if(code !== '\x00') {
+            result += code;
+        }
+    } 
+    return result;
+}
+
+module.exports = {toString};
+
+/***/ }),
+/* 247 */
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("process");
+
+/***/ }),
+/* 248 */
+/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
+
+/*
+ * Copyright (c) 2022, Sergio S.- sergi.ss4@gmail.com http://sergiosoriano.com
+ * All rights reserved.
+ * 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ * 
+ * 1. Redistributions of source code must retain the above copyright notice, this
+ *    list of conditions and the following disclaimer.
+ * 
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions and the following disclaimer in the documentation
+ *    and/or other materials provided with the distribution.
+ * 
+ * 3. Neither the name of the copyright holder nor the names of its
+ *    contributors may be used to endorse or promote products derived from
+ *    this software without specific prior written permission.
+ *    	
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
+ */
+
+const { getInt16BigEndian } = __webpack_require__(244);
+
+class DeviceInfo1 {
+
+	getBytes(data, offset) {
+		data[offset] = ((this.communicationPassword >> 16) & 0xF) | ((this.communicationPasswordLength & 0xF) << 4);
+		data[offset + 1] = (this.communicationPassword >> 8) & 0xFF;
+		data[offset + 2] = this.communicationPassword & 0xFF;
+		data[offset + 3] = this.sleepTime;
+		data[offset + 4] = this.volume;
+		data[offset + 5] = this.language;
+		data[offset + 6] = this.timeFormat | ((this.dateFormat & 0xF) << 4);
+		data[offset + 7] = this.attendanceState;
+		data[offset + 8] = this.languageSetting;
+	}
+
+   static valueOf(data) {
+		const deviceInfo = new DeviceInfo1();
+		deviceInfo.firmwareVersion = data.toString('utf-8', 0, 8);
+		deviceInfo.communicationPasswordLength = (data[8] >> 4) & 0xF; 
+		const v1 = (data[8] & 0xF) << 16;
+		const v2 = (getInt16BigEndian(data, 9) & 0xFFFF);
+		deviceInfo.communicationPassword = v1 | v2;
+		deviceInfo.sleepTime = data[11];
+		deviceInfo.volume = data[12];
+		deviceInfo.language = data[13];
+		deviceInfo.timeFormat = data[14] & 0xF;
+		deviceInfo.dateFormat = (data[14] >> 4) & 0xF;
+		deviceInfo.attendanceState = data[15];
+		deviceInfo.languageSetting = data[16];
+		deviceInfo.commandVersion = data[17];
+		return deviceInfo;
+	}
+
+}
+
+module.exports = {DeviceInfo1};
+
+/***/ }),
+/* 249 */
+/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
+
+/*
+ * Copyright (c) 2022, Sergio S.- sergi.ss4@gmail.com http://sergiosoriano.com
+ * All rights reserved.
+ * 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ * 
+ * 1. Redistributions of source code must retain the above copyright notice, this
+ *    list of conditions and the following disclaimer.
+ * 
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions and the following disclaimer in the documentation
+ *    and/or other materials provided with the distribution.
+ * 
+ * 3. Neither the name of the copyright holder nor the names of its
+ *    contributors may be used to endorse or promote products derived from
+ *    this software without specific prior written permission.
+ *    	
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
+ */
+
+const { getInt24BigEndian, setInt24BigEndian } = __webpack_require__(244);
+
+class DeviceInfo2 {
+
+	getBytes(data, offset) {
+		data[offset] = this.fingerprintPrecision;
+		data[offset + 1] = this.wiegandHeadCode;
+		data[offset + 2] = this.wieganOption;
+		data[offset + 3] = this.workCodePermission;
+		data[offset + 4] = this.realTimeModeSetting;
+		data[offset + 5] = this.autoUpdateFpSetting;
+		data[offset + 6] = this.relayMode;
+		data[offset + 7] = this.lockDelay;
+		setInt24BigEndian(data, offset + 8, this.memoryFullAlarm);
+		data[offset + 11] = this.repeatAttendanceDelay;
+		data[offset + 12] = this.doorSensorDelay;
+		data[offset + 13] = this.scheduledBellDelay;
+		data[offset + 14] = this.reserved;
+	}
+
+    static valueOf(data) {
+        const deviceInfo = new DeviceInfo2();
+		deviceInfo.fingerprintPrecision = data[0];
+		deviceInfo.wiegandHeadCode = data[1];
+		deviceInfo.wieganOption = data[2];
+		deviceInfo.workCodePermission = data[3];
+		deviceInfo.realTimeModeSetting = data[4];
+		deviceInfo.autoUpdateFpSetting = data[5];
+		deviceInfo.relayMode = data[6];
+		deviceInfo.lockDelay = data[7];
+		deviceInfo.memoryFullAlarm = getInt24BigEndian(data, 8);
+		deviceInfo.repeatAttendanceDelay = data[11];
+		deviceInfo.doorSensorDelay = data[12];
+		deviceInfo.scheduledBellDelay = data[13];
+		deviceInfo.reserved = data[14];
+		return deviceInfo;
+    }
+
+}
+
+module.exports = { DeviceInfo2 };
+
+/***/ }),
+/* 250 */
+/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
+
+/*
+ * Copyright (c) 2022, Sergio S.- sergi.ss4@gmail.com http://sergiosoriano.com
+ * All rights reserved.
+ * 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ * 
+ * 1. Redistributions of source code must retain the above copyright notice, this
+ *    list of conditions and the following disclaimer.
+ * 
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions and the following disclaimer in the documentation
+ *    and/or other materials provided with the distribution.
+ * 
+ * 3. Neither the name of the copyright holder nor the names of its
+ *    contributors may be used to endorse or promote products derived from
+ *    this software without specific prior written permission.
+ *    	
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
+ */
+
+const { getInt24BigEndian } = __webpack_require__(244);
+
+class RecordInformation {
+
+	static valueOf(data) {
+		const result = new RecordInformation();
+		result.userAmount = getInt24BigEndian(data, 0);
+		result.fpAmount = getInt24BigEndian(data, 3);
+		result.passwordAmount =getInt24BigEndian(data, 6);
+		result.cardAmount = getInt24BigEndian(data, 9);
+		result.allRecordAmount = getInt24BigEndian(data, 12);
+		result.newRecordAmount = getInt24BigEndian(data, 15);
+		return result;
+	}
+
+}
+
+module.exports = {RecordInformation};
+
+/***/ }),
+/* 251 */
+/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
+
+/*
+ * Copyright (c) 2022, Sergio S.- sergi.ss4@gmail.com http://sergiosoriano.com
+ * All rights reserved.
+ * 
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ * 
+ * 1. Redistributions of source code must retain the above copyright notice, this
+ *    list of conditions and the following disclaimer.
+ * 
+ * 2. Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions and the following disclaimer in the documentation
+ *    and/or other materials provided with the distribution.
+ * 
+ * 3. Neither the name of the copyright holder nor the names of its
+ *    contributors may be used to endorse or promote products derived from
+ *    this software without specific prior written permission.
+ *    	
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
+ */
+
+const { getInt16BigEndian, getInt32BigEndian, getLong40BigEndian, setInt16BigEndian, setInt32BigEndian, setLong40BigEndian } = __webpack_require__(244);
+const { toString } = __webpack_require__(246);
+
+class UserInfo {
+
+    constructor() {
+        this.password = 0;
+        this.passwordLength = 0;
+        this.card = 0;
+        this.dpt = 0;
+        this.group = 0;
+        this.attendanceMode = 0;
+        this.enrollFpState = 0;
+        this.keep = 0;
+        this.specialMessage = 0;
+    }
+
+    getBytes(data, offset) {
+
+        setLong40BigEndian(data, offset, this.userId);
+		
+		//result.passwordLength = (data[offset + 5] >> 4) & 0xF; 
+		//int v1 = ((data[offset + 5] & 0xF) << 16) | getInt16BigEndian(data, offset + 6);
+		//int v2 = data[offset + 27] << 12;
+		
+		data[offset + 5] = (this.passwordLength << 4) | ((this.password >> 16) & 0xF);
+		setInt16BigEndian(data, offset + 6, this.password & 0xFFFF);
+		setInt16BigEndian(data, offset + 27, this.password >> 12); // 8 bits
+		
+		setInt32BigEndian(data, offset + 8, this.card);
+
+		for(let i = offset + 12, n = i + 19; i < n; ++i) { // Clear name bytes
+            data[i] = 0;
+        }
+        
+		if(this.name != null) { // set name bytes
+            let index = offset + 12;
+            let n = Math.min(index + 19, index + (this.name.length * 2 + 2));
+            data[index++] = -2;
+            data[index++] = -1;
+            let i = 0;
+            while(index < n) {
+                data[index++] = 0;
+                data[index++] = this.name.charCodeAt(i++);
+            }
+		}
+
+		data[offset + 32] = this.dpt;
+		data[offset + 33] = this.group;
+		data[offset + 34] = this.attendanceMode;
+		setInt16BigEndian(data, offset + 35, this.enrollFpState);
+		data[offset + 38] = this.keep;
+		data[offset + 39] = this.specialMessage;
+    }
+
+    static valueOf(data, offset) { // UNICODE version 
+		const result = new UserInfo();
+		result.userId = getLong40BigEndian(data, offset);
+		result.passwordLength = (data[offset + 5] >> 4) & 0xF; 
+        // The low 20bits of password is saved in Byte 6-8, high 8 bits saved in Byte28
+		const v1 = (((data[offset + 5] & 0xF) << 16) | getInt16BigEndian(data, offset + 6));
+		const v2 = data[offset + 27] << 12;
+        result.password = v1 | v2;
+		result.card = getInt32BigEndian(data, offset + 8);
+        const d = data.slice(offset + 12, offset + 19);
+		result.name = toString(data, offset + 12, offset + 31);
+		result.dpt   = data[offset + 32];
+		result.group = data[offset + 33];
+		result.attendanceMode = data[offset + 34];
+		result.enrollFpState = getInt16BigEndian(data, offset + 35);
+		result.keep = data[offset + 38];
+		result.specialMessage = data[offset + 39];
+		return result;
+	}
+
+}
+
+module.exports = {UserInfo};
+
+/***/ }),
+/* 252 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -16833,8 +19098,8 @@ const common_1 = __webpack_require__(5);
 const event_emitter_1 = __webpack_require__(139);
 const typeorm_1 = __webpack_require__(16);
 const typeorm_2 = __webpack_require__(25);
-const biometric_device_entity_1 = __webpack_require__(74);
-const biometric_interface_1 = __webpack_require__(226);
+const biometric_device_entity_1 = __webpack_require__(76);
+const biometric_interface_1 = __webpack_require__(228);
 let AttendanceTrackingService = AttendanceTrackingService_1 = class AttendanceTrackingService {
     constructor(attendancePunchRepository, deviceRepository, eventEmitter) {
         this.attendancePunchRepository = attendancePunchRepository;
@@ -16913,9 +19178,10 @@ exports.AttendanceTrackingService = AttendanceTrackingService = AttendanceTracki
 
 
 /***/ }),
-/* 231 */
+/* 253 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -16930,7 +19196,9 @@ var BiometricsPollingService_1;
 var _a, _b;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.BiometricsPollingService = void 0;
-const attendance_event_1 = __webpack_require__(232);
+const biometrics_device_type_enum_1 = __webpack_require__(77);
+const punch_method_enum_1 = __webpack_require__(74);
+const attendance_event_1 = __webpack_require__(236);
 const common_1 = __webpack_require__(5);
 const config_1 = __webpack_require__(6);
 const event_emitter_1 = __webpack_require__(139);
@@ -16951,14 +19219,14 @@ let BiometricsPollingService = BiometricsPollingService_1 = class BiometricsPoll
         this.stopAllPolling();
     }
     // Provide a way to register device connections
-    registerDeviceConnection(deviceId, zkDevice) {
-        this.connections.set(deviceId, zkDevice);
+    registerDeviceConnection(deviceId, device) {
+        this.connections.set(deviceId, device);
         // this.logger.log(`Registered device ${deviceId} for polling`);
     }
     // Start polling for a specific device
     startPolling(deviceId) {
-        const zkDevice = this.connections.get(deviceId);
-        if (!zkDevice) {
+        const device = this.connections.get(deviceId);
+        if (!device) {
             this.logger.warn(`Cannot start polling for device ${deviceId}: Device not registered`);
             return false;
         }
@@ -16980,11 +19248,11 @@ let BiometricsPollingService = BiometricsPollingService_1 = class BiometricsPoll
             }
             try {
                 // Get current attendance size
-                const currentCount = await zkDevice.getAttendanceSize();
+                const currentCount = await device.getAttendanceSize();
                 // If there are new records
                 if (currentCount > 0) {
                     // Get all attendance records - returns { data: records, err: error }
-                    const response = await zkDevice.getAttendances();
+                    const response = await device.getAttendances();
                     // Extract the records array from the response
                     const records = response.data || [];
                     // Filter new records and use a cache to prevent duplicates
@@ -17023,14 +19291,13 @@ let BiometricsPollingService = BiometricsPollingService_1 = class BiometricsPoll
                         let attendances = [];
                         // Process each new record
                         filteredRecords.forEach((record) => {
-                            var _a;
                             // Standardize record format
                             const standardizedRecord = {
                                 userId: record.user_id.trim(), // Trim any whitespace
                                 timestamp: new Date(record.record_time || Date.now()),
-                                type: (_a = record.type) !== null && _a !== void 0 ? _a : 0,
                                 deviceId: deviceId,
-                                status: record.state
+                                punchMethod: this.getPunchMethod(record.status || 0, device.provider),
+                                punchType: record.type, // Default to 0 if not provided
                             };
                             // Add to the attendance list
                             attendances.push(standardizedRecord);
@@ -17057,6 +19324,19 @@ let BiometricsPollingService = BiometricsPollingService_1 = class BiometricsPoll
         });
         this.logger.log(`Started polling for device ${deviceId} at ${pollingInterval}ms intervals`);
         return true;
+    }
+    getPunchMethod(value, deviceType) {
+        if (deviceType === biometrics_device_type_enum_1.BiometricDeviceType.ZKTECO) {
+            switch (value) {
+                case 0:
+                    return punch_method_enum_1.PunchMethod.FINGERPRINT;
+                default:
+                    return punch_method_enum_1.PunchMethod.UNKNOWN;
+            }
+        }
+        else {
+            return punch_method_enum_1.PunchMethod.UNKNOWN;
+        }
     }
     // Stop polling for a specific device
     stopPolling(deviceId) {
@@ -17087,44 +19367,10 @@ exports.BiometricsPollingService = BiometricsPollingService = BiometricsPollingS
 
 
 /***/ }),
-/* 232 */
-/***/ ((__unused_webpack_module, exports) => {
-
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.FinalWorkHoursCalculationEvent = exports.AttendanceProcessedEvent = exports.AttendanceRecordedEvent = exports.ATTENDANCE_EVENTS = void 0;
-exports.ATTENDANCE_EVENTS = {
-    ATTENDANCE_RECORDED: 'attendance.recorded',
-    ATTENDANCE_PROCESSED: 'attendance.processed',
-    FINAL_WORK_HOURS_CALCULATION: 'attendance.final_work_hours_calculation'
-};
-class AttendanceRecordedEvent {
-    constructor(attendances, deviceId) {
-        this.attendances = attendances;
-        this.deviceId = deviceId;
-    }
-}
-exports.AttendanceRecordedEvent = AttendanceRecordedEvent;
-class AttendanceProcessedEvent {
-    constructor(attendances) {
-        this.attendances = attendances;
-    }
-}
-exports.AttendanceProcessedEvent = AttendanceProcessedEvent;
-class FinalWorkHoursCalculationEvent {
-    constructor(attendanceIds, batchId, processedBy) {
-        this.attendanceIds = attendanceIds;
-        this.batchId = batchId;
-        this.processedBy = processedBy;
-    }
-}
-exports.FinalWorkHoursCalculationEvent = FinalWorkHoursCalculationEvent;
-
-
-/***/ }),
-/* 233 */
+/* 254 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -17138,33 +19384,34 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-var ZKTecoBiometricsService_1;
 var _a, _b, _c, _d, _e;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ZKTecoBiometricsService = void 0;
 const common_1 = __webpack_require__(5);
 const config_1 = __webpack_require__(6);
 const typeorm_1 = __webpack_require__(16);
-const ZKLib = __webpack_require__(234);
+const ZKLib = __webpack_require__(255);
+const biometrics_device_type_enum_1 = __webpack_require__(77);
+const punch_method_enum_1 = __webpack_require__(74);
 const event_emitter_1 = __webpack_require__(139);
 const typeorm_2 = __webpack_require__(25);
-const biometric_device_entity_1 = __webpack_require__(74);
-const biometric_template_entity_1 = __webpack_require__(229);
-const base_biometrics_service_1 = __webpack_require__(235);
-const biometrics_polling_service_1 = __webpack_require__(231);
+const biometric_device_entity_1 = __webpack_require__(76);
+const biometric_template_entity_1 = __webpack_require__(234);
+const base_biometrics_service_1 = __webpack_require__(237);
+const biometrics_polling_service_1 = __webpack_require__(253);
 /**
  * ZKTeco implementation of the biometric service
  * Handles communication with ZKTeco biometric devices
  */
-let ZKTecoBiometricsService = ZKTecoBiometricsService_1 = class ZKTecoBiometricsService extends base_biometrics_service_1.BaseBiometricsService {
+let ZKTecoBiometricsService = class ZKTecoBiometricsService extends base_biometrics_service_1.BaseBiometricsService {
     constructor(configService, deviceRepository, biometricsPollingService, templateRepository, eventEmitter) {
-        super(deviceRepository, templateRepository, eventEmitter);
+        super(deviceRepository, eventEmitter);
         this.configService = configService;
         this.deviceRepository = deviceRepository;
         this.biometricsPollingService = biometricsPollingService;
         this.templateRepository = templateRepository;
         this.eventEmitter = eventEmitter;
-        this.logger = new common_1.Logger(ZKTecoBiometricsService_1.name);
+        this.biometricDeviceType = biometrics_device_type_enum_1.BiometricDeviceType.ZKTECO;
         // Listen for attendance events from polling service
         this.eventEmitter.on('attendance.recorded', (record) => {
             this.emitAttendanceEvent(record);
@@ -17341,10 +19588,11 @@ let ZKTecoBiometricsService = ZKTecoBiometricsService_1 = class ZKTecoBiometrics
      * @param port Device port
      * @returns Connected device information
      */
-    async connectWithRetry(deviceId, ipAddress, port) {
+    async connectWithRetry(dto, deviceId) {
         const timeout = this.configService.get('ZKTECO_TIMEOUT', 5000);
         const retryAttempts = this.configService.get('ZKTECO_RETRY_ATTEMPTS', 3);
         const retryDelay = this.configService.get('ZKTECO_RETRY_DELAY', 1000);
+        const { ipAddress, port } = dto;
         let attempts = 0;
         let lastError = new Error('No connection attempts made');
         while (attempts < retryAttempts) {
@@ -17376,9 +19624,10 @@ let ZKTecoBiometricsService = ZKTecoBiometricsService_1 = class ZKTecoBiometrics
                 this.connections.set(deviceId, zk);
                 // Create device object with enhanced info
                 const device = {
-                    id: deviceId,
+                    deviceId,
                     ipAddress,
                     port,
+                    provider: this.biometricDeviceType,
                     model: (deviceInfo === null || deviceInfo === void 0 ? void 0 : deviceInfo.deviceName) || (deviceInfo === null || deviceInfo === void 0 ? void 0 : deviceInfo.model) || 'Unknown',
                     serialNumber: (deviceInfo === null || deviceInfo === void 0 ? void 0 : deviceInfo.serialNumber) || 'Unknown',
                     firmware: deviceInfo === null || deviceInfo === void 0 ? void 0 : deviceInfo.firmware,
@@ -17387,28 +19636,14 @@ let ZKTecoBiometricsService = ZKTecoBiometricsService_1 = class ZKTecoBiometrics
                     os: deviceInfo === null || deviceInfo === void 0 ? void 0 : deviceInfo.os,
                     isConnected: true,
                 };
-                // Store device in memory
-                this.devices.set(deviceId, device);
                 // Store in database
-                await this.deviceRepository.save({
-                    id: deviceId,
-                    ipAddress,
-                    port,
-                    model: device.model,
-                    serialNumber: device.serialNumber,
-                    provider: 'zkteco',
-                    firmware: device.firmware,
-                    platform: device.platform,
-                    deviceVersion: device.deviceVersion,
-                    os: device.os,
-                    isConnected: true,
-                });
+                const save = await this.deviceRepository.save(device);
                 // Register the connection with the polling service
                 this.biometricsPollingService.registerDeviceConnection(deviceId, zk);
                 // Start polling instead of direct setup
                 this.biometricsPollingService.startPolling(deviceId);
                 this.logger.log(`Successfully connected to ZKTeco device at ${ipAddress}:${port}`);
-                return device;
+                return save;
             }
             catch (error) {
                 // Ensure error is properly typed
@@ -17423,114 +19658,20 @@ let ZKTecoBiometricsService = ZKTecoBiometricsService_1 = class ZKTecoBiometrics
         this.logger.error(`Failed to connect to ZKTeco device after ${attempts} attempts: ${lastError.message}`);
         throw new base_biometrics_service_1.BiometricException(`Failed to connect to device: ${lastError.message}`, common_1.HttpStatus.SERVICE_UNAVAILABLE);
     }
-    /**
-     * Set up default real-time monitoring for a device
-     * @param deviceId Device identifier
-     * @param zkDevice ZK device instance
-     */
-    async setupDefaultRealTimeMonitoring(deviceId, zkDevice) {
-        this.logger.log(`Setting up default real-time monitoring for device ${deviceId}`);
-        // Before attempting to get real-time logs, ensure connection is active
-        if (!zkDevice._socket || !zkDevice._socket.writable) {
-            await zkDevice.createSocket();
-            this.logger.debug(`Refreshed socket connection for device ${deviceId}`);
-        }
-        // Enable device first to ensure it's ready to receive commands
-        await zkDevice.enableDevice();
-        // Register for real-time logs
-        zkDevice.getRealTimeLogs((record) => {
-            var _a;
-            if (!record)
-                return;
-            this.logger.debug(`Received real-time log: ${JSON.stringify(record)}`);
-            // Convert to standard format
-            const standardizedRecord = {
-                userId: record.userId || '',
-                timestamp: new Date(record.timestamp || Date.now()),
-                type: (_a = record.type) !== null && _a !== void 0 ? _a : 0,
-                deviceId: deviceId,
-                verificationMode: record.verificationMode,
-                status: record.status,
-                workcode: record.workcode,
-                data: record.data
-            };
-            // Emit event for this record
-            this.emitAttendanceEvent(standardizedRecord);
-            // Call any custom callback if registered
-            const monitorInfo = this.activeMonitoring.get(deviceId);
-            if (monitorInfo && typeof monitorInfo.callback === 'function') {
-                monitorInfo.callback(standardizedRecord);
-            }
-        });
-        // Store in active monitoring with empty callback
-        this.activeMonitoring.set(deviceId, { deviceId, callback: undefined });
-        this.logger.log(`Default real-time monitoring established for device ${deviceId}`);
-    }
-    /**
-     * Setup monitoring for device connection status
-     * @param deviceId Device identifier
-     * @param zkDevice ZK device instance
-     */
-    setupDeviceMonitoring(deviceId, zkDevice) {
-        const pingInterval = this.configService.get('DEVICE_PING_INTERVAL', 3000);
-        const interval = setInterval(async () => {
-            if (!this.connections.has(deviceId)) {
-                clearInterval(interval);
-                return;
-            }
-            try {
-                // Try to get device info as a ping
-                await zkDevice.getInfo();
-                // If monitoring was set up but is no longer active, try to restart it
-                if (this.activeMonitoring.has(deviceId) && !this.isMonitoringActive(deviceId)) {
-                    this.logger.warn(`Real-time monitoring appears to have stopped for device ${deviceId}. Attempting to restart...`);
-                    try {
-                        await this.setupDefaultRealTimeMonitoring(deviceId, zkDevice);
-                        this.logger.log(`Successfully restarted real-time monitoring for device ${deviceId}`);
-                    }
-                    catch (monitoringError) {
-                        this.logger.error(`Failed to restart monitoring: ${monitoringError instanceof Error ? monitoringError.message : String(monitoringError)}`);
-                    }
-                }
-            }
-            catch (error) {
-                // Your existing error handling code
-            }
-        }, pingInterval);
-    }
-    /**
-     * Disconnect from a ZKTeco device
-     * @param deviceId Device identifier
-     * @returns True if disconnected successfully
-     */
-    async disconnect(deviceId) {
+    async disconnect(deviceId, isManual = true) {
         // Stop the polling first
         this.biometricsPollingService.stopPolling(deviceId);
         const zkDevice = this.connections.get(deviceId);
         if (!zkDevice) {
-            this.logger.warn(`Attempted to disconnect from device ${deviceId} but no connection found`);
-            return false;
+            throw new common_1.BadRequestException(`Device ${deviceId} not connected`);
         }
-        try {
-            // Clear monitoring first
-            this.activeMonitoring.delete(deviceId);
-            // Use disconnect method
-            await zkDevice.disconnect();
-            this.connections.delete(deviceId);
-            const device = this.devices.get(deviceId);
-            if (device) {
-                device.isConnected = false;
-                this.devices.set(deviceId, device);
-            }
-            await this.deviceRepository.update({ id: deviceId }, { isConnected: false });
-            this.logger.log(`Successfully disconnected from ZKTeco device ${deviceId}`);
-            return true;
-        }
-        catch (error) {
-            const errorMessage = error instanceof Error ? error.message : String(error);
-            this.logger.error(`Error disconnecting from device ${deviceId}: ${errorMessage}`);
-            return false;
-        }
+        // Clear monitoring first
+        this.activeMonitoring.delete(deviceId);
+        ~
+        // Use disconnect method
+        await zkDevice.disconnect();
+        this.connections.delete(deviceId);
+        return await this.updateDeviceStatus(deviceId, false, isManual ? false : true);
     }
     /**
      * Get connected device by ID, throwing an exception if not found
@@ -18010,21 +20151,15 @@ let ZKTecoBiometricsService = ZKTecoBiometricsService_1 = class ZKTecoBiometrics
                 return [];
             }
             // Convert records to a standard format
-            const standardizedRecords = records.map(record => {
-                var _a;
-                return ({
-                    userId: record.userId || '',
-                    timestamp: new Date(record.timestamp),
-                    type: (_a = record.type) !== null && _a !== void 0 ? _a : 0, // Required field with fallback
-                    deviceId: deviceId, // Required field - use the current device ID
-                    verificationMode: record.verificationMode,
-                    status: record.status,
-                    workcode: record.workcode,
-                    isSynced: false, // Default value for new records
-                    retrievedAt: new Date(), // Set current time as retrieval time
-                    data: record.data
-                });
-            });
+            const standardizedRecords = records.map(record => ({
+                userId: record.userId || '',
+                timestamp: new Date(record.timestamp),
+                punchType: record.status,
+                punchMethod: punch_method_enum_1.PunchMethod.MANUAL, // Default value for punch method
+                deviceId: deviceId, // Required field - use the current device ID
+                isSynced: false, // Default value for new records
+                retrievedAt: new Date(), // Set current time as retrieval time
+            }));
             // Filter by date if provided
             let filteredRecords = standardizedRecords;
             if (startDate || endDate) {
@@ -18044,60 +20179,6 @@ let ZKTecoBiometricsService = ZKTecoBiometricsService_1 = class ZKTecoBiometrics
             this.logger.error(`Error getting attendance records from device ${deviceId}: ${errorMessage}`);
             throw new base_biometrics_service_1.BiometricException(`Failed to get attendance records: ${errorMessage}`);
         }
-    }
-    /**
-     * Set up real-time attendance log monitoring
-     * @param deviceId Device identifier
-     * @param callback Function to call when attendance logs are received
-     * @returns Monitoring ID that can be used to stop monitoring
-     */
-    startRealTimeMonitoring(deviceId, callback) {
-        const zkDevice = this.getConnectedDevice(deviceId);
-        const monitoringId = `monitoring-${deviceId}-${Date.now()}`;
-        try {
-            this.logger.log(`Registering custom callback for real-time monitoring on device ${deviceId}`);
-            // Update or create monitoring info
-            this.activeMonitoring.set(deviceId, {
-                deviceId,
-                callback: callback // Store the callback
-            });
-            // If monitoring isn't already active, set it up
-            if (!this.isMonitoringActive(deviceId)) {
-                this.setupDefaultRealTimeMonitoring(deviceId, zkDevice)
-                    .catch(err => {
-                    const errMsg = err instanceof Error ? err.message : String(err);
-                    this.logger.error(`Failed to set up monitoring for device ${deviceId}: ${errMsg}`);
-                });
-            }
-            this.logger.log(`Real-time monitoring callback registered for device ${deviceId} with ID ${monitoringId}`);
-            return monitoringId;
-        }
-        catch (error) {
-            const errorMessage = error instanceof Error ? error.message : String(error);
-            this.logger.error(`Error registering monitoring callback for device ${deviceId}: ${errorMessage}`);
-            throw new base_biometrics_service_1.BiometricException(`Failed to start real-time monitoring: ${errorMessage}`);
-        }
-    }
-    /**
-     * Check if monitoring is active for a device
-     */
-    isMonitoringActive(deviceId) {
-        return this.activeMonitoring.has(deviceId);
-    }
-    /**
-     * Stop real-time monitoring
-     * @param monitoringId Monitoring ID returned from startRealTimeMonitoring
-     * @returns True if stopped successfully
-     */
-    stopRealTimeMonitoring(monitoringId) {
-        // This would need to be implemented based on how the library handles stopping monitoring
-        // This is a placeholder implementation
-        this.logger.log(`Stopping real-time monitoring for ID ${monitoringId}`);
-        // In a real implementation, you would:
-        // 1. Look up the deviceId and monitoring info using the monitoringId
-        // 2. Call the appropriate method to stop monitoring on the device
-        // 3. Clean up any resources
-        return true;
     }
     /**
      * Clear all attendance records from a device
@@ -18240,7 +20321,7 @@ let ZKTecoBiometricsService = ZKTecoBiometricsService_1 = class ZKTecoBiometrics
     }
 };
 exports.ZKTecoBiometricsService = ZKTecoBiometricsService;
-exports.ZKTecoBiometricsService = ZKTecoBiometricsService = ZKTecoBiometricsService_1 = __decorate([
+exports.ZKTecoBiometricsService = ZKTecoBiometricsService = __decorate([
     (0, common_1.Injectable)(),
     __param(1, (0, typeorm_1.InjectRepository)(biometric_device_entity_1.BiometricDevice)),
     __param(3, (0, typeorm_1.InjectRepository)(biometric_template_entity_1.BiometricTemplate)),
@@ -18249,705 +20330,17 @@ exports.ZKTecoBiometricsService = ZKTecoBiometricsService = ZKTecoBiometricsServ
 
 
 /***/ }),
-/* 234 */
+/* 255 */
 /***/ ((module) => {
 
+"use strict";
 module.exports = require("zkteco-js");
 
 /***/ }),
-/* 235 */
-/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
-
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.BaseBiometricsService = exports.BiometricException = void 0;
-const common_1 = __webpack_require__(5);
-/**
- * Base exception class for biometric-related errors
- */
-class BiometricException extends common_1.HttpException {
-    constructor(message, statusCode = common_1.HttpStatus.INTERNAL_SERVER_ERROR) {
-        super(message, statusCode);
-    }
-}
-exports.BiometricException = BiometricException;
-/**
- * Abstract base class for all biometric service implementations
- * Provides common functionality and defines the interface that all biometric services must implement
- */
-class BaseBiometricsService {
-    constructor(deviceRepository, templateRepository, eventEmitter) {
-        this.deviceRepository = deviceRepository;
-        this.templateRepository = templateRepository;
-        this.eventEmitter = eventEmitter;
-        // Make logger protected so it can be inherited by derived classes
-        this.logger = new common_1.Logger(this.constructor.name);
-        this.connections = new Map();
-        this.activeMonitoring = new Map();
-        this.devices = new Map();
-        this.initializeFromDatabase();
-    }
-    /**
-     * Load previously connected devices from database on service startup
-     */
-    async initializeFromDatabase() {
-        try {
-            const savedDevices = await this.deviceRepository.find();
-            if (savedDevices.length > 0) {
-                this.logger.log(`Found ${savedDevices.length} previously connected devices. Attempting to reconnect...`);
-                // Try to reconnect to devices in parallel
-                await Promise.allSettled(savedDevices.map(device => this.connect(device.ipAddress, device.port)
-                    .catch(err => {
-                    const errorMessage = err instanceof Error ? err.message : 'Unknown error';
-                    this.logger.warn(`Failed to reconnect to device ${device.id}: ${errorMessage}`);
-                })));
-            }
-        }
-        catch (error) {
-            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-            this.logger.error(`Error initializing devices from database: ${errorMessage}`);
-        }
-    }
-    /**
-     * Clean up resources when module is destroyed
-     */
-    async onModuleDestroy() {
-        this.logger.log('Module destroying, disconnecting from all devices...');
-        // Close all connections when service is destroyed
-        const disconnectPromises = Array.from(this.connections.entries()).map(([deviceId]) => this.disconnect(deviceId));
-        await Promise.allSettled(disconnectPromises);
-        this.logger.log('All device connections closed');
-    }
-    emitAttendanceEvent(record) {
-        try {
-            this.eventEmitter.emit('biometric.attendance', record);
-        }
-        catch (error) {
-            this.logger.error(`Error emitting attendance event: ${error instanceof Error ? error.message : String(error)}`);
-        }
-    }
-    /**
-     * Connect to a Biometric device
-     * @param ipAddress Device IP address
-     * @param port Device port
-     * @returns Connected device information
-     */
-    async connect(ipAddress, port) {
-        var _a;
-        if (!ipAddress || !port) {
-            throw new BiometricException('IP address and port are required', common_1.HttpStatus.BAD_REQUEST);
-        }
-        const deviceId = this.generateDeviceId(ipAddress, port);
-        // Check if already connected
-        if (this.connections.has(deviceId)) {
-            this.logger.warn(`Device ${deviceId} is already connected`);
-            return (_a = this.devices.get(deviceId)) !== null && _a !== void 0 ? _a : null;
-        }
-        // Create new connection with retry logic
-        return this.connectWithRetry(deviceId, ipAddress, port);
-    }
-    // Device information methods (optional with default implementation)
-    async getDeviceInfo(deviceId) {
-        throw new BiometricException('Method not implemented', common_1.HttpStatus.NOT_IMPLEMENTED);
-    }
-    async getSerialNumber(deviceId) {
-        throw new BiometricException('Method not implemented', common_1.HttpStatus.NOT_IMPLEMENTED);
-    }
-    async getFirmwareVersion(deviceId) {
-        throw new BiometricException('Method not implemented', common_1.HttpStatus.NOT_IMPLEMENTED);
-    }
-    async getDeviceName(deviceId) {
-        throw new BiometricException('Method not implemented', common_1.HttpStatus.NOT_IMPLEMENTED);
-    }
-    async restartDevice(deviceId) {
-        throw new BiometricException('Method not implemented', common_1.HttpStatus.NOT_IMPLEMENTED);
-    }
-    // Time management methods (optional)
-    async getTime(deviceId) {
-        throw new BiometricException('Method not implemented', common_1.HttpStatus.NOT_IMPLEMENTED);
-    }
-    async setTime(deviceId, time) {
-        throw new BiometricException('Method not implemented', common_1.HttpStatus.NOT_IMPLEMENTED);
-    }
-    // User management methods (optional)
-    async enrollUser(deviceId, userId, fingerId) {
-        throw new BiometricException('Method not implemented', common_1.HttpStatus.NOT_IMPLEMENTED);
-    }
-    async deleteUser(deviceId, userId) {
-        throw new BiometricException('Method not implemented', common_1.HttpStatus.NOT_IMPLEMENTED);
-    }
-    async verifyFingerprint(deviceId, template) {
-        throw new BiometricException('Method not implemented', common_1.HttpStatus.NOT_IMPLEMENTED);
-    }
-    async getUsers(deviceId) {
-        throw new BiometricException('Method not implemented', common_1.HttpStatus.NOT_IMPLEMENTED);
-    }
-    async getUserDetails(deviceId) {
-        throw new BiometricException('Method not implemented', common_1.HttpStatus.NOT_IMPLEMENTED);
-    }
-    async setUser(deviceId, uid, userId, name, password, role, cardno) {
-        throw new BiometricException('Method not implemented', common_1.HttpStatus.NOT_IMPLEMENTED);
-    }
-    async syncUsers(sourceDeviceId, targetDeviceId) {
-        throw new BiometricException('Method not implemented', common_1.HttpStatus.NOT_IMPLEMENTED);
-    }
-    // Attendance management methods (optional)
-    async getAttendanceRecords(deviceId, startDate, endDate) {
-        throw new BiometricException('Method not implemented', common_1.HttpStatus.NOT_IMPLEMENTED);
-    }
-    async clearAttendanceRecords(deviceId) {
-        throw new BiometricException('Method not implemented', common_1.HttpStatus.NOT_IMPLEMENTED);
-    }
-    async getAttendanceSize(deviceId) {
-        throw new BiometricException('Method not implemented', common_1.HttpStatus.NOT_IMPLEMENTED);
-    }
-    // Real-time monitoring methods (optional)
-    startRealTimeMonitoring(deviceId, callback) {
-        throw new BiometricException('Method not implemented', common_1.HttpStatus.NOT_IMPLEMENTED);
-    }
-    stopRealTimeMonitoring(monitoringId) {
-        throw new BiometricException('Method not implemented', common_1.HttpStatus.NOT_IMPLEMENTED);
-    }
-    // Door control (optional)
-    async unlockDoor(deviceId) {
-        throw new BiometricException('Method not implemented', common_1.HttpStatus.NOT_IMPLEMENTED);
-    }
-    // Command execution (optional)
-    async executeCommand(deviceId, command, data) {
-        throw new BiometricException('Method not implemented', common_1.HttpStatus.NOT_IMPLEMENTED);
-    }
-    /**
-     * Get all connected devices
-     * @returns Array of connected biometric devices
-     */
-    getConnectedDevices() {
-        return Promise.resolve(Array.from(this.devices.values()));
-    }
-    /**
-     * Get a device by ID, throwing an exception if not found
-     * @param deviceId Device identifier
-     * @returns Device information
-     */
-    getDevice(deviceId) {
-        const device = this.devices.get(deviceId);
-        if (!device) {
-            throw new BiometricException(`Device with ID ${deviceId} not found or not connected`, common_1.HttpStatus.NOT_FOUND);
-        }
-        return device;
-    }
-    /**
-     * Generate a unique device ID from IP address and port
-     * @param ipAddress Device IP address
-     * @param port Device port
-     * @returns Unique device identifier
-     */
-    generateDeviceId(ipAddress, port) {
-        return `${ipAddress}:${port}`;
-    }
-    /**
-     * Safely handle errors by ensuring proper type conversion
-     * @param error The error to process
-     * @returns Standardized error message string
-     */
-    formatErrorMessage(error) {
-        return error instanceof Error ? error.message : String(error);
-    }
-}
-exports.BaseBiometricsService = BaseBiometricsService;
-
-
-/***/ }),
-/* 236 */
+/* 256 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
-
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-var __metadata = (this && this.__metadata) || function (k, v) {
-    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
-};
-var __param = (this && this.__param) || function (paramIndex, decorator) {
-    return function (target, key) { decorator(target, key, paramIndex); }
-};
-var _a, _b, _c;
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.AnvizBiometricService = void 0;
-const common_1 = __webpack_require__(5);
-const event_emitter_1 = __webpack_require__(139);
-const typeorm_1 = __webpack_require__(16);
-const typeorm_2 = __webpack_require__(25);
-const biometric_device_entity_1 = __webpack_require__(74);
-const biometric_template_entity_1 = __webpack_require__(229);
-const base_biometrics_service_1 = __webpack_require__(235);
-const anviz_client_1 = __webpack_require__(237);
-let AnvizBiometricService = class AnvizBiometricService extends base_biometrics_service_1.BaseBiometricsService {
-    constructor(deviceRepository, templateRepository, eventEmitter) {
-        super(deviceRepository, templateRepository, eventEmitter);
-        this.deviceRepository = deviceRepository;
-        this.templateRepository = templateRepository;
-        this.eventEmitter = eventEmitter;
-        this.clients = new Map();
-    }
-    // ─────────────────────────────────────────────────────────────────────────────
-    // Core device management
-    // ─────────────────────────────────────────────────────────────────────────────
-    async connectWithRetry(deviceId, ipAddress, port) {
-        var _a;
-        const maxAttempts = 3;
-        let lastError;
-        const channel = Buffer.from([0xFF, 0xFF, 0xFF, 0xFF]);
-        const client = new anviz_client_1.AnvizClient(ipAddress, port);
-        for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-            try {
-                this.logger.log(`Connecting to ${deviceId} (attempt ${attempt})`);
-                await client.connect(3000);
-                this.clients.set(deviceId, { client, channel });
-                const info = await client.getDeviceInfo(channel);
-                const saved = (_a = await this.deviceRepository.findOne({
-                    where: { ipAddress, port }
-                })) !== null && _a !== void 0 ? _a : this.deviceRepository.create({ ipAddress, port });
-                await this.deviceRepository.save(saved);
-                const device = {
-                    id: deviceId,
-                    ipAddress,
-                    port,
-                    model: undefined,
-                    serialNumber: undefined,
-                    isConnected: true,
-                    firmware: info.firmwareVersion,
-                    platform: undefined,
-                    deviceVersion: undefined,
-                    os: undefined,
-                };
-                this.devices.set(deviceId, device);
-                this.logger.log(`Connected to device ${deviceId}`);
-                return device;
-            }
-            catch (err) {
-                lastError = err;
-                this.logger.warn(`Attempt ${attempt} failed: ${this.formatErrorMessage(err)}`);
-                await new Promise(res => setTimeout(res, 1000));
-            }
-        }
-        throw new base_biometrics_service_1.BiometricException(`Failed to connect to device ${deviceId}: ${this.formatErrorMessage(lastError)}`, common_1.HttpStatus.GATEWAY_TIMEOUT);
-    }
-    async connect(ipAddress, port) {
-        const deviceId = this.generateDeviceId(ipAddress, port);
-        if (this.connections.has(deviceId)) {
-            return this.devices.get(deviceId);
-        }
-        return this.connectWithRetry(deviceId, ipAddress, port);
-    }
-    async disconnect(deviceId) {
-        const entry = this.clients.get(deviceId);
-        if (!entry)
-            return false;
-        try {
-            entry.client.disconnect();
-            this.clients.delete(deviceId);
-            const dev = this.devices.get(deviceId);
-            if (dev)
-                dev.isConnected = false;
-            this.devices.delete(deviceId);
-            this.logger.log(`Disconnected device ${deviceId}`);
-            return true;
-        }
-        catch (err) {
-            this.logger.error(`Error disconnecting ${deviceId}: ${this.formatErrorMessage(err)}`);
-            return false;
-        }
-    }
-    async getConnectedDevices() {
-        return Array.from(this.devices.values());
-    }
-    // ─────────────────────────────────────────────────────────────────────────────
-    // Device information
-    // ─────────────────────────────────────────────────────────────────────────────
-    async getDeviceInfo(deviceId) {
-        var _a;
-        const { client, channel } = (_a = this.clients.get(deviceId)) !== null && _a !== void 0 ? _a : (() => { throw new base_biometrics_service_1.BiometricException(`Device ${deviceId} not connected`, common_1.HttpStatus.NOT_FOUND); })();
-        const info = await client.getDeviceInfo(channel);
-        return {
-            firmwareVersion: info.firmwareVersion,
-            password: info.password,
-            sleepTime: info.sleepTime,
-            volume: info.volume,
-            language: info.language,
-            dateFormat: info.dateFormat,
-            attendanceState: info.attendanceState,
-            languageSettingFlag: info.languageSettingFlag,
-            cmdVersion: info.cmdVersion,
-        };
-    }
-    async getSerialNumber(deviceId) {
-        // Not available in V2.1 basic info; stubbed
-        throw new base_biometrics_service_1.BiometricException('Serial number not supported by protocol', common_1.HttpStatus.NOT_IMPLEMENTED);
-    }
-    async getFirmwareVersion(deviceId) {
-        const info = await this.getDeviceInfo(deviceId);
-        return info.firmwareVersion;
-    }
-    async getDeviceName(deviceId) {
-        // Not implemented in V2.1
-        throw new base_biometrics_service_1.BiometricException('Device name not supported by protocol', common_1.HttpStatus.NOT_IMPLEMENTED);
-    }
-    async restartDevice(deviceId) {
-        // No restart command in basic V2.1
-        throw new base_biometrics_service_1.BiometricException('Restart not supported by protocol', common_1.HttpStatus.NOT_IMPLEMENTED);
-    }
-    // ─────────────────────────────────────────────────────────────────────────────
-    // Time management
-    // ─────────────────────────────────────────────────────────────────────────────
-    async getTime(deviceId) {
-        var _a;
-        const { client, channel } = (_a = this.clients.get(deviceId)) !== null && _a !== void 0 ? _a : (() => { throw new base_biometrics_service_1.BiometricException(`Device ${deviceId} not connected`, common_1.HttpStatus.NOT_FOUND); })();
-        return client.getDateTime(channel);
-    }
-    async setTime(deviceId, time) {
-        var _a;
-        const { client, channel } = (_a = this.clients.get(deviceId)) !== null && _a !== void 0 ? _a : (() => { throw new base_biometrics_service_1.BiometricException(`Device ${deviceId} not connected`, common_1.HttpStatus.NOT_FOUND); })();
-        await client.setDateTime(channel, time);
-        return true;
-    }
-    // ─────────────────────────────────────────────────────────────────────────────
-    // User management
-    // ─────────────────────────────────────────────────────────────────────────────
-    async registerUser(deviceId, userData) {
-        throw new base_biometrics_service_1.BiometricException('registerUser not implemented', common_1.HttpStatus.NOT_IMPLEMENTED);
-    }
-    async getUserFingerprint(deviceId, userId, fingerId) {
-        throw new base_biometrics_service_1.BiometricException('getUserFingerprint not implemented', common_1.HttpStatus.NOT_IMPLEMENTED);
-    }
-    async enrollUser(deviceId, userId, fingerId) {
-        throw new base_biometrics_service_1.BiometricException('enrollUser not implemented', common_1.HttpStatus.NOT_IMPLEMENTED);
-    }
-    async deleteUser(deviceId, userId) {
-        throw new base_biometrics_service_1.BiometricException('deleteUser not implemented', common_1.HttpStatus.NOT_IMPLEMENTED);
-    }
-    async verifyFingerprint(deviceId, template) {
-        throw new base_biometrics_service_1.BiometricException('verifyFingerprint not implemented', common_1.HttpStatus.NOT_IMPLEMENTED);
-    }
-    async getUsers(deviceId) {
-        throw new base_biometrics_service_1.BiometricException('getUsers not implemented', common_1.HttpStatus.NOT_IMPLEMENTED);
-    }
-    async getUserDetails(deviceId) {
-        throw new base_biometrics_service_1.BiometricException('getUserDetails not implemented', common_1.HttpStatus.NOT_IMPLEMENTED);
-    }
-    async setUser(deviceId, uid, userId, name, password, role, cardno) {
-        throw new base_biometrics_service_1.BiometricException('setUser not implemented', common_1.HttpStatus.NOT_IMPLEMENTED);
-    }
-    async syncUsers(sourceDeviceId, targetDeviceId) {
-        throw new base_biometrics_service_1.BiometricException('syncUsers not implemented', common_1.HttpStatus.NOT_IMPLEMENTED);
-    }
-    // ─────────────────────────────────────────────────────────────────────────────
-    // Attendance management
-    // ─────────────────────────────────────────────────────────────────────────────
-    async getAttendanceRecords(deviceId, startDate, endDate) {
-        var _a;
-        const { client, channel } = (_a = this.clients.get(deviceId)) !== null && _a !== void 0 ? _a : (() => { throw new base_biometrics_service_1.BiometricException(`Device ${deviceId} not connected`, common_1.HttpStatus.NOT_FOUND); })();
-        const raw = await client.downloadRecords(channel, 0, 25);
-        const recs = raw.map(buf => ({
-            userId: buf.readUInt32BE(0).toString(),
-            timestamp: new Date(2000 + buf.readUInt8(4), buf.readUInt8(5) - 1, buf.readUInt8(6), buf.readUInt8(7), buf.readUInt8(8), buf.readUInt8(9)),
-            type: buf.readUInt8(10),
-            deviceId,
-            verificationMode: buf.readUInt8(11),
-            status: buf.readUInt8(12),
-            workcode: buf.readUInt8(13),
-        }));
-        const filtered = recs.filter(r => {
-            if (startDate && r.timestamp < startDate)
-                return false;
-            if (endDate && r.timestamp > endDate)
-                return false;
-            return true;
-        });
-        filtered.forEach(r => this.emitAttendanceEvent(r));
-        return filtered;
-    }
-    async clearAttendanceRecords(deviceId) {
-        throw new base_biometrics_service_1.BiometricException('clearAttendanceRecords not implemented', common_1.HttpStatus.NOT_IMPLEMENTED);
-    }
-    async getAttendanceSize(deviceId) {
-        throw new base_biometrics_service_1.BiometricException('getAttendanceSize not implemented', common_1.HttpStatus.NOT_IMPLEMENTED);
-    }
-    // ─────────────────────────────────────────────────────────────────────────────
-    // Real-time monitoring
-    // ─────────────────────────────────────────────────────────────────────────────
-    startRealTimeMonitoring(deviceId, callback) {
-        throw new base_biometrics_service_1.BiometricException('Real-time monitoring not implemented', common_1.HttpStatus.NOT_IMPLEMENTED);
-    }
-    stopRealTimeMonitoring(monitoringId) {
-        throw new base_biometrics_service_1.BiometricException('Real-time monitoring not implemented', common_1.HttpStatus.NOT_IMPLEMENTED);
-    }
-    // ─────────────────────────────────────────────────────────────────────────────
-    // Door control
-    // ─────────────────────────────────────────────────────────────────────────────
-    async unlockDoor(deviceId) {
-        throw new base_biometrics_service_1.BiometricException('unlockDoor not implemented', common_1.HttpStatus.NOT_IMPLEMENTED);
-    }
-    // ─────────────────────────────────────────────────────────────────────────────
-    // Generic command
-    // ─────────────────────────────────────────────────────────────────────────────
-    async executeCommand(deviceId, command, data) {
-        throw new base_biometrics_service_1.BiometricException('executeCommand not implemented', common_1.HttpStatus.NOT_IMPLEMENTED);
-    }
-};
-exports.AnvizBiometricService = AnvizBiometricService;
-exports.AnvizBiometricService = AnvizBiometricService = __decorate([
-    (0, common_1.Injectable)(),
-    __param(0, (0, typeorm_1.InjectRepository)(biometric_device_entity_1.BiometricDevice)),
-    __param(1, (0, typeorm_1.InjectRepository)(biometric_template_entity_1.BiometricTemplate)),
-    __metadata("design:paramtypes", [typeof (_a = typeof typeorm_2.Repository !== "undefined" && typeorm_2.Repository) === "function" ? _a : Object, typeof (_b = typeof typeorm_2.Repository !== "undefined" && typeorm_2.Repository) === "function" ? _b : Object, typeof (_c = typeof event_emitter_1.EventEmitter2 !== "undefined" && event_emitter_1.EventEmitter2) === "function" ? _c : Object])
-], AnvizBiometricService);
-
-
-/***/ }),
-/* 237 */
-/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
-
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.AnvizClient = exports.Command = exports.AckCode = void 0;
-// AnvizClient.ts
-const net_1 = __webpack_require__(238);
-const STX = 0xA5;
-/** All the return codes (RET) from the device */
-var AckCode;
-(function (AckCode) {
-    AckCode[AckCode["SUCCESS"] = 0] = "SUCCESS";
-    AckCode[AckCode["FAIL"] = 1] = "FAIL";
-    AckCode[AckCode["FULL"] = 4] = "FULL";
-    AckCode[AckCode["EMPTY"] = 5] = "EMPTY";
-    AckCode[AckCode["NO_USER"] = 6] = "NO_USER";
-    AckCode[AckCode["TIME_OUT"] = 8] = "TIME_OUT";
-    AckCode[AckCode["USER_OCCUPIED"] = 10] = "USER_OCCUPIED";
-    AckCode[AckCode["FINGER_OCCUPIED"] = 11] = "FINGER_OCCUPIED";
-})(AckCode || (exports.AckCode = AckCode = {}));
-/** All Part II command op-codes */
-var Command;
-(function (Command) {
-    Command[Command["GetDeviceInfo"] = 48] = "GetDeviceInfo";
-    Command[Command["SetDeviceInfo"] = 49] = "SetDeviceInfo";
-    Command[Command["GetTAConfig2"] = 50] = "GetTAConfig2";
-    Command[Command["SetTAConfig2"] = 51] = "SetTAConfig2";
-    Command[Command["GetDateTime"] = 56] = "GetDateTime";
-    Command[Command["SetDateTime"] = 57] = "SetDateTime";
-    Command[Command["GetNetworkParams"] = 58] = "GetNetworkParams";
-    Command[Command["SetNetworkParams"] = 59] = "SetNetworkParams";
-    Command[Command["GetRecordInfo"] = 60] = "GetRecordInfo";
-    Command[Command["DownloadRecords"] = 64] = "DownloadRecords";
-    // … add others 0x42,0x44…0x5F as needed …
-})(Command || (exports.Command = Command = {}));
-/** CRC-16/X-25 (poly=0x1021, init=0xFFFF, reflect in/out) */
-function crc16(buffer) {
-    let crc = 0xFFFF;
-    for (const b of buffer) {
-        crc ^= b;
-        for (let i = 0; i < 8; i++) {
-            if (crc & 1)
-                crc = (crc >>> 1) ^ 0x8408;
-            else
-                crc = crc >>> 1;
-        }
-    }
-    // swap bytes
-    return ((crc & 0xFF) << 8) | (crc >>> 8);
-}
-class AnvizClient {
-    constructor(host, port = 4370) {
-        this.host = host;
-        this.port = port;
-        this.socket = new net_1.Socket();
-        this.socket.on('data', this.onData.bind(this));
-        this.socket.on('error', err => {
-            if (this.pending) {
-                this.pending.reject(err);
-                this.pending = undefined;
-            }
-        });
-    }
-    /** Open TCP connection */
-    connect(timeout = 5000) {
-        return new Promise((res, rej) => {
-            const to = setTimeout(() => rej(new Error('Connect timeout')), timeout);
-            this.socket.once('connect', () => { clearTimeout(to); res(); });
-            this.socket.once('error', e => { clearTimeout(to); rej(e); });
-            this.socket.connect(this.port, this.host);
-        });
-    }
-    /** Gracefully close */
-    disconnect() {
-        this.socket.end();
-    }
-    /** Internal: called on incoming data */
-    onData(data) {
-        if (!this.pending)
-            return;
-        clearTimeout(this.pending.timeout);
-        this.pending.resolve(data);
-        this.pending = undefined;
-    }
-    /**
-     * Internal: send raw framed packet, await full raw response
-     * Frame: [STX][CH×4][CMD][LEN16][DATA][CRC16]
-     */
-    sendRaw(channel, cmd, payload = Buffer.alloc(0), timeout = 2000) {
-        if (channel.length !== 4)
-            throw new Error('Channel must be 4 bytes');
-        if (payload.length > 400)
-            throw new Error('Payload too large');
-        // build header + payload
-        const header = Buffer.alloc(1 + 4 + 1 + 2);
-        header.writeUInt8(STX, 0);
-        channel.copy(header, 1);
-        header.writeUInt8(cmd, 5);
-        header.writeUInt16BE(payload.length, 6);
-        const frame = Buffer.concat([header, payload]);
-        const crc = crc16(frame);
-        const crcBuf = Buffer.alloc(2);
-        crcBuf.writeUInt16BE(crc, 0);
-        // send + await
-        return new Promise((resolve, reject) => {
-            this.pending = {
-                resolve,
-                reject,
-                timeout: setTimeout(() => {
-                    this.pending = undefined;
-                    reject(new Error('Response timeout'));
-                }, timeout)
-            };
-            this.socket.write(Buffer.concat([frame, crcBuf]));
-        });
-    }
-    /**
-     * Internal: parse ACK/RET/LEN/DATA, throw on errors
-     */
-    async sendCommand(channel, cmd, payload = Buffer.alloc(0), parser) {
-        const resp = await this.sendRaw(channel, cmd, payload);
-        if (resp.readUInt8(0) !== STX)
-            throw new Error('Bad STX');
-        const ack = resp.readUInt8(5);
-        const ret = resp.readUInt8(6);
-        const len = resp.readUInt16BE(7);
-        const data = resp.slice(9, 9 + len);
-        if (ack !== (cmd | 0x80))
-            throw new Error(`Unexpected ACK: 0x${ack.toString(16)}`);
-        if (ret !== AckCode.SUCCESS)
-            throw new Error(`Device error RET=0x${ret.toString(16)}`);
-        return parser ? parser(data) : data;
-    }
-    // ─── High-level SDK methods ────────────────────────────────────────────────
-    /** CMD 0x30: get basic device info */
-    async getDeviceInfo(channel) {
-        return this.sendCommand(channel, Command.GetDeviceInfo, Buffer.alloc(0), buf => ({
-            firmwareVersion: buf.slice(0, 8).toString('ascii'),
-            password: buf.slice(8, 11).toString('ascii'),
-            sleepTime: buf.readUInt8(11),
-            volume: buf.readUInt8(12),
-            language: buf.readUInt8(13),
-            dateFormat: buf.readUInt8(14),
-            attendanceState: buf.readUInt8(15),
-            languageSettingFlag: buf.readUInt8(16),
-            cmdVersion: buf.readUInt8(17),
-        }));
-    }
-    /** CMD 0x31: set basic device info */
-    async setDeviceInfo(channel, cfg) {
-        const data = Buffer.alloc(10, 0xFF);
-        if (cfg.password !== undefined) {
-            data[0] = (cfg.password.length << 4);
-            Buffer.from(cfg.password).copy(data, 1);
-        }
-        if (cfg.sleepTime !== undefined)
-            data[3] = cfg.sleepTime;
-        if (cfg.volume !== undefined)
-            data[4] = cfg.volume;
-        if (cfg.language !== undefined)
-            data[5] = cfg.language;
-        if (cfg.dateFormat !== undefined)
-            data[6] = cfg.dateFormat;
-        if (cfg.attendanceState !== undefined)
-            data[7] = cfg.attendanceState;
-        if (cfg.languageSettingFlag !== undefined)
-            data[8] = cfg.languageSettingFlag;
-        await this.sendCommand(channel, Command.SetDeviceInfo, data);
-    }
-    /** CMD 0x38: get device date/time */
-    async getDateTime(channel) {
-        return this.sendCommand(channel, Command.GetDateTime, Buffer.alloc(0), buf => {
-            const [y, m, d, h, min, s] = Array.from(buf.values());
-            return new Date(2000 + y, m - 1, d, h, min, s);
-        });
-    }
-    /** CMD 0x39: set device date/time */
-    async setDateTime(channel, dt) {
-        const year = dt.getFullYear() - 2000;
-        const data = Buffer.from([
-            year, dt.getMonth() + 1, dt.getDate(),
-            dt.getHours(), dt.getMinutes(), dt.getSeconds()
-        ]);
-        await this.sendCommand(channel, Command.SetDateTime, data);
-    }
-    /** CMD 0x3A: get TCP/IP parameters */
-    async getNetworkParams(channel) {
-        return this.sendCommand(channel, Command.GetNetworkParams, Buffer.alloc(0), buf => ({
-            ip: [buf[0], buf[1], buf[2], buf[3]],
-            mask: [buf[4], buf[5], buf[6], buf[7]],
-            mac: [buf[8], buf[9], buf[10], buf[11], buf[12], buf[13]],
-            gateway: [buf[14], buf[15], buf[16], buf[17]],
-            serverIp: [buf[18], buf[19], buf[20], buf[21]],
-            farLimit: buf.readUInt16BE(22),
-            comPort: buf.readUInt8(24),
-            mode: buf.readUInt8(25),
-            dhcpLimit: buf.readUInt8(26),
-        }));
-    }
-    /** CMD 0x3B: set TCP/IP parameters */
-    async setNetworkParams(channel, cfg) {
-        const data = Buffer.alloc(27);
-        data.set(cfg.ip, 0);
-        data.set(cfg.mask, 4);
-        data.set(cfg.mac, 8);
-        data.set(cfg.gateway, 14);
-        data.set(cfg.serverIp, 18);
-        data.writeUInt16BE(cfg.farLimit, 22);
-        data.writeUInt8(cfg.comPort, 24);
-        data.writeUInt8(cfg.mode, 25);
-        data.writeUInt8(cfg.dhcpLimit, 26);
-        await this.sendCommand(channel, Command.SetNetworkParams, data);
-    }
-    /** CMD 0x40: download attendance records (mode=0/1/2/0x10, count=1–25) */
-    async downloadRecords(channel, mode, count) {
-        if (count < 1 || count > 25)
-            throw new Error('count must be 1–25');
-        const payload = Buffer.from([mode, count]);
-        const raw = await this.sendCommand(channel, Command.DownloadRecords, payload);
-        const valid = raw.readUInt8(0);
-        const recs = [];
-        for (let i = 0; i < valid; i++) {
-            recs.push(raw.slice(1 + i * 14, 1 + (i + 1) * 14));
-        }
-        return recs;
-    }
-}
-exports.AnvizClient = AnvizClient;
-
-
-/***/ }),
-/* 238 */
-/***/ ((module) => {
-
-module.exports = require("net");
-
-/***/ }),
-/* 239 */
-/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
-
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -18959,8 +20352,8 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.AttendancePunchesModule = void 0;
 const common_1 = __webpack_require__(5);
 const typeorm_1 = __webpack_require__(16);
-const attendance_punches_controller_1 = __webpack_require__(240);
-const attendance_punches_service_1 = __webpack_require__(241);
+const attendance_punches_controller_1 = __webpack_require__(257);
+const attendance_punches_service_1 = __webpack_require__(258);
 const attendance_punch_entity_1 = __webpack_require__(73);
 let AttendancePunchesModule = class AttendancePunchesModule {
 };
@@ -18976,15 +20369,16 @@ exports.AttendancePunchesModule = AttendancePunchesModule = __decorate([
 
 
 /***/ }),
-/* 240 */
+/* 257 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
+"use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.AttendancePunchesController = void 0;
 const create_controller_factory_1 = __webpack_require__(18);
-const attendance_punches_service_1 = __webpack_require__(241);
-const attendance_punch_dto_1 = __webpack_require__(242);
+const attendance_punches_service_1 = __webpack_require__(258);
+const attendance_punch_dto_1 = __webpack_require__(259);
 const attendance_punch_entity_1 = __webpack_require__(73);
 class AttendancePunchesController extends (0, create_controller_factory_1.createController)(attendance_punch_entity_1.AttendancePunch, attendance_punches_service_1.AttendancePunchesService, attendance_punch_dto_1.GetAttendancePunchDto) {
     async create(entityDto, createdById) {
@@ -19004,9 +20398,10 @@ exports.AttendancePunchesController = AttendancePunchesController;
 
 
 /***/ }),
-/* 241 */
+/* 258 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -19045,9 +20440,10 @@ exports.AttendancePunchesService = AttendancePunchesService = __decorate([
 
 
 /***/ }),
-/* 242 */
+/* 259 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -19058,9 +20454,12 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
+var _a, _b, _c;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.GetAttendancePunchDto = exports.UpdateAttendancePunchDto = exports.AttendancePunchDto = void 0;
 const base_dto_1 = __webpack_require__(101);
+const punch_method_enum_1 = __webpack_require__(74);
+const punch_type_enum_1 = __webpack_require__(75);
 const create_get_dto_factory_1 = __webpack_require__(103);
 const swagger_1 = __webpack_require__(8);
 const class_transformer_1 = __webpack_require__(23);
@@ -19070,8 +20469,9 @@ class AttendancePunchDto extends (0, swagger_1.PartialType)(base_dto_1.BaseDto) 
 exports.AttendancePunchDto = AttendancePunchDto;
 __decorate([
     (0, swagger_1.ApiProperty)({
-        description: 'Attendance associated with this punch',
-        example: '123e4567-e89b-12d3-a456-426614174000'
+        description: 'Attendance record this punch is associated with',
+        example: '123e4567-e89b-12d3-a456-426614174000',
+        type: String
     }),
     (0, class_validator_1.IsNotEmpty)(),
     (0, class_validator_1.IsUUID)(4),
@@ -19079,8 +20479,9 @@ __decorate([
 ], AttendancePunchDto.prototype, "attendanceId", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({
-        description: 'Biometric Device associated with this punch',
-        example: '123e4567-e89b-12d3-a456-426614174000'
+        description: 'Biometric device used for this punch',
+        example: '123e4567-e89b-12d3-a456-426614174000',
+        type: String
     }),
     (0, class_validator_1.IsNotEmpty)(),
     (0, class_validator_1.IsUUID)(4),
@@ -19088,26 +20489,40 @@ __decorate([
 ], AttendancePunchDto.prototype, "biometricDeviceId", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({
-        description: 'Type of attendance punch',
-        example: "1"
+        description: 'Type of attendance punch (IN/OUT)',
+        enum: punch_type_enum_1.PunchType,
+        enumName: 'PunchType'
     }),
     (0, class_validator_1.IsNotEmpty)(),
-    (0, class_validator_1.IsString)(),
-    __metadata("design:type", String)
+    (0, class_validator_1.IsEnum)(punch_type_enum_1.PunchType),
+    __metadata("design:type", typeof (_a = typeof punch_type_enum_1.PunchType !== "undefined" && punch_type_enum_1.PunchType) === "function" ? _a : Object)
 ], AttendancePunchDto.prototype, "punchType", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({
+        description: 'Method used for punch (FINGERPRINT/MANUAL/etc)',
+        enum: punch_method_enum_1.PunchMethod,
+        enumName: 'PunchMethod'
+    }),
+    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsEnum)(punch_method_enum_1.PunchMethod),
+    __metadata("design:type", typeof (_b = typeof punch_method_enum_1.PunchMethod !== "undefined" && punch_method_enum_1.PunchMethod) === "function" ? _b : Object)
+], AttendancePunchDto.prototype, "punchMethod", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
         description: 'Timestamp of the punch',
-        example: '2023-07-21T08:30:00Z'
+        example: '2023-07-21T08:30:00Z',
+        type: Date
     }),
     (0, class_validator_1.IsNotEmpty)(),
     (0, class_validator_1.IsDateString)(),
-    __metadata("design:type", String)
+    (0, class_transformer_1.Type)(() => Date),
+    __metadata("design:type", typeof (_c = typeof Date !== "undefined" && Date) === "function" ? _c : Object)
 ], AttendancePunchDto.prototype, "time", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({
-        description: 'Location information (optional)',
-        example: 'Main Office',
+        description: 'Employee identification number',
+        example: 12345,
+        type: Number
     }),
     (0, class_validator_1.IsNumber)(),
     (0, class_validator_1.IsNotEmpty)(),
@@ -19123,15 +20538,16 @@ exports.GetAttendancePunchDto = GetAttendancePunchDto;
 
 
 /***/ }),
-/* 243 */
+/* 260 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
+"use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.AttendancesController = void 0;
 const create_controller_factory_1 = __webpack_require__(18);
-const attendances_service_1 = __webpack_require__(244);
-const attendance_dto_1 = __webpack_require__(248);
+const attendances_service_1 = __webpack_require__(261);
+const attendance_dto_1 = __webpack_require__(265);
 const attendance_entity_1 = __webpack_require__(52);
 class AttendancesController extends (0, create_controller_factory_1.createController)(attendance_entity_1.Attendance, attendances_service_1.AttendancesService, attendance_dto_1.GetAttendanceDto, undefined, attendance_dto_1.UpdateAttendanceDto) {
     async create(entityDto, createdById) {
@@ -19148,9 +20564,10 @@ exports.AttendancesController = AttendancesController;
 
 
 /***/ }),
-/* 244 */
+/* 261 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -19168,9 +20585,9 @@ var _a, _b, _c, _d, _e, _f, _g;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.AttendancesService = void 0;
 const attendance_status_enum_1 = __webpack_require__(50);
-const notification_type_enum_1 = __webpack_require__(80);
+const notification_type_enum_1 = __webpack_require__(83);
 const request_status_enum_1 = __webpack_require__(51);
-const attendance_event_1 = __webpack_require__(232);
+const attendance_event_1 = __webpack_require__(236);
 const base_service_1 = __webpack_require__(31);
 const users_service_1 = __webpack_require__(30);
 const common_1 = __webpack_require__(5);
@@ -19180,11 +20597,11 @@ const typeorm_1 = __webpack_require__(16);
 const date_fns_1 = __webpack_require__(155);
 const typeorm_2 = __webpack_require__(25);
 const employees_service_1 = __webpack_require__(104);
-const notifications_service_1 = __webpack_require__(245);
+const notifications_service_1 = __webpack_require__(262);
 const schedules_service_1 = __webpack_require__(153);
 const attendance_entity_1 = __webpack_require__(52);
 const work_time_request_entity_1 = __webpack_require__(49);
-const work_time_requests_service_1 = __webpack_require__(247);
+const work_time_requests_service_1 = __webpack_require__(264);
 let AttendancesService = class AttendancesService extends base_service_1.BaseService {
     constructor(attendancesRepository, usersService, workTimeRequestsService, notificationsService, employeesService, schedulesService, eventEmitter) {
         super(attendancesRepository, usersService);
@@ -19399,9 +20816,10 @@ exports.AttendancesService = AttendancesService = __decorate([
 
 
 /***/ }),
-/* 245 */
+/* 262 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -19426,8 +20844,8 @@ const common_1 = __webpack_require__(5);
 const typeorm_1 = __webpack_require__(16);
 const bull_2 = __webpack_require__(158);
 const typeorm_2 = __webpack_require__(25);
-const notification_entity_1 = __webpack_require__(79);
-const notifications_gateway_1 = __webpack_require__(246);
+const notification_entity_1 = __webpack_require__(82);
+const notifications_gateway_1 = __webpack_require__(263);
 let NotificationsService = NotificationsService_1 = class NotificationsService extends base_service_1.BaseService {
     constructor(notificationRepo, usersService, notificationsGateway, notificationsQueue) {
         super(notificationRepo, usersService);
@@ -19509,9 +20927,10 @@ exports.NotificationsService = NotificationsService = NotificationsService_1 = _
 
 
 /***/ }),
-/* 246 */
+/* 263 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
+"use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.NotificationsGateway = void 0;
@@ -19522,9 +20941,10 @@ exports.NotificationsGateway = NotificationsGateway;
 
 
 /***/ }),
-/* 247 */
+/* 264 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -19563,9 +20983,10 @@ exports.WorkTimeRequestsService = WorkTimeRequestsService = __decorate([
 
 
 /***/ }),
-/* 248 */
+/* 265 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -19654,9 +21075,10 @@ exports.GetAttendanceDto = GetAttendanceDto;
 
 
 /***/ }),
-/* 249 */
+/* 266 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -19669,8 +21091,8 @@ exports.FinalWorkHoursModule = void 0;
 const common_1 = __webpack_require__(5);
 const typeorm_1 = __webpack_require__(16);
 const final_work_hour_entity_1 = __webpack_require__(58);
-const final_work_hours_controller_1 = __webpack_require__(250);
-const final_work_hours_service_1 = __webpack_require__(252);
+const final_work_hours_controller_1 = __webpack_require__(267);
+const final_work_hours_service_1 = __webpack_require__(269);
 let FinalWorkHoursModule = class FinalWorkHoursModule {
 };
 exports.FinalWorkHoursModule = FinalWorkHoursModule;
@@ -19687,16 +21109,17 @@ exports.FinalWorkHoursModule = FinalWorkHoursModule = __decorate([
 
 
 /***/ }),
-/* 250 */
+/* 267 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
+"use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.FinalWorkHoursController = void 0;
 const create_controller_factory_1 = __webpack_require__(18);
-const final_work_hour_dto_1 = __webpack_require__(251);
+const final_work_hour_dto_1 = __webpack_require__(268);
 const final_work_hour_entity_1 = __webpack_require__(58);
-const final_work_hours_service_1 = __webpack_require__(252);
+const final_work_hours_service_1 = __webpack_require__(269);
 class FinalWorkHoursController extends (0, create_controller_factory_1.createController)(final_work_hour_entity_1.FinalWorkHour, final_work_hours_service_1.FinalWorkHoursService, final_work_hour_dto_1.GetFinalWorkHourDto, undefined, final_work_hour_dto_1.UpdateFinalWorkHourDto) {
     async create(entityDto, createdById) {
         return await super.create(entityDto, createdById);
@@ -19709,9 +21132,10 @@ exports.FinalWorkHoursController = FinalWorkHoursController;
 
 
 /***/ }),
-/* 251 */
+/* 268 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -19747,9 +21171,10 @@ exports.GetFinalWorkHourDto = GetFinalWorkHourDto;
 
 
 /***/ }),
-/* 252 */
+/* 269 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -19933,9 +21358,10 @@ exports.FinalWorkHoursService = FinalWorkHoursService = __decorate([
 
 
 /***/ }),
-/* 253 */
+/* 270 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -19946,34 +21372,29 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
-var __param = (this && this.__param) || function (paramIndex, decorator) {
-    return function (target, key) { decorator(target, key, paramIndex); }
-};
 var AttendanceListener_1;
-var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l;
+var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.AttendanceListener = void 0;
 const attendance_status_enum_1 = __webpack_require__(50);
 const holiday_type_enum_1 = __webpack_require__(69);
-const notification_type_enum_1 = __webpack_require__(80);
+const notification_type_enum_1 = __webpack_require__(83);
 const request_status_enum_1 = __webpack_require__(51);
 const schedule_status_1 = __webpack_require__(54);
-const attendance_event_1 = __webpack_require__(232);
-const attendance_punches_service_1 = __webpack_require__(241);
-const attendances_service_1 = __webpack_require__(244);
-const biometric_interface_1 = __webpack_require__(226);
-const biometric_devices_service_1 = __webpack_require__(227);
+const attendance_event_1 = __webpack_require__(236);
+const attendance_punches_service_1 = __webpack_require__(258);
+const attendances_service_1 = __webpack_require__(261);
+const biometric_devices_service_1 = __webpack_require__(226);
 const employees_service_1 = __webpack_require__(104);
-const notifications_service_1 = __webpack_require__(245);
+const notifications_service_1 = __webpack_require__(262);
 const schedules_service_1 = __webpack_require__(153);
 const common_1 = __webpack_require__(5);
 const event_emitter_1 = __webpack_require__(139);
 const date_fns_1 = __webpack_require__(155);
 const final_work_hour_entity_1 = __webpack_require__(58);
-const work_time_requests_service_1 = __webpack_require__(247);
+const work_time_requests_service_1 = __webpack_require__(264);
 let AttendanceListener = AttendanceListener_1 = class AttendanceListener {
-    constructor(biometricService, attendancesService, attendancePunchesService, employeesService, schedulesService, biometricDevicesService, notificationsService, workTimeRequestsService) {
-        this.biometricService = biometricService;
+    constructor(attendancesService, attendancePunchesService, employeesService, schedulesService, biometricDevicesService, notificationsService, workTimeRequestsService) {
         this.attendancesService = attendancesService;
         this.attendancePunchesService = attendancePunchesService;
         this.employeesService = employeesService;
@@ -19990,7 +21411,7 @@ let AttendanceListener = AttendanceListener_1 = class AttendanceListener {
         var _a;
         this.logger.log(`Handling attendance recorded event for ${event.attendances.length} records`);
         // Get the biometric device entity
-        const biometricDevice = await this.biometricDevicesService.findOneBy({ id: event.deviceId });
+        const biometricDevice = await this.biometricDevicesService.findOneBy({ deviceId: event.deviceId });
         if (!biometricDevice) {
             this.logger.error(`Biometric device with ID ${event.deviceId} not found`);
             return;
@@ -20001,7 +21422,7 @@ let AttendanceListener = AttendanceListener_1 = class AttendanceListener {
                 // Find employee by biometric ID
                 this.logger.log(`Raw userId from device: "${record.userId}"`);
                 // Validate userId is a proper number before parsing
-                if (!record.userId || !/^\d+$/.test(record.userId.trim())) {
+                if (!record.userId || !/^\d+$/.test(record.userId)) {
                     this.logger.warn(`Invalid user ID format: "${record.userId}". Must be numeric.`);
                     continue;
                 }
@@ -20021,7 +21442,7 @@ let AttendanceListener = AttendanceListener_1 = class AttendanceListener {
                 const punchTime = new Date(record.timestamp);
                 const punchDate = (0, date_fns_1.format)(punchTime, 'yyyy-MM-dd');
                 const punchTimeStr = (0, date_fns_1.format)(punchTime, 'HH:mm:ss');
-                const punchType = record.type;
+                const punchType = record.punchType;
                 // Find today's schedule for the employee
                 const todaySchedule = await this.schedulesService.getEmployeeScheduleToday(employee.id);
                 let attendanceStatuses = [];
@@ -20208,7 +21629,8 @@ let AttendanceListener = AttendanceListener_1 = class AttendanceListener {
                 await this.attendancePunchesService.create({
                     attendance: { id: existingAttendance.id },
                     time: punchTime,
-                    punchType: record.type.toString(),
+                    punchType: record.punchType,
+                    punchMethod: record.punchMethod,
                     employeeNumber,
                     biometricDevice: { id: biometricDevice.id },
                     createdBy: employee.user.id,
@@ -20224,8 +21646,6 @@ let AttendanceListener = AttendanceListener_1 = class AttendanceListener {
                 }
             }
         }
-        // After processing all records, clear the device
-        await this.biometricService.clearAttendanceRecords(event.deviceId);
     }
     async handleAttendanceProcessed() {
         // create final work hours
@@ -20253,26 +21673,26 @@ exports.AttendanceListener = AttendanceListener;
 __decorate([
     (0, event_emitter_1.OnEvent)(attendance_event_1.ATTENDANCE_EVENTS.ATTENDANCE_RECORDED),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [typeof (_j = typeof attendance_event_1.AttendanceRecordedEvent !== "undefined" && attendance_event_1.AttendanceRecordedEvent) === "function" ? _j : Object]),
-    __metadata("design:returntype", typeof (_k = typeof Promise !== "undefined" && Promise) === "function" ? _k : Object)
+    __metadata("design:paramtypes", [typeof (_h = typeof attendance_event_1.AttendanceRecordedEvent !== "undefined" && attendance_event_1.AttendanceRecordedEvent) === "function" ? _h : Object]),
+    __metadata("design:returntype", typeof (_j = typeof Promise !== "undefined" && Promise) === "function" ? _j : Object)
 ], AttendanceListener.prototype, "handleAttendanceRecorded", null);
 __decorate([
     (0, event_emitter_1.OnEvent)(attendance_event_1.ATTENDANCE_EVENTS.ATTENDANCE_PROCESSED),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
-    __metadata("design:returntype", typeof (_l = typeof Promise !== "undefined" && Promise) === "function" ? _l : Object)
+    __metadata("design:returntype", typeof (_k = typeof Promise !== "undefined" && Promise) === "function" ? _k : Object)
 ], AttendanceListener.prototype, "handleAttendanceProcessed", null);
 exports.AttendanceListener = AttendanceListener = AttendanceListener_1 = __decorate([
     (0, common_1.Injectable)(),
-    __param(0, (0, common_1.Inject)('BIOMETRIC_SERVICE')),
-    __metadata("design:paramtypes", [typeof (_a = typeof biometric_interface_1.IBiometricService !== "undefined" && biometric_interface_1.IBiometricService) === "function" ? _a : Object, typeof (_b = typeof attendances_service_1.AttendancesService !== "undefined" && attendances_service_1.AttendancesService) === "function" ? _b : Object, typeof (_c = typeof attendance_punches_service_1.AttendancePunchesService !== "undefined" && attendance_punches_service_1.AttendancePunchesService) === "function" ? _c : Object, typeof (_d = typeof employees_service_1.EmployeesService !== "undefined" && employees_service_1.EmployeesService) === "function" ? _d : Object, typeof (_e = typeof schedules_service_1.SchedulesService !== "undefined" && schedules_service_1.SchedulesService) === "function" ? _e : Object, typeof (_f = typeof biometric_devices_service_1.BiometricDevicesService !== "undefined" && biometric_devices_service_1.BiometricDevicesService) === "function" ? _f : Object, typeof (_g = typeof notifications_service_1.NotificationsService !== "undefined" && notifications_service_1.NotificationsService) === "function" ? _g : Object, typeof (_h = typeof work_time_requests_service_1.WorkTimeRequestsService !== "undefined" && work_time_requests_service_1.WorkTimeRequestsService) === "function" ? _h : Object])
+    __metadata("design:paramtypes", [typeof (_a = typeof attendances_service_1.AttendancesService !== "undefined" && attendances_service_1.AttendancesService) === "function" ? _a : Object, typeof (_b = typeof attendance_punches_service_1.AttendancePunchesService !== "undefined" && attendance_punches_service_1.AttendancePunchesService) === "function" ? _b : Object, typeof (_c = typeof employees_service_1.EmployeesService !== "undefined" && employees_service_1.EmployeesService) === "function" ? _c : Object, typeof (_d = typeof schedules_service_1.SchedulesService !== "undefined" && schedules_service_1.SchedulesService) === "function" ? _d : Object, typeof (_e = typeof biometric_devices_service_1.BiometricDevicesService !== "undefined" && biometric_devices_service_1.BiometricDevicesService) === "function" ? _e : Object, typeof (_f = typeof notifications_service_1.NotificationsService !== "undefined" && notifications_service_1.NotificationsService) === "function" ? _f : Object, typeof (_g = typeof work_time_requests_service_1.WorkTimeRequestsService !== "undefined" && work_time_requests_service_1.WorkTimeRequestsService) === "function" ? _g : Object])
 ], AttendanceListener);
 
 
 /***/ }),
-/* 254 */
+/* 271 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -20285,9 +21705,9 @@ exports.WorkTimeRequestsModule = void 0;
 const common_1 = __webpack_require__(5);
 const typeorm_1 = __webpack_require__(16);
 const work_time_request_entity_1 = __webpack_require__(49);
-const work_time_requests_controller_1 = __webpack_require__(255);
-const work_time_requests_service_1 = __webpack_require__(247);
-const work_time_responses_module_1 = __webpack_require__(257);
+const work_time_requests_controller_1 = __webpack_require__(272);
+const work_time_requests_service_1 = __webpack_require__(264);
+const work_time_responses_module_1 = __webpack_require__(274);
 let WorkTimeRequestsModule = class WorkTimeRequestsModule {
 };
 exports.WorkTimeRequestsModule = WorkTimeRequestsModule;
@@ -20308,16 +21728,17 @@ exports.WorkTimeRequestsModule = WorkTimeRequestsModule = __decorate([
 
 
 /***/ }),
-/* 255 */
+/* 272 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
+"use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.WorkTimeRequestsController = void 0;
 const create_controller_factory_1 = __webpack_require__(18);
-const work_time_request_dto_1 = __webpack_require__(256);
+const work_time_request_dto_1 = __webpack_require__(273);
 const work_time_request_entity_1 = __webpack_require__(49);
-const work_time_requests_service_1 = __webpack_require__(247);
+const work_time_requests_service_1 = __webpack_require__(264);
 class WorkTimeRequestsController extends (0, create_controller_factory_1.createController)(work_time_request_entity_1.WorkTimeRequest, work_time_requests_service_1.WorkTimeRequestsService, work_time_request_dto_1.GetWorkTimeRequestDto, work_time_request_dto_1.WorkTimeRequestDto, work_time_request_dto_1.UpdateWorkTimeRequestDto) {
     async delete(id) {
         return await super.delete(id);
@@ -20327,9 +21748,10 @@ exports.WorkTimeRequestsController = WorkTimeRequestsController;
 
 
 /***/ }),
-/* 256 */
+/* 273 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -20391,9 +21813,10 @@ exports.GetWorkTimeRequestDto = GetWorkTimeRequestDto;
 
 
 /***/ }),
-/* 257 */
+/* 274 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -20405,9 +21828,9 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.WorkTimeResponsesModule = void 0;
 const common_1 = __webpack_require__(5);
 const typeorm_1 = __webpack_require__(16);
-const work_time_response_entity_1 = __webpack_require__(75);
-const work_time_responses_controller_1 = __webpack_require__(258);
-const work_time_responses_service_1 = __webpack_require__(260);
+const work_time_response_entity_1 = __webpack_require__(78);
+const work_time_responses_controller_1 = __webpack_require__(275);
+const work_time_responses_service_1 = __webpack_require__(277);
 let WorkTimeResponsesModule = class WorkTimeResponsesModule {
 };
 exports.WorkTimeResponsesModule = WorkTimeResponsesModule;
@@ -20424,16 +21847,17 @@ exports.WorkTimeResponsesModule = WorkTimeResponsesModule = __decorate([
 
 
 /***/ }),
-/* 258 */
+/* 275 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
+"use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.WorkTimeResponsesController = void 0;
 const create_controller_factory_1 = __webpack_require__(18);
-const work_time_response_dto_1 = __webpack_require__(259);
-const work_time_response_entity_1 = __webpack_require__(75);
-const work_time_responses_service_1 = __webpack_require__(260);
+const work_time_response_dto_1 = __webpack_require__(276);
+const work_time_response_entity_1 = __webpack_require__(78);
+const work_time_responses_service_1 = __webpack_require__(277);
 class WorkTimeResponsesController extends (0, create_controller_factory_1.createController)(work_time_response_entity_1.WorkTimeResponse, work_time_responses_service_1.WorkTimeResponsesService, work_time_response_dto_1.GetWorkTimeResponseDto, work_time_response_dto_1.WorkTimeResponseDto, work_time_response_dto_1.UpdateWorkTimeResponseDto) {
     async delete(id) {
         return await super.delete(id);
@@ -20443,9 +21867,10 @@ exports.WorkTimeResponsesController = WorkTimeResponsesController;
 
 
 /***/ }),
-/* 259 */
+/* 276 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -20501,9 +21926,10 @@ exports.GetWorkTimeResponseDto = GetWorkTimeResponseDto;
 
 
 /***/ }),
-/* 260 */
+/* 277 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -20525,7 +21951,7 @@ const users_service_1 = __webpack_require__(30);
 const common_1 = __webpack_require__(5);
 const typeorm_1 = __webpack_require__(16);
 const typeorm_2 = __webpack_require__(25);
-const work_time_response_entity_1 = __webpack_require__(75);
+const work_time_response_entity_1 = __webpack_require__(78);
 let WorkTimeResponsesService = class WorkTimeResponsesService extends base_service_1.BaseService {
     constructor(workTimeResponsesRepository, usersService) {
         super(workTimeResponsesRepository, usersService);
@@ -20542,9 +21968,10 @@ exports.WorkTimeResponsesService = WorkTimeResponsesService = __decorate([
 
 
 /***/ }),
-/* 261 */
+/* 278 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -20557,9 +21984,9 @@ exports.DocumentsModule = void 0;
 const common_1 = __webpack_require__(5);
 const core_1 = __webpack_require__(7);
 const typeorm_1 = __webpack_require__(16);
-const document_types_module_1 = __webpack_require__(262);
-const documents_controller_1 = __webpack_require__(266);
-const documents_service_1 = __webpack_require__(267);
+const document_types_module_1 = __webpack_require__(279);
+const documents_controller_1 = __webpack_require__(283);
+const documents_service_1 = __webpack_require__(284);
 const document_entity_1 = __webpack_require__(48);
 let DocumentsModule = class DocumentsModule {
 };
@@ -20588,9 +22015,10 @@ exports.DocumentsModule = DocumentsModule = __decorate([
 
 
 /***/ }),
-/* 262 */
+/* 279 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -20602,9 +22030,9 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.DocumentTypesModule = void 0;
 const common_1 = __webpack_require__(5);
 const typeorm_1 = __webpack_require__(16);
-const document_types_controller_1 = __webpack_require__(263);
-const document_types_service_1 = __webpack_require__(264);
-const document_type_entity_1 = __webpack_require__(76);
+const document_types_controller_1 = __webpack_require__(280);
+const document_types_service_1 = __webpack_require__(281);
+const document_type_entity_1 = __webpack_require__(79);
 let DocumentTypesModule = class DocumentTypesModule {
 };
 exports.DocumentTypesModule = DocumentTypesModule;
@@ -20619,25 +22047,27 @@ exports.DocumentTypesModule = DocumentTypesModule = __decorate([
 
 
 /***/ }),
-/* 263 */
+/* 280 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
+"use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.DocumentTypesController = void 0;
 const create_controller_factory_1 = __webpack_require__(18);
-const document_types_service_1 = __webpack_require__(264);
-const document_type_dto_1 = __webpack_require__(265);
-const document_type_entity_1 = __webpack_require__(76);
+const document_types_service_1 = __webpack_require__(281);
+const document_type_dto_1 = __webpack_require__(282);
+const document_type_entity_1 = __webpack_require__(79);
 class DocumentTypesController extends (0, create_controller_factory_1.createController)(document_type_entity_1.DocumentType, document_types_service_1.DocumentTypesService, document_type_dto_1.GetDocumentTypeDto, document_type_dto_1.DocumentTypeDto, document_type_dto_1.UpdateDocumentTypeDto) {
 }
 exports.DocumentTypesController = DocumentTypesController;
 
 
 /***/ }),
-/* 264 */
+/* 281 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -20659,7 +22089,7 @@ const users_service_1 = __webpack_require__(30);
 const common_1 = __webpack_require__(5);
 const typeorm_1 = __webpack_require__(16);
 const typeorm_2 = __webpack_require__(25);
-const document_type_entity_1 = __webpack_require__(76);
+const document_type_entity_1 = __webpack_require__(79);
 let DocumentTypesService = class DocumentTypesService extends base_service_1.BaseService {
     constructor(documentTypesRepository, usersService) {
         super(documentTypesRepository, usersService);
@@ -20676,9 +22106,10 @@ exports.DocumentTypesService = DocumentTypesService = __decorate([
 
 
 /***/ }),
-/* 265 */
+/* 282 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -20746,15 +22177,16 @@ exports.GetDocumentTypeDto = GetDocumentTypeDto;
 
 
 /***/ }),
-/* 266 */
+/* 283 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
+"use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.DocumentsController = void 0;
 const create_controller_factory_1 = __webpack_require__(18);
-const documents_service_1 = __webpack_require__(267);
-const document_dto_1 = __webpack_require__(268);
+const documents_service_1 = __webpack_require__(284);
+const document_dto_1 = __webpack_require__(285);
 const document_entity_1 = __webpack_require__(48);
 class DocumentsController extends (0, create_controller_factory_1.createController)(document_entity_1.Document, documents_service_1.DocumentsService, document_dto_1.GetDocumentDto, document_dto_1.DocumentDto, document_dto_1.UpdateDocumentDto) {
 }
@@ -20762,9 +22194,10 @@ exports.DocumentsController = DocumentsController;
 
 
 /***/ }),
-/* 267 */
+/* 284 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -20803,9 +22236,10 @@ exports.DocumentsService = DocumentsService = __decorate([
 
 
 /***/ }),
-/* 268 */
+/* 285 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -20876,9 +22310,10 @@ exports.GetDocumentDto = GetDocumentDto;
 
 
 /***/ }),
-/* 269 */
+/* 286 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -20889,8 +22324,8 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.FilesModule = void 0;
 const common_1 = __webpack_require__(5);
-const file_provider_config_1 = __webpack_require__(270);
-const files_controller_1 = __webpack_require__(279);
+const file_provider_config_1 = __webpack_require__(287);
+const files_controller_1 = __webpack_require__(296);
 let FilesModule = class FilesModule {
 };
 exports.FilesModule = FilesModule;
@@ -20903,14 +22338,15 @@ exports.FilesModule = FilesModule = __decorate([
 
 
 /***/ }),
-/* 270 */
+/* 287 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
+"use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.fileProviders = exports.fileProviderConfig = exports.FILE_SERVICE = void 0;
 const config_1 = __webpack_require__(6);
-const local_file_service_1 = __webpack_require__(271);
+const local_file_service_1 = __webpack_require__(288);
 exports.FILE_SERVICE = 'FILE_SERVICE';
 exports.fileProviderConfig = {
     provide: exports.FILE_SERVICE,
@@ -20937,9 +22373,10 @@ exports.fileProviders = [exports.fileProviderConfig, local_file_service_1.LocalF
 
 
 /***/ }),
-/* 271 */
+/* 288 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
@@ -20993,10 +22430,10 @@ const common_1 = __webpack_require__(5);
 const config_1 = __webpack_require__(6);
 const fs = __importStar(__webpack_require__(125));
 const fs_1 = __webpack_require__(125);
-const mime = __importStar(__webpack_require__(272));
+const mime = __importStar(__webpack_require__(289));
 const path_1 = __importDefault(__webpack_require__(127));
-const file_list_options_dto_1 = __webpack_require__(273);
-const base_file_service_1 = __webpack_require__(274);
+const file_list_options_dto_1 = __webpack_require__(290);
+const base_file_service_1 = __webpack_require__(291);
 let LocalFileService = class LocalFileService extends base_file_service_1.BaseFileService {
     constructor(configService) {
         const uploadDir = configService.getOrThrow('FILE_DIRECTORY');
@@ -21599,15 +23036,17 @@ exports.LocalFileService = LocalFileService = __decorate([
 
 
 /***/ }),
-/* 272 */
+/* 289 */
 /***/ ((module) => {
 
+"use strict";
 module.exports = require("mime-types");
 
 /***/ }),
-/* 273 */
+/* 290 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -21784,9 +23223,10 @@ __decorate([
 
 
 /***/ }),
-/* 274 */
+/* 291 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
@@ -21836,12 +23276,12 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.BaseFileService = void 0;
 const common_1 = __webpack_require__(5);
-const crypto = __importStar(__webpack_require__(275));
-const csv_writer_1 = __webpack_require__(276);
-const ExcelJS = __importStar(__webpack_require__(277));
+const crypto = __importStar(__webpack_require__(292));
+const csv_writer_1 = __webpack_require__(293);
+const ExcelJS = __importStar(__webpack_require__(294));
 const fs = __importStar(__webpack_require__(125));
 const path = __importStar(__webpack_require__(127));
-const pdfkit_1 = __importDefault(__webpack_require__(278));
+const pdfkit_1 = __importDefault(__webpack_require__(295));
 let BaseFileService = class BaseFileService {
     constructor(uploadDir, baseUrl) {
         this.logger = new common_1.Logger(this.constructor.name);
@@ -22076,33 +23516,38 @@ exports.BaseFileService = BaseFileService = __decorate([
 
 
 /***/ }),
-/* 275 */
+/* 292 */
 /***/ ((module) => {
 
+"use strict";
 module.exports = require("crypto");
 
 /***/ }),
-/* 276 */
+/* 293 */
 /***/ ((module) => {
 
+"use strict";
 module.exports = require("csv-writer");
 
 /***/ }),
-/* 277 */
+/* 294 */
 /***/ ((module) => {
 
+"use strict";
 module.exports = require("exceljs");
 
 /***/ }),
-/* 278 */
+/* 295 */
 /***/ ((module) => {
 
+"use strict";
 module.exports = require("pdfkit");
 
 /***/ }),
-/* 279 */
+/* 296 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -22123,14 +23568,14 @@ exports.FilesController = void 0;
 const authorize_decorator_1 = __webpack_require__(26);
 const current_user_decorator_1 = __webpack_require__(97);
 const common_1 = __webpack_require__(5);
-const platform_express_1 = __webpack_require__(280);
+const platform_express_1 = __webpack_require__(297);
 const swagger_1 = __webpack_require__(8);
 const express_1 = __webpack_require__(205);
-const file_provider_config_1 = __webpack_require__(270);
-const directory_metadata_dto_1 = __webpack_require__(281);
-const file_list_response_dto_1 = __webpack_require__(282);
-const file_meta_data_dto_1 = __webpack_require__(283);
-const file_service_interface_1 = __webpack_require__(284);
+const file_provider_config_1 = __webpack_require__(287);
+const directory_metadata_dto_1 = __webpack_require__(298);
+const file_list_response_dto_1 = __webpack_require__(299);
+const file_meta_data_dto_1 = __webpack_require__(300);
+const file_service_interface_1 = __webpack_require__(301);
 let FilesController = FilesController_1 = class FilesController {
     constructor(fileService) {
         this.fileService = fileService;
@@ -22672,15 +24117,17 @@ exports.FilesController = FilesController = FilesController_1 = __decorate([
 
 
 /***/ }),
-/* 280 */
+/* 297 */
 /***/ ((module) => {
 
+"use strict";
 module.exports = require("@nestjs/platform-express");
 
 /***/ }),
-/* 281 */
+/* 298 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -22729,9 +24176,10 @@ __decorate([
 
 
 /***/ }),
-/* 282 */
+/* 299 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -22746,8 +24194,8 @@ var _a;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.FileListResponseDto = void 0;
 const swagger_1 = __webpack_require__(8);
-const directory_metadata_dto_1 = __webpack_require__(281);
-const file_meta_data_dto_1 = __webpack_require__(283);
+const directory_metadata_dto_1 = __webpack_require__(298);
+const file_meta_data_dto_1 = __webpack_require__(300);
 class FileListResponseDto {
 }
 exports.FileListResponseDto = FileListResponseDto;
@@ -22790,9 +24238,10 @@ __decorate([
 
 
 /***/ }),
-/* 283 */
+/* 300 */
 /***/ ((__unused_webpack_module, exports) => {
 
+"use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.FileMetadata = void 0;
@@ -22802,17 +24251,19 @@ exports.FileMetadata = FileMetadata;
 
 
 /***/ }),
-/* 284 */
+/* 301 */
 /***/ ((__unused_webpack_module, exports) => {
 
+"use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 
 
 /***/ }),
-/* 285 */
+/* 302 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -22824,8 +24275,8 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.LogsModule = void 0;
 const common_1 = __webpack_require__(5);
 const core_1 = __webpack_require__(7);
-const activity_logs_module_1 = __webpack_require__(286);
-const system_logs_module_1 = __webpack_require__(289);
+const activity_logs_module_1 = __webpack_require__(303);
+const system_logs_module_1 = __webpack_require__(306);
 let LogsModule = class LogsModule {
 };
 exports.LogsModule = LogsModule;
@@ -22858,9 +24309,10 @@ exports.LogsModule = LogsModule = __decorate([
 
 
 /***/ }),
-/* 286 */
+/* 303 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -22872,9 +24324,9 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ActivityLogsModule = void 0;
 const common_1 = __webpack_require__(5);
 const typeorm_1 = __webpack_require__(16);
-const activity_logs_controller_1 = __webpack_require__(287);
-const activity_logs_service_1 = __webpack_require__(89);
-const activity_log_entity_1 = __webpack_require__(77);
+const activity_logs_controller_1 = __webpack_require__(304);
+const activity_logs_service_1 = __webpack_require__(92);
+const activity_log_entity_1 = __webpack_require__(80);
 let ActivityLogsModule = class ActivityLogsModule {
 };
 exports.ActivityLogsModule = ActivityLogsModule;
@@ -22891,25 +24343,27 @@ exports.ActivityLogsModule = ActivityLogsModule = __decorate([
 
 
 /***/ }),
-/* 287 */
+/* 304 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
+"use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ActivityLogsController = void 0;
 const create_controller_factory_1 = __webpack_require__(18);
-const activity_logs_service_1 = __webpack_require__(89);
-const activity_log_dto_1 = __webpack_require__(288);
-const activity_log_entity_1 = __webpack_require__(77);
+const activity_logs_service_1 = __webpack_require__(92);
+const activity_log_dto_1 = __webpack_require__(305);
+const activity_log_entity_1 = __webpack_require__(80);
 class ActivityLogsController extends (0, create_controller_factory_1.createController)(activity_log_entity_1.ActivityLog, activity_logs_service_1.ActivityLogsService, activity_log_dto_1.GetActivityLogDto) {
 }
 exports.ActivityLogsController = ActivityLogsController;
 
 
 /***/ }),
-/* 288 */
+/* 305 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -22925,7 +24379,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.GetActivityLogDto = exports.UpdateActivityLogDto = exports.ActivityLogDto = void 0;
 const base_dto_1 = __webpack_require__(101);
 const action_enum_1 = __webpack_require__(40);
-const log_level_enum_1 = __webpack_require__(78);
+const log_level_enum_1 = __webpack_require__(81);
 const create_get_dto_factory_1 = __webpack_require__(103);
 const user_entity_1 = __webpack_require__(47);
 const swagger_1 = __webpack_require__(8);
@@ -22998,9 +24452,10 @@ exports.GetActivityLogDto = GetActivityLogDto;
 
 
 /***/ }),
-/* 289 */
+/* 306 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -23012,10 +24467,10 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.SystemLogsModule = void 0;
 const common_1 = __webpack_require__(5);
 const typeorm_1 = __webpack_require__(16);
-const system_log_entity_1 = __webpack_require__(290);
-const system_logger_service_1 = __webpack_require__(291);
-const system_logs_controller_1 = __webpack_require__(293);
-const system_logs_service_1 = __webpack_require__(292);
+const system_log_entity_1 = __webpack_require__(307);
+const system_logger_service_1 = __webpack_require__(308);
+const system_logs_controller_1 = __webpack_require__(310);
+const system_logs_service_1 = __webpack_require__(309);
 let SystemLogsModule = class SystemLogsModule {
 };
 exports.SystemLogsModule = SystemLogsModule;
@@ -23032,9 +24487,10 @@ exports.SystemLogsModule = SystemLogsModule = __decorate([
 
 
 /***/ }),
-/* 290 */
+/* 307 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -23048,7 +24504,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var _a;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.SystemLog = void 0;
-const log_level_enum_1 = __webpack_require__(78);
+const log_level_enum_1 = __webpack_require__(81);
 const base_entity_1 = __webpack_require__(34);
 const typeorm_1 = __webpack_require__(25);
 let SystemLog = class SystemLog extends base_entity_1.BaseEntity {
@@ -23085,9 +24541,10 @@ exports.SystemLog = SystemLog = __decorate([
 
 
 /***/ }),
-/* 291 */
+/* 308 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -23101,9 +24558,9 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var _a;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.SystemLogger = void 0;
-const log_level_enum_1 = __webpack_require__(78);
+const log_level_enum_1 = __webpack_require__(81);
 const common_1 = __webpack_require__(5);
-const system_logs_service_1 = __webpack_require__(292);
+const system_logs_service_1 = __webpack_require__(309);
 let SystemLogger = class SystemLogger extends common_1.ConsoleLogger {
     constructor(systemLogsService) {
         super();
@@ -23145,10 +24602,10 @@ let SystemLogger = class SystemLogger extends common_1.ConsoleLogger {
         }
     }
     debug(message, context) {
-        if (!this.shouldIgnoreLog(message, context)) {
-            super.debug(message, context);
-            this.saveLog(message, context, log_level_enum_1.LogLevel.DEBUG);
-        }
+        // if (!this.shouldIgnoreLog(message, context)) {
+        //     super.debug(message, context);
+        //     this.saveLog(message, context, LogLevel.DEBUG);
+        // }
     }
     verbose(message, context) {
         if (!this.shouldIgnoreLog(message, context)) {
@@ -23212,9 +24669,10 @@ exports.SystemLogger = SystemLogger = __decorate([
 
 
 /***/ }),
-/* 292 */
+/* 309 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -23237,7 +24695,7 @@ const common_1 = __webpack_require__(5);
 const schedule_1 = __webpack_require__(131);
 const typeorm_1 = __webpack_require__(16);
 const typeorm_2 = __webpack_require__(25);
-const system_log_entity_1 = __webpack_require__(290);
+const system_log_entity_1 = __webpack_require__(307);
 let SystemLogsService = class SystemLogsService extends base_service_1.BaseService {
     constructor(systemLogsRepository, usersService) {
         super(systemLogsRepository, usersService);
@@ -23281,25 +24739,27 @@ exports.SystemLogsService = SystemLogsService = __decorate([
 
 
 /***/ }),
-/* 293 */
+/* 310 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
+"use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.SystemLogsController = void 0;
 const create_controller_factory_1 = __webpack_require__(18);
-const system_log_dto_1 = __webpack_require__(294);
-const system_log_entity_1 = __webpack_require__(290);
-const system_logs_service_1 = __webpack_require__(292);
+const system_log_dto_1 = __webpack_require__(311);
+const system_log_entity_1 = __webpack_require__(307);
+const system_logs_service_1 = __webpack_require__(309);
 class SystemLogsController extends (0, create_controller_factory_1.createController)(system_log_entity_1.SystemLog, system_logs_service_1.SystemLogsService, system_log_dto_1.GetSystemLogDto) {
 }
 exports.SystemLogsController = SystemLogsController;
 
 
 /***/ }),
-/* 294 */
+/* 311 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -23314,7 +24774,7 @@ var _a;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.GetSystemLogDto = exports.UpdateSystemLogDto = exports.SystemLogDto = void 0;
 const base_dto_1 = __webpack_require__(101);
-const log_level_enum_1 = __webpack_require__(78);
+const log_level_enum_1 = __webpack_require__(81);
 const create_get_dto_factory_1 = __webpack_require__(103);
 const swagger_1 = __webpack_require__(8);
 const class_validator_1 = __webpack_require__(24);
@@ -23361,9 +24821,10 @@ exports.GetSystemLogDto = GetSystemLogDto;
 
 
 /***/ }),
-/* 295 */
+/* 312 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -23376,14 +24837,14 @@ exports.NotificationsModule = void 0;
 const bull_1 = __webpack_require__(4);
 const common_1 = __webpack_require__(5);
 const typeorm_1 = __webpack_require__(16);
-const notification_entity_1 = __webpack_require__(79);
-const notifications_gateway_1 = __webpack_require__(246);
-const notifications_controller_1 = __webpack_require__(296);
-const notifications_service_1 = __webpack_require__(245);
-const notifications_processor_1 = __webpack_require__(298);
-const push_subscriptions_module_1 = __webpack_require__(304);
-const user_connection_service_1 = __webpack_require__(301);
-const web_push_service_1 = __webpack_require__(302);
+const notification_entity_1 = __webpack_require__(82);
+const notifications_gateway_1 = __webpack_require__(263);
+const notifications_controller_1 = __webpack_require__(313);
+const notifications_service_1 = __webpack_require__(262);
+const notifications_processor_1 = __webpack_require__(315);
+const push_subscriptions_module_1 = __webpack_require__(321);
+const user_connection_service_1 = __webpack_require__(318);
+const web_push_service_1 = __webpack_require__(319);
 let NotificationsModule = class NotificationsModule {
 };
 exports.NotificationsModule = NotificationsModule;
@@ -23417,9 +24878,10 @@ exports.NotificationsModule = NotificationsModule = __decorate([
 
 
 /***/ }),
-/* 296 */
+/* 313 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -23441,9 +24903,9 @@ const override_decorator_1 = __webpack_require__(98);
 const create_controller_factory_1 = __webpack_require__(18);
 const common_1 = __webpack_require__(5);
 const swagger_1 = __webpack_require__(8);
-const notification_dto_1 = __webpack_require__(297);
-const notification_entity_1 = __webpack_require__(79);
-const notifications_service_1 = __webpack_require__(245);
+const notification_dto_1 = __webpack_require__(314);
+const notification_entity_1 = __webpack_require__(82);
+const notifications_service_1 = __webpack_require__(262);
 class NotificationsController extends (0, create_controller_factory_1.createController)(notification_entity_1.Notification, notifications_service_1.NotificationsService, notification_dto_1.GetNotificationDto, notification_dto_1.NotificationDto, notification_dto_1.UpdateNotificationDto) {
     constructor(notificationsService, notificationsGateway) {
         super(notificationsService);
@@ -23494,9 +24956,10 @@ __decorate([
 
 
 /***/ }),
-/* 297 */
+/* 314 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -23512,7 +24975,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.GetNotificationDto = exports.UpdateNotificationDto = exports.NotificationDto = void 0;
 const base_dto_1 = __webpack_require__(101);
 const reference_dto_1 = __webpack_require__(102);
-const notification_type_enum_1 = __webpack_require__(80);
+const notification_type_enum_1 = __webpack_require__(83);
 const create_get_dto_factory_1 = __webpack_require__(103);
 const swagger_1 = __webpack_require__(8);
 const class_transformer_1 = __webpack_require__(23);
@@ -23618,9 +25081,10 @@ exports.GetNotificationDto = GetNotificationDto;
 
 
 /***/ }),
-/* 298 */
+/* 315 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -23638,11 +25102,11 @@ exports.NotificationsProcessor = void 0;
 const bull_1 = __webpack_require__(4);
 const common_1 = __webpack_require__(5);
 const bull_2 = __webpack_require__(158);
-const notifications_gateway_1 = __webpack_require__(246);
-const notifications_service_1 = __webpack_require__(245);
-const push_subscriptions_service_1 = __webpack_require__(299);
-const user_connection_service_1 = __webpack_require__(301);
-const web_push_service_1 = __webpack_require__(302);
+const notifications_gateway_1 = __webpack_require__(263);
+const notifications_service_1 = __webpack_require__(262);
+const push_subscriptions_service_1 = __webpack_require__(316);
+const user_connection_service_1 = __webpack_require__(318);
+const web_push_service_1 = __webpack_require__(319);
 let NotificationsProcessor = NotificationsProcessor_1 = class NotificationsProcessor {
     constructor(notificationsService, notificationsGateway, webPushService, pushSubscriptionService, userConnectionService) {
         this.notificationsService = notificationsService;
@@ -23970,9 +25434,10 @@ exports.NotificationsProcessor = NotificationsProcessor = NotificationsProcessor
 
 
 /***/ }),
-/* 299 */
+/* 316 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -23994,7 +25459,7 @@ const users_service_1 = __webpack_require__(30);
 const common_1 = __webpack_require__(5);
 const typeorm_1 = __webpack_require__(16);
 const typeorm_2 = __webpack_require__(25);
-const push_subscription_entity_1 = __webpack_require__(300);
+const push_subscription_entity_1 = __webpack_require__(317);
 let PushSubscriptionsService = class PushSubscriptionsService extends base_service_1.BaseService {
     constructor(pushSubscriptionsRepository, usersService) {
         super(pushSubscriptionsRepository, usersService);
@@ -24061,9 +25526,10 @@ exports.PushSubscriptionsService = PushSubscriptionsService = __decorate([
 
 
 /***/ }),
-/* 300 */
+/* 317 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -24099,9 +25565,10 @@ exports.PushSubscription = PushSubscription = __decorate([
 
 
 /***/ }),
-/* 301 */
+/* 318 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -24163,9 +25630,10 @@ exports.UserConnectionService = UserConnectionService = __decorate([
 
 
 /***/ }),
-/* 302 */
+/* 319 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
@@ -24215,7 +25683,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.WebPushService = void 0;
 const common_1 = __webpack_require__(5);
 const config_1 = __webpack_require__(6);
-const webPush = __importStar(__webpack_require__(303));
+const webPush = __importStar(__webpack_require__(320));
 let WebPushService = WebPushService_1 = class WebPushService {
     constructor(configService) {
         this.configService = configService;
@@ -24284,15 +25752,17 @@ exports.WebPushService = WebPushService = WebPushService_1 = __decorate([
 
 
 /***/ }),
-/* 303 */
+/* 320 */
 /***/ ((module) => {
 
+"use strict";
 module.exports = require("web-push");
 
 /***/ }),
-/* 304 */
+/* 321 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -24304,9 +25774,9 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.PushSubscriptionsModule = void 0;
 const common_1 = __webpack_require__(5);
 const typeorm_1 = __webpack_require__(16);
-const push_subscriptions_controller_1 = __webpack_require__(305);
-const push_subscriptions_service_1 = __webpack_require__(299);
-const push_subscription_entity_1 = __webpack_require__(300);
+const push_subscriptions_controller_1 = __webpack_require__(322);
+const push_subscriptions_service_1 = __webpack_require__(316);
+const push_subscription_entity_1 = __webpack_require__(317);
 let PushSubscriptionsModule = class PushSubscriptionsModule {
 };
 exports.PushSubscriptionsModule = PushSubscriptionsModule;
@@ -24323,9 +25793,10 @@ exports.PushSubscriptionsModule = PushSubscriptionsModule = __decorate([
 
 
 /***/ }),
-/* 305 */
+/* 322 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -24347,9 +25818,9 @@ const current_user_decorator_1 = __webpack_require__(97);
 const create_controller_factory_1 = __webpack_require__(18);
 const common_1 = __webpack_require__(5);
 const swagger_1 = __webpack_require__(8);
-const push_subscription_dto_1 = __webpack_require__(306);
-const push_subscription_entity_1 = __webpack_require__(300);
-const push_subscriptions_service_1 = __webpack_require__(299);
+const push_subscription_dto_1 = __webpack_require__(323);
+const push_subscription_entity_1 = __webpack_require__(317);
+const push_subscriptions_service_1 = __webpack_require__(316);
 class PushSubscriptionsController extends (0, create_controller_factory_1.createController)(push_subscription_entity_1.PushSubscription, // Entity name for Swagger documentation
 push_subscriptions_service_1.PushSubscriptionsService, // The service handling PushSubscription-related operations
 push_subscription_dto_1.GetPushSubscriptionDto) {
@@ -24435,9 +25906,10 @@ __decorate([
 
 
 /***/ }),
-/* 306 */
+/* 323 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -24472,9 +25944,10 @@ exports.GetPushSubscriptionDto = GetPushSubscriptionDto;
 
 
 /***/ }),
-/* 307 */
+/* 324 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -24487,11 +25960,11 @@ exports.OrganizationManagementModule = void 0;
 const common_1 = __webpack_require__(5);
 const core_1 = __webpack_require__(7);
 const typeorm_1 = __webpack_require__(16);
-const branches_module_1 = __webpack_require__(308);
-const departments_module_1 = __webpack_require__(312);
+const branches_module_1 = __webpack_require__(325);
+const departments_module_1 = __webpack_require__(329);
 const organization_entity_1 = __webpack_require__(42);
-const organizations_controller_1 = __webpack_require__(316);
-const organizations_service_1 = __webpack_require__(318);
+const organizations_controller_1 = __webpack_require__(333);
+const organizations_service_1 = __webpack_require__(335);
 let OrganizationManagementModule = class OrganizationManagementModule {
 };
 exports.OrganizationManagementModule = OrganizationManagementModule;
@@ -24531,9 +26004,10 @@ exports.OrganizationManagementModule = OrganizationManagementModule = __decorate
 
 
 /***/ }),
-/* 308 */
+/* 325 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -24545,9 +26019,9 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.BranchesModule = void 0;
 const common_1 = __webpack_require__(5);
 const typeorm_1 = __webpack_require__(16);
-const branches_controller_1 = __webpack_require__(309);
-const branches_service_1 = __webpack_require__(310);
-const departments_module_1 = __webpack_require__(312);
+const branches_controller_1 = __webpack_require__(326);
+const branches_service_1 = __webpack_require__(327);
+const departments_module_1 = __webpack_require__(329);
 const branch_entity_1 = __webpack_require__(41);
 let BranchesModule = class BranchesModule {
 };
@@ -24564,15 +26038,16 @@ exports.BranchesModule = BranchesModule = __decorate([
 
 
 /***/ }),
-/* 309 */
+/* 326 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
+"use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.BranchesController = void 0;
 const create_controller_factory_1 = __webpack_require__(18);
-const branches_service_1 = __webpack_require__(310);
-const branch_dto_1 = __webpack_require__(311);
+const branches_service_1 = __webpack_require__(327);
+const branch_dto_1 = __webpack_require__(328);
 const branch_entity_1 = __webpack_require__(41);
 class BranchesController extends (0, create_controller_factory_1.createController)(branch_entity_1.Branch, branches_service_1.BranchesService, branch_dto_1.GetBranchDto, branch_dto_1.BranchDto, branch_dto_1.UpdateBranchDto) {
 }
@@ -24580,9 +26055,10 @@ exports.BranchesController = BranchesController;
 
 
 /***/ }),
-/* 310 */
+/* 327 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -24621,9 +26097,10 @@ exports.BranchesService = BranchesService = __decorate([
 
 
 /***/ }),
-/* 311 */
+/* 328 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -24706,9 +26183,10 @@ exports.GetBranchDto = GetBranchDto;
 
 
 /***/ }),
-/* 312 */
+/* 329 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -24720,8 +26198,8 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.DepartmentsModule = void 0;
 const common_1 = __webpack_require__(5);
 const typeorm_1 = __webpack_require__(16);
-const departments_controller_1 = __webpack_require__(313);
-const departments_service_1 = __webpack_require__(314);
+const departments_controller_1 = __webpack_require__(330);
+const departments_service_1 = __webpack_require__(331);
 const department_entity_1 = __webpack_require__(36);
 let DepartmentsModule = class DepartmentsModule {
 };
@@ -24739,15 +26217,16 @@ exports.DepartmentsModule = DepartmentsModule = __decorate([
 
 
 /***/ }),
-/* 313 */
+/* 330 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
+"use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.DepartmentsController = void 0;
 const create_controller_factory_1 = __webpack_require__(18);
-const departments_service_1 = __webpack_require__(314);
-const department_dto_1 = __webpack_require__(315);
+const departments_service_1 = __webpack_require__(331);
+const department_dto_1 = __webpack_require__(332);
 const department_entity_1 = __webpack_require__(36);
 class DepartmentsController extends (0, create_controller_factory_1.createController)(department_entity_1.Department, departments_service_1.DepartmentsService, department_dto_1.GetDepartmentDto, department_dto_1.DepartmentDto, department_dto_1.UpdateDepartmentDto) {
 }
@@ -24755,9 +26234,10 @@ exports.DepartmentsController = DepartmentsController;
 
 
 /***/ }),
-/* 314 */
+/* 331 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -24796,9 +26276,10 @@ exports.DepartmentsService = DepartmentsService = __decorate([
 
 
 /***/ }),
-/* 315 */
+/* 332 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -24881,25 +26362,27 @@ exports.GetDepartmentDto = GetDepartmentDto;
 
 
 /***/ }),
-/* 316 */
+/* 333 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
+"use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.OrganizationsController = void 0;
 const create_controller_factory_1 = __webpack_require__(18);
-const organization_dto_1 = __webpack_require__(317);
+const organization_dto_1 = __webpack_require__(334);
 const organization_entity_1 = __webpack_require__(42);
-const organizations_service_1 = __webpack_require__(318);
+const organizations_service_1 = __webpack_require__(335);
 class OrganizationsController extends (0, create_controller_factory_1.createController)(organization_entity_1.Organization, organizations_service_1.OrganizationsService, organization_dto_1.GetOrganizationDto, organization_dto_1.OrganizationDto, organization_dto_1.UpdateOrganizationDto) {
 }
 exports.OrganizationsController = OrganizationsController;
 
 
 /***/ }),
-/* 317 */
+/* 334 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -24976,9 +26459,10 @@ exports.GetOrganizationDto = GetOrganizationDto;
 
 
 /***/ }),
-/* 318 */
+/* 335 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -25017,9 +26501,10 @@ exports.OrganizationsService = OrganizationsService = __decorate([
 
 
 /***/ }),
-/* 319 */
+/* 336 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -25032,14 +26517,14 @@ exports.PayrollManagementModule = void 0;
 const common_1 = __webpack_require__(5);
 const core_1 = __webpack_require__(7);
 const typeorm_1 = __webpack_require__(16);
-const final_work_hours_module_1 = __webpack_require__(249);
+const final_work_hours_module_1 = __webpack_require__(266);
 const employee_management_module_1 = __webpack_require__(15);
 const cutoffs_module_1 = __webpack_require__(128);
 const payroll_entity_1 = __webpack_require__(63);
-const payroll_item_types_module_1 = __webpack_require__(320);
-const payroll_items_module_1 = __webpack_require__(324);
-const payrolls_controller_1 = __webpack_require__(328);
-const payrolls_service_1 = __webpack_require__(329);
+const payroll_item_types_module_1 = __webpack_require__(337);
+const payroll_items_module_1 = __webpack_require__(341);
+const payrolls_controller_1 = __webpack_require__(345);
+const payrolls_service_1 = __webpack_require__(346);
 let PayrollManagementModule = class PayrollManagementModule {
 };
 exports.PayrollManagementModule = PayrollManagementModule;
@@ -25086,9 +26571,10 @@ exports.PayrollManagementModule = PayrollManagementModule = __decorate([
 
 
 /***/ }),
-/* 320 */
+/* 337 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -25101,8 +26587,8 @@ exports.PayrollItemTypesModule = void 0;
 const common_1 = __webpack_require__(5);
 const typeorm_1 = __webpack_require__(16);
 const payroll_item_type_entity_1 = __webpack_require__(66);
-const payroll_item_types_controller_1 = __webpack_require__(321);
-const payroll_item_types_service_1 = __webpack_require__(323);
+const payroll_item_types_controller_1 = __webpack_require__(338);
+const payroll_item_types_service_1 = __webpack_require__(340);
 let PayrollItemTypesModule = class PayrollItemTypesModule {
 };
 exports.PayrollItemTypesModule = PayrollItemTypesModule;
@@ -25119,25 +26605,27 @@ exports.PayrollItemTypesModule = PayrollItemTypesModule = __decorate([
 
 
 /***/ }),
-/* 321 */
+/* 338 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
+"use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.PayrollItemTypesController = void 0;
 const create_controller_factory_1 = __webpack_require__(18);
-const payroll_item_type_dto_1 = __webpack_require__(322);
+const payroll_item_type_dto_1 = __webpack_require__(339);
 const payroll_item_type_entity_1 = __webpack_require__(66);
-const payroll_item_types_service_1 = __webpack_require__(323);
+const payroll_item_types_service_1 = __webpack_require__(340);
 class PayrollItemTypesController extends (0, create_controller_factory_1.createController)(payroll_item_type_entity_1.PayrollItemType, payroll_item_types_service_1.PayrollItemTypesService, payroll_item_type_dto_1.GetPayrollItemTypeDto, payroll_item_type_dto_1.PayrollItemTypeDto, payroll_item_type_dto_1.UpdatePayrollItemTypeDto) {
 }
 exports.PayrollItemTypesController = PayrollItemTypesController;
 
 
 /***/ }),
-/* 322 */
+/* 339 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -25395,9 +26883,10 @@ exports.GetPayrollItemTypeDto = GetPayrollItemTypeDto;
 
 
 /***/ }),
-/* 323 */
+/* 340 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -25436,9 +26925,10 @@ exports.PayrollItemTypesService = PayrollItemTypesService = __decorate([
 
 
 /***/ }),
-/* 324 */
+/* 341 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -25451,8 +26941,8 @@ exports.PayrollItemsModule = void 0;
 const common_1 = __webpack_require__(5);
 const typeorm_1 = __webpack_require__(16);
 const payroll_item_entity_1 = __webpack_require__(65);
-const payroll_items_controller_1 = __webpack_require__(325);
-const payroll_items_service_1 = __webpack_require__(327);
+const payroll_items_controller_1 = __webpack_require__(342);
+const payroll_items_service_1 = __webpack_require__(344);
 let PayrollItemsModule = class PayrollItemsModule {
 };
 exports.PayrollItemsModule = PayrollItemsModule;
@@ -25469,25 +26959,27 @@ exports.PayrollItemsModule = PayrollItemsModule = __decorate([
 
 
 /***/ }),
-/* 325 */
+/* 342 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
+"use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.PayrollItemsController = void 0;
 const create_controller_factory_1 = __webpack_require__(18);
-const payroll_dto_1 = __webpack_require__(326);
+const payroll_dto_1 = __webpack_require__(343);
 const payroll_item_entity_1 = __webpack_require__(65);
-const payroll_items_service_1 = __webpack_require__(327);
+const payroll_items_service_1 = __webpack_require__(344);
 class PayrollItemsController extends (0, create_controller_factory_1.createController)(payroll_item_entity_1.PayrollItem, payroll_items_service_1.PayrollItemsService, payroll_dto_1.GetPayrollDto, payroll_dto_1.PayrollDto, payroll_dto_1.UpdatePayrollDto) {
 }
 exports.PayrollItemsController = PayrollItemsController;
 
 
 /***/ }),
-/* 326 */
+/* 343 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -25523,9 +27015,10 @@ exports.GetPayrollDto = GetPayrollDto;
 
 
 /***/ }),
-/* 327 */
+/* 344 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -25564,9 +27057,10 @@ exports.PayrollItemsService = PayrollItemsService = __decorate([
 
 
 /***/ }),
-/* 328 */
+/* 345 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -25585,16 +27079,16 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.PayrollsController = void 0;
 const authorize_decorator_1 = __webpack_require__(26);
 const current_user_decorator_1 = __webpack_require__(97);
-const generalresponse_dto_1 = __webpack_require__(83);
+const generalresponse_dto_1 = __webpack_require__(86);
 const action_enum_1 = __webpack_require__(40);
 const create_controller_factory_1 = __webpack_require__(18);
 const common_1 = __webpack_require__(5);
 const swagger_1 = __webpack_require__(8);
 const class_transformer_1 = __webpack_require__(23);
 const express_1 = __webpack_require__(205);
-const payroll_dto_1 = __webpack_require__(326);
+const payroll_dto_1 = __webpack_require__(343);
 const payroll_entity_1 = __webpack_require__(63);
-const payrolls_service_1 = __webpack_require__(329);
+const payrolls_service_1 = __webpack_require__(346);
 class PayrollsController extends (0, create_controller_factory_1.createController)(payroll_entity_1.Payroll, payrolls_service_1.PayrollsService, payroll_dto_1.GetPayrollDto, payroll_dto_1.PayrollDto, payroll_dto_1.UpdatePayrollDto) {
     constructor(payrollsService) {
         super(payrollsService);
@@ -25969,9 +27463,10 @@ __decorate([
 
 
 /***/ }),
-/* 329 */
+/* 346 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -25994,20 +27489,20 @@ const cutoff_type_enum_1 = __webpack_require__(57);
 const payroll_item_category_enum_1 = __webpack_require__(67);
 const payroll_status_enum_1 = __webpack_require__(64);
 const role_scope_type_enum_1 = __webpack_require__(38);
-const utility_helper_1 = __webpack_require__(84);
+const utility_helper_1 = __webpack_require__(87);
 const base_service_1 = __webpack_require__(31);
 const users_service_1 = __webpack_require__(30);
-const final_work_hours_service_1 = __webpack_require__(252);
+const final_work_hours_service_1 = __webpack_require__(269);
 const common_1 = __webpack_require__(5);
 const typeorm_1 = __webpack_require__(16);
-const mathjs_1 = __webpack_require__(330);
+const mathjs_1 = __webpack_require__(347);
 const typeorm_2 = __webpack_require__(25);
 const employees_service_1 = __webpack_require__(104);
 const cutoffs_service_1 = __webpack_require__(130);
 const payroll_entity_1 = __webpack_require__(63);
-const payroll_item_types_service_1 = __webpack_require__(323);
+const payroll_item_types_service_1 = __webpack_require__(340);
 const payroll_item_entity_1 = __webpack_require__(65);
-const payroll_items_service_1 = __webpack_require__(327);
+const payroll_items_service_1 = __webpack_require__(344);
 // Add these types to your system using PayrollItemType entity
 const salaryCompensationTypes = [
     {
@@ -26994,15 +28489,17 @@ exports.PayrollsService = PayrollsService = PayrollsService_1 = __decorate([
 
 
 /***/ }),
-/* 330 */
+/* 347 */
 /***/ ((module) => {
 
+"use strict";
 module.exports = require("mathjs");
 
 /***/ }),
-/* 331 */
+/* 348 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
+"use strict";
 
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
@@ -27047,7 +28544,7 @@ var HttpExceptionFilter_1;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.HttpExceptionFilter = void 0;
 const common_1 = __webpack_require__(5);
-const crypto = __importStar(__webpack_require__(275));
+const crypto = __importStar(__webpack_require__(292));
 /**
  * HttpExceptionFilter is a global filter that handles all exceptions thrown in the application.
  * It logs the error details, sanitizes sensitive information, and sends a user-friendly response to the client.
@@ -27198,193 +28695,10 @@ exports.HttpExceptionFilter = HttpExceptionFilter = HttpExceptionFilter_1 = __de
 
 
 /***/ }),
-/* 332 */
+/* 349 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
-
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-var __importStar = (this && this.__importStar) || (function () {
-    var ownKeys = function(o) {
-        ownKeys = Object.getOwnPropertyNames || function (o) {
-            var ar = [];
-            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
-            return ar;
-        };
-        return ownKeys(o);
-    };
-    return function (mod) {
-        if (mod && mod.__esModule) return mod;
-        var result = {};
-        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
-        __setModuleDefault(result, mod);
-        return result;
-    };
-})();
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.LoggingInterceptor = void 0;
-const common_1 = __webpack_require__(5);
-const crypto = __importStar(__webpack_require__(275));
-const operators_1 = __webpack_require__(96);
-/**
- * LoggingInterceptor is a NestJS interceptor that logs HTTP requests and responses.
- * It also sanitizes sensitive data and adds a correlation ID to each request and response.
- */
-let LoggingInterceptor = class LoggingInterceptor {
-    constructor() {
-        this.logger = new common_1.Logger('HTTP');
-        this.SENSITIVE_FIELDS = ['password', 'confirmPassword', 'token', 'authorization', 'creditCard'];
-        this.ALLOWED_HEADERS = ['user-agent', 'content-type', 'accept', 'origin'];
-    }
-    /**
-     * Intercepts HTTP requests and responses to log relevant information.
-     * @param context - The execution context of the request.
-     * @param next - The next handler in the request pipeline.
-     * @returns An observable of the response.
-     */
-    intercept(context, next) {
-        const request = context.switchToHttp().getRequest();
-        const response = context.switchToHttp().getResponse();
-        const correlationId = request.headers['x-correlation-id'] || crypto.randomUUID();
-        const startTime = Date.now();
-        const method = request.method;
-        const url = request.originalUrl || request.url;
-        const userAgent = request.get('user-agent') || '';
-        const ip = this.getClientIp(request);
-        // Skip logging body for streaming endpoints
-        if (url.includes('/stream/') || url.includes('/download/')) {
-            this.logger.log(`${method} ${url} ${ip} ${userAgent} [STREAMING]`);
-            return next.handle(); // Don't try to log response for streaming
-        }
-        // Set correlation ID in response headers
-        response.setHeader('x-correlation-id', correlationId);
-        // Log request
-        this.logger.log({
-            type: 'REQUEST',
-            correlationId,
-            timestamp: new Date().toISOString(),
-            method: request.method,
-            url: request.originalUrl,
-            query: this.sanitizeData(request.query),
-            body: this.sanitizeData(request.body),
-            headers: this.filterHeaders(request.headers),
-            ip: request.ip,
-        });
-        return next.handle().pipe((0, operators_1.tap)((responseBody) => {
-            this.logResponse(correlationId, startTime, response.statusCode, responseBody);
-        }), (0, operators_1.catchError)((error) => {
-            this.logError(correlationId, startTime, error);
-            throw error;
-        }));
-    }
-    getClientIp(req) {
-        var _a, _b;
-        return req.ip ||
-            ((_a = req.connection) === null || _a === void 0 ? void 0 : _a.remoteAddress) ||
-            ((_b = req.headers['x-forwarded-for']) === null || _b === void 0 ? void 0 : _b.split(',')[0]) ||
-            'unknown';
-    }
-    /**
-     * Sanitizes sensitive data in the request body or query parameters.
-     * @param data - The data to sanitize.
-     * @returns The sanitized data.
-     */
-    sanitizeData(data) {
-        if (!data)
-            return data;
-        const sanitized = Object.assign({}, data);
-        const sanitizeObject = (obj) => {
-            for (const key in obj) {
-                if (this.SENSITIVE_FIELDS.includes(key.toLowerCase())) {
-                    obj[key] = '[REDACTED]';
-                }
-                else if (typeof obj[key] === 'object') {
-                    sanitizeObject(obj[key]);
-                }
-            }
-        };
-        sanitizeObject(sanitized);
-        return sanitized;
-    }
-    /**
-     * Filters headers to include only allowed headers.
-     * @param headers - The headers to filter.
-     * @returns The filtered headers.
-     */
-    filterHeaders(headers) {
-        return Object.keys(headers)
-            .filter(key => this.ALLOWED_HEADERS.includes(key.toLowerCase()))
-            .reduce((obj, key) => {
-            obj[key] = headers[key];
-            return obj;
-        }, {});
-    }
-    /**
-     * Logs the response details.
-     * @param correlationId - The correlation ID of the request.
-     * @param startTime - The start time of the request.
-     * @param statusCode - The HTTP status code of the response.
-     * @param body - The response body.
-     */
-    logResponse(correlationId, startTime, statusCode, body) {
-        this.logger.log({
-            type: 'RESPONSE',
-            correlationId,
-            timestamp: new Date().toISOString(),
-            duration: `${Date.now() - startTime}ms`,
-            statusCode,
-            responseSize: JSON.stringify(body).length,
-            success: statusCode < 400,
-        });
-    }
-    /**
-     * Logs the error details.
-     * @param correlationId - The correlation ID of the request.
-     * @param startTime - The start time of the request.
-     * @param error - The error object.
-     */
-    logError(correlationId, startTime, error) {
-        this.logger.error({
-            type: 'ERROR',
-            correlationId,
-            timestamp: new Date().toISOString(),
-            duration: `${Date.now() - startTime}ms`,
-            statusCode: error.status || 500,
-            message: error.message,
-            stack: error.stack || 'No stack trace available'
-        });
-    }
-};
-exports.LoggingInterceptor = LoggingInterceptor;
-exports.LoggingInterceptor = LoggingInterceptor = __decorate([
-    (0, common_1.Injectable)()
-], LoggingInterceptor);
-
-
-/***/ }),
-/* 333 */
-/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
-
+"use strict";
 
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -27396,7 +28710,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.TransformInterceptor = void 0;
 const common_1 = __webpack_require__(5);
 const class_transformer_1 = __webpack_require__(23);
-const operators_1 = __webpack_require__(96);
+const operators_1 = __webpack_require__(233);
 /**
  * A NestJS interceptor that transforms the response data.
  *
@@ -27428,15 +28742,16 @@ exports.TransformInterceptor = TransformInterceptor = __decorate([
 
 
 /***/ }),
-/* 334 */
+/* 350 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
+"use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.swaggerCustomOptions = exports.swaggerConfig = exports.getLocalIpAddress = void 0;
 const config_1 = __webpack_require__(6);
 const swagger_1 = __webpack_require__(8);
-const os_1 = __webpack_require__(335);
+const os_1 = __webpack_require__(351);
 // Initialize ConfigService
 const configService = new config_1.ConfigService();
 // Get local IP address
@@ -27503,9 +28818,10 @@ exports.swaggerCustomOptions = {
 
 
 /***/ }),
-/* 335 */
+/* 351 */
 /***/ ((module) => {
 
+"use strict";
 module.exports = require("os");
 
 /***/ })

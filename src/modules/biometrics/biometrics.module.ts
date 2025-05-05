@@ -2,11 +2,12 @@ import { AttendancePunch } from '@/modules/attendance-management/attendance-punc
 import { Module } from '@nestjs/common';
 import { RouterModule } from '@nestjs/core';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { AnvizBiometricsService } from './anviz/services/anvis-biometrics.service';
+import { BiometricDevicesController } from './biometric-devices.controller';
 import { BiometricsController } from './biometrics.controller';
 import { BiometricDevice } from './entities/biometric-device.entity';
 import { BiometricTemplate } from './entities/biometric-template.entity';
 import { TimeoutInterceptor } from './interceptors/timeout.interceptor';
+import { AnvizBiometricsService } from './services/anvis-biometrics.service';
 import { AttendanceTrackingService } from './services/attendance-tracking.service';
 import { BiometricDevicesService } from './services/biometric-devices.service';
 import { BiometricsFactoryService } from './services/biometrics-factory.service';
@@ -21,7 +22,7 @@ import { ZKTecoBiometricsService } from './services/zkteco-biometrics.service';
             module: BiometricsModule,
         }]),
     ],
-    controllers: [BiometricsController],
+    controllers: [BiometricsController, BiometricDevicesController],
     providers: [
         // Register ZKTeco service
         {

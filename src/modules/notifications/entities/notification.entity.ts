@@ -11,7 +11,7 @@ export class Notification extends BaseEntity<Notification> {
   @Column()
   message!: string;
 
-  @Column()
+  @Column({ nullable: true })
   iconOrImage?: string;
 
   @Column({

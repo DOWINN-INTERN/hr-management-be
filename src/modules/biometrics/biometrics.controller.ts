@@ -1,41 +1,11 @@
-import { Body, Controller, Delete, Get, HttpException, HttpStatus, Inject, Param, Post, Put, Query, UseInterceptors, ValidationPipe } from '@nestjs/common';
-import { ApiBody, ApiOperation, ApiParam, ApiProperty, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
-import { IsEnum, IsInt, IsIP, IsOptional, Max, Min } from 'class-validator';
+import { Body, Controller, Delete, Get, HttpException, HttpStatus, Param, Post, Put, Query, UseInterceptors, ValidationPipe } from '@nestjs/common';
+import { ApiOperation, ApiParam, ApiProperty, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { IsOptional } from 'class-validator';
 import { ErrorResponseDto } from './dtos/error-response.dto';
-import { BiometricDevice, BiometricDeviceType } from './entities/biometric-device.entity';
 import { TimeoutInterceptor } from './interceptors/timeout.interceptor';
-import { AttendanceRecord, IBiometricDevice, IBiometricService, IBiometricTemplate, IBiometricUser } from './interfaces/biometric.interface';
+import { AttendanceRecord, IBiometricTemplate, IBiometricUser } from './interfaces/biometric.interface';
 import { BiometricDevicesService } from './services/biometric-devices.service';
 import { BiometricsFactoryService } from './services/biometrics-factory.service';
-
-class ConnectDeviceDto {
-    @ApiProperty({
-        description: 'Device IP address',
-        example: '192.168.1.100'
-    })
-    @IsIP(4)
-    ipAddress!: string;
-
-    @ApiProperty({
-        description: 'Device port number',
-        example: 4370,
-        default: 4370
-    })
-    @IsInt()
-    @Min(1)
-    @Max(65535)
-    port: number = 4370;
-
-    @ApiProperty({
-        description: 'Device type/manufacturer',
-        enum: BiometricDeviceType,
-        default: BiometricDeviceType.ZKTECO,
-        example: 'zkteco'
-    })
-    @IsEnum(BiometricDeviceType)
-    @IsOptional()
-    deviceType?: string = BiometricDeviceType.ZKTECO;
-}
 
 class SetUserDto {
     @ApiProperty({
@@ -108,8 +78,6 @@ class GetFingerprintDto {
 @UseInterceptors(new TimeoutInterceptor(30))
 export class BiometricsController {
     constructor(
-        @Inject('BIOMETRIC_SERVICE')
-        private readonly defaultBiometricService: IBiometricService,
         private readonly biometricsFactory: BiometricsFactoryService,
         private readonly biometricDevicesService: BiometricDevicesService
     ) {}
@@ -249,154 +217,6 @@ export class BiometricsController {
                 error,
                 'Failed to register user',
                 'User registration not supported by this device type'
-            );
-        }
-    }
-
-    @ApiOperation({ summary: 'Connect to a biometric device' })
-    @ApiResponse({ 
-        status: HttpStatus.CREATED, 
-        description: 'Device connected successfully',
-        type: Object 
-    })
-    @ApiResponse({ 
-        status: HttpStatus.BAD_REQUEST, 
-        description: 'Invalid input data',
-        type: ErrorResponseDto 
-    })
-    @ApiResponse({ 
-        status: HttpStatus.SERVICE_UNAVAILABLE, 
-        description: 'Device connection failed',
-        type: ErrorResponseDto 
-    })
-    @ApiBody({
-        type: ConnectDeviceDto,
-        description: 'Device connection parameters'
-
-    })
-    @Post('devices/connect')
-    async connectDevice(
-        @Body() connectDeviceDto: ConnectDeviceDto
-    ): Promise<IBiometricDevice | null> {
-        try {
-            // Use the appropriate service based on device type
-            const service = this.biometricsFactory.getService(
-                connectDeviceDto.deviceType || BiometricDeviceType.ZKTECO
-            );
-            
-            const device = await service.connect(
-                connectDeviceDto.ipAddress,
-                connectDeviceDto.port
-            );
-            
-            // If connection was successful, update or create device in database
-            if (device) {
-                // Create a BiometricDevice entity instance
-                const biometricDevice = new BiometricDevice({});
-                
-                // Set properties from device object
-                Object.assign(biometricDevice, {
-                    ...device,
-                    provider: connectDeviceDto.deviceType || BiometricDeviceType.ZKTECO
-                });
-                
-                // Save additional info to database
-                await this.biometricDevicesService.save(biometricDevice);
-            }
-            
-            return device;
-        } catch (error: unknown) {
-            if (error instanceof HttpException) {
-                throw error;
-            }
-            throw new HttpException(
-                `Failed to connect to device: ${this.getErrorMessage(error)}`,
-                HttpStatus.SERVICE_UNAVAILABLE
-            );
-        }
-    }
-
-    @ApiOperation({ summary: 'Disconnect from a biometric device' })
-    @ApiResponse({ status: HttpStatus.OK, description: 'Device disconnected successfully' })
-    @ApiResponse({ 
-        status: HttpStatus.NOT_FOUND, 
-        description: 'Device not found',
-        type: ErrorResponseDto
-    })
-    @ApiParam({ name: 'deviceId', description: 'Device ID to disconnect from' })
-    @Post('devices/:deviceId/disconnect')
-    async disconnectDevice(@Param('deviceId') deviceId: string): Promise<{ success: boolean; message: string }> {
-        try {
-            // Get the appropriate service based on the device ID
-            const service = await this.biometricsFactory.getServiceByDeviceId(deviceId);
-            
-            const result = await service.disconnect(deviceId);
-            
-            // Update database record
-            if (result) {
-                await this.biometricDevicesService.update(deviceId, {
-                    isConnected: false
-                });
-            }
-            
-            return {
-                success: result,
-                message: result 
-                    ? 'Device disconnected successfully' 
-                    : 'Device disconnect failed'
-            };
-        } catch (error: unknown) {
-            return this.handleError(
-                error,
-                'Failed to disconnect device',
-                'Device disconnection failed'
-            );
-        }
-    }
-
-    @ApiOperation({ summary: 'Get all connected biometric devices' })
-    @ApiResponse({ 
-        status: HttpStatus.OK, 
-        description: 'List of connected devices',
-        type: [Object]
-    })
-    @Get('devices')
-    async getConnectedDevices(): Promise<IBiometricDevice[]> {
-        try {
-            // Get all devices from database
-            const devices = await this.biometricDevicesService.getRepository().find({
-                where: { isConnected: true }
-            });
-            
-            return devices;
-        } catch (error: unknown) {
-            throw new HttpException(
-                `Failed to get connected devices: ${this.getErrorMessage(error)}`,
-                HttpStatus.INTERNAL_SERVER_ERROR
-            );
-        }
-    }
-
-    @ApiOperation({ summary: 'Get device information' })
-    @ApiResponse({ status: HttpStatus.OK, description: 'Device information' })
-    @ApiResponse({ 
-        status: HttpStatus.NOT_FOUND, 
-        description: 'Device not found',
-        type: ErrorResponseDto
-    })
-    @ApiParam({ name: 'deviceId', description: 'Target device ID' })
-    @Get('devices/:deviceId/info')
-    async getDeviceInfo(@Param('deviceId') deviceId: string): Promise<Record<string, any>> {
-        try {
-            // Get the appropriate service based on the device ID
-            const service = await this.biometricsFactory.getServiceByDeviceId(deviceId);
-            
-            return await service.getDeviceInfo(deviceId);
-        } catch (error: unknown) {
-            return this.handleError(
-                error,
-                'Failed to get device information',
-                'Device information retrieval not supported by this device type'
             );
         }
     }

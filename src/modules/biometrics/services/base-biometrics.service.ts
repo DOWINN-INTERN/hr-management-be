@@ -1,11 +1,11 @@
-import { HttpException, HttpStatus, Logger } from '@nestjs/common';
+import { BiometricDeviceType } from '@/common/enums/biometrics-device-type.enum';
+import { BadRequestException, HttpException, HttpStatus, InternalServerErrorException, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Repository } from 'typeorm';
+import { ConnectDeviceDto } from '../dtos/connect-device.dto';
 import { BiometricDevice } from '../entities/biometric-device.entity';
-import { BiometricTemplate } from '../entities/biometric-template.entity';
 import {
   AttendanceRecord,
-  IBiometricDevice,
   IBiometricService,
   IBiometricTemplate,
   IBiometricUser
@@ -29,14 +29,12 @@ export abstract class BaseBiometricsService implements Partial<IBiometricService
     protected readonly logger = new Logger(this.constructor.name);
     protected readonly connections: Map<string, any> = new Map();
     protected readonly activeMonitoring: Map<string, { deviceId: string, callback?: Function, intervalId?: number }> = new Map();
-    protected devices: Map<string, IBiometricDevice> = new Map();
 
     constructor(
-        protected readonly deviceRepository: Repository<BiometricDevice>,
-        protected readonly templateRepository: Repository<BiometricTemplate>,
-        protected readonly eventEmitter: EventEmitter2, // Replace with actual event emitter type
+      protected readonly deviceRepository: Repository<BiometricDevice>,
+      protected readonly eventEmitter: EventEmitter2,
     ) {
-        this.initializeFromDatabase();
+      this.initializeFromDatabase();
     }
 
 
@@ -47,39 +45,28 @@ export abstract class BaseBiometricsService implements Partial<IBiometricService
         try {
         const savedDevices = await this.deviceRepository.find();
         
-        if (savedDevices.length > 0) {
-            this.logger.log(`Found ${savedDevices.length} previously connected devices. Attempting to reconnect...`);
-            
+        if (savedDevices.length > 0) {            
             // Try to reconnect to devices in parallel
             await Promise.allSettled(
-            savedDevices.map(device => 
-                this.connect(device.ipAddress, device.port)
-                .catch(err => {
-                    const errorMessage = err instanceof Error ? err.message : 'Unknown error';
-                    this.logger.warn(`Failed to reconnect to device ${device.id}: ${errorMessage}`);
-                })
-            )
+              savedDevices.map(device => 
+                  // convert device to ConnectDeviceDto using class transformer
+                  this.connect({
+                      deviceId: device.deviceId,
+                      ipAddress: device.ipAddress,
+                      port: device.port,
+                      deviceType: device.provider
+                  } as ConnectDeviceDto)
+                  .catch(err => {
+                      const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+                      this.logger.warn(`Failed to reconnect to device ${device.id}: ${errorMessage}`);
+                  })
+              )
             );
         }
         } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
         this.logger.error(`Error initializing devices from database: ${errorMessage}`);
         }
-    }
-
-    /**
-     * Clean up resources when module is destroyed
-     */
-    async onModuleDestroy(): Promise<void> {
-        this.logger.log('Module destroying, disconnecting from all devices...');
-        
-        // Close all connections when service is destroyed
-        const disconnectPromises = Array.from(this.connections.entries()).map(
-        ([deviceId]) => this.disconnect(deviceId)
-        );
-        
-        await Promise.allSettled(disconnectPromises);
-        this.logger.log('All device connections closed');
     }
   
     emitAttendanceEvent(record: AttendanceRecord): void {
@@ -113,29 +100,50 @@ export abstract class BaseBiometricsService implements Partial<IBiometricService
      * @param port Device port
      * @returns Connected device information
      */
-    async connect(ipAddress: string, port: number): Promise<IBiometricDevice | null> {
-        if (!ipAddress || !port) {
-        throw new BiometricException('IP address and port are required', HttpStatus.BAD_REQUEST);
+    async connect(dto: ConnectDeviceDto): Promise<BiometricDevice> {
+        if (this.biometricDeviceType !== dto.deviceType) {
+            throw new InternalServerErrorException(
+                `Device type mismatch: expected ${this.biometricDeviceType}, got ${dto.deviceType}`
+            );
         }
 
-        const deviceId = this.generateDeviceId(ipAddress, port);
-        
-        // Check if already connected
-        if (this.connections.has(deviceId)) {
-            this.logger.warn(`Device ${deviceId} is already connected`);
-            return this.devices.get(deviceId) ?? null;
-        }
+        const deviceId = this.generateDeviceId(dto.ipAddress, dto.port);
 
         // Create new connection with retry logic
-        return this.connectWithRetry(deviceId, ipAddress, port);
+        return this.connectWithRetry(dto, deviceId);
     }
 
-    abstract connectWithRetry(deviceId: string, 
-        ipAddress: string,
-        port: number
-    ): Promise<IBiometricDevice>;
+    /**
+     * Update device connection status in memory and database
+     * @param deviceId Device identifier 
+     * @param isConnected Connection status
+     * @param isOffline Offline status
+     */
+    protected async updateDeviceStatus(
+        deviceId: string, 
+        isConnected: boolean, 
+        isOffline: boolean
+    ): Promise<BiometricDevice> {
+        const device = await this.deviceRepository.findOne({ where: { deviceId } });
 
-    abstract disconnect(deviceId: string): Promise<boolean>;
+        if (!device) {
+            throw new BadRequestException(`Device ${deviceId} not found`);
+        }
+
+        device.isConnected = isConnected;
+        device.isOffline = isOffline;
+
+        return await this.deviceRepository.save(device);
+    }
+
+    abstract biometricDeviceType: BiometricDeviceType;
+
+    abstract connectWithRetry(
+      dto: ConnectDeviceDto,
+      deviceId: string
+    ): Promise<BiometricDevice>;
+
+    abstract disconnect(deviceId: string): Promise<BiometricDevice>;
   
     // Device information methods (optional with default implementation)
     async getDeviceInfo(deviceId: string): Promise<Record<string, any>> {
@@ -234,30 +242,6 @@ export abstract class BaseBiometricsService implements Partial<IBiometricService
   // Command execution (optional)
   async executeCommand(deviceId: string, command: string, data?: string): Promise<any> {
     throw new BiometricException('Method not implemented', HttpStatus.NOT_IMPLEMENTED);
-  }
-
-  /**
-   * Get all connected devices
-   * @returns Array of connected biometric devices
-   */
-  getConnectedDevices(): Promise<IBiometricDevice[]> {
-    return Promise.resolve(Array.from(this.devices.values()));
-  }
-
-  /**
-   * Get a device by ID, throwing an exception if not found
-   * @param deviceId Device identifier
-   * @returns Device information
-   */
-  protected getDevice(deviceId: string): IBiometricDevice {
-    const device = this.devices.get(deviceId);
-    if (!device) {
-      throw new BiometricException(
-        `Device with ID ${deviceId} not found or not connected`,
-        HttpStatus.NOT_FOUND
-      );
-    }
-    return device;
   }
 
   /**
