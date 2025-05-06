@@ -8,7 +8,6 @@ import { BiometricDevice } from './entities/biometric-device.entity';
 import { BiometricTemplate } from './entities/biometric-template.entity';
 import { TimeoutInterceptor } from './interceptors/timeout.interceptor';
 import { AnvizBiometricsService } from './services/anvis-biometrics.service';
-import { AttendanceTrackingService } from './services/attendance-tracking.service';
 import { BiometricDevicesService } from './services/biometric-devices.service';
 import { BiometricsFactoryService } from './services/biometrics-factory.service';
 import { BiometricsPollingService } from './services/biometrics-polling.service';
@@ -46,7 +45,6 @@ import { ZKTecoBiometricsService } from './services/zkteco-biometrics.service';
         BiometricsPollingService,
         BiometricDevicesService,
         BiometricsFactoryService,
-        AttendanceTrackingService,
     ],
     exports: [
         'ZKTECO_SERVICE',
@@ -54,7 +52,6 @@ import { ZKTecoBiometricsService } from './services/zkteco-biometrics.service';
         'BIOMETRIC_SERVICE',
         BiometricDevicesService,
         BiometricsFactoryService,
-        AttendanceTrackingService,
     ],
 })
 export class BiometricsModule {}

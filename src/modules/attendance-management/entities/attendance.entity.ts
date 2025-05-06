@@ -15,14 +15,18 @@ export class Attendance extends BaseEntity<Attendance> {
 
     @Column({ 
         type: 'simple-array',
+        nullable: true,
     })
-    statuses!: AttendanceStatus[];
+    statuses?: AttendanceStatus[];
 
     @Column({ type: 'timestamp', nullable: true })
     timeIn?: Date;
 
     @Column({ type: 'timestamp', nullable: true })
     timeOut?: Date;
+
+    @Column({ default: false })
+    isProcessed!: boolean;
 
     @OneToOne(() => Schedule, (schedule: Schedule) => schedule.attendance, { eager: true })
     @JoinColumn({ name: 'scheduleId' })

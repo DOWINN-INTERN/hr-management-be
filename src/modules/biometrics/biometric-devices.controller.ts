@@ -23,8 +23,8 @@ export class BiometricDevicesController extends createController(BiometricDevice
         return await super.create(entityDto, createdById);
     }
 
-    override async delete(id: string): Promise<GeneralResponseDto> {
-        return await super.delete(id);
+    override async softDelete(id: string, deletedBy: string): Promise<GeneralResponseDto> {
+        return await super.softDelete(id, deletedBy);
     }
 
     override async deleteMany(ids: string[], hardDelete?: boolean): Promise<void> {
@@ -88,6 +88,6 @@ export class BiometricDevicesController extends createController(BiometricDevice
         // Get the appropriate service based on the device ID
         const service = await this.biometricsFactory.getServiceByDeviceId(deviceId);
         
-        return await service.disconnect(deviceId);
+        return await service.disconnect(deviceId, true);
     }
 }

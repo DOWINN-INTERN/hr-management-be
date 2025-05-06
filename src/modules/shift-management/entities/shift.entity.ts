@@ -78,9 +78,9 @@ export class Shift extends BaseEntity<Shift> {
     })
     cutoffs?: Cutoff[];
     
-    @OneToMany(() => Group, (group: Group) => group.shift)
+    @OneToMany(() => Group, (group: Group) => group.shift, { nullable: true })
     groups?: Group[];
     
-    @OneToMany(() => Schedule, (schedule: Schedule) => schedule.shift)
+    @OneToMany(() => Schedule, (schedule: Schedule) => schedule.shift, { nullable: true})
     schedules?: Schedule[];
 }

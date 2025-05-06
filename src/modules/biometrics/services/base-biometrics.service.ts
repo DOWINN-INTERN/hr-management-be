@@ -1,5 +1,5 @@
 import { BiometricDeviceType } from '@/common/enums/biometrics-device-type.enum';
-import { BadRequestException, HttpException, HttpStatus, InternalServerErrorException, Logger } from '@nestjs/common';
+import { HttpException, HttpStatus, InternalServerErrorException, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Repository } from 'typeorm';
 import { ConnectDeviceDto } from '../dtos/connect-device.dto';
@@ -43,7 +43,7 @@ export abstract class BaseBiometricsService implements Partial<IBiometricService
      */
     private async initializeFromDatabase(): Promise<void> {
         try {
-        const savedDevices = await this.deviceRepository.find();
+        const savedDevices = await this.deviceRepository.find({ where: { isConnected: true } });
         
         if (savedDevices.length > 0) {            
             // Try to reconnect to devices in parallel
@@ -56,10 +56,7 @@ export abstract class BaseBiometricsService implements Partial<IBiometricService
                       port: device.port,
                       deviceType: device.provider
                   } as ConnectDeviceDto)
-                  .catch(err => {
-                      const errorMessage = err instanceof Error ? err.message : 'Unknown error';
-                      this.logger.warn(`Failed to reconnect to device ${device.id}: ${errorMessage}`);
-                  })
+                  .catch()
               )
             );
         }
@@ -110,31 +107,44 @@ export abstract class BaseBiometricsService implements Partial<IBiometricService
         const deviceId = this.generateDeviceId(dto.ipAddress, dto.port);
 
         // Create new connection with retry logic
-        return this.connectWithRetry(dto, deviceId);
+        return await this.connectWithRetry(dto, deviceId);
+
     }
 
     /**
-     * Update device connection status in memory and database
-     * @param deviceId Device identifier 
-     * @param isConnected Connection status
-     * @param isOffline Offline status
-     */
-    protected async updateDeviceStatus(
-        deviceId: string, 
-        isConnected: boolean, 
-        isOffline: boolean
-    ): Promise<BiometricDevice> {
-        const device = await this.deviceRepository.findOne({ where: { deviceId } });
-
-        if (!device) {
-            throw new BadRequestException(`Device ${deviceId} not found`);
-        }
-
-        device.isConnected = isConnected;
-        device.isOffline = isOffline;
-
-        return await this.deviceRepository.save(device);
-    }
+   * Update device connection and online status in memory and database
+   * @param deviceId Device identifier
+   * @param isConnected Whether the device is connected
+   * @param isOffline Whether the device is considered offline
+   * @returns Updated device information
+   */
+  async updateDeviceStatus(
+    deviceId: string, 
+    isConnected: boolean, 
+    isOffline: boolean
+  ): Promise<BiometricDevice> {
+      // Find the device in the database
+      let device = await this.deviceRepository.findOne({ where: { deviceId } });
+      
+      if (!device) {
+          this.logger.warn(`Device ${deviceId} not found in database during status update`);
+          throw new BiometricException(`Device ${deviceId} not found`, HttpStatus.NOT_FOUND);
+      }
+      
+      // Update properties
+      device.isConnected = isConnected;
+      device.isOffline = isOffline;
+      
+      // Update lastSync for successful connections
+      if (isConnected) {
+          device.lastSync = new Date();
+      }
+      
+      // Save to database
+      device = await this.deviceRepository.save(device);
+      
+      return device;
+  }
 
     abstract biometricDeviceType: BiometricDeviceType;
 
@@ -143,7 +153,7 @@ export abstract class BaseBiometricsService implements Partial<IBiometricService
       deviceId: string
     ): Promise<BiometricDevice>;
 
-    abstract disconnect(deviceId: string): Promise<BiometricDevice>;
+    abstract disconnect(deviceId: string, isManual: boolean): Promise<BiometricDevice>;
   
     // Device information methods (optional with default implementation)
     async getDeviceInfo(deviceId: string): Promise<Record<string, any>> {

@@ -1,6 +1,6 @@
 import { Body, Controller, Delete, Get, HttpException, HttpStatus, Param, Post, Put, Query, UseInterceptors, ValidationPipe } from '@nestjs/common';
 import { ApiOperation, ApiParam, ApiProperty, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
-import { IsOptional } from 'class-validator';
+import { IsNumber, IsOptional, IsString } from 'class-validator';
 import { ErrorResponseDto } from './dtos/error-response.dto';
 import { TimeoutInterceptor } from './interceptors/timeout.interceptor';
 import { AttendanceRecord, IBiometricTemplate, IBiometricUser } from './interfaces/biometric.interface';
@@ -71,6 +71,64 @@ class GetFingerprintDto {
     })
     @IsOptional()
     fingerId?: number = 0;
+}
+
+// New DTOs for additional endpoints
+
+class SetDeviceTimeDto {
+    @ApiProperty({
+        description: 'Time to set on the device (ISO format)',
+        example: '2025-05-06T12:00:00.000Z',
+        required: false
+    })
+    @IsOptional()
+    @IsString()
+    time?: string;
+}
+
+class UnlockDoorDto {
+    @ApiProperty({
+        description: 'Delay in seconds to keep the door unlocked',
+        example: 3,
+        required: false
+    })
+    @IsOptional()
+    @IsNumber()
+    delay?: number;
+}
+
+class SyncUsersDto {
+    @ApiProperty({
+        description: 'Source device ID to copy users from',
+        example: '192.168.1.100:4370'
+    })
+    @IsString()
+    sourceDeviceId!: string;
+
+    @ApiProperty({
+        description: 'Target device ID to copy users to',
+        example: '192.168.1.101:4370'
+    })
+    @IsString()
+    targetDeviceId!: string;
+}
+
+class ExecuteCommandDto {
+    @ApiProperty({
+        description: 'Command to execute on device',
+        example: 'get_device_info1'
+    })
+    @IsString()
+    command!: string;
+
+    @ApiProperty({
+        description: 'Data for the command (optional)',
+        example: '{"value": 1}',
+        required: false
+    })
+    @IsOptional()
+    @IsString()
+    data?: string;
 }
 
 @ApiTags('Biometrics')
@@ -198,27 +256,19 @@ export class BiometricsController {
     async registerUser(
         @Body() setUserDto: SetUserDto
     ): Promise<IBiometricUser> {
-        try {
-            // Get the appropriate service based on the device ID
-            const service = await this.biometricsFactory.getServiceByDeviceId(setUserDto.deviceId);
-            
-            return await service.registerUser(
-                setUserDto.deviceId,
-                {
-                    userId: setUserDto.userId,
-                    name: setUserDto.name,
-                    password: setUserDto.password,
-                    cardNumber: setUserDto.cardNumber,
-                    role: setUserDto.role
-                }
-            );
-        } catch (error: unknown) {
-            return this.handleError(
-                error,
-                'Failed to register user',
-                'User registration not supported by this device type'
-            );
-        }
+        // Get the appropriate service based on the device ID
+        const service = await this.biometricsFactory.getServiceByDeviceId(setUserDto.deviceId);
+        
+        return await service.registerUser(
+            setUserDto.deviceId,
+            {
+                userId: setUserDto.userId,
+                name: setUserDto.name,
+                password: setUserDto.password,
+                cardNumber: setUserDto.cardNumber,
+                role: setUserDto.role
+            }
+        );
     }
 
     @ApiOperation({ summary: 'Set device time' })
@@ -470,6 +520,333 @@ export class BiometricsController {
                 error,
                 'Failed to clear attendance records',
                 'Attendance record clearing not supported by this device type'
+            );
+        }
+    }
+
+    @ApiOperation({ summary: 'Get device time' })
+    @ApiResponse({ 
+        status: HttpStatus.OK, 
+        description: 'Device time retrieved successfully',
+        schema: {
+            type: 'object',
+            properties: {
+                deviceId: { type: 'string', example: '192.168.1.100:4370' },
+                time: { type: 'string', format: 'date-time', example: '2025-05-06T12:00:00.000Z' }
+            }
+        }
+    })
+    @ApiResponse({ 
+        status: HttpStatus.NOT_FOUND, 
+        description: 'Device not found',
+        type: ErrorResponseDto
+    })
+    @ApiResponse({ 
+        status: HttpStatus.NOT_IMPLEMENTED, 
+        description: 'Feature not implemented on this device',
+        type: ErrorResponseDto
+    })
+    @ApiParam({ name: 'deviceId', description: 'Target device ID' })
+    @Get('devices/:deviceId/time')
+    async getTime(@Param('deviceId') deviceId: string): Promise<{ deviceId: string; time: Date }> {
+        try {
+            // Get the appropriate service based on the device ID
+            const service = await this.biometricsFactory.getServiceByDeviceId(deviceId);
+            
+            const time = await service.getTime(deviceId);
+            
+            return { deviceId, time };
+        } catch (error: unknown) {
+            return this.handleError(
+                error,
+                'Failed to get device time',
+                'Time retrieval not supported by this device type'
+            );
+        }
+    }
+
+    @ApiOperation({ summary: 'Get device serial number' })
+    @ApiResponse({ 
+        status: HttpStatus.OK, 
+        description: 'Device serial number retrieved successfully',
+        schema: {
+            type: 'object',
+            properties: {
+                deviceId: { type: 'string', example: '192.168.1.100:4370' },
+                serialNumber: { type: 'string', example: 'ABC123456' }
+            }
+        }
+    })
+    @ApiResponse({ 
+        status: HttpStatus.NOT_FOUND, 
+        description: 'Device not found',
+        type: ErrorResponseDto
+    })
+    @ApiParam({ name: 'deviceId', description: 'Target device ID' })
+    @Get('devices/:deviceId/serial')
+    async getSerialNumber(@Param('deviceId') deviceId: string): Promise<{ deviceId: string; serialNumber: string }> {
+        try {
+            // Get the appropriate service based on the device ID
+            const service = await this.biometricsFactory.getServiceByDeviceId(deviceId);
+            
+            const serialNumber = await service.getSerialNumber(deviceId);
+            
+            return { deviceId, serialNumber };
+        } catch (error: unknown) {
+            return this.handleError(
+                error,
+                'Failed to get device serial number',
+                'Serial number retrieval not supported by this device type'
+            );
+        }
+    }
+
+    @ApiOperation({ summary: 'Get device firmware version' })
+    @ApiResponse({ 
+        status: HttpStatus.OK, 
+        description: 'Device firmware version retrieved successfully',
+        schema: {
+            type: 'object',
+            properties: {
+                deviceId: { type: 'string', example: '192.168.1.100:4370' },
+                firmwareVersion: { type: 'string', example: '1.2.3' }
+            }
+        }
+    })
+    @ApiResponse({ 
+        status: HttpStatus.NOT_FOUND, 
+        description: 'Device not found',
+        type: ErrorResponseDto
+    })
+    @ApiParam({ name: 'deviceId', description: 'Target device ID' })
+    @Get('devices/:deviceId/firmware')
+    async getFirmwareVersion(@Param('deviceId') deviceId: string): Promise<{ deviceId: string; firmwareVersion: string }> {
+        try {
+            // Get the appropriate service based on the device ID
+            const service = await this.biometricsFactory.getServiceByDeviceId(deviceId);
+            
+            const firmwareVersion = await service.getFirmwareVersion(deviceId);
+            
+            return { deviceId, firmwareVersion };
+        } catch (error: unknown) {
+            return this.handleError(
+                error,
+                'Failed to get device firmware version',
+                'Firmware version retrieval not supported by this device type'
+            );
+        }
+    }
+
+    @ApiOperation({ summary: 'Restart device' })
+    @ApiResponse({ 
+        status: HttpStatus.OK, 
+        description: 'Device restarted successfully',
+        schema: {
+            type: 'object',
+            properties: {
+                deviceId: { type: 'string', example: '192.168.1.100:4370' },
+                success: { type: 'boolean', example: true }
+            }
+        }
+    })
+    @ApiResponse({ 
+        status: HttpStatus.NOT_FOUND, 
+        description: 'Device not found',
+        type: ErrorResponseDto
+    })
+    @ApiResponse({ 
+        status: HttpStatus.NOT_IMPLEMENTED, 
+        description: 'Feature not implemented on this device',
+        type: ErrorResponseDto
+    })
+    @ApiParam({ name: 'deviceId', description: 'Target device ID' })
+    @Post('devices/:deviceId/restart')
+    async restartDevice(@Param('deviceId') deviceId: string): Promise<{ deviceId: string; success: boolean }> {
+        try {
+            // Get the appropriate service based on the device ID
+            const service = await this.biometricsFactory.getServiceByDeviceId(deviceId);
+            
+            const success = await service.restartDevice(deviceId);
+            
+            return { deviceId, success };
+        } catch (error: unknown) {
+            return this.handleError(
+                error,
+                'Failed to restart device',
+                'Device restart not supported by this device type'
+            );
+        }
+    }
+
+    @ApiOperation({ summary: 'Unlock device door' })
+    @ApiResponse({ 
+        status: HttpStatus.OK, 
+        description: 'Door unlocked successfully',
+        schema: {
+            type: 'object',
+            properties: {
+                deviceId: { type: 'string', example: '192.168.1.100:4370' },
+                success: { type: 'boolean', example: true }
+            }
+        }
+    })
+    @ApiResponse({ 
+        status: HttpStatus.NOT_FOUND, 
+        description: 'Device not found',
+        type: ErrorResponseDto
+    })
+    @ApiResponse({ 
+        status: HttpStatus.NOT_IMPLEMENTED, 
+        description: 'Feature not implemented on this device',
+        type: ErrorResponseDto
+    })
+    @ApiParam({ name: 'deviceId', description: 'Target device ID' })
+    @Post('devices/:deviceId/unlock-door')
+    async unlockDoor(
+        @Param('deviceId') deviceId: string,
+        @Body() unlockDoorDto: UnlockDoorDto
+    ): Promise<{ deviceId: string; success: boolean }> {
+        try {
+            // Get the appropriate service based on the device ID
+            const service = await this.biometricsFactory.getServiceByDeviceId(deviceId);
+            
+            // Unlock door with delay (if supported)
+            const success = await service.unlockDoor(deviceId);
+            
+            return { deviceId, success };
+        } catch (error: unknown) {
+            return this.handleError(
+                error,
+                'Failed to unlock door',
+                'Door unlocking not supported by this device type'
+            );
+        }
+    }
+
+    @ApiOperation({ summary: 'Sync users between devices' })
+    @ApiResponse({ 
+        status: HttpStatus.OK, 
+        description: 'Users synced successfully',
+        schema: {
+            type: 'object',
+            properties: {
+                sourceDeviceId: { type: 'string', example: '192.168.1.100:4370' },
+                targetDeviceId: { type: 'string', example: '192.168.1.101:4370' },
+                count: { type: 'number', example: 10 }
+            }
+        }
+    })
+    @ApiResponse({ 
+        status: HttpStatus.NOT_FOUND, 
+        description: 'Device not found',
+        type: ErrorResponseDto
+    })
+    @ApiResponse({ 
+        status: HttpStatus.NOT_IMPLEMENTED, 
+        description: 'Feature not implemented on this device',
+        type: ErrorResponseDto
+    })
+    @Post('devices/sync-users')
+    async syncUsers(@Body() syncUsersDto: SyncUsersDto): Promise<{ sourceDeviceId: string; targetDeviceId: string; count: number }> {
+        try {
+            const { sourceDeviceId, targetDeviceId } = syncUsersDto;
+            
+            // Get the appropriate service based on source device ID (could also check target device type)
+            const service = await this.biometricsFactory.getServiceByDeviceId(sourceDeviceId);
+            
+            const count = await service.syncUsers(sourceDeviceId, targetDeviceId);
+            
+            return { sourceDeviceId, targetDeviceId, count };
+        } catch (error: unknown) {
+            return this.handleError(
+                error,
+                'Failed to sync users between devices',
+                'User synchronization not supported by this device type'
+            );
+        }
+    }
+
+    @ApiOperation({ summary: 'Execute custom command on device' })
+    @ApiResponse({ 
+        status: HttpStatus.OK, 
+        description: 'Command executed successfully',
+        schema: {
+            type: 'object',
+            properties: {
+                deviceId: { type: 'string', example: '192.168.1.100:4370' },
+                command: { type: 'string', example: 'get_device_info1' },
+                result: { type: 'object', additionalProperties: true }
+            }
+        }
+    })
+    @ApiResponse({ 
+        status: HttpStatus.NOT_FOUND, 
+        description: 'Device not found',
+        type: ErrorResponseDto
+    })
+    @ApiResponse({ 
+        status: HttpStatus.BAD_REQUEST, 
+        description: 'Invalid command',
+        type: ErrorResponseDto
+    })
+    @ApiResponse({ 
+        status: HttpStatus.NOT_IMPLEMENTED, 
+        description: 'Feature not implemented on this device',
+        type: ErrorResponseDto
+    })
+    @ApiParam({ name: 'deviceId', description: 'Target device ID' })
+    @Post('devices/:deviceId/command')
+    async executeCommand(
+        @Param('deviceId') deviceId: string,
+        @Body() executeCommandDto: ExecuteCommandDto
+    ): Promise<{ deviceId: string; command: string; result: any }> {
+        try {
+            const { command, data } = executeCommandDto;
+            
+            // Get the appropriate service based on the device ID
+            const service = await this.biometricsFactory.getServiceByDeviceId(deviceId);
+            
+            const result = await service.executeCommand(deviceId, command, data);
+            
+            return { deviceId, command, result };
+        } catch (error: unknown) {
+            return this.handleError(
+                error,
+                'Failed to execute command',
+                'Command execution not supported by this device type'
+            );
+        }
+    }
+
+    @ApiOperation({ summary: 'Get user details including fingerprint info' })
+    @ApiResponse({ 
+        status: HttpStatus.OK, 
+        description: 'User details retrieved successfully',
+        type: [Object]
+    })
+    @ApiResponse({ 
+        status: HttpStatus.NOT_FOUND, 
+        description: 'Device not found',
+        type: ErrorResponseDto
+    })
+    @ApiResponse({ 
+        status: HttpStatus.NOT_IMPLEMENTED, 
+        description: 'Feature not implemented on this device',
+        type: ErrorResponseDto
+    })
+    @ApiParam({ name: 'deviceId', description: 'Target device ID' })
+    @Get('devices/:deviceId/user-details')
+    async getUserDetails(@Param('deviceId') deviceId: string): Promise<IBiometricUser[]> {
+        try {
+            // Get the appropriate service based on the device ID
+            const service = await this.biometricsFactory.getServiceByDeviceId(deviceId);
+            
+            return await service.getUserDetails(deviceId);
+        } catch (error: unknown) {
+            return this.handleError(
+                error,
+                'Failed to get user details',
+                'User details retrieval not supported by this device type'
             );
         }
     }

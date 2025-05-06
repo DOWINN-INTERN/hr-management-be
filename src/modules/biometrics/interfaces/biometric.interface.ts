@@ -14,7 +14,7 @@ export interface IBiometricTemplate {
 export interface IBiometricService {
     // Core device management (required)
     connect(dto: ConnectDeviceDto): Promise<BiometricDevice>;
-    disconnect(deviceId: string): Promise<BiometricDevice>;
+    disconnect(deviceId: string, isManual: boolean): Promise<BiometricDevice>;
     
     // Device information methods
     getSerialNumber(deviceId: string): Promise<string>;
@@ -80,6 +80,10 @@ export interface AttendanceRecord {
     punchType: PunchType;
     punchMethod: PunchMethod;
     deviceId: string;
+}
+
+export interface AnvizRecord {
+    userId: string;
 }
 
 /**

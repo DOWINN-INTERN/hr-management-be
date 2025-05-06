@@ -9,7 +9,7 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { InjectRepository } from '@nestjs/typeorm';
 import { differenceInMinutes, endOfDay, format, startOfDay, subDays } from 'date-fns';
-import { Between, IsNull, Not, Repository } from 'typeorm';
+import { Between, IsNull, LessThan, Not, Repository } from 'typeorm';
 import { EmployeesService } from '../employee-management/employees.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { SchedulesService } from '../shift-management/schedules/schedules.service';
@@ -47,6 +47,8 @@ export class AttendancesService extends BaseService<Attendance> {
     async processAttendanceRecords() {
         const yesterday = subDays(new Date(), 1);
         const yesterdayFormatted = format(yesterday, 'yyyy-MM-dd');
+
+        // find all attendance records yesterday that shift has already ended
         
         this.logger.log(`Processing attendance records for ${yesterdayFormatted}`);
         
@@ -86,6 +88,9 @@ export class AttendancesService extends BaseService<Attendance> {
             where: {
                 timeIn: Between(startOfDay(date), endOfDay(date)),
                 timeOut: IsNull(),
+                schedule: {
+                    endTime: LessThan(format(new Date(), 'HH:mm:ss')) // Ensure the schedule end time has already passed
+                }
             },
             relations: { employee: true, schedule: true }
         });
@@ -95,7 +100,7 @@ export class AttendancesService extends BaseService<Attendance> {
                 this.logger.log(`Employee ${attendance.employee.id} has no check-out for ${formattedDate}`);
                 
                 // Update attendance with NO_CHECKED_OUT status
-                attendance.statuses = [...attendance.statuses, AttendanceStatus.NO_CHECKED_OUT];
+                attendance.statuses = [...attendance.statuses || [], AttendanceStatus.NO_CHECKED_OUT];
                 attendance.timeOut = new Date(`${formattedDate}T${attendance.schedule.endTime}`); // Use schedule end time
                 await this.save(attendance);
 
@@ -132,6 +137,7 @@ export class AttendancesService extends BaseService<Attendance> {
                 timeIn: Between(startOfDay(date), endOfDay(date)),
                 timeOut: Not(IsNull()),  // Only process completed shifts
                 schedule: {
+                    endTime: LessThan(format(new Date(), 'HH:mm:ss')), // Ensure the schedule end time has already passed
                     restDay: true,
                 },
             },
@@ -157,8 +163,8 @@ export class AttendancesService extends BaseService<Attendance> {
                     this.logger.log(`Employee ${attendance.employee.id} worked ${totalWorkHours.toFixed(2)} hours on rest day - eligible for offset`);
                     
                     // Add OFFSET status
-                    if (!attendance.statuses.includes(AttendanceStatus.OFFSET)) {
-                        attendance.statuses = [...attendance.statuses, AttendanceStatus.OFFSET];
+                    if (!attendance.statuses?.includes(AttendanceStatus.OFFSET)) {
+                        attendance.statuses = [...attendance.statuses || [], AttendanceStatus.OFFSET];
                     }
                     
                     // Grant offset leave credit to the employee
@@ -177,8 +183,8 @@ export class AttendancesService extends BaseService<Attendance> {
                     this.logger.log(`Employee ${attendance.employee.id} worked ${totalWorkHours.toFixed(2)} hours on rest day - eligible for overtime`);
                     
                     // Add OVERTIME status
-                    if (!attendance.statuses.includes(AttendanceStatus.OVERTIME)) {
-                        attendance.statuses = [...attendance.statuses, AttendanceStatus.OVERTIME];
+                    if (!attendance.statuses?.includes(AttendanceStatus.OVERTIME)) {
+                        attendance.statuses = [...attendance.statuses || [], AttendanceStatus.OVERTIME];
                     }
                     
                     // Notify the employee about overtime

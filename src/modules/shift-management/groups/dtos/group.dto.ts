@@ -3,7 +3,7 @@ import { ReferenceDto } from "@/common/dtos/reference.dto";
 import { createGetDto } from "@/common/factories/create-get-dto.factory";
 import { ApiProperty, ApiPropertyOptional, PartialType } from "@nestjs/swagger";
 import { Type } from "class-transformer";
-import { IsNotEmpty, IsOptional, IsString, IsUUID, ValidateNested } from "class-validator";
+import { IsNotEmpty, IsOptional, IsString, ValidateNested } from "class-validator";
 
 export class GroupDto extends PartialType(BaseDto) {
     @ApiProperty({ 
@@ -24,14 +24,15 @@ export class GroupDto extends PartialType(BaseDto) {
     @IsString()
     description?: string;
 
-    @ApiProperty({
-        description: 'ID of the shift this group is assigned to',
-        example: '123e4567-e89b-12d3-a456-426614174000',
+    @ApiPropertyOptional({
+        description: 'Shift assigned to this group',
+        type: ReferenceDto,
         required: false
     })
     @IsOptional()
-    @IsUUID()
-    shiftId?: string;
+    @ValidateNested()
+    @Type(() => ReferenceDto)
+    shift?: ReferenceDto;
 
     @ApiPropertyOptional({ 
         description: 'Employees assigned to this group',
