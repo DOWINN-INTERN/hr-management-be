@@ -450,18 +450,18 @@ export class PayrollsService extends BaseService<Payroll> {
       + payroll.holidayOvertimePay + payroll.specialHolidayOvertimePay
       + payroll.restDayOvertimePay + payroll.nightDifferentialPay;
 
-    // // 11. Total hours worked
-    // payroll.totalHours = payroll.totalRegularHours + payroll.totalRestDayHours + 
-    //                     payroll.totalHolidayHours + payroll.totalSpecialHolidayHours +
-    //                     payroll.totalOvertimeHours + payroll.totalRestDayOvertimeHours +
-    //                     payroll.totalHolidayOvertimeHours + payroll.totalSpecialHolidayOvertimeHours;
+    // 11. Total hours worked
+    payroll.totalHours = payroll.totalRegularHours + payroll.totalRestDayHours + 
+                        payroll.totalHolidayHours + payroll.totalSpecialHolidayHours +
+                        payroll.totalOvertimeHours + payroll.totalRestDayOvertimeHours +
+                        payroll.totalHolidayOvertimeHours + payroll.totalSpecialHolidayOvertimeHours;
     
     // 12. Initial taxable income (will be adjusted for non-taxable items)
     payroll.taxableIncome = payroll.grossPay;
   }
   
   /**
-   * Evaluate formula for a payroll item
+   * Evaluate formula for a payroll item, with BaseCompensation available
    */
   async evaluateFormula(
     formula: string,
@@ -469,8 +469,14 @@ export class PayrollsService extends BaseService<Payroll> {
     parameters?: Record<string, any>
   ): Promise<{ result: number; details: any }> {
     try {
+      // Get base compensation amount
+      const baseCompensation = await this.getEmployeeBaseCompensation(payroll.employee.id);
+      
       // Create comprehensive scope for formula evaluation
       const scope: Record<string, any> = {
+        // Base compensation
+        BaseCompensation: baseCompensation?.amount || 0,
+        
         // Employee data
         MonthlyRate: payroll.monthlyRate,
         DailyRate: payroll.dailyRate,
@@ -486,6 +492,7 @@ export class PayrollsService extends BaseService<Payroll> {
         HolidayOvertimeHours: payroll.totalHolidayOvertimeHours,
         SpecialHolidayOvertimeHours: payroll.totalSpecialHolidayOvertimeHours,
         RestDayOvertimeHours: payroll.totalRestDayOvertimeHours,
+        TotalHours: payroll.totalHours || 0,
 
         // Pay components
         BasicPay: payroll.basicPay,
@@ -501,6 +508,13 @@ export class PayrollsService extends BaseService<Payroll> {
         // Totals
         GrossPay: payroll.grossPay,
         TaxableIncome: payroll.taxableIncome,
+        
+        // Cutoff info
+        CutoffType: payroll.cutoff.cutoffType,
+        WorkingDaysInPeriod: UtilityHelper.getBusinessDays(
+          payroll.cutoff.startDate, 
+          payroll.cutoff.endDate
+        ),
         
         // Add custom parameters
         ...parameters
@@ -519,27 +533,16 @@ export class PayrollsService extends BaseService<Payroll> {
         }
       };
     } catch (error) {
-      if (error instanceof Error) {
-        this.logger.error(`Error evaluating formula: ${formula}`, error.stack);
-        return {
-          result: 0,
-          details: {
-            formula,
-            error: error.message,
-            result: 0
-          }
-        };
-      } else {
-        this.logger.error(`Error evaluating formula: ${formula}`, String(error));
-        return {
-          result: 0,
-          details: {
-            formula,
-            error: String(error),
-            result: 0
-          }
-        };
-      }
+      // Error handling...
+      this.logger.error(`Error evaluating formula: ${formula}`, error);
+      return {
+        result: 0,
+        details: {
+          formula,
+          error: error instanceof Error ? error.message : String(error),
+          result: 0
+        }
+      };
     }
   }
   
@@ -1049,8 +1052,14 @@ private determineEmployeePosition(employee: Employee): string {
       const employee = await this.employeesService.findOneByOrFail({ id: employeeId });
       const cutoff = await this.cutoffsService.findOneByOrFail({ id: cutoffId });
       
+      // Get base compensation
+      const baseCompensation = await this.getEmployeeBaseCompensation(employeeId);
+      if (!baseCompensation) {
+        throw new BadRequestException(`No base compensation defined for employee ${employeeId}`);
+      }
+      
       // If exists and already processed, prevent re-processing
-      if (existingPayroll && existingPayroll.status !== PayrollStatus.RELEASED) {
+      if (existingPayroll && existingPayroll.status === PayrollStatus.RELEASED) {
         throw new BadRequestException(
           `Payroll for employee ${employee.id} for cutoff ${cutoff.id} has already been released and cannot be reprocessed`
         );
@@ -1080,7 +1089,7 @@ private determineEmployeePosition(employee: Employee): string {
       payroll.status = PayrollStatus.PROCESSING;
       
       // Calculate basic pay from work hours
-      this.calculateBasicPay(payroll, finalWorkHours);
+      await this.calculateBasicPay(payroll, finalWorkHours);
       
       // Save payroll to get an ID if new
       const savedPayroll = await transactionManager.save(payroll);

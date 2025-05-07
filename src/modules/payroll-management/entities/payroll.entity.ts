@@ -58,6 +58,10 @@ export class Payroll extends BaseEntity<Payroll> {
     
     @Column('decimal', { precision: 10, scale: 2, default: 0 })
     totalNightDifferentialHours!: number;
+
+    // Total hours
+    @Column('decimal', { precision: 10, scale: 2, default: 0 })
+    totalHours!: number;
     
     // Core earnings
     @Column('decimal', { precision: 15, scale: 2, default: 0 })
@@ -169,69 +173,81 @@ export class Payroll extends BaseEntity<Payroll> {
     @Column('json', { nullable: true })
     calculationDetails?: Record<string, any>;
 
-    @AfterLoad()
-    calculateTotals() {
-        if (!this.payrollItems) return;
-
-        // Reset totals
-        this.totalAllowances = 0;
-        this.totalBonuses = 0;
-        this.totalBenefits = 0;
-        this.totalDeductions = 0;
-        this.totalGovernmentContributions = 0;
-        this.totalTaxes = 0;
-
-        // Calculate based on payroll items
-        this.payrollItems.forEach(item => {
-            const category = item.payrollItemType.category.toLowerCase();
-            
-            // Sum by category
-            if (category.includes('allowance')) {
-                this.totalAllowances += +item.amount;
-            } else if (category.includes('bonus')) {
-                this.totalBonuses += +item.amount;
-            } else if (category.includes('benefit')) {
-                this.totalBenefits += +item.amount;
-            } else if (category.includes('deduction')) {
-                this.totalDeductions += +item.amount;
-            } else if (category.includes('government')) {
-                this.totalGovernmentContributions += +item.amount;
-            } else if (category.includes('tax')) {
-                this.totalTaxes += +item.amount;
-            }
-        });
-    }
+    // Virtual getters for government contributions
+  @AfterLoad()
+  computeGovtContributions() {
+    if (!this.payrollItems) return;
     
-    // Helper methods to get government contributions by type
-    getContributionByType(type: string): { employee: number; employer: number; total: number } {
-        const result = { employee: 0, employer: 0, total: 0 };
-        
-        if (!this.payrollItems) return result;
-        
-        this.payrollItems.forEach(item => {
-            if (item.payrollItemType.governmentContributionType?.toLowerCase() === type.toLowerCase()) {
-                result.employee += +item.amount;
-                result.employer += +(item.employerAmount || 0);
-            }
-        });
-        
-        result.total = result.employee + result.employer;
-        return result;
-    }
+    // SSS
+    const sssItem = this.payrollItems.find(item => 
+      item.payrollItemType.governmentContributionType === 'SSS'
+    );
+    this._sssContribution = {
+      employee: sssItem?.amount || 0,
+      employer: sssItem?.employerAmount || 0,
+      total: (sssItem?.amount || 0) + (sssItem?.employerAmount || 0)
+    };
     
-    get sssContribution() {
-        return this.getContributionByType('sss');
-    }
+    // PhilHealth
+    const philHealthItem = this.payrollItems.find(item => 
+      item.payrollItemType.governmentContributionType === 'PHILHEALTH'
+    );
+    this._philHealthContribution = {
+      employee: philHealthItem?.amount || 0,
+      employer: philHealthItem?.employerAmount || 0,
+      total: (philHealthItem?.amount || 0) + (philHealthItem?.employerAmount || 0)
+    };
     
-    get philHealthContribution() {
-        return this.getContributionByType('philhealth');
-    }
+    // Pag-IBIG
+    const pagibigItem = this.payrollItems.find(item => 
+      item.payrollItemType.governmentContributionType === 'PAGIBIG'
+    );
+    this._pagIbigContribution = {
+      employee: pagibigItem?.amount || 0,
+      employer: pagibigItem?.employerAmount || 0,
+      total: (pagibigItem?.amount || 0) + (pagibigItem?.employerAmount || 0)
+    };
     
-    get pagIbigContribution() {
-        return this.getContributionByType('pagibig');
-    }
-    
-    get withHoldingTax() {
-        return this.getContributionByType('tax').employee;
-    }
+    // Tax
+    const taxItem = this.payrollItems.find(item => 
+      item.payrollItemType.governmentContributionType === 'TAX'
+    );
+    this._withHoldingTax = taxItem?.amount || 0;
+  }
+  
+  private _sssContribution: { employee: number; employer: number; total: number } = {
+    employee: 0,
+    employer: 0,
+    total: 0
+  };
+  
+  get sssContribution() {
+    return this._sssContribution;
+  }
+  
+  private _philHealthContribution: { employee: number; employer: number; total: number } = {
+    employee: 0,
+    employer: 0,
+    total: 0
+  };
+  
+  get philHealthContribution() {
+    return this._philHealthContribution;
+  }
+  
+  private _pagIbigContribution: { employee: number; employer: number; total: number } = {
+    employee: 0,
+    employer: 0,
+    total: 0
+  };
+  
+  get pagIbigContribution() {
+    return this._pagIbigContribution;
+  }
+  
+  private _withHoldingTax: number = 0;
+  
+  get withHoldingTax() {
+    return this._withHoldingTax;
+  }
 }

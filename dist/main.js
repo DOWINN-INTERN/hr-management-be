@@ -4089,10 +4089,6 @@ __decorate([
     __metadata("design:type", typeof (_f = typeof group_entity_1.Group !== "undefined" && group_entity_1.Group) === "function" ? _f : Object)
 ], Employee.prototype, "group", void 0);
 __decorate([
-    (0, typeorm_1.Column)('decimal', { precision: 10, scale: 2, default: 0 }),
-    __metadata("design:type", Number)
-], Employee.prototype, "monthlyRate", void 0);
-__decorate([
     (0, typeorm_1.OneToMany)(() => schedule_entity_1.Schedule, (schedule) => schedule.employee, { nullable: true }),
     __metadata("design:type", Array)
 ], Employee.prototype, "schedules", void 0);
@@ -4763,6 +4759,7 @@ var CutoffStatus;
     CutoffStatus["INACTIVE"] = "INACTIVE";
     CutoffStatus["COMPLETED"] = "COMPLETED";
     CutoffStatus["PENDING"] = "PENDING";
+    CutoffStatus["PROCESSING"] = "PROCESSING";
     CutoffStatus["CANCELLED"] = "CANCELLED";
 })(CutoffStatus || (exports.CutoffStatus = CutoffStatus = {}));
 
@@ -4927,7 +4924,11 @@ __decorate([
     __metadata("design:type", Boolean)
 ], FinalWorkHour.prototype, "isApproved", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ default: false }),
+    (0, typeorm_1.Column)(),
+    __metadata("design:type", String)
+], FinalWorkHour.prototype, "batchId", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ default: true }),
     __metadata("design:type", Boolean)
 ], FinalWorkHour.prototype, "isProcessed", void 0);
 __decorate([
@@ -5212,66 +5213,65 @@ const typeorm_1 = __webpack_require__(25);
 const cutoff_entity_1 = __webpack_require__(55);
 const payroll_item_entity_1 = __webpack_require__(65);
 let Payroll = class Payroll extends base_entity_1.BaseEntity {
-    calculateTotals() {
+    constructor() {
+        super(...arguments);
+        this._sssContribution = {
+            employee: 0,
+            employer: 0,
+            total: 0
+        };
+        this._philHealthContribution = {
+            employee: 0,
+            employer: 0,
+            total: 0
+        };
+        this._pagIbigContribution = {
+            employee: 0,
+            employer: 0,
+            total: 0
+        };
+        this._withHoldingTax = 0;
+    }
+    // Virtual getters for government contributions
+    computeGovtContributions() {
         if (!this.payrollItems)
             return;
-        // Reset totals
-        this.totalAllowances = 0;
-        this.totalBonuses = 0;
-        this.totalBenefits = 0;
-        this.totalDeductions = 0;
-        this.totalGovernmentContributions = 0;
-        this.totalTaxes = 0;
-        // Calculate based on payroll items
-        this.payrollItems.forEach(item => {
-            const category = item.payrollItemType.category.toLowerCase();
-            // Sum by category
-            if (category.includes('allowance')) {
-                this.totalAllowances += +item.amount;
-            }
-            else if (category.includes('bonus')) {
-                this.totalBonuses += +item.amount;
-            }
-            else if (category.includes('benefit')) {
-                this.totalBenefits += +item.amount;
-            }
-            else if (category.includes('deduction')) {
-                this.totalDeductions += +item.amount;
-            }
-            else if (category.includes('government')) {
-                this.totalGovernmentContributions += +item.amount;
-            }
-            else if (category.includes('tax')) {
-                this.totalTaxes += +item.amount;
-            }
-        });
-    }
-    // Helper methods to get government contributions by type
-    getContributionByType(type) {
-        const result = { employee: 0, employer: 0, total: 0 };
-        if (!this.payrollItems)
-            return result;
-        this.payrollItems.forEach(item => {
-            var _a;
-            if (((_a = item.payrollItemType.governmentContributionType) === null || _a === void 0 ? void 0 : _a.toLowerCase()) === type.toLowerCase()) {
-                result.employee += +item.amount;
-                result.employer += +(item.employerAmount || 0);
-            }
-        });
-        result.total = result.employee + result.employer;
-        return result;
+        // SSS
+        const sssItem = this.payrollItems.find(item => item.payrollItemType.governmentContributionType === 'SSS');
+        this._sssContribution = {
+            employee: (sssItem === null || sssItem === void 0 ? void 0 : sssItem.amount) || 0,
+            employer: (sssItem === null || sssItem === void 0 ? void 0 : sssItem.employerAmount) || 0,
+            total: ((sssItem === null || sssItem === void 0 ? void 0 : sssItem.amount) || 0) + ((sssItem === null || sssItem === void 0 ? void 0 : sssItem.employerAmount) || 0)
+        };
+        // PhilHealth
+        const philHealthItem = this.payrollItems.find(item => item.payrollItemType.governmentContributionType === 'PHILHEALTH');
+        this._philHealthContribution = {
+            employee: (philHealthItem === null || philHealthItem === void 0 ? void 0 : philHealthItem.amount) || 0,
+            employer: (philHealthItem === null || philHealthItem === void 0 ? void 0 : philHealthItem.employerAmount) || 0,
+            total: ((philHealthItem === null || philHealthItem === void 0 ? void 0 : philHealthItem.amount) || 0) + ((philHealthItem === null || philHealthItem === void 0 ? void 0 : philHealthItem.employerAmount) || 0)
+        };
+        // Pag-IBIG
+        const pagibigItem = this.payrollItems.find(item => item.payrollItemType.governmentContributionType === 'PAGIBIG');
+        this._pagIbigContribution = {
+            employee: (pagibigItem === null || pagibigItem === void 0 ? void 0 : pagibigItem.amount) || 0,
+            employer: (pagibigItem === null || pagibigItem === void 0 ? void 0 : pagibigItem.employerAmount) || 0,
+            total: ((pagibigItem === null || pagibigItem === void 0 ? void 0 : pagibigItem.amount) || 0) + ((pagibigItem === null || pagibigItem === void 0 ? void 0 : pagibigItem.employerAmount) || 0)
+        };
+        // Tax
+        const taxItem = this.payrollItems.find(item => item.payrollItemType.governmentContributionType === 'TAX');
+        this._withHoldingTax = (taxItem === null || taxItem === void 0 ? void 0 : taxItem.amount) || 0;
     }
     get sssContribution() {
-        return this.getContributionByType('sss');
+        return this._sssContribution;
     }
     get philHealthContribution() {
-        return this.getContributionByType('philhealth');
+        return this._philHealthContribution;
     }
     get pagIbigContribution() {
-        return this.getContributionByType('pagibig');
+        return this._pagIbigContribution;
     }
     get withHoldingTax() {
-        return this.getContributionByType('tax').employee;
+        return this._withHoldingTax;
     }
 };
 exports.Payroll = Payroll;
@@ -5340,6 +5340,10 @@ __decorate([
     (0, typeorm_1.Column)('decimal', { precision: 10, scale: 2, default: 0 }),
     __metadata("design:type", Number)
 ], Payroll.prototype, "totalNightDifferentialHours", void 0);
+__decorate([
+    (0, typeorm_1.Column)('decimal', { precision: 10, scale: 2, default: 0 }),
+    __metadata("design:type", Number)
+], Payroll.prototype, "totalHours", void 0);
 __decorate([
     (0, typeorm_1.Column)('decimal', { precision: 15, scale: 2, default: 0 }),
     __metadata("design:type", Number)
@@ -5481,7 +5485,7 @@ __decorate([
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", void 0)
-], Payroll.prototype, "calculateTotals", null);
+], Payroll.prototype, "computeGovtContributions", null);
 exports.Payroll = Payroll = __decorate([
     (0, typeorm_1.Entity)('payrolls')
 ], Payroll);
@@ -9850,8 +9854,8 @@ let CutoffsService = CutoffsService_1 = class CutoffsService extends base_servic
                 }
             });
             if (pendingCutoffs.length > 0) {
-                this.logger.log(`Found ${pendingCutoffs.length} pending cutoffs to mark as COMPLETED`);
-                const result = await this.cutoffsRepository.update({ id: (0, typeorm_2.In)(pendingCutoffs.map(c => c.id)) }, { status: cutoff_status_enum_1.CutoffStatus.COMPLETED });
+                this.logger.log(`Found ${pendingCutoffs.length} pending cutoffs to mark as PROCESSING`);
+                const result = await this.cutoffsRepository.update({ id: (0, typeorm_2.In)(pendingCutoffs.map(c => c.id)) }, { status: cutoff_status_enum_1.CutoffStatus.PROCESSING });
                 updated += result.affected || 0;
             }
             return { updated, errors };
@@ -18404,8 +18408,9 @@ class AttendanceRecordedEvent {
 }
 exports.AttendanceRecordedEvent = AttendanceRecordedEvent;
 class AttendanceProcessedEvent {
-    constructor(attendances) {
+    constructor(attendances, processedBy = 'SYSTEM') {
         this.attendances = attendances;
+        this.processedBy = processedBy;
     }
 }
 exports.AttendanceProcessedEvent = AttendanceProcessedEvent;
@@ -21258,10 +21263,14 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
 var _a;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.AttendancesController = void 0;
 const authorize_decorator_1 = __webpack_require__(26);
+const current_user_decorator_1 = __webpack_require__(97);
 const generalresponse_dto_1 = __webpack_require__(86);
 const action_enum_1 = __webpack_require__(40);
 const create_controller_factory_1 = __webpack_require__(18);
@@ -21280,9 +21289,10 @@ class AttendancesController extends (0, create_controller_factory_1.createContro
     async deleteMany(ids, hardDelete) {
         await super.deleteMany(ids, hardDelete);
     }
-    async processAttendanceRecords() {
+    async processAttendanceRecords(userId) {
         try {
-            await this.baseService.processAttendanceRecords();
+            if (!(await this.baseService.processAttendanceRecords(userId)))
+                throw new common_1.NotFoundException('No attendance records found to process');
             return {
                 message: 'Attendance records processed successfully',
                 statusCode: common_1.HttpStatus.OK
@@ -21317,8 +21327,9 @@ __decorate([
         status: common_1.HttpStatus.INTERNAL_SERVER_ERROR,
         description: 'An error occurred while processing attendance records'
     }),
+    __param(0, (0, current_user_decorator_1.CurrentUser)('sub')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", []),
+    __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", typeof (_a = typeof Promise !== "undefined" && Promise) === "function" ? _a : Object)
 ], AttendancesController.prototype, "processAttendanceRecords", null);
 
@@ -21341,7 +21352,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-var _a, _b, _c, _d, _e, _f, _g;
+var _a, _b, _c, _d, _e, _f, _g, _h;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.AttendancesService = void 0;
 const attendance_status_enum_1 = __webpack_require__(50);
@@ -21385,7 +21396,7 @@ let AttendancesService = class AttendancesService extends base_service_1.BaseSer
         });
     }
     // Run at midnight
-    async processAttendanceRecords() {
+    async processAttendanceRecords(processedBy) {
         const yesterday = (0, date_fns_1.subDays)(new Date(), 1);
         const yesterdayFormatted = (0, date_fns_1.format)(yesterday, 'yyyy-MM-dd');
         this.logger.log(`Processing attendance records for ${yesterdayFormatted}`);
@@ -21410,13 +21421,18 @@ let AttendancesService = class AttendancesService extends base_service_1.BaseSer
             },
             relations: { schedule: true }
         });
+        if (attendances.length === 0) {
+            this.logger.log(`No attendance records to process`);
+            return false;
+        }
         // mark attendance records as processed
         for (const attendance of attendances) {
             attendance.isProcessed = true;
         }
         await this.attendancesRepository.save(attendances);
         // Emit event for attendance processing
-        this.eventEmitter.emit(attendance_event_1.ATTENDANCE_EVENTS.ATTENDANCE_PROCESSED, new attendance_event_1.AttendanceProcessedEvent(attendances));
+        this.eventEmitter.emit(attendance_event_1.ATTENDANCE_EVENTS.ATTENDANCE_PROCESSED, new attendance_event_1.AttendanceProcessedEvent(attendances, processedBy));
+        return true;
     }
     async handleUnderTimeEmployees() {
         this.logger.log(`Handling under time employees`);
@@ -21712,8 +21728,8 @@ exports.AttendancesService = AttendancesService;
 __decorate([
     (0, schedule_1.Cron)(schedule_1.CronExpression.EVERY_DAY_AT_MIDNIGHT),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", []),
-    __metadata("design:returntype", Promise)
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", typeof (_h = typeof Promise !== "undefined" && Promise) === "function" ? _h : Object)
 ], AttendancesService.prototype, "processAttendanceRecords", null);
 exports.AttendancesService = AttendancesService = __decorate([
     (0, common_1.Injectable)(),
@@ -22288,16 +22304,22 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-var WorkHourCalculationService_1;
-var _a, _b;
+var WorkHourCalculationService_1, WorkHourCalculationProcessor_1;
+var _a, _b, _c, _d, _e, _f, _g;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.WorkHourCalculationService = void 0;
+exports.WorkHourCalculationProcessor = exports.WorkHourCalculationService = void 0;
+const attendance_status_enum_1 = __webpack_require__(50);
 const attendance_event_1 = __webpack_require__(236);
 const bull_1 = __webpack_require__(4);
 const common_1 = __webpack_require__(5);
 const event_emitter_1 = __webpack_require__(139);
 const bull_2 = __webpack_require__(158);
 const uuid_1 = __webpack_require__(112);
+const attendances_service_1 = __webpack_require__(260);
+const attendance_entity_1 = __webpack_require__(52);
+const work_time_requests_service_1 = __webpack_require__(263);
+const work_time_response_entity_1 = __webpack_require__(78);
+const final_work_hours_service_1 = __webpack_require__(268);
 let WorkHourCalculationService = WorkHourCalculationService_1 = class WorkHourCalculationService {
     constructor(workHourQueue, eventEmitter) {
         this.workHourQueue = workHourQueue;
@@ -22338,6 +22360,100 @@ exports.WorkHourCalculationService = WorkHourCalculationService = WorkHourCalcul
     __param(0, (0, bull_1.InjectQueue)('work-hour-calculation')),
     __metadata("design:paramtypes", [typeof (_a = typeof bull_2.Queue !== "undefined" && bull_2.Queue) === "function" ? _a : Object, typeof (_b = typeof event_emitter_1.EventEmitter2 !== "undefined" && event_emitter_1.EventEmitter2) === "function" ? _b : Object])
 ], WorkHourCalculationService);
+let WorkHourCalculationProcessor = WorkHourCalculationProcessor_1 = class WorkHourCalculationProcessor {
+    constructor(attendanceService, finalWorkHourService, workTimeRequestsService) {
+        this.attendanceService = attendanceService;
+        this.finalWorkHourService = finalWorkHourService;
+        this.workTimeRequestsService = workTimeRequestsService;
+        this.logger = new common_1.Logger(WorkHourCalculationProcessor_1.name);
+        this.GRACE_PERIOD_MINUTES = 5; // Consider late after 5 minutes
+        this.OVER_TIME_THRESHOLD_MINUTES = 30; // Consider overtime if more than 30 minutes
+    }
+    async calculateFinalWorkHours(job) {
+        const { attendanceIds, batchId, processedBy } = job.data;
+        for (const attendanceId of attendanceIds) {
+            // Find attendance with all necessary relations
+            const attendance = await this.attendanceService.findOneByOrFail({ id: attendanceId }, { relations: { employee: true, schedule: { shift: true, cutoff: true, holiday: true } } });
+            // Create or update final work hour record
+            let finalWorkHour = await this.finalWorkHourService.findOneBy({
+                attendance: new attendance_entity_1.Attendance({ id: attendanceId })
+            });
+            if (!finalWorkHour) {
+                // Convert schedule times to Date objects when needed
+                let timeIn = attendance.timeIn;
+                let timeOut = attendance.timeOut;
+                let overTimeOut = undefined;
+                const [shours, sminutes] = attendance.schedule.endTime.split(':').map(Number);
+                let scheduleEndTime = new Date(attendance.schedule.date);
+                scheduleEndTime.setHours(shours, sminutes, 0);
+                const [ehours, eminutes] = attendance.schedule.startTime.split(':').map(Number);
+                let scheduleStartTime = new Date(attendance.schedule.date);
+                scheduleStartTime.setHours(ehours, eminutes, 0);
+                // Clone the dates to avoid mutation issues
+                const scheduleStartTimePlus = new Date(scheduleStartTime);
+                scheduleStartTimePlus.setMinutes(scheduleStartTimePlus.getMinutes() + this.GRACE_PERIOD_MINUTES); // 5 minutes grace period
+                // Handle timeIn logic
+                if (!timeIn) {
+                    // If timeIn is not available, use schedule's startTime + 60 minutes
+                    timeIn = new Date(scheduleStartTime);
+                    timeIn.setMinutes(timeIn.getMinutes() + 60);
+                    this.logger.log(`No timeIn for attendance ${attendanceId}, using schedule start time + 60 minutes`);
+                }
+                else if (timeIn <= scheduleStartTimePlus) {
+                    // If timeIn is within grace period (not late), use schedule's startTime
+                    timeIn = new Date(scheduleStartTime);
+                    this.logger.log(`TimeIn is within grace period for attendance ${attendanceId}, using schedule start time`);
+                }
+                // If timeIn is late, we keep the actual timeIn value (no change needed)
+                // Handle timeOut logic
+                if (!timeOut) {
+                    // If timeOut is not available, use schedule's endTime - 60 minutes
+                    timeOut = new Date(scheduleEndTime);
+                    timeOut.setMinutes(timeOut.getMinutes() - 60);
+                    this.logger.log(`No timeOut for attendance ${attendanceId}, using schedule end time - 60 minutes`);
+                }
+                else if (timeOut > scheduleEndTime) {
+                    // find the work time request of this attendance 
+                    const workTimeRequest = await this.workTimeRequestsService.findOneBy({
+                        attendance: new attendance_entity_1.Attendance({ id: attendanceId }),
+                        workTimeResponse: new work_time_response_entity_1.WorkTimeResponse({ approved: true }),
+                        type: attendance_status_enum_1.AttendanceStatus.OVERTIME
+                    }, {
+                        relations: { workTimeResponse: true, attendance: true }
+                    });
+                    if (workTimeRequest)
+                        overTimeOut = new Date(timeOut);
+                    timeOut = new Date(scheduleEndTime);
+                }
+                finalWorkHour = await this.finalWorkHourService.create({
+                    attendance: { id: attendanceId },
+                    employee: { id: attendance.employee.id },
+                    cutoff: { id: attendance.schedule.cutoff.id },
+                    timeIn,
+                    batchId,
+                    timeOut,
+                    overTimeOut,
+                    dayType: attendance.dayType,
+                    workDate: attendance.schedule.date,
+                    createdBy: processedBy
+                });
+            }
+            // Update work hours breakdown
+            await this.finalWorkHourService.updateWorkHoursBreakdown(finalWorkHour.id, processedBy);
+        }
+    }
+};
+exports.WorkHourCalculationProcessor = WorkHourCalculationProcessor;
+__decorate([
+    (0, bull_1.Process)('calculate-final-work-hours'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [typeof (_f = typeof bull_2.Job !== "undefined" && bull_2.Job) === "function" ? _f : Object]),
+    __metadata("design:returntype", typeof (_g = typeof Promise !== "undefined" && Promise) === "function" ? _g : Object)
+], WorkHourCalculationProcessor.prototype, "calculateFinalWorkHours", null);
+exports.WorkHourCalculationProcessor = WorkHourCalculationProcessor = WorkHourCalculationProcessor_1 = __decorate([
+    (0, bull_1.Processor)('work-hour-calculation'),
+    __metadata("design:paramtypes", [typeof (_c = typeof attendances_service_1.AttendancesService !== "undefined" && attendances_service_1.AttendancesService) === "function" ? _c : Object, typeof (_d = typeof final_work_hours_service_1.FinalWorkHoursService !== "undefined" && final_work_hours_service_1.FinalWorkHoursService) === "function" ? _d : Object, typeof (_e = typeof work_time_requests_service_1.WorkTimeRequestsService !== "undefined" && work_time_requests_service_1.WorkTimeRequestsService) === "function" ? _e : Object])
+], WorkHourCalculationProcessor);
 
 
 /***/ }),
@@ -22426,7 +22542,6 @@ let AttendanceListener = AttendanceListener_1 = class AttendanceListener {
                 const punchTime = new Date(record.timestamp);
                 const punchDate = (0, date_fns_1.format)(punchTime, 'yyyy-MM-dd');
                 const punchTimeStr = (0, date_fns_1.format)(punchTime, 'HH:mm:ss');
-                const punchType = record.punchType;
                 // Find today's schedule for the employee
                 const todaySchedule = await this.schedulesService.getEmployeeScheduleToday(employee.id);
                 let attendanceStatuses = [];
@@ -22656,7 +22771,7 @@ let AttendanceListener = AttendanceListener_1 = class AttendanceListener {
         // Extract attendance IDs
         const attendanceIds = event.attendances.map(attendance => attendance.id);
         // Queue the attendances for final work hour calculation
-        const batchId = await this.workHourCalculationService.queueFinalWorkHoursCalculation(attendanceIds, 'SYSTEM' // Since this is triggered by a system process
+        const batchId = await this.workHourCalculationService.queueFinalWorkHoursCalculation(attendanceIds, event.processedBy // Since this is triggered by a system process
         );
         this.logger.log(`Queued ${attendanceIds.length} attendances for final work hours calculation. Batch ID: ${batchId}`);
     }
@@ -27961,6 +28076,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.PayrollItemsModule = void 0;
 const common_1 = __webpack_require__(5);
 const typeorm_1 = __webpack_require__(16);
+const payroll_item_types_module_1 = __webpack_require__(337);
 const payroll_item_entity_1 = __webpack_require__(65);
 const payroll_items_controller_1 = __webpack_require__(342);
 const payroll_items_service_1 = __webpack_require__(344);
@@ -27971,6 +28087,7 @@ exports.PayrollItemsModule = PayrollItemsModule = __decorate([
     (0, common_1.Module)({
         imports: [
             typeorm_1.TypeOrmModule.forFeature([payroll_item_entity_1.PayrollItem]),
+            payroll_item_types_module_1.PayrollItemTypesModule,
         ],
         providers: [payroll_items_service_1.PayrollItemsService],
         exports: [payroll_items_service_1.PayrollItemsService],
@@ -28053,27 +28170,77 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-var _a, _b;
+var _a, _b, _c;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.PayrollItemsService = void 0;
+const payroll_item_category_enum_1 = __webpack_require__(67);
 const base_service_1 = __webpack_require__(31);
 const users_service_1 = __webpack_require__(30);
 const common_1 = __webpack_require__(5);
 const typeorm_1 = __webpack_require__(16);
 const typeorm_2 = __webpack_require__(25);
+const payroll_item_types_service_1 = __webpack_require__(340);
 const payroll_item_entity_1 = __webpack_require__(65);
 let PayrollItemsService = class PayrollItemsService extends base_service_1.BaseService {
-    constructor(payrollItemsRepository, usersService) {
+    constructor(payrollItemsRepository, usersService, payrollItemTypesService) {
         super(payrollItemsRepository, usersService);
         this.payrollItemsRepository = payrollItemsRepository;
         this.usersService = usersService;
+        this.payrollItemTypesService = payrollItemTypesService;
+    }
+    /**
+   * Set up an employee's default compensation
+   * @param employeeId Employee ID
+   * @param rateType Type of rate (MONTHLY, DAILY, HOURLY)
+   * @param amount Rate amount
+   * @param userId User performing the action
+   */
+    async setupEmployeeCompensation(employeeId, rateType, amount, userId) {
+        // Deactivate any existing compensation items
+        const existingItems = await this.getRepository().findBy({
+            employee: { id: employeeId },
+            payrollItemType: { category: payroll_item_category_enum_1.PayrollItemCategory.COMPENSATION },
+            isActive: true
+        });
+        for (const item of existingItems) {
+            await this.update(item.id, { isActive: false }, userId);
+        }
+        // Get the appropriate payroll item type
+        let itemTypeName;
+        switch (rateType) {
+            case 'MONTHLY':
+                itemTypeName = 'Monthly Salary';
+                break;
+            case 'DAILY':
+                itemTypeName = 'Daily Rate';
+                break;
+            case 'HOURLY':
+                itemTypeName = 'Hourly Rate';
+                break;
+            default:
+                throw new common_1.BadRequestException(`Invalid rate type: ${rateType}`);
+        }
+        const payrollItemType = await this.payrollItemTypesService.findOneByOrFail({
+            name: itemTypeName,
+            isActive: true
+        });
+        // Create new compensation item
+        const newItem = new payroll_item_entity_1.PayrollItem({
+            employee: { id: employeeId },
+            payrollItemType,
+            amount,
+            occurrence: payrollItemType.defaultOccurrence,
+            isTaxable: payrollItemType.isTaxable,
+            isActive: true
+        });
+        return this.create(newItem, userId);
     }
 };
 exports.PayrollItemsService = PayrollItemsService;
 exports.PayrollItemsService = PayrollItemsService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, typeorm_1.InjectRepository)(payroll_item_entity_1.PayrollItem)),
-    __metadata("design:paramtypes", [typeof (_a = typeof typeorm_2.Repository !== "undefined" && typeorm_2.Repository) === "function" ? _a : Object, typeof (_b = typeof users_service_1.UsersService !== "undefined" && users_service_1.UsersService) === "function" ? _b : Object])
+    __metadata("design:paramtypes", [typeof (_a = typeof typeorm_2.Repository !== "undefined" && typeorm_2.Repository) === "function" ? _a : Object, typeof (_b = typeof users_service_1.UsersService !== "undefined" && users_service_1.UsersService) === "function" ? _b : Object, typeof (_c = typeof payroll_item_types_service_1.PayrollItemTypesService !== "undefined" && payroll_item_types_service_1.PayrollItemTypesService) === "function" ? _c : Object])
 ], PayrollItemsService);
 
 
@@ -28718,70 +28885,115 @@ let PayrollsService = PayrollsService_1 = class PayrollsService extends base_ser
         this.NightDifferentialPayMultiplier = 0.1;
     }
     /**
-     * Calculate rates based on monthly salary and cutoff period
+     * Gets the base compensation item for an employee
      */
-    calculateRates(employee, cutoff) {
-        const monthlyRate = employee.monthlyRate;
-        const businessDaysInPeriod = utility_helper_1.UtilityHelper.getBusinessDays(cutoff.startDate, cutoff.endDate);
-        const businessDaysInMonth = utility_helper_1.UtilityHelper.getBusinessDaysInMonth(cutoff.startDate);
-        // Calculate daily rate based on cutoff type
-        let dailyRate;
-        switch (cutoff.cutoffType) {
-            case cutoff_type_enum_1.CutoffType.DAILY:
-                dailyRate = monthlyRate / businessDaysInMonth;
-                break;
-            case cutoff_type_enum_1.CutoffType.WEEKLY:
-                dailyRate = (monthlyRate / 4) / businessDaysInPeriod;
-                break;
-            case cutoff_type_enum_1.CutoffType.BI_WEEKLY:
-                dailyRate = (monthlyRate / 2) / businessDaysInPeriod;
-                break;
-            case cutoff_type_enum_1.CutoffType.MONTHLY:
-            default:
-                dailyRate = monthlyRate / businessDaysInMonth;
-                break;
+    async getEmployeeBaseCompensation(employeeId) {
+        // Find the employee's active compensation item
+        const compensationItems = await this.payrollItemsService.getRepository().find({
+            where: {
+                employee: { id: employeeId },
+                payrollItemType: { category: payroll_item_category_enum_1.PayrollItemCategory.COMPENSATION },
+                isActive: true
+            },
+            relations: { payrollItemType: true },
+            order: { createdAt: 'DESC' }
+        });
+        if (!compensationItems.length) {
+            return null;
         }
-        // Standard 8-hour workday in Philippines
-        const hourlyRate = dailyRate / 8;
-        return { monthlyRate, dailyRate, hourlyRate };
+        // Prioritize Monthly Salary over Daily Rate over Hourly Rate
+        const monthlyItem = compensationItems.find(item => item.payrollItemType.name === 'Monthly Salary');
+        if (monthlyItem) {
+            return {
+                type: 'MONTHLY',
+                amount: monthlyItem.amount
+            };
+        }
+        const dailyItem = compensationItems.find(item => item.payrollItemType.name === 'Daily Rate');
+        if (dailyItem) {
+            return {
+                type: 'DAILY',
+                amount: dailyItem.amount
+            };
+        }
+        const hourlyItem = compensationItems.find(item => item.payrollItemType.name === 'Hourly Rate');
+        if (hourlyItem) {
+            return {
+                type: 'HOURLY',
+                amount: hourlyItem.amount
+            };
+        }
+        // Default to the first compensation item found
+        return {
+            type: compensationItems[0].payrollItemType.name.toUpperCase(),
+            amount: compensationItems[0].amount
+        };
     }
-    calculateRatesBase(employee, cutoff, baseCompensationItem) {
-        const compensationType = baseCompensationItem.payrollItemType.name;
-        const amount = baseCompensationItem.amount;
-        // Calculate days in period
+    /**
+     * Calculate rates based on employee's compensation type and cutoff period
+     */
+    async calculateRates(employeeId, cutoff) {
+        const baseCompensation = await this.getEmployeeBaseCompensation(employeeId);
+        if (!baseCompensation) {
+            throw new common_1.BadRequestException(`No compensation defined for employee ${employeeId}`);
+        }
+        const { type, amount } = baseCompensation;
         const businessDaysInPeriod = utility_helper_1.UtilityHelper.getBusinessDays(cutoff.startDate, cutoff.endDate);
         const businessDaysInMonth = utility_helper_1.UtilityHelper.getBusinessDaysInMonth(cutoff.startDate);
-        // Initialize with default values
+        // Default values
         let monthlyRate = 0;
         let dailyRate = 0;
         let hourlyRate = 0;
-        // Calculate based on compensation type
-        switch (compensationType) {
-            case 'Monthly Salary':
+        // Calculate rates based on compensation type
+        switch (type) {
+            case 'MONTHLY':
                 monthlyRate = amount;
-                dailyRate = amount / businessDaysInMonth;
-                hourlyRate = dailyRate / 8; // Assuming 8-hour workday
+                // Calculate daily rate based on cutoff type
+                switch (cutoff.cutoffType) {
+                    case cutoff_type_enum_1.CutoffType.DAILY:
+                        dailyRate = monthlyRate / businessDaysInMonth;
+                        break;
+                    case cutoff_type_enum_1.CutoffType.WEEKLY:
+                        dailyRate = (monthlyRate / 4) / businessDaysInPeriod;
+                        break;
+                    case cutoff_type_enum_1.CutoffType.BI_WEEKLY:
+                        dailyRate = (monthlyRate / 2) / businessDaysInPeriod;
+                        break;
+                    case cutoff_type_enum_1.CutoffType.MONTHLY:
+                    default:
+                        dailyRate = monthlyRate / businessDaysInMonth;
+                        break;
+                }
+                // Standard 8-hour workday
+                hourlyRate = dailyRate / 8;
                 break;
-            case 'Daily Rate':
+            case 'DAILY':
                 dailyRate = amount;
                 monthlyRate = dailyRate * businessDaysInMonth;
                 hourlyRate = dailyRate / 8;
                 break;
-            case 'Hourly Rate':
+            case 'HOURLY':
                 hourlyRate = amount;
                 dailyRate = hourlyRate * 8;
                 monthlyRate = dailyRate * businessDaysInMonth;
                 break;
             default:
-                throw new Error(`Unknown compensation type: ${compensationType}`);
+                throw new common_1.BadRequestException(`Unknown compensation type: ${type}`);
         }
-        return { monthlyRate, dailyRate, hourlyRate };
+        return {
+            monthlyRate,
+            dailyRate,
+            hourlyRate,
+            baseCompensationType: type,
+            baseCompensationAmount: amount
+        };
     }
     /**
      * Calculate basic pay components from work hours
      */
-    calculateBasicPay(payroll, finalWorkHours) {
-        const rates = this.calculateRates(payroll.employee, payroll.cutoff);
+    async calculateBasicPay(payroll, finalWorkHours) {
+        // Get rates based on employee's compensation type
+        const rates = await this.calculateRates(payroll.employee.id, payroll.cutoff);
         // Set rates
         payroll.monthlyRate = rates.monthlyRate;
         payroll.dailyRate = rates.dailyRate;
@@ -28808,10 +29020,10 @@ let PayrollsService = PayrollsService_1 = class PayrollsService extends base_ser
         payroll.nightDifferentialPay = 0;
         // Process each work hour record
         for (const workHour of finalWorkHours) {
-            // Aggregate regular hours
+            // Fix the hours mapping - you had these swapped
             payroll.totalRegularHours += +workHour.regularDayHours || 0;
-            payroll.totalHolidayHours += +workHour.specialHolidayHours || 0;
-            payroll.totalSpecialHolidayHours += +workHour.regularHolidayHours || 0;
+            payroll.totalHolidayHours += +workHour.regularHolidayHours || 0;
+            payroll.totalSpecialHolidayHours += +workHour.specialHolidayHours || 0;
             payroll.totalRestDayHours += +workHour.restDayHours || 0;
             // Aggregate overtime hours
             payroll.totalOvertimeHours += +workHour.overtimeRegularDayHours || 0;
@@ -28846,24 +29058,34 @@ let PayrollsService = PayrollsService_1 = class PayrollsService extends base_ser
             + payroll.holidayOvertimePay + payroll.specialHolidayOvertimePay
             + payroll.restDayOvertimePay + payroll.nightDifferentialPay;
         // 11. Total hours worked
+        payroll.totalHours = payroll.totalRegularHours + payroll.totalRestDayHours +
+            payroll.totalHolidayHours + payroll.totalSpecialHolidayHours +
+            payroll.totalOvertimeHours + payroll.totalRestDayOvertimeHours +
+            payroll.totalHolidayOvertimeHours + payroll.totalSpecialHolidayOvertimeHours;
         // 12. Initial taxable income (will be adjusted for non-taxable items)
         payroll.taxableIncome = payroll.grossPay;
     }
     /**
-     * Evaluate formula for a payroll item
+     * Evaluate formula for a payroll item, with BaseCompensation available
      */
     async evaluateFormula(formula, payroll, parameters) {
         try {
+            // Get base compensation amount
+            const baseCompensation = await this.getEmployeeBaseCompensation(payroll.employee.id);
             // Create comprehensive scope for formula evaluation
             const scope = Object.assign({ 
+                // Base compensation
+                BaseCompensation: (baseCompensation === null || baseCompensation === void 0 ? void 0 : baseCompensation.amount) || 0, 
                 // Employee data
                 MonthlyRate: payroll.monthlyRate, DailyRate: payroll.dailyRate, HourlyRate: payroll.hourlyRate, 
                 // Work hours
-                RegularHours: payroll.totalRegularHours, HolidayHours: payroll.totalHolidayHours, SpecialHolidayHours: payroll.totalSpecialHolidayHours, RestDayHours: payroll.totalRestDayHours, NightDiffHours: payroll.totalNightDifferentialHours, OvertimeHours: payroll.totalOvertimeHours, HolidayOvertimeHours: payroll.totalHolidayOvertimeHours, SpecialHolidayOvertimeHours: payroll.totalSpecialHolidayOvertimeHours, RestDayOvertimeHours: payroll.totalRestDayOvertimeHours, 
+                RegularHours: payroll.totalRegularHours, HolidayHours: payroll.totalHolidayHours, SpecialHolidayHours: payroll.totalSpecialHolidayHours, RestDayHours: payroll.totalRestDayHours, NightDiffHours: payroll.totalNightDifferentialHours, OvertimeHours: payroll.totalOvertimeHours, HolidayOvertimeHours: payroll.totalHolidayOvertimeHours, SpecialHolidayOvertimeHours: payroll.totalSpecialHolidayOvertimeHours, RestDayOvertimeHours: payroll.totalRestDayOvertimeHours, TotalHours: payroll.totalHours || 0, 
                 // Pay components
                 BasicPay: payroll.basicPay, HolidayPay: payroll.holidayPay, SpecialHolidayPay: payroll.specialHolidayPay, RestDayPay: payroll.restDayPay, NightDifferentialPay: payroll.nightDifferentialPay, OvertimePay: payroll.overtimePay, HolidayOvertimePay: payroll.holidayOvertimePay, SpecialHolidayOvertimePay: payroll.specialHolidayOvertimePay, RestDayOvertimePay: payroll.restDayOvertimePay, 
                 // Totals
-                GrossPay: payroll.grossPay, TaxableIncome: payroll.taxableIncome }, parameters);
+                GrossPay: payroll.grossPay, TaxableIncome: payroll.taxableIncome, 
+                // Cutoff info
+                CutoffType: payroll.cutoff.cutoffType, WorkingDaysInPeriod: utility_helper_1.UtilityHelper.getBusinessDays(payroll.cutoff.startDate, payroll.cutoff.endDate) }, parameters);
             // Execute formula
             const result = (0, mathjs_1.evaluate)(formula, scope);
             const numericResult = parseFloat(Number(result).toFixed(2));
@@ -28877,28 +29099,16 @@ let PayrollsService = PayrollsService_1 = class PayrollsService extends base_ser
             };
         }
         catch (error) {
-            if (error instanceof Error) {
-                this.logger.error(`Error evaluating formula: ${formula}`, error.stack);
-                return {
-                    result: 0,
-                    details: {
-                        formula,
-                        error: error.message,
-                        result: 0
-                    }
-                };
-            }
-            else {
-                this.logger.error(`Error evaluating formula: ${formula}`, String(error));
-                return {
-                    result: 0,
-                    details: {
-                        formula,
-                        error: String(error),
-                        result: 0
-                    }
-                };
-            }
+            // Error handling...
+            this.logger.error(`Error evaluating formula: ${formula}`, error);
+            return {
+                result: 0,
+                details: {
+                    formula,
+                    error: error instanceof Error ? error.message : String(error),
+                    result: 0
+                }
+            };
         }
     }
     /**
@@ -29325,22 +29535,26 @@ let PayrollsService = PayrollsService_1 = class PayrollsService extends base_ser
                     }
                 }
             });
-            // If exists and already processed, prevent re-processing
-            if (existingPayroll && ![payroll_status_enum_1.PayrollStatus.DRAFT, payroll_status_enum_1.PayrollStatus.ERROR].includes(existingPayroll.status)) {
-                throw new common_1.BadRequestException(`Payroll for this employee and cutoff already processed with status: ${existingPayroll.status}`);
-            }
             // Get employee and cutoff data
             const employee = await this.employeesService.findOneByOrFail({ id: employeeId });
             const cutoff = await this.cutoffsService.findOneByOrFail({ id: cutoffId });
-            if (cutoff.status !== cutoff_status_enum_1.CutoffStatus.PENDING) {
-                throw new common_1.BadRequestException('Cutoff is not pending');
+            // Get base compensation
+            const baseCompensation = await this.getEmployeeBaseCompensation(employeeId);
+            if (!baseCompensation) {
+                throw new common_1.BadRequestException(`No base compensation defined for employee ${employeeId}`);
+            }
+            // If exists and already processed, prevent re-processing
+            if (existingPayroll && existingPayroll.status === payroll_status_enum_1.PayrollStatus.RELEASED) {
+                throw new common_1.BadRequestException(`Payroll for employee ${employee.id} for cutoff ${cutoff.id} has already been released and cannot be reprocessed`);
+            }
+            if (cutoff.status !== cutoff_status_enum_1.CutoffStatus.PROCESSING) {
+                throw new common_1.BadRequestException('Cutoff is not in processing status');
             }
             // Get final work hours for this employee and cutoff
             const finalWorkHours = await this.finalWorkHoursService.getRepository().findBy({
                 employee: { id: employeeId },
                 cutoff: { id: cutoffId },
                 isApproved: true,
-                isProcessed: false
             });
             if (!finalWorkHours.length) {
                 throw new common_1.BadRequestException('No approved work hours found for this cutoff period');
@@ -29352,7 +29566,7 @@ let PayrollsService = PayrollsService_1 = class PayrollsService extends base_ser
             payroll.cutoff = cutoff;
             payroll.status = payroll_status_enum_1.PayrollStatus.PROCESSING;
             // Calculate basic pay from work hours
-            this.calculateBasicPay(payroll, finalWorkHours);
+            await this.calculateBasicPay(payroll, finalWorkHours);
             // Save payroll to get an ID if new
             const savedPayroll = await transactionManager.save(payroll);
             // Process all payroll items
