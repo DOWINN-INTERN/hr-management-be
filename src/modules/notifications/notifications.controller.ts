@@ -22,16 +22,16 @@ export class NotificationsController extends createController(Notification, Noti
         super(notificationsService);
     }
 
+    @Override()
     @ApiOperation({ 
         summary: 'Send a Notification to Multiple Users',
         description: 'Creates a notification for multiple recipients at once and queues them for delivery'
     })
-    @Override()
     override async create(
         @Body() createNotificationDto: NotificationDto,
         @CurrentUser('sub') createdById: string
     ) {
-    return await this.notificationsService.createBulkNotifications(createNotificationDto, createdById);
+        return await this.notificationsService.createBulkNotifications(createNotificationDto, createdById);
     }   
 
     @Patch(':id/read')

@@ -3,7 +3,7 @@ import { HolidayType } from '@/common/enums/holiday-type.enum';
 import { NotificationType } from '@/common/enums/notification-type.enum';
 import { RequestStatus } from '@/common/enums/request-status.enum';
 import { ScheduleStatus } from '@/common/enums/schedule-status';
-import { ATTENDANCE_EVENTS, AttendanceRecordedEvent } from '@/common/events/attendance.event';
+import { ATTENDANCE_EVENTS, AttendanceProcessedEvent, AttendanceRecordedEvent } from '@/common/events/attendance.event';
 import { AttendancePunchesService } from '@/modules/attendance-management/attendance-punches/attendance-punches.service';
 import { AttendancesService } from '@/modules/attendance-management/attendances.service';
 import { BiometricDevicesService } from '@/modules/biometrics/services/biometric-devices.service';
@@ -16,6 +16,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { differenceInMinutes, format, isAfter, isBefore, parseISO } from 'date-fns';
 import { DayType } from '../final-work-hours/entities/final-work-hour.entity';
+import { WorkHourCalculationService } from '../final-work-hours/services/work-hour-calculation.service';
 import { WorkTimeRequestsService } from '../work-time-requests/work-time-requests.service';
 
 @Injectable()
@@ -33,6 +34,7 @@ export class AttendanceListener {
     private readonly biometricDevicesService: BiometricDevicesService,
     private readonly notificationsService: NotificationsService,
     private readonly workTimeRequestsService: WorkTimeRequestsService,
+    private readonly workHourCalculationService: WorkHourCalculationService,
   ) {}
 
   @OnEvent(ATTENDANCE_EVENTS.ATTENDANCE_RECORDED)
@@ -72,7 +74,6 @@ export class AttendanceListener {
         const punchTime = new Date(record.timestamp);
         const punchDate = format(punchTime, 'yyyy-MM-dd');
         const punchTimeStr = format(punchTime, 'HH:mm:ss');
-        const punchType = record.punchType;
 
         // Find today's schedule for the employee
         const todaySchedule = await this.schedulesService.getEmployeeScheduleToday(employee.id);
@@ -172,6 +173,7 @@ export class AttendanceListener {
           existingAttendance = await this.attendancesService.create({
             employee: { id: employee.id },
             schedule: { id: todaySchedule.id },
+            dayType,
             createdBy: employee.user.id,
           });
         }
@@ -303,7 +305,7 @@ export class AttendanceListener {
           createdBy: employee.user.id,
         });
         
-        this.logger.log(`Successfully processed ${punchType} punch for employee ${employee.user.email} at ${punchTimeStr} with status ${existingAttendance.statuses}`);
+        this.logger.log(`Successfully processed ${record.punchMethod} punch for employee ${employee.user.email} at ${punchTimeStr} with status ${existingAttendance.statuses}`);
       } catch (error) {
         if (error instanceof Error) {
           this.logger.error(`Error processing attendance record: ${error.message}`, error.stack);
@@ -315,10 +317,24 @@ export class AttendanceListener {
   }
 
   @OnEvent(ATTENDANCE_EVENTS.ATTENDANCE_PROCESSED)
-  async handleAttendanceProcessed(): Promise<void> {
-    // create final work hours
+    async handleAttendanceProcessedEvent(event: AttendanceProcessedEvent) {
+        this.logger.log(`Handling attendance processed event for ${event.attendances.length} attendances`);
 
-  }
+        if (event.attendances.length === 0) {
+            return;
+        }
+
+        // Extract attendance IDs
+        const attendanceIds = event.attendances.map(attendance => attendance.id);
+
+        // Queue the attendances for final work hour calculation
+        const batchId = await this.workHourCalculationService.queueFinalWorkHoursCalculation(
+            attendanceIds,
+            event.processedBy // Since this is triggered by a system process
+        );
+
+        this.logger.log(`Queued ${attendanceIds.length} attendances for final work hours calculation. Batch ID: ${batchId}`);
+    }
 
   // Helper methods for notifications and work time requests
   
@@ -338,74 +354,4 @@ export class AttendanceListener {
       this.logger.error(`Failed to create work time request: ${error.message}`);
     }
   }
-
-  // private async notifyLateCheckIn(employee: Employee, date: Date, time: Date, lateInfo: string): Promise<void> {
-  //   const managersToNotify = await this.employeesService.getEmployeeManagers(employee.id);
-    
-  //   if (managersToNotify.length > 0) {
-  //     await this.notificationsService.createBulkNotifications({
-  //       title: 'Late Check-in',
-  //       message: `Employee ${employee.user.email} checked in ${lateInfo} on ${date} at ${time}`,
-  //       type: 'WARNING',
-  //       recipients: managersToNotify.map(manager => ({ id: manager.user.id })),
-  //       read: false
-  //     }, 'SYSTEM');
-  //   }
-  // }
-
-  // private async notifyEarlyCheckout(employee, date, minutesEarly: number): Promise<void> {
-  //   const managersToNotify = await this.employeesService.getEmployeeManagers(employee.id);
-    
-  //   if (managersToNotify.length > 0) {
-  //     await this.notificationsService.createBulkNotifications({
-  //       title: 'Early Check-out',
-  //       message: `Employee ${employee.user.email} checked out ${minutesEarly} minutes early on ${date}`,
-  //       type: 'WARNING',
-  //       recipients: managersToNotify.map(manager => ({ id: manager.user.id })),
-  //       read: false
-  //     }, 'SYSTEM');
-  //   }
-  // }
-
-  // private async notifyOvertime(employee, date, minutesOvertime: number): Promise<void> {
-  //   const managersToNotify = await this.employeesService.getEmployeeManagers(employee.id);
-    
-  //   if (managersToNotify.length > 0) {
-  //     await this.notificationsService.createBulkNotifications({
-  //       title: 'Overtime Alert',
-  //       message: `Employee ${employee.user.email} worked ${minutesOvertime} minutes overtime on ${date}`,
-  //       type: 'INFO',
-  //       recipients: managersToNotify.map(manager => ({ id: manager.user.id })),
-  //       read: false
-  //     }, 'SYSTEM');
-  //   }
-  // }
-
-  // private async notifyHolidayCheckIn(employee, holidayName: string): Promise<void> {
-  //   const managersToNotify = await this.employeesService.getEmployeeManagers(employee.id);
-    
-  //   if (managersToNotify.length > 0) {
-  //     await this.notificationsService.createBulkNotifications({
-  //       title: 'Holiday Check-in',
-  //       message: `Employee ${employee.user.email} checked in on a holiday (${holidayName})`,
-  //       type: 'INFO',
-  //       recipients: managersToNotify.map(manager => ({ id: manager.user.id })),
-  //       read: false
-  //     }, 'SYSTEM');
-  //   }
-  // }
-
-  // private async notifyEmployeeOnLeave(employee, date): Promise<void> {
-  //   const managersToNotify = await this.employeesService.getEmployeeManagers(employee.id);
-    
-  //   if (managersToNotify.length > 0) {
-  //     await this.notificationsService.createBulkNotifications({
-  //       title: 'Check-in While on Leave',
-  //       message: `Employee ${employee.user.email} tried to check in while on approved leave for ${date}`,
-  //       type: 'INFO',
-  //       recipients: managersToNotify.map(manager => ({ id: manager.user.id })),
-  //       read: false
-  //     }, 'SYSTEM');
-  //   }
-  // }
 }

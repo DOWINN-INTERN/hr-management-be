@@ -76,9 +76,6 @@ export class Employee extends BaseEntity<Employee> {
     @JoinColumn({ name: 'groupId' })
     group?: Group;
 
-    @Column('decimal', { precision: 10, scale: 2, default: 0 })
-    monthlyRate!: number;
-
     @OneToMany(() => Schedule, (schedule: Schedule) => schedule.employee, { nullable: true })
     schedules?: Schedule[];
 

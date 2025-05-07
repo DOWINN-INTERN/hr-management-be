@@ -25,6 +25,7 @@ export class NotificationsService extends BaseService<Notification> {
 
   override async create(createDto: DeepPartial<Notification>, createdBy?: string): Promise<Notification> {
     const notification = await super.create(createDto, createdBy);
+    this.notificationsGateway.emitToUser(notification, notification.user.id);
     // Queue for processing instead of immediate sending
     await this.notificationsQueue.add('processNotification', {
       notificationId: notification.id,

@@ -1,6 +1,6 @@
 import { JwtService } from '@/modules/account-management/auth/services/jwt.service';
 import { UsersService } from '@/modules/account-management/users/users.service';
-import { Logger, NotFoundException, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
+import { Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import {
     OnGatewayConnection,
@@ -437,7 +437,7 @@ export abstract class BaseGateway implements OnGatewayInit, OnGatewayConnection,
     public emitToUser(data: any, userId?: string): void {
         if (!userId || !this.connectedClients.has(userId)) {
             this.logger.warn(`User ${userId} not connected`);
-            throw new NotFoundException(`User ${userId} not connected`);
+            return;
         }
 
         const userRoom = `user:${userId}:${this.namespace}`;

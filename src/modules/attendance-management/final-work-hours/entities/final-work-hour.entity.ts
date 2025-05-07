@@ -86,8 +86,11 @@ export class FinalWorkHour extends BaseEntity<FinalWorkHour> {
     
     @Column({ default: false })
     isApproved!: boolean;
-    
-    @Column({ default: false })
+
+    @Column()
+    batchId!: string;
+
+    @Column({ default: true })
     isProcessed!: boolean;
     
     @Column({ type: 'date' })

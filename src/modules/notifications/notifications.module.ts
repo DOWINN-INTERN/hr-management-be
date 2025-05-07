@@ -1,5 +1,6 @@
 import { BullModule } from '@nestjs/bull';
 import { Global, Module } from '@nestjs/common';
+import { RouterModule } from '@nestjs/core';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Notification } from './entities/notification.entity';
 import { NotificationsGateway } from './gateways/notifications.gateway';
@@ -18,6 +19,18 @@ import { WebPushService } from './services/web-push.service';
         BullModule.registerQueue({
           name: 'notifications',
         }),
+        RouterModule.register([
+          {
+            path: 'notifications',
+            module: NotificationsModule,
+            children: [
+              {
+                path: 'push',
+                module: PushSubscriptionsModule,
+              }
+            ]
+          },
+        ]),
     ],
   providers: [
     NotificationsService, 

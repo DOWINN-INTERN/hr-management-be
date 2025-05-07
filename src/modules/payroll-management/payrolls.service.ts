@@ -226,90 +226,149 @@ export class PayrollsService extends BaseService<Payroll> {
   }
 
   /**
-   * Calculate rates based on monthly salary and cutoff period
+   * Gets the base compensation item for an employee
    */
-  calculateRates(employee: Employee, cutoff: Cutoff): {
-    monthlyRate: number;
-    dailyRate: number;
-    hourlyRate: number;
-  } {
-    const monthlyRate = employee.monthlyRate;
-    const businessDaysInPeriod = UtilityHelper.getBusinessDays(cutoff.startDate, cutoff.endDate);
-    const businessDaysInMonth = UtilityHelper.getBusinessDaysInMonth(cutoff.startDate);
+  async getEmployeeBaseCompensation(
+    employeeId: string
+  ): Promise<{ type: string; amount: number } | null> {
+    // Find the employee's active compensation item
+    const compensationItems = await this.payrollItemsService.getRepository().find({
+      where: {
+        employee: { id: employeeId },
+        payrollItemType: { category: PayrollItemCategory.COMPENSATION },
+        isActive: true
+      },
+      relations: { payrollItemType: true },
+      order: { createdAt: 'DESC' }
+    });
     
-    // Calculate daily rate based on cutoff type
-    let dailyRate: number;
-    switch (cutoff.cutoffType) {
-      case CutoffType.DAILY:
-        dailyRate = monthlyRate / businessDaysInMonth;
-        break;
-      case CutoffType.WEEKLY:
-        dailyRate = (monthlyRate / 4) / businessDaysInPeriod;
-        break;
-      case CutoffType.BI_WEEKLY:
-        dailyRate = (monthlyRate / 2) / businessDaysInPeriod;
-        break;
-      case CutoffType.MONTHLY:
-      default:
-        dailyRate = monthlyRate / businessDaysInMonth;
-        break;
+    if (!compensationItems.length) {
+      return null;
     }
     
-    // Standard 8-hour workday in Philippines
-    const hourlyRate = dailyRate / 8;
+    // Prioritize Monthly Salary over Daily Rate over Hourly Rate
+    const monthlyItem = compensationItems.find(item => 
+      item.payrollItemType.name === 'Monthly Salary'
+    );
     
-    return { monthlyRate, dailyRate, hourlyRate };
+    if (monthlyItem) {
+      return {
+        type: 'MONTHLY',
+        amount: monthlyItem.amount
+      };
+    }
+    
+    const dailyItem = compensationItems.find(item => 
+      item.payrollItemType.name === 'Daily Rate'
+    );
+    
+    if (dailyItem) {
+      return {
+        type: 'DAILY',
+        amount: dailyItem.amount
+      };
+    }
+    
+    const hourlyItem = compensationItems.find(item => 
+      item.payrollItemType.name === 'Hourly Rate'
+    );
+    
+    if (hourlyItem) {
+      return {
+        type: 'HOURLY',
+        amount: hourlyItem.amount
+      };
+    }
+    
+    // Default to the first compensation item found
+    return {
+      type: compensationItems[0].payrollItemType.name.toUpperCase(),
+      amount: compensationItems[0].amount
+    };
   }
 
-  calculateRatesBase(employee: Employee, cutoff: Cutoff, baseCompensationItem: PayrollItem): {
+  /**
+   * Calculate rates based on employee's compensation type and cutoff period
+   */
+  async calculateRates(employeeId: string, cutoff: Cutoff): Promise<{
     monthlyRate: number;
     dailyRate: number;
     hourlyRate: number;
-  } {
-    const compensationType = baseCompensationItem.payrollItemType.name;
-    const amount = baseCompensationItem.amount;
+    baseCompensationType: string;
+    baseCompensationAmount: number;
+  }> {
+    const baseCompensation = await this.getEmployeeBaseCompensation(employeeId);
     
-    // Calculate days in period
+    if (!baseCompensation) {
+      throw new BadRequestException(`No compensation defined for employee ${employeeId}`);
+    }
+    
+    const { type, amount } = baseCompensation;
     const businessDaysInPeriod = UtilityHelper.getBusinessDays(cutoff.startDate, cutoff.endDate);
     const businessDaysInMonth = UtilityHelper.getBusinessDaysInMonth(cutoff.startDate);
     
-    // Initialize with default values
+    // Default values
     let monthlyRate = 0;
     let dailyRate = 0;
     let hourlyRate = 0;
     
-    // Calculate based on compensation type
-    switch (compensationType) {
-      case 'Monthly Salary':
+    // Calculate rates based on compensation type
+    switch (type) {
+      case 'MONTHLY':
         monthlyRate = amount;
-        dailyRate = amount / businessDaysInMonth;
-        hourlyRate = dailyRate / 8; // Assuming 8-hour workday
+        
+        // Calculate daily rate based on cutoff type
+        switch (cutoff.cutoffType) {
+          case CutoffType.DAILY:
+            dailyRate = monthlyRate / businessDaysInMonth;
+            break;
+          case CutoffType.WEEKLY:
+            dailyRate = (monthlyRate / 4) / businessDaysInPeriod;
+            break;
+          case CutoffType.BI_WEEKLY:
+            dailyRate = (monthlyRate / 2) / businessDaysInPeriod;
+            break;
+          case CutoffType.MONTHLY:
+          default:
+            dailyRate = monthlyRate / businessDaysInMonth;
+            break;
+        }
+        
+        // Standard 8-hour workday
+        hourlyRate = dailyRate / 8;
         break;
         
-      case 'Daily Rate':
+      case 'DAILY':
         dailyRate = amount;
         monthlyRate = dailyRate * businessDaysInMonth;
         hourlyRate = dailyRate / 8;
         break;
         
-      case 'Hourly Rate':
+      case 'HOURLY':
         hourlyRate = amount;
         dailyRate = hourlyRate * 8;
         monthlyRate = dailyRate * businessDaysInMonth;
         break;
         
       default:
-        throw new Error(`Unknown compensation type: ${compensationType}`);
+        throw new BadRequestException(`Unknown compensation type: ${type}`);
     }
     
-    return { monthlyRate, dailyRate, hourlyRate };
+    return {
+      monthlyRate,
+      dailyRate,
+      hourlyRate,
+      baseCompensationType: type,
+      baseCompensationAmount: amount
+    };
   }
-  
+
   /**
    * Calculate basic pay components from work hours
    */
-  calculateBasicPay(payroll: Payroll, finalWorkHours: FinalWorkHour[]): void {
-    const rates = this.calculateRates(payroll.employee, payroll.cutoff);
+  async calculateBasicPay(payroll: Payroll, finalWorkHours: FinalWorkHour[]): Promise<void> {
+    // Get rates based on employee's compensation type
+    const rates = await this.calculateRates(payroll.employee.id, payroll.cutoff);
     
     // Set rates
     payroll.monthlyRate = rates.monthlyRate;
@@ -340,10 +399,10 @@ export class PayrollsService extends BaseService<Payroll> {
     
     // Process each work hour record
     for (const workHour of finalWorkHours) {
-      // Aggregate regular hours
+      // Fix the hours mapping - you had these swapped
       payroll.totalRegularHours += +workHour.regularDayHours || 0;
-      payroll.totalHolidayHours += +workHour.specialHolidayHours || 0; 
-      payroll.totalSpecialHolidayHours += +workHour.regularHolidayHours || 0;
+      payroll.totalHolidayHours += +workHour.regularHolidayHours || 0; 
+      payroll.totalSpecialHolidayHours += +workHour.specialHolidayHours || 0;
       payroll.totalRestDayHours += +workHour.restDayHours || 0;
       
       // Aggregate overtime hours
@@ -391,8 +450,11 @@ export class PayrollsService extends BaseService<Payroll> {
       + payroll.holidayOvertimePay + payroll.specialHolidayOvertimePay
       + payroll.restDayOvertimePay + payroll.nightDifferentialPay;
 
-    // 11. Total hours worked
-
+    // // 11. Total hours worked
+    // payroll.totalHours = payroll.totalRegularHours + payroll.totalRestDayHours + 
+    //                     payroll.totalHolidayHours + payroll.totalSpecialHolidayHours +
+    //                     payroll.totalOvertimeHours + payroll.totalRestDayOvertimeHours +
+    //                     payroll.totalHolidayOvertimeHours + payroll.totalSpecialHolidayOvertimeHours;
     
     // 12. Initial taxable income (will be adjusted for non-taxable items)
     payroll.taxableIncome = payroll.grossPay;
@@ -982,28 +1044,27 @@ private determineEmployeePosition(employee: Employee): string {
           }
         }
       });
-      
-      // If exists and already processed, prevent re-processing
-      if (existingPayroll && ![PayrollStatus.DRAFT, PayrollStatus.ERROR].includes(existingPayroll.status)) {
-        throw new BadRequestException(
-          `Payroll for this employee and cutoff already processed with status: ${existingPayroll.status}`
-        );
-      }
-      
+
       // Get employee and cutoff data
       const employee = await this.employeesService.findOneByOrFail({ id: employeeId });
       const cutoff = await this.cutoffsService.findOneByOrFail({ id: cutoffId });
       
-      if (cutoff.status !== CutoffStatus.PENDING) {
-        throw new BadRequestException('Cutoff is not pending');
+      // If exists and already processed, prevent re-processing
+      if (existingPayroll && existingPayroll.status !== PayrollStatus.RELEASED) {
+        throw new BadRequestException(
+          `Payroll for employee ${employee.id} for cutoff ${cutoff.id} has already been released and cannot be reprocessed`
+        );
       }
       
+      if (cutoff.status !== CutoffStatus.PROCESSING) {
+        throw new BadRequestException('Cutoff is not in processing status');
+      }
+
       // Get final work hours for this employee and cutoff
       const finalWorkHours = await this.finalWorkHoursService.getRepository().findBy({
         employee: { id: employeeId },
         cutoff: { id: cutoffId },
         isApproved: true,
-        isProcessed: false
       });
       
       if (!finalWorkHours.length) {

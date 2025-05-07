@@ -4,7 +4,7 @@ import { Employee } from '@/modules/employee-management/entities/employee.entity
 import { Schedule } from '@/modules/shift-management/schedules/entities/schedule.entity';
 import { Column, Entity, JoinColumn, ManyToOne, OneToMany, OneToOne } from 'typeorm';
 import { AttendancePunch } from '../attendance-punches/entities/attendance-punch.entity';
-import { FinalWorkHour } from '../final-work-hours/entities/final-work-hour.entity';
+import { DayType, FinalWorkHour } from '../final-work-hours/entities/final-work-hour.entity';
 import { WorkTimeRequest } from '../work-time-requests/entities/work-time-request.entity';
 
 @Entity('attendances')
@@ -27,6 +27,9 @@ export class Attendance extends BaseEntity<Attendance> {
 
     @Column({ default: false })
     isProcessed!: boolean;
+
+    @Column({ type: 'enum', enum: DayType })
+    dayType!: DayType;
 
     @OneToOne(() => Schedule, (schedule: Schedule) => schedule.attendance, { eager: true })
     @JoinColumn({ name: 'scheduleId' })

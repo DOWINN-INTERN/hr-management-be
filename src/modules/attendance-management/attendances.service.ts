@@ -1,4 +1,5 @@
 import { AttendanceStatus } from '@/common/enums/attendance-status.enum';
+import { HolidayType } from '@/common/enums/holiday-type.enum';
 import { NotificationType } from '@/common/enums/notification-type.enum';
 import { RequestStatus } from '@/common/enums/request-status.enum';
 import { ATTENDANCE_EVENTS, AttendanceProcessedEvent } from '@/common/events/attendance.event';
@@ -9,11 +10,12 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { InjectRepository } from '@nestjs/typeorm';
 import { differenceInMinutes, endOfDay, format, startOfDay, subDays } from 'date-fns';
-import { Between, IsNull, LessThan, Not, Repository } from 'typeorm';
+import { ArrayContains, Between, IsNull, LessThan, Not, Repository } from 'typeorm';
 import { EmployeesService } from '../employee-management/employees.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { SchedulesService } from '../shift-management/schedules/schedules.service';
 import { Attendance } from './entities/attendance.entity';
+import { DayType } from './final-work-hours/entities/final-work-hour.entity';
 import { WorkTimeRequest } from './work-time-requests/entities/work-time-request.entity';
 import { WorkTimeRequestsService } from './work-time-requests/work-time-requests.service';
 
@@ -44,78 +46,204 @@ export class AttendancesService extends BaseService<Attendance> {
 
     // Run at midnight
     @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
-    async processAttendanceRecords() {
+    async processAttendanceRecords(processedBy?: string): Promise<boolean> {
         const yesterday = subDays(new Date(), 1);
         const yesterdayFormatted = format(yesterday, 'yyyy-MM-dd');
 
-        // find all attendance records yesterday that shift has already ended
-        
         this.logger.log(`Processing attendance records for ${yesterdayFormatted}`);
-        
+
+        // Process employees with under time
+        await this.handleUnderTimeEmployees();
+
+        // Process employees with over time
+        await this.handleOverTimeEmployees();
+
         // Process employees with check-in but no check-out
-        await this.handleMissingCheckOuts(yesterday);
+        await this.handleMissingCheckOuts();
 
         // Process employees worked on rest day
-        await this.handleRestDayEmployees(yesterday);
+        await this.handleRestDayEmployees();
 
         // Process employees that has no attendance record or absent
-        await this.handleAbsentEmployees(yesterday);
+        await this.handleAbsentEmployees();
         
-        this.logger.log(`Completed processing attendance records for ${yesterdayFormatted}`);
+        this.logger.log(`Completed processing attendance records`);
 
         // Get all attendance records for the day that has no final work hours yet
         const attendances = await this.attendancesRepository.find({
             where: {
-                timeIn: Between(startOfDay(yesterday), endOfDay(yesterday)),
-                finalWorkHour: IsNull(),
+                isProcessed: false,
+                schedule: {
+                    endTime: LessThan(format(new Date(), 'HH:mm:ss')) // Ensure the schedule end time has already passed
+                }
             },
-            relations: { employee: true, schedule: true }
+            relations: { schedule: true }
         });
+
+        if (attendances.length === 0) {
+            this.logger.log(`No attendance records to process`);
+            return false;
+        }
+
+        // mark attendance records as processed
+        for (const attendance of attendances) {
+            attendance.isProcessed = true;
+        }
+        await this.attendancesRepository.save(attendances);
 
         // Emit event for attendance processing
         this.eventEmitter.emit(
             ATTENDANCE_EVENTS.ATTENDANCE_PROCESSED,
-            new AttendanceProcessedEvent(attendances)
+            new AttendanceProcessedEvent(attendances, processedBy)
         );
+        return true;
     }
 
-    private async handleMissingCheckOuts(date: Date) {
-        const formattedDate = format(date, 'yyyy-MM-dd');
-        this.logger.log(`Handling missing check-outs for ${formattedDate}`);
+    async handleUnderTimeEmployees() {
+        this.logger.log(`Handling under time employees`);
+        
+        // Find all unprocessed undertime attendance records
+        const attendances = await this.attendancesRepository.find({
+            where: {
+                isProcessed: false,
+                statuses: ArrayContains([AttendanceStatus.UNDER_TIME]), // Filter for UNDERTIME status
+                schedule: {
+                    endTime: LessThan(format(new Date(), 'HH:mm:ss')) // Ensure the schedule end time has already passed
+                }
+            },
+            relations: { employee: { user: true }, schedule: true }
+        });
+        
+        for (const attendance of attendances) {
+            try {
+                this.logger.log(`Processing under time for employee ${attendance.employee.user.email}`);
+                const formattedAttendanceDate = format(attendance.createdAt, 'yyyy-MM-dd');
+
+                // Calculate total undertime minutes
+                const scheduleEndTime = new Date(`${formattedAttendanceDate}T${attendance.schedule.endTime}`);
+                const timeOut = attendance.timeOut ? new Date(attendance.timeOut) : new Date(attendance.schedule.endTime);
+
+                // Calculate undertime (when employee leaves before scheduled end time)
+                let undertimeMinutes = Math.floor((scheduleEndTime.getTime() - timeOut.getTime()) / (1000 * 60));
+
+                // Create work time request
+                const workTimeRequest = new WorkTimeRequest({
+                    attendance: attendance,
+                    type: AttendanceStatus.UNDER_TIME,
+                    duration: undertimeMinutes,
+                    status: RequestStatus.PENDING,
+                    dayType: attendance.dayType,
+                    createdBy: attendance.employee.id,
+                    employee: attendance.employee
+                });
+                await this.workTimeRequestsService.save(workTimeRequest);
+
+                await this.notificationsService.create({
+                    title: 'Early Check-out',
+                    message: `You left ${undertimeMinutes} minutes early on ${formattedAttendanceDate}.`,
+                    type: NotificationType.WARNING,
+                    category: 'ATTENDANCE',
+                    user: { id: attendance.employee.user.id },
+                });
+                
+            } catch (error: any) {
+                this.logger.error(`Error processing under time for attendance ${attendance.id}: ${error.message}`, error.stack);
+            }
+        }
+    }
+
+    async handleOverTimeEmployees() {
+        this.logger.log(`Handling over time employees`);
+        
+        // Find all unprocessed overtime attendance records
+        const attendances = await this.attendancesRepository.find({
+            where: {
+                isProcessed: false,
+                statuses: ArrayContains([AttendanceStatus.OVERTIME]), // Filter for OVERTIME status
+                schedule: {
+                    endTime: LessThan(format(new Date(), 'HH:mm:ss')) // Ensure the schedule end time has already passed
+                }
+            },
+            relations: { employee: { user: true }, schedule: true }
+        });
+        
+        for (const attendance of attendances) {
+            try {
+                this.logger.log(`Processing over time for employee ${attendance.employee.user.email}`);
+                const formattedAttendanceDate = format(attendance.createdAt, 'yyyy-MM-dd');
+
+                // Calculate total overtime minutes
+                const scheduleEndTime = new Date(`${formattedAttendanceDate}T${attendance.schedule.endTime}`);
+                const timeOut = attendance.timeOut ? new Date(attendance.timeOut) : new Date(attendance.schedule.endTime);
+
+                // Calculate overtime (when employee leaves after scheduled end time)
+                let overtimeMinutes = Math.floor((timeOut.getTime() - scheduleEndTime.getTime()) / (1000 * 60));
+
+                // Create work time request
+                const workTimeRequest = new WorkTimeRequest({
+                    attendance: attendance,
+                    type: AttendanceStatus.OVERTIME,
+                    duration: overtimeMinutes,
+                    status: RequestStatus.PENDING,
+                    dayType: attendance.dayType,
+                    createdBy: attendance.employee.id,
+                    employee: attendance.employee
+                });
+                await this.workTimeRequestsService.save(workTimeRequest);
+
+                await this.notificationsService.create({
+                    title: 'Overtime Alert',
+                    message: `You worked ${overtimeMinutes} minutes of overtime on ${formattedAttendanceDate}.`,
+                    type: NotificationType.INFO,
+                    category: 'ATTENDANCE',
+                    user: { id: attendance.employee.user.id },
+                });
+                
+            } catch (error: any) {
+                this.logger.error(`Error processing over time for attendance ${attendance.id}: ${error.message}`, error.stack);
+            }
+        }
+    }
+
+
+    async handleMissingCheckOuts() {
+        this.logger.log(`Handling missing check-outs`);
         
         // Find all attendance records for the day that have timeIn but no timeOut
         const incompleteAttendances = await this.attendancesRepository.find({
             where: {
-                timeIn: Between(startOfDay(date), endOfDay(date)),
+                isProcessed: false,
+                timeIn: Not(IsNull()),
                 timeOut: IsNull(),
                 schedule: {
                     endTime: LessThan(format(new Date(), 'HH:mm:ss')) // Ensure the schedule end time has already passed
                 }
             },
-            relations: { employee: true, schedule: true }
+            relations: { employee: { user: true }, schedule: true }
         });
         
         for (const attendance of incompleteAttendances) {
             try {
-                this.logger.log(`Employee ${attendance.employee.id} has no check-out for ${formattedDate}`);
-                
+                const formattedAttendanceDate = format(attendance.createdAt, 'yyyy-MM-dd');
+                this.logger.log(`Employee ${attendance.employee.user.email} has no check-out for ${formattedAttendanceDate}`);
                 // Update attendance with NO_CHECKED_OUT status
                 attendance.statuses = [...attendance.statuses || [], AttendanceStatus.NO_CHECKED_OUT];
-                attendance.timeOut = new Date(`${formattedDate}T${attendance.schedule.endTime}`); // Use schedule end time
                 await this.save(attendance);
 
                 // create new work time request
                 await this.workTimeRequestsService.create({
-                    attendance: { id: attendance.id },
+                    attendance,
                     type: AttendanceStatus.NO_CHECKED_OUT,
                     status: RequestStatus.PENDING,
+                    dayType: attendance.dayType,
+                    createdBy: attendance.employee.id,
                     employee: { id: attendance.employee.id },
                 });
 
                 await this.notificationsService.create({
                     title: 'Missing Check-Out Alert',
-                    message: `You have a missing check-out for ${formattedDate}. Please check your attendance record.`,
-                    type: NotificationType.INFO,
+                    message: `You forgot to check-out in ${formattedAttendanceDate}. Please check your attendance record.`,
+                    type: NotificationType.DANGER,
                     category: 'ATTENDANCE',
                     user: { id: attendance.employee.user.id },
                 });
@@ -126,27 +254,28 @@ export class AttendancesService extends BaseService<Attendance> {
         }
     }
 
-    async handleRestDayEmployees(date: Date) {
-        const formattedDate = format(date, 'yyyy-MM-dd');
-        this.logger.log(`Handling rest day employees for ${formattedDate}`);
+    async handleRestDayEmployees() {
+        this.logger.log(`Handling rest day attendances`);
         
         // Find all attendance records for the day where employees worked on their rest day
         // and have clocked out (timeOut is not null)
         const restDayAttendances = await this.attendancesRepository.find({
             where: {
-                timeIn: Between(startOfDay(date), endOfDay(date)),
+                isProcessed: false,
+                timeIn: Not(IsNull()),
                 timeOut: Not(IsNull()),  // Only process completed shifts
                 schedule: {
                     endTime: LessThan(format(new Date(), 'HH:mm:ss')), // Ensure the schedule end time has already passed
                     restDay: true,
                 },
             },
-            relations: { employee: true, schedule: true }
+            relations: { employee: { user: true }, schedule: true }
         });
         
         for (const attendance of restDayAttendances) {
             try {
-                this.logger.log(`Processing rest day work for employee ${attendance.employee.id} on ${formattedDate}`);
+                const formattedDate = format(attendance.createdAt, 'yyyy-MM-dd');
+                this.logger.log(`Processing rest day work for employee ${attendance.employee.user.email} on ${formattedDate}`);
                 
                 // Calculate total hours worked
                 const timeIn = attendance.timeIn ? new Date(attendance.timeIn) : new Date();
@@ -168,14 +297,23 @@ export class AttendancesService extends BaseService<Attendance> {
                     }
                     
                     // Grant offset leave credit to the employee
-                    attendance.employee.offsetLeaveCredits += 1;
-                    await this.employeesService.save(attendance.employee);
+                    // attendance.employee.offsetLeaveCredits += 1;
+                    // await this.employeesService.save(attendance.employee);
+
+                    await this.workTimeRequestsService.create({
+                        attendance,
+                        type: AttendanceStatus.OFFSET,
+                        status: RequestStatus.PENDING,
+                        dayType: attendance.dayType,
+                        createdBy: attendance.employee.id,
+                        employee: { id: attendance.employee.id },
+                    });
                     
                     // Notify the employee about offset earned
                     await this.notificationsService.create({
-                        title: 'Rest Day Offset Earned',
-                        message: `You have earned 1 offset leave credit for working on your rest day (${formattedDate}).`,
-                        type: NotificationType.SUCCESS,
+                        title: 'Rest Day Offset Requested',
+                        message: `You are qualified for 1 offset leave credit for working on your rest day (${formattedDate}).`,
+                        type: NotificationType.INFO,
                         category: 'ATTENDANCE',
                         user: { id: attendance.employee.user.id },
                     });
@@ -200,6 +338,7 @@ export class AttendancesService extends BaseService<Attendance> {
                     await this.workTimeRequestsService.create({
                         attendance: { id: attendance.id },
                         type: AttendanceStatus.OVERTIME,
+                        dayType: attendance.dayType,
                         duration: totalWorkMinutes,
                         status: RequestStatus.PENDING,
                         employee: { id: attendance.employee.id },
@@ -215,29 +354,50 @@ export class AttendancesService extends BaseService<Attendance> {
         }
     }
 
-    async handleAbsentEmployees(date: Date) {
+    async handleAbsentEmployees() {
         // Find all schedules for the given date that should have attendance
-        const schedules = await this.schedulesService.getRepository().find({
+        const absentSchedules = await this.schedulesService.getRepository().find({
             where: { 
-                date,
+                attendance: IsNull(),
                 restDay: false,
+                date: LessThan(new Date()),
+                endTime: LessThan(format(new Date(), 'HH:mm:ss')), // Ensure the schedule end time has already passed
             },
             relations: { employee: { user: true }, attendance: true }
         });
-    
-        // Filter schedules to find employees without attendance records
-        // and exclude schedules on holidays
-        const absentSchedules = schedules.filter(schedule => 
-            !schedule.attendance);
         
         // Process each absent employee
         for (const schedule of absentSchedules) {
             try
             {
+
+                let dayType: DayType;
+                const isRestDay = schedule.restDay;
+                const holidayType = schedule.holiday?.type;
+        
+                if (isRestDay && holidayType === HolidayType.REGULAR) {
+                    dayType = DayType.REGULAR_HOLIDAY_REST_DAY;
+                } 
+                else if (isRestDay && (holidayType === HolidayType.SPECIAL_NON_WORKING)) {
+                    dayType = DayType.SPECIAL_HOLIDAY_REST_DAY;
+                }
+                else if (isRestDay) {
+                    dayType = DayType.REST_DAY;
+                }
+                else if (holidayType === HolidayType.REGULAR) {
+                    dayType = DayType.REGULAR_HOLIDAY;
+                }
+                else if (holidayType === HolidayType.SPECIAL_NON_WORKING || holidayType === HolidayType.SPECIAL_WORKING) {
+                    dayType = DayType.SPECIAL_HOLIDAY;
+                }
+                else {
+                    dayType = DayType.REGULAR_DAY;
+                }
                 // Create new attendance record with absent status
                 const attendance = new Attendance({});
                 attendance.employee = schedule.employee;
                 attendance.schedule = schedule;
+                attendance.dayType = dayType;
                 attendance.statuses = [AttendanceStatus.ABSENT];
                 
                 const savedAttendance = await this.attendancesRepository.save(attendance);
@@ -248,6 +408,8 @@ export class AttendancesService extends BaseService<Attendance> {
                 workTimeRequest.attendance = savedAttendance;
                 workTimeRequest.type = AttendanceStatus.ABSENT;
                 workTimeRequest.status = RequestStatus.PENDING;
+                workTimeRequest.dayType = dayType;
+                workTimeRequest.createdBy = schedule.employee.id;
                 
                 await this.workTimeRequestsService.save(workTimeRequest);
         
@@ -255,8 +417,9 @@ export class AttendancesService extends BaseService<Attendance> {
                 await this.notificationsService.create({
                     user: { id: schedule.employee.user.id },
                     title: 'Absence Recorded',
-                    message: `You were marked absent for ${format(date, 'MMMM dd, yyyy')}`,
-                    type: NotificationType.INFO
+                    category: 'ATTENDANCE',
+                    message: `You were marked absent for ${format(schedule.date, 'MMMM dd, yyyy')}`,
+                    type: NotificationType.DANGER
                 });
             } catch (error: any) {
                 this.logger.error(`Error processing absence for employee ${schedule.employee.id}: ${error.message}`, error.stack);

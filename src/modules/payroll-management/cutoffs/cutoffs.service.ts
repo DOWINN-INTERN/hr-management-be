@@ -202,11 +202,11 @@ export class CutoffsService extends BaseService<Cutoff> {
             });
             
             if (pendingCutoffs.length > 0) {
-                this.logger.log(`Found ${pendingCutoffs.length} pending cutoffs to mark as COMPLETED`);
+                this.logger.log(`Found ${pendingCutoffs.length} pending cutoffs to mark as PROCESSING`);
                 
                 const result = await this.cutoffsRepository.update(
                     { id: In(pendingCutoffs.map(c => c.id)) },
-                    { status: CutoffStatus.COMPLETED }
+                    { status: CutoffStatus.PROCESSING }
                 );
                 
                 updated += result.affected || 0;

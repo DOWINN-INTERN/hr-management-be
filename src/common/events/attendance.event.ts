@@ -17,6 +17,7 @@ export class AttendanceRecordedEvent {
 export class AttendanceProcessedEvent {
   constructor(
     public readonly attendances: Attendance[],
+    public readonly processedBy: string = 'SYSTEM',
   ) {}
 }
 

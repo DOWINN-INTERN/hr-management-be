@@ -2,7 +2,7 @@ import { BaseDto } from "@/common/dtos/base.dto";
 import { ReferenceDto } from "@/common/dtos/reference.dto";
 import { NotificationType } from "@/common/enums/notification-type.enum";
 import { createGetDto } from "@/common/factories/create-get-dto.factory";
-import { ApiProperty, ApiPropertyOptional, PartialType } from "@nestjs/swagger";
+import { ApiProperty, PartialType } from "@nestjs/swagger";
 import { Type } from "class-transformer";
 import { IsEnum, IsOptional, IsString, ValidateNested } from "class-validator";
 
@@ -73,10 +73,8 @@ export class NotificationDto extends BaseDto {
   @IsOptional()
   metadata?: Record<string, any>;
 
-  @ApiPropertyOptional({ 
-      description: 'Recipients of the notification. Provide a flat array of objects e.g. [{ "id": "recipient-id"}]',
-      required: true,
-      isArray: true,
+  @ApiProperty({ 
+      description: 'Recipients of the notification.',
       type: [ReferenceDto]
   })
   @ValidateNested({ each: true })
