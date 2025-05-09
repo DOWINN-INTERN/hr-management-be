@@ -1,6 +1,7 @@
 import { AttendanceStatus } from '@/common/enums/attendance-status.enum';
 import { BaseEntity } from '@/database/entities/base.entity';
 import { Employee } from '@/modules/employee-management/entities/employee.entity';
+import { Cutoff } from '@/modules/payroll-management/cutoffs/entities/cutoff.entity';
 import { Schedule } from '@/modules/shift-management/schedules/entities/schedule.entity';
 import { Column, Entity, JoinColumn, ManyToOne, OneToMany, OneToOne } from 'typeorm';
 import { AttendancePunch } from '../attendance-punches/entities/attendance-punch.entity';
@@ -35,13 +36,16 @@ export class Attendance extends BaseEntity<Attendance> {
     @JoinColumn({ name: 'scheduleId' })
     schedule!: Schedule;
 
+    @ManyToOne(() => Cutoff, (cutoff: Cutoff) => cutoff.attendances)
+    @JoinColumn({ name: 'cutoffId' })
+    cutoff!: Cutoff;
+
     @OneToMany(() => AttendancePunch, (attendancePunches: AttendancePunch) => attendancePunches.attendance, { cascade: true })
     attendancePunches!: AttendancePunch[];
 
     @OneToMany(() => WorkTimeRequest, (workTimeRequest: WorkTimeRequest) => workTimeRequest.attendance, { cascade: true, nullable: true })
     workTimeRequests?: WorkTimeRequest[];
 
-    @OneToOne(() => FinalWorkHour, (finalWorkHour: FinalWorkHour) => finalWorkHour.attendance, { cascade: true, nullable: true })
-    @JoinColumn({ name: 'finalWorkHourId' })
+    @OneToOne(() => FinalWorkHour, (finalWorkHour: FinalWorkHour) => finalWorkHour.attendance, { nullable: true })
     finalWorkHour?: FinalWorkHour;
 }

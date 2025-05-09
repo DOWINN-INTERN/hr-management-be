@@ -6,7 +6,7 @@ import { Column, Entity, OneToMany } from 'typeorm';
 
 @Entity('biometric_devices')
 export class BiometricDevice extends BaseEntity<BiometricDevice> {
-    @Column({ unique: true })
+    @Column({ unique: true, nullable: true })
     name?: string;
 
     @Column({ unique: true })
@@ -46,7 +46,7 @@ export class BiometricDevice extends BaseEntity<BiometricDevice> {
     @Column({ default: false })
     isConnected!: boolean;
 
-    @Column()
+    @Column({ default: true})
     isOffline!: boolean;
 
     @Column({ type: 'timestamp', nullable: true })

@@ -1,7 +1,9 @@
 import { BaseDto } from "@/common/dtos/base.dto";
+import { ReferenceDto } from "@/common/dtos/reference.dto";
 import { createGetDto } from "@/common/factories/create-get-dto.factory";
 import { ApiProperty, PartialType } from "@nestjs/swagger";
-import { IsBoolean, IsNotEmpty, IsString, IsUUID } from "class-validator";
+import { Type } from "class-transformer";
+import { IsBoolean, IsNotEmpty, IsOptional, IsString, ValidateNested } from "class-validator";
 
 export class WorkTimeResponseDto extends PartialType(BaseDto) {
     @ApiProperty({ 
@@ -20,13 +22,15 @@ export class WorkTimeResponseDto extends PartialType(BaseDto) {
     @IsNotEmpty()
     message!: string;
 
-    @ApiProperty({ 
-        description: 'ID of the related work time request',
-        example: '123e4567-e89b-12d3-a456-426614174000' 
+
+    @ApiProperty({
+        description: 'Work time request associated with this response',
+        type: ReferenceDto,
     })
-    @IsUUID()
-    @IsNotEmpty()
-    workTimeRequestId!: string;
+    @IsOptional()
+    @ValidateNested()
+    @Type(() => ReferenceDto)
+    workTimeRequest?: ReferenceDto;
 }
 
 export class UpdateWorkTimeResponseDto extends PartialType(WorkTimeResponseDto) {}

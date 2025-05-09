@@ -1,21 +1,19 @@
 import { AttendanceStatus } from "@/common/enums/attendance-status.enum";
-import { ATTENDANCE_EVENTS, FinalWorkHoursCalculationEvent } from "@/common/events/attendance.event";
 import { InjectQueue, Process, Processor } from "@nestjs/bull";
 import { Injectable, Logger } from "@nestjs/common";
-import { EventEmitter2 } from "@nestjs/event-emitter";
 import { Job, Queue } from "bull";
 import { v4 as uuidv4 } from "uuid";
 import { AttendancesService } from "../../attendances.service";
 import { Attendance } from "../../entities/attendance.entity";
 import { WorkTimeRequestsService } from "../../work-time-requests/work-time-requests.service";
-import { WorkTimeResponse } from "../../work-time-requests/work-time-responses/entities/work-time-response.entity";
+import { FinalWorkHour } from "../entities/final-work-hour.entity";
 import { FinalWorkHoursService } from "../final-work-hours.service";
 
 export interface FinalWorkHoursJobData {
     attendanceIds: string[];
     batchId: string;
     processedBy: string;
-  }
+}
 
 @Injectable()
 export class WorkHourCalculationService {
@@ -24,49 +22,47 @@ export class WorkHourCalculationService {
   constructor(
     @InjectQueue('work-hour-calculation')
     private readonly workHourQueue: Queue,
-    private readonly eventEmitter: EventEmitter2
   ) {}
-
-//   async addGenerationJob(data: ScheduleGenerationJob): Promise<Job<ScheduleGenerationJob>> {
-//       this.logger.log(`Adding schedule generation job for ${data.employeeIds.length} employees in group ${data.groupId}`);
-//       return this.scheduleQueue.add('generate', data);
-//     }
 
   async queueFinalWorkHoursCalculation(
     attendanceIds: string[],
     processedBy: string
   ): Promise<string> {
-    // Generate a batch ID for tracking
-    const batchId = uuidv4();
-
-    // Emit the event first
-    this.eventEmitter.emit(
-      ATTENDANCE_EVENTS.FINAL_WORK_HOURS_CALCULATION, 
-      new FinalWorkHoursCalculationEvent(attendanceIds, batchId, processedBy)
-    );
-
-    // Queue the job with high priority
-    await this.workHourQueue.add(
-      'calculate-final-work-hours',
-      {
-        attendanceIds,
-        batchId,
-        processedBy
-      } as FinalWorkHoursJobData,
-      {
-        priority: 1,
-        attempts: 3,
-        backoff: {
-          type: 'exponential',
-          delay: 5000
-        },
-        removeOnComplete: true,
-        jobId: `final-work-hours-${batchId}`
+    try {
+      // Validate input
+      if (!attendanceIds || attendanceIds.length === 0) {
+        throw new Error('No attendance IDs provided for calculation');
       }
-    );
+      
+      // Generate a batch ID for tracking
+      const batchId = uuidv4();
 
-    this.logger.log(`Queued final work hours calculation for batch ${batchId} with ${attendanceIds.length} attendances`);
-    return batchId;
+      // Queue the job with high priority
+      await this.workHourQueue.add(
+        'calculate-final-work-hours',
+        {
+          attendanceIds,
+          batchId,
+          processedBy
+        } as FinalWorkHoursJobData,
+        {
+          priority: 1,
+          attempts: 3,
+          backoff: {
+            type: 'exponential',
+            delay: 5000
+          },
+          removeOnComplete: true,
+          jobId: `final-work-hours-${batchId}`
+        }
+      );
+
+      this.logger.log(`Queued final work hours calculation for batch ${batchId} with ${attendanceIds.length} attendances`);
+      return batchId;
+    } catch (error: any) {
+      this.logger.error(`Failed to queue work hour calculation: ${error.message}`, error.stack);
+      throw error;
+    }
   }
 }
 
@@ -75,84 +71,146 @@ export class WorkHourCalculationProcessor {
   private readonly logger = new Logger(WorkHourCalculationProcessor.name);
   private readonly GRACE_PERIOD_MINUTES = 5; // Consider late after 5 minutes
   private readonly OVER_TIME_THRESHOLD_MINUTES = 30; // Consider overtime if more than 30 minutes
+  
   constructor(
     private readonly attendanceService: AttendancesService,
     private readonly finalWorkHourService: FinalWorkHoursService,
     private readonly workTimeRequestsService: WorkTimeRequestsService,
   ) {}
+  
   @Process('calculate-final-work-hours')
   async calculateFinalWorkHours(job: Job<FinalWorkHoursJobData>): Promise<void> {
     const { attendanceIds, batchId, processedBy } = job.data;
+    this.logger.log(`Processing final work hours calculation for batch ${batchId} with ${attendanceIds.length} attendances`);
     
-    for (const attendanceId of attendanceIds) {
-      // Find attendance with all necessary relations
-      const attendance = await this.attendanceService.findOneByOrFail(
+    try {
+      let processedCount = 0;
+      let failedCount = 0;
+      
+      for (const attendanceId of attendanceIds) {
+        try {
+          // log hello
+          await this.processAttendance(attendanceId, batchId, processedBy);
+          processedCount++;
+        } catch (attendanceError: any) {
+          failedCount++;
+          this.logger.error(
+            `Error processing attendance ${attendanceId} in batch ${batchId}: ${attendanceError.message}`
+          );
+          // Continue processing other attendances despite this error
+        }
+      }
+
+      if (failedCount > attendanceIds.length * 0.5) { // If more than 50% failed
+        throw new Error(`Batch ${batchId} had too many failures: ${failedCount}/${attendanceIds.length}`);
+      }
+      
+      if (processedCount === attendanceIds.length) {
+        this.logger.log(`Successfully processed all ${processedCount} attendances in batch ${batchId}`);
+      }
+      else 
+      {
+        this.logger.warn(`Processed ${processedCount} out of ${attendanceIds.length} attendances in batch ${batchId}`);
+      }
+    } catch (error: any) {
+      this.logger.error(`Failed to process batch ${batchId}: ${error.message}`);
+      throw error; // Re-throw to allow Bull to handle the job failure
+    }
+  }
+  
+  private async processAttendance(attendanceId: string, batchId: string, processedBy: string): Promise<void> {
+    this.logger.log(`Processing attendance ${attendanceId}`);
+    
+    // Find attendance with all necessary relations
+    let attendance = await this.attendanceService.findOneByOrFail(
         { id: attendanceId },
         { relations: { employee: true, schedule: { shift: true, cutoff: true, holiday: true } } }
       );
-      
-      // Create or update final work hour record
-      let finalWorkHour = await this.finalWorkHourService.findOneBy({
+    
+    // Create or update final work hour record
+    let finalWorkHour = await this.finalWorkHourService.findOneBy({
         attendance: new Attendance({ id: attendanceId })
-      });
-      
-      if (!finalWorkHour) {
-        // Convert schedule times to Date objects when needed
+      }, { relations: { attendance: true } });
+
+    if (finalWorkHour) {
+      this.logger.log(`Final work hour already exists for attendance ${attendanceId}, updating...`);
+    }
+    else {
+      this.logger.log(`Creating new final work hour for attendance ${attendanceId}`);
+      finalWorkHour = new FinalWorkHour({});
+    }
+
+    // Convert schedule times to Date objects when needed
       let timeIn = attendance.timeIn;
       let timeOut = attendance.timeOut;
       let overTimeOut = undefined;
+      let noTimeInHours = 0;
+      let noTimeOutHours = 0;
 
-      const [shours, sminutes] = attendance.schedule.endTime.split(':').map(Number);
-      let scheduleEndTime = new Date(attendance.schedule.date);
-      scheduleEndTime.setHours(shours, sminutes, 0);
+      // Safely parse schedule times
+      let scheduleEndTime, scheduleStartTime;
+      try {
+        const [shours, sminutes] = attendance.schedule.endTime.split(':').map(Number);
+        scheduleEndTime = new Date(attendance.schedule.date);
+        scheduleEndTime.setHours(shours, sminutes, 0);
 
-      const [ehours, eminutes] = attendance.schedule.startTime.split(':').map(Number);
-      let scheduleStartTime = new Date(attendance.schedule.date);
-      scheduleStartTime.setHours(ehours, eminutes, 0);
-
-      // Clone the dates to avoid mutation issues
-      const scheduleStartTimePlus = new Date(scheduleStartTime);
-      scheduleStartTimePlus.setMinutes(scheduleStartTimePlus.getMinutes() + this.GRACE_PERIOD_MINUTES); // 5 minutes grace period
-
-      // Handle timeIn logic
-      if (!timeIn) {
-        // If timeIn is not available, use schedule's startTime + 60 minutes
-        timeIn = new Date(scheduleStartTime);
-        timeIn.setMinutes(timeIn.getMinutes() + 60);
-        this.logger.log(`No timeIn for attendance ${attendanceId}, using schedule start time + 60 minutes`);
-      } else if (timeIn <= scheduleStartTimePlus) {
-        // If timeIn is within grace period (not late), use schedule's startTime
-        timeIn = new Date(scheduleStartTime);
-        this.logger.log(`TimeIn is within grace period for attendance ${attendanceId}, using schedule start time`);
-      } 
-      // If timeIn is late, we keep the actual timeIn value (no change needed)
-
-      // Handle timeOut logic
-      if (!timeOut) {
-        // If timeOut is not available, use schedule's endTime - 60 minutes
-        timeOut = new Date(scheduleEndTime);
-        timeOut.setMinutes(timeOut.getMinutes() - 60);
-        this.logger.log(`No timeOut for attendance ${attendanceId}, using schedule end time - 60 minutes`);
-      } else if (timeOut > scheduleEndTime) {
-        // find the work time request of this attendance 
-        const workTimeRequest = await this.workTimeRequestsService.findOneBy(
-          {
-            attendance: new Attendance({ id: attendanceId }),
-            workTimeResponse: new WorkTimeResponse({ approved: true }),
-            type: AttendanceStatus.OVERTIME
-          },
-          {
-            relations: { workTimeResponse: true, attendance: true }
-          }
-        );
-        
-        if (workTimeRequest)
-          overTimeOut = new Date(timeOut);
-
-        timeOut = new Date(scheduleEndTime);
+        const [ehours, eminutes] = attendance.schedule.startTime.split(':').map(Number);
+        scheduleStartTime = new Date(attendance.schedule.date);
+        scheduleStartTime.setHours(ehours, eminutes, 0);
+      } catch (parseError: any) {
+        throw new Error(`Invalid schedule times for attendance ${attendanceId}: ${parseError.message}`);
       }
 
-        finalWorkHour = await this.finalWorkHourService.create({
+        // Clone the dates to avoid mutation issues
+        const scheduleStartTimePlus = new Date(scheduleStartTime);
+        scheduleStartTimePlus.setMinutes(scheduleStartTimePlus.getMinutes() + this.GRACE_PERIOD_MINUTES);
+
+        // Handle timeIn logic
+        if (!timeIn) {
+          // Check if attendance status contains absent
+          if (attendance.statuses?.includes(AttendanceStatus.ABSENT) === false) {
+            noTimeInHours = 1;
+          }
+        } else if (timeIn <= scheduleStartTimePlus) {
+          timeIn = new Date(scheduleStartTime);
+          this.logger.log(`TimeIn is within grace period for attendance ${attendanceId}, using schedule start time`);
+        }
+
+        // Handle timeOut logic
+        if (!timeOut) {
+          // Check if attendance status contains absent
+          if (attendance.statuses?.includes(AttendanceStatus.ABSENT) === false) {
+            noTimeOutHours = 1;
+          }
+        } else if (timeOut > scheduleEndTime) {
+          try {
+            // Find the work time request of this attendance
+            const workTimeRequest = await this.workTimeRequestsService.getRepository().findOne(
+              {
+                where: {
+                  attendance: { id: attendanceId },
+                  workTimeResponse: { approved: true },
+                  type: AttendanceStatus.OVERTIME
+                },
+                relations: { workTimeResponse: true, attendance: true }
+              }
+            );
+            
+            if (workTimeRequest) {
+              overTimeOut = new Date(timeOut);
+              this.logger.debug(`Overtime approved for attendance ${attendanceId}`);
+            }
+
+            timeOut = new Date(scheduleEndTime);
+          } catch (queryError: any) {
+            this.logger.warn(`Error checking work time request for attendance ${attendanceId}: ${queryError.message}`);
+            timeOut = new Date(scheduleEndTime);
+          }
+        }
+
+      try {
+        finalWorkHour = await this.finalWorkHourService.getRepository().save({
+          id: finalWorkHour.id,
           attendance: { id: attendanceId },
           employee: { id: attendance.employee.id },
           cutoff: { id: attendance.schedule.cutoff.id },
@@ -160,14 +218,18 @@ export class WorkHourCalculationProcessor {
           batchId,
           timeOut,
           overTimeOut,
+          noTimeInHours,
+          noTimeOutHours,
           dayType: attendance.dayType,
           workDate: attendance.schedule.date,
-          createdBy: processedBy
+          createdBy: finalWorkHour.id ? finalWorkHour.createdBy : processedBy,
+          updatedBy: finalWorkHour.id ? processedBy : undefined,
         });
+        
+        // Update work hours breakdown
+        await this.finalWorkHourService.updateWorkHoursBreakdown(finalWorkHour.id, processedBy);
+      } catch (saveError: any) {
+        throw new Error(`Database error while saving final work hour: ${saveError.message}`);
       }
-      
-      // Update work hours breakdown
-      await this.finalWorkHourService.updateWorkHoursBreakdown(finalWorkHour.id, processedBy);
-    }
   }
 }

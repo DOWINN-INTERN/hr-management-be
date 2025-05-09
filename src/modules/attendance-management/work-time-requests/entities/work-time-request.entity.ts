@@ -41,7 +41,6 @@ export class WorkTimeRequest extends BaseEntity<WorkTimeRequest> {
     @Column({ type: 'text', nullable: true })
     reason?: string;
 
-    @OneToOne(() => WorkTimeResponse, (workTimeResponse: WorkTimeResponse) => workTimeResponse.workTimeRequest, { eager: true, nullable: true, cascade: true })
-    @JoinColumn({ name: 'workTimeResponseId' })
+    @OneToOne(() => WorkTimeResponse, (workTimeResponse: WorkTimeResponse) => workTimeResponse.workTimeRequest, { eager: true, nullable: true})
     workTimeResponse?: WorkTimeResponse;
 }

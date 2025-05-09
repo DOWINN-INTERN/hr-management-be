@@ -80,6 +80,7 @@ export class EmailConfigurationsService extends BaseService<EmailConfiguration> 
 
     async getDepartmentConfiguration(departmentId: string): Promise<EmailConfiguration> {
         const config = await this.emailConfigurationsRepository.findOne({ 
+            // maybe error here for departmentId
             where: { departmentId, isDeleted: false },
             select: ['id', 'name', 'host', 'port', 'secure', 'username', 'password', 'fromEmail', 'fromName']
         });
@@ -93,6 +94,7 @@ export class EmailConfigurationsService extends BaseService<EmailConfiguration> 
 
     async getOrganizationConfiguration(organizationId: string): Promise<EmailConfiguration> {
         const config = await this.emailConfigurationsRepository.findOne({ 
+            // maybe error here for organizationId
             where: { organizationId, isDeleted: false },
             select: ['id', 'name', 'host', 'port', 'secure', 'username', 'password', 'fromEmail', 'fromName']
         });
@@ -106,6 +108,7 @@ export class EmailConfigurationsService extends BaseService<EmailConfiguration> 
 
     async getBranchConfiguration(branchId: string): Promise<EmailConfiguration> {
         const config = await this.emailConfigurationsRepository.findOne({ 
+            // maybe error here for branchId
             where: { branchId, isDeleted: false },
             select: ['id', 'name', 'host', 'port', 'secure', 'username', 'password', 'fromEmail', 'fromName']
         });

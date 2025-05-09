@@ -1,7 +1,7 @@
 import { BaseEntity } from '@/database/entities/base.entity';
 import { Employee } from '@/modules/employee-management/entities/employee.entity';
 import { Cutoff } from '@/modules/payroll-management/cutoffs/entities/cutoff.entity';
-import { AfterLoad, Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
+import { AfterLoad, Column, Entity, JoinColumn, ManyToOne, OneToOne } from 'typeorm';
 import { Attendance } from '../../entities/attendance.entity';
 
 // Define day type enum for better type safety
@@ -20,7 +20,7 @@ export class FinalWorkHour extends BaseEntity<FinalWorkHour> {
     @JoinColumn({ name: 'employeeId' })
     employee!: Employee;
 
-    @ManyToOne(() => Attendance, (attendance: Attendance) => attendance.finalWorkHour)
+    @OneToOne(() => Attendance, (attendance: Attendance) => attendance.finalWorkHour)
     @JoinColumn({ name: 'attendanceId' })
     attendance!: Attendance;
 
@@ -28,14 +28,30 @@ export class FinalWorkHour extends BaseEntity<FinalWorkHour> {
     @JoinColumn({ name: 'cutoffId' })
     cutoff!: Cutoff;
 
-    @Column({ type: 'timestamp'})
-    timeIn!: Date;
+    @Column({ type: 'timestamp', nullable: true })
+    timeIn?: Date;
 
-    @Column({ type: 'timestamp'})
-    timeOut!: Date;
+    @Column({ type: 'timestamp', nullable: true })
+    timeOut?: Date;
 
     @Column({ type: 'timestamp', nullable: true })
     overTimeOut?: Date;
+
+    // Deduction hours
+    @Column('decimal', { precision: 10, scale: 2, default: 0 })
+    noTimeInHours!: number;
+
+    @Column('decimal', { precision: 10, scale: 2, default: 0 })
+    noTimeOutHours!: number;
+
+    @Column('decimal', { precision: 10, scale: 2, default: 0 })
+    absentHours!: number;
+
+    @Column('decimal', { precision: 10, scale: 2, default: 0 })
+    tardinessHours!: number;
+
+    @Column('decimal', { precision: 10, scale: 2, default: 0 })
+    undertimeHours!: number;
     
     // Basic hour categories - strictly tracking hours, no pay calculations
     @Column('decimal', { precision: 10, scale: 2, default: 0 })

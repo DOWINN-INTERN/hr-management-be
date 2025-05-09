@@ -6,6 +6,7 @@ import { BiometricDevicesController } from './biometric-devices.controller';
 import { BiometricsController } from './biometrics.controller';
 import { BiometricDevice } from './entities/biometric-device.entity';
 import { BiometricTemplate } from './entities/biometric-template.entity';
+import { BiometricsGateway } from './gateways/biometrics.gateway';
 import { TimeoutInterceptor } from './interceptors/timeout.interceptor';
 import { AnvizBiometricsService } from './services/anvis-biometrics.service';
 import { BiometricDevicesService } from './services/biometric-devices.service';
@@ -45,6 +46,7 @@ import { ZKTecoBiometricsService } from './services/zkteco-biometrics.service';
         BiometricsPollingService,
         BiometricDevicesService,
         BiometricsFactoryService,
+        BiometricsGateway,
     ],
     exports: [
         'ZKTECO_SERVICE',

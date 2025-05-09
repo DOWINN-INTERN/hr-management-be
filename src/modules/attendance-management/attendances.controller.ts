@@ -50,12 +50,12 @@ export class AttendancesController extends createController(Attendance, Attendan
                 throw new NotFoundException('No attendance records found to process');
             
             return {
-                message: 'Attendance records processed successfully',
+                message: 'Processing of attendance records has been initiated. Please wait for the system to finish processing.',
                 statusCode: HttpStatus.OK
             };
         } catch (error: any) {
             return {
-                message: `Failed to process attendance records: ${error.message}`,
+                message: 'An error occurred while processing attendance records: ' + error.message,
                 statusCode: HttpStatus.INTERNAL_SERVER_ERROR
             };
         }

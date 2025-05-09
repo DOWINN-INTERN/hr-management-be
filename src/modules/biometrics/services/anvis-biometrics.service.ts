@@ -9,6 +9,7 @@ import { Repository } from 'typeorm';
 import { ConnectDeviceDto } from '../dtos/connect-device.dto';
 import { BiometricDevice } from '../entities/biometric-device.entity';
 import { BiometricTemplate } from '../entities/biometric-template.entity';
+import { BiometricsGateway } from '../gateways/biometrics.gateway';
 import { AttendanceRecord, IBiometricTemplate, IBiometricUser } from '../interfaces/biometric.interface';
 import { BaseBiometricsService, BiometricException } from './base-biometrics.service';
 
@@ -46,8 +47,9 @@ export class AnvizBiometricsService extends BaseBiometricsService {
         @InjectRepository(BiometricDevice)
         protected readonly deviceRepository: Repository<BiometricDevice>,
         protected readonly eventEmitter: EventEmitter2,
+        protected readonly biometricsGateway: BiometricsGateway,
     ) {
-        super(deviceRepository, eventEmitter);
+        super(deviceRepository, eventEmitter, biometricsGateway);
     }
 
     /**
@@ -327,7 +329,7 @@ export class AnvizBiometricsService extends BaseBiometricsService {
 
                 // log
                 this.logger.log(`Connected to Anviz device ${deviceId} (${deviceInfo.serialNumber})`);
-                
+                this.biometricsGateway.pingAll();
                 // Update or create device in database
                 return await this.deviceRepository.save(device);
 

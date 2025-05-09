@@ -67,7 +67,7 @@ export class AuthService {
     var user: User | null = null;
     if (UtilityHelper.isEmail(model.emailOrUserName)) {
       // check if email exists
-      user = await this.usersService.findOneBy({ email: model.emailOrUserName.toLowerCase().trim() }, { relations: { employee: { roles: true } } });
+      user = await this.usersService.findOneBy({ email: model.emailOrUserName.toLowerCase().trim() }, { relations: { employee: { roles: { organization: true, branch: true, department: true } } } });
         
       if (!user) {
         return null;
@@ -75,7 +75,7 @@ export class AuthService {
     }
     else {
       // check if username exists
-      user = await this.usersService.findOneBy({ userName: model.emailOrUserName.toLowerCase().trim() }, { relations: { employee: { roles: true } } });
+      user = await this.usersService.findOneBy({ userName: model.emailOrUserName.toLowerCase().trim() }, { relations: { employee: { roles: { organization: true, branch: true, department: true } } } });
       if (!user) {
         return null;
       }
@@ -371,7 +371,7 @@ export class AuthService {
     // save refresh token to database
     await this.sessionsService.create({
       refreshToken,
-      userId: user.id,
+      user: { id: user.id },
       expiresAt,
       userAgent: request?.headers['user-agent'],
       ipAddress: request?.ip,
@@ -408,7 +408,7 @@ export class AuthService {
     // save refresh token to database
     await this.sessionsService.create({
       refreshToken,
-      userId: user.id,
+      user: { id: user.id },
       expiresAt,
       userAgent: req?.headers['user-agent'],
       ipAddress: req?.ip,

@@ -20,7 +20,6 @@ export class Schedule extends BaseEntity<Schedule> {
     status?: ScheduleStatus;
 
     @OneToOne(() => Attendance, (attendance: Attendance) => attendance.schedule, { nullable: true })
-    @JoinColumn({ name: 'attendanceId' })
     attendance?: Attendance;
 
     @Column({ type: 'time', nullable: true })
@@ -53,7 +52,7 @@ export class Schedule extends BaseEntity<Schedule> {
     @OneToMany(() => ScheduleChangeRequest, (scheduleChangeRequest: ScheduleChangeRequest) => scheduleChangeRequest.schedule)
     scheduleChangeRequests?: ScheduleChangeRequest[];
 
-    @ManyToOne(() => Cutoff, (cutoff: Cutoff) => cutoff.schedules)
+    @ManyToOne(() => Cutoff, (cutoff: Cutoff) => cutoff.schedules, { eager: true })
     @JoinColumn({ name: 'cutoffId' })
     cutoff!: Cutoff;
 }

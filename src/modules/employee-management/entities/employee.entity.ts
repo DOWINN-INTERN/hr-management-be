@@ -57,7 +57,7 @@ export class Employee extends BaseEntity<Employee> {
     @Column({ default: 0 })
     offsetLeaveCredits!: number;
 
-    @OneToOne(() => User, (user) => user.employee)
+    @OneToOne(() => User, (user) => user.employee, { eager: true })
     @JoinColumn({ name: 'userId' })
     user!: User;
 

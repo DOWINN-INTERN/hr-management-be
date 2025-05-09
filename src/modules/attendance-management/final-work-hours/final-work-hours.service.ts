@@ -1,8 +1,13 @@
+import { AttendanceStatus } from '@/common/enums/attendance-status.enum';
 import { HolidayType } from '@/common/enums/holiday-type.enum';
+import { ATTENDANCE_EVENTS, RecalculateFinalWorkHoursEvent } from '@/common/events/attendance.event';
 import { BaseService } from '@/common/services/base.service';
 import { UsersService } from '@/modules/account-management/users/users.service';
+import { CutoffsService } from '@/modules/payroll-management/cutoffs/cutoffs.service';
 import { Injectable } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { InjectRepository } from '@nestjs/typeorm';
+import { format } from 'date-fns';
 import { Repository } from 'typeorm';
 import { DayType, FinalWorkHour } from './entities/final-work-hour.entity';
 
@@ -12,6 +17,10 @@ interface WorkHoursBreakdown {
     restDayHours: number;
     specialHolidayHours: number;
     regularHolidayHours: number;
+
+    absentHours: number;
+    tardinessHours: number;
+    undertimeHours: number;
 
     // Overtime categories
     overtimeRegularDayHours: number;
@@ -36,7 +45,9 @@ export class FinalWorkHoursService extends BaseService<FinalWorkHour> {
     constructor(
         @InjectRepository(FinalWorkHour)
         private readonly finalWorkHoursRepository: Repository<FinalWorkHour>,
-        protected readonly usersService: UsersService
+        protected readonly usersService: UsersService,
+        private readonly eventEmitter: EventEmitter2,
+        private readonly cutoffsService: CutoffsService,
     ) {
         super(finalWorkHoursRepository, usersService);
     }
@@ -46,12 +57,14 @@ export class FinalWorkHoursService extends BaseService<FinalWorkHour> {
      * No pay calculations included - strictly time tracking
      */
     calculateWorkHoursBreakdown(finalWorkHour: FinalWorkHour): WorkHoursBreakdown {
-
         const result: WorkHoursBreakdown = {
             regularDayHours: 0,
             restDayHours: 0,
             specialHolidayHours: 0,
             regularHolidayHours: 0,
+            absentHours: 0,
+            tardinessHours: 0,
+            undertimeHours: 0,
             
             overtimeRegularDayHours: 0,
             overtimeRestDayHours: 0,
@@ -71,16 +84,48 @@ export class FinalWorkHoursService extends BaseService<FinalWorkHour> {
         const { schedule } = finalWorkHour.attendance;
         const isRestDay = schedule.restDay === true;
         const holidayType = schedule.holiday?.type;
+
+        const formattedAttendanceDate = format(schedule.date, 'yyyy-MM-dd');
+        
+        // Calculate total undertime minutes
+        const scheduleEndTime = new Date(`${formattedAttendanceDate}T${schedule.endTime}`);
+        const scheduleStartTime = new Date(`${formattedAttendanceDate}T${schedule.startTime}`);
+
+        // Convert hours to milliseconds (1 hour = 3600000 milliseconds)
+        const noTimeInMilliseconds = finalWorkHour.noTimeInHours * 3600000;
+        const noTimeOutMilliseconds = finalWorkHour.noTimeOutHours * 3600000;
+
+        // Properly calculate timeIn and timeOut with Date objects
+        const timeIn = finalWorkHour.timeIn || 
+            new Date(scheduleStartTime.getTime() + noTimeInMilliseconds);
+        const timeOut = finalWorkHour.timeOut || 
+            new Date(scheduleEndTime.getTime() - noTimeOutMilliseconds);
+
+        const { statuses } = finalWorkHour.attendance;
+        const isLate = statuses?.includes(AttendanceStatus.LATE);
+        const isUndertime = statuses?.includes(AttendanceStatus.UNDER_TIME);
+        const isAbsent = statuses?.includes(AttendanceStatus.ABSENT);
+
+
+        if (isAbsent) 
+        {
+            // If absent, set all hours to 0
+            result.absentHours = this.calculateHours(timeIn, timeOut, schedule.breakTime);
+            return result;
+        }
         
         // Calculate regular and overtime hours
-        const regularHours = this.calculateHours(finalWorkHour.timeIn, finalWorkHour.timeOut, schedule.shift.defaultBreakTime);
+        const regularHours = this.calculateHours(timeIn, timeOut, schedule.breakTime);
         const overtimeHours = finalWorkHour.overTimeOut ? 
-            this.calculateHours(finalWorkHour.timeOut, finalWorkHour.overTimeOut, schedule.shift.defaultBreakTime) : 0;
-        
+            this.calculateHours(timeOut, finalWorkHour.overTimeOut) : 0;
+
+        result.tardinessHours = isLate ? this.calculateHours(scheduleStartTime, timeIn) : 0;
+        result.undertimeHours = isUndertime ? this.calculateHours(timeOut, scheduleEndTime) : 0;
+
         // Calculate night differential hours
         const nightDiffHours = this.calculateNightDifferentialHours(
-            finalWorkHour.timeIn, 
-            finalWorkHour.timeOut,
+            timeIn, 
+            timeOut,
             finalWorkHour.overTimeOut
         );
         
@@ -181,7 +226,7 @@ export class FinalWorkHoursService extends BaseService<FinalWorkHour> {
      * @param breakTimeDuration Break time in minutes
      * @returns Number of hours worked, rounded to 2 decimal places
      */
-    private calculateHours(start: Date, end: Date, breakTimeDuration: number): number {
+    private calculateHours(start: Date, end: Date, breakTimeDuration: number = 0): number {
         // Calculate the time difference in milliseconds
         const diffMs = end.getTime() - start.getTime();
         
@@ -195,6 +240,14 @@ export class FinalWorkHoursService extends BaseService<FinalWorkHour> {
         // Round to 2 decimal places
         return Math.round(totalHours * 100) / 100;
     }
+
+    async recalculateByCutoffId(cutoffId: string, updatedBy: string) {
+        // Check if cutoff exists
+        await this.cutoffsService.findOneByOrFail({ id: cutoffId });
+
+        // emit event to recalculate final work hours
+        this.eventEmitter.emit(ATTENDANCE_EVENTS.RECALCULATE_FINAL_WORK_HOURS, new RecalculateFinalWorkHoursEvent(cutoffId, updatedBy));        
+    }
     
     /**
      * Updates a FinalWorkHour entity with calculated hours breakdown
@@ -206,6 +259,9 @@ export class FinalWorkHoursService extends BaseService<FinalWorkHour> {
         );
         
         const breakdown = this.calculateWorkHoursBreakdown(finalWorkHour);
+
+        // log
+        this.logger.log(`Updating final work hour ${finalWorkHourId}`);
         
         // Update the record with calculated hours
         return this.update(finalWorkHourId, {
@@ -222,6 +278,10 @@ export class FinalWorkHoursService extends BaseService<FinalWorkHour> {
             nightDifferentialHours: breakdown.nightDifferentialHours,
             
             dayType: breakdown.dayType,
+
+            absentHours: breakdown.absentHours,
+            tardinessHours: breakdown.tardinessHours,
+            undertimeHours: breakdown.undertimeHours,
             
             totalRegularHours: breakdown.totalRegularHours,
             totalOvertimeHours: breakdown.totalOvertimeHours,

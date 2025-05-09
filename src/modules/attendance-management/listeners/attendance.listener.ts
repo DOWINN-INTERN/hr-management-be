@@ -3,7 +3,7 @@ import { HolidayType } from '@/common/enums/holiday-type.enum';
 import { NotificationType } from '@/common/enums/notification-type.enum';
 import { RequestStatus } from '@/common/enums/request-status.enum';
 import { ScheduleStatus } from '@/common/enums/schedule-status';
-import { ATTENDANCE_EVENTS, AttendanceProcessedEvent, AttendanceRecordedEvent } from '@/common/events/attendance.event';
+import { ATTENDANCE_EVENTS, AttendanceProcessedEvent, AttendanceRecordedEvent, RecalculateFinalWorkHoursEvent } from '@/common/events/attendance.event';
 import { AttendancePunchesService } from '@/modules/attendance-management/attendance-punches/attendance-punches.service';
 import { AttendancesService } from '@/modules/attendance-management/attendances.service';
 import { BiometricDevicesService } from '@/modules/biometrics/services/biometric-devices.service';
@@ -238,13 +238,17 @@ export class AttendanceListener {
             });
           }
 
+          
+
           // Check if employee is undertime
           if (isBefore(punchTime, shiftEndTime)) {
             // log
             this.logger.log(`Employee ${employee.user.email} is leaving early on ${punchDate} at ${punchTimeStr}`);
             const minutesEarly = differenceInMinutes(shiftEndTime, punchTime);
             if (minutesEarly > this.UNDER_TIME_THRESHOLD_MINUTES) {
-              attendanceStatuses.push(AttendanceStatus.UNDER_TIME);
+              if (!existingAttendance.statuses?.includes(AttendanceStatus.UNDER_TIME)) {
+                attendanceStatuses.push(AttendanceStatus.UNDER_TIME);
+              }
               this.logger.log(`Employee ${employee.id} is leaving ${minutesEarly} minutes early`);
               
               // move this to cron job
@@ -260,11 +264,10 @@ export class AttendanceListener {
               //   user: { id: employee.user.id },
               // });
             }
+
           } else {
-            // remove undertime and checked out status
-            attendanceStatuses = attendanceStatuses.filter(status => status !== AttendanceStatus.CHECKED_OUT);
-            attendanceStatuses = attendanceStatuses.filter(status => status !== AttendanceStatus.UNDER_TIME);
             // Check if employee is overtime
+            attendanceStatuses = attendanceStatuses.filter(status => status !== AttendanceStatus.UNDER_TIME);
             const minutesOvertime = differenceInMinutes(punchTime, shiftEndTime);
             if (minutesOvertime > this.OVER_TIME_THRESHOLD_MINUTES) {
               if (!existingAttendance.statuses?.includes(AttendanceStatus.OVERTIME)) {
@@ -286,7 +289,8 @@ export class AttendanceListener {
             }
           }
           
-          attendanceStatuses.push(AttendanceStatus.CHECKED_OUT);
+          if (!existingAttendance.statuses?.includes(AttendanceStatus.CHECKED_OUT))
+            attendanceStatuses.push(AttendanceStatus.CHECKED_OUT);
           existingAttendance.statuses = [...attendanceStatuses];
           
           existingAttendance.updatedBy = employee.user.id;
@@ -317,24 +321,40 @@ export class AttendanceListener {
   }
 
   @OnEvent(ATTENDANCE_EVENTS.ATTENDANCE_PROCESSED)
-    async handleAttendanceProcessedEvent(event: AttendanceProcessedEvent) {
-        this.logger.log(`Handling attendance processed event for ${event.attendances.length} attendances`);
+  async handleAttendanceProcessedEvent(event: AttendanceProcessedEvent) {
+    this.logger.log(`Handling attendance processed event for ${event.attendances.length} attendances`);
 
-        if (event.attendances.length === 0) {
-            return;
-        }
-
-        // Extract attendance IDs
-        const attendanceIds = event.attendances.map(attendance => attendance.id);
-
-        // Queue the attendances for final work hour calculation
-        const batchId = await this.workHourCalculationService.queueFinalWorkHoursCalculation(
-            attendanceIds,
-            event.processedBy // Since this is triggered by a system process
-        );
-
-        this.logger.log(`Queued ${attendanceIds.length} attendances for final work hours calculation. Batch ID: ${batchId}`);
+    if (event.attendances.length === 0) {
+        return;
     }
+
+    // Extract attendance IDs
+    const attendanceIds = event.attendances.map(attendance => attendance.id);
+
+    // Queue the attendances for final work hour calculation
+    await this.workHourCalculationService.queueFinalWorkHoursCalculation(
+        attendanceIds,
+        event.processedBy // Since this is triggered by a system process
+    );
+  }
+
+  @OnEvent(ATTENDANCE_EVENTS.RECALCULATE_FINAL_WORK_HOURS)
+  async handleRecalculateFinalWorkHoursEvent(event: RecalculateFinalWorkHoursEvent) {
+    this.logger.log(`Handling recalculation of final work hours for cutoff ID ${event.cutoffId}`);
+
+    // Fetch all attendances for the given cutoff
+    const attendances = await this.attendancesService.getRepository().find({
+      where: { schedule: { cutoff: { id: event.cutoffId } } },
+    });
+
+    const attendanceIds = attendances.map(attendance => attendance.id);
+
+    // Queue the attendances for final work hour calculation
+    await this.workHourCalculationService.queueFinalWorkHoursCalculation(
+      attendanceIds,
+      event.recalculatedBy // Since this is triggered by a system process
+    );
+  }
 
   // Helper methods for notifications and work time requests
   

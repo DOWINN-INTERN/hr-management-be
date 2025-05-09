@@ -37,5 +37,18 @@ export const queues: QueueConfig[] = [
       },
     },
   },
+  {
+    name: 'work-hour-calculation',
+    options: {
+      defaultJobOptions: {
+        attempts: 3,
+        backoff: {
+          type: 'exponential',
+          delay: 5000,
+        },
+        removeOnComplete: true,
+      },
+    },
+  },
   // Add other queues as needed
 ];

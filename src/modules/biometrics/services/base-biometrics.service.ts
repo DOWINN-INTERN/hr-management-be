@@ -4,6 +4,7 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Repository } from 'typeorm';
 import { ConnectDeviceDto } from '../dtos/connect-device.dto';
 import { BiometricDevice } from '../entities/biometric-device.entity';
+import { BiometricsGateway } from '../gateways/biometrics.gateway';
 import {
   AttendanceRecord,
   IBiometricService,
@@ -33,6 +34,7 @@ export abstract class BaseBiometricsService implements Partial<IBiometricService
     constructor(
       protected readonly deviceRepository: Repository<BiometricDevice>,
       protected readonly eventEmitter: EventEmitter2,
+      protected readonly biometricsGateway: BiometricsGateway,
     ) {
       this.initializeFromDatabase();
     }
@@ -142,6 +144,8 @@ export abstract class BaseBiometricsService implements Partial<IBiometricService
       
       // Save to database
       device = await this.deviceRepository.save(device);
+
+      this.biometricsGateway.pingAll();
       
       return device;
   }

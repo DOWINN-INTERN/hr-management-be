@@ -26,20 +26,24 @@ export class ScopeInterceptor implements NestInterceptor {
   private readonly logger = new Logger(ScopeInterceptor.name);
 
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
+    const request = context.switchToHttp().getRequest();
+    const user: IJwtPayload = request.user;
+    const method = request.method;
+    const path = request.path;
     try {
-      const request = context.switchToHttp().getRequest();
-      const user: IJwtPayload = request.user;
-      const method = request.method;
-      const path = request.path;
 
-      this.logger.debug(`Processing ${method} request to ${path}`);
+      this.logger.log(`Processing ${method} request to ${path}`);
+      request.resourceScope = {
+        type: RoleScopeType.OWNED,
+        userId: user?.sub  // This will be undefined if no user
+      };
       
       if (!user) {
-        this.logger.debug('No authenticated user found in request');
+        this.logger.log('No authenticated user found in request');
         return next.handle();
       }
 
-      this.logger.debug(`Setting resource scope for user: ${user.sub}`);
+      this.logger.log(`Setting resource scope for user: ${user.sub}`);
       
       try {
         // Determine effective scope

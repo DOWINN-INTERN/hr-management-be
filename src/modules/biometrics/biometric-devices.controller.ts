@@ -23,6 +23,10 @@ export class BiometricDevicesController extends createController(BiometricDevice
         return await super.create(entityDto, createdById);
     }
 
+    override async delete(id: string): Promise<GeneralResponseDto> {
+        return await super.delete(id);
+    }
+
     override async softDelete(id: string, deletedBy: string): Promise<GeneralResponseDto> {
         return await super.softDelete(id, deletedBy);
     }

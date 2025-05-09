@@ -1,6 +1,7 @@
 import { CutoffStatus } from '@/common/enums/cutoff-status.enum';
 import { CutoffType } from '@/common/enums/cutoff-type.enum';
 import { BaseEntity } from '@/database/entities/base.entity';
+import { Attendance } from '@/modules/attendance-management/entities/attendance.entity';
 import { FinalWorkHour } from '@/modules/attendance-management/final-work-hours/entities/final-work-hour.entity';
 import { Shift } from '@/modules/shift-management/entities/shift.entity';
 import { Schedule } from '@/modules/shift-management/schedules/entities/schedule.entity';
@@ -35,4 +36,7 @@ export class Cutoff extends BaseEntity<Cutoff> {
 
     @ManyToMany(() => Shift, (shift: Shift) => shift.cutoffs, { nullable: true })
     shifts?: Shift[];
+
+    @OneToMany(() => Attendance, (attendance: Attendance) => attendance.cutoff, { nullable: true })
+    attendances?: Attendance[];
 }

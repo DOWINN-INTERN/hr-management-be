@@ -154,9 +154,9 @@ export class JwtService {
     const mappedRoles = user.employee?.roles ? user.employee?.roles.map(role => ({
       name: role.name,
       scope: role.scope,
-      departmentId: role.departmentId,
-      organizationId: role.organizationId,
-      branchId: role.branchId,
+      departmentId: role.department?.id,
+      organizationId: role.organization?.id,
+      branchId: role.branch?.id,
     })) : [];
 
     return {

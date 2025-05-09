@@ -1,23 +1,32 @@
-import {
-    Column,
-    Index
-} from 'typeorm';
-import { BaseEntity } from './base.entity';
+// import { User } from '@/modules/account-management/users/entities/user.entity';
+// import { Department } from '@/modules/organization-management/branches/departments/entities/department.entity';
+// import { Branch } from '@/modules/organization-management/branches/entities/branch.entity';
+// import { Organization } from '@/modules/organization-management/entities/organization.entity';
+// import {
+//     Index,
+//     JoinColumn,
+//     ManyToOne
+// } from 'typeorm';
+// import { BaseEntity } from './base.entity';
 
-export abstract class BaseEntityWithScope<T> extends BaseEntity<T> {
-    @Column({ nullable: true })
-    @Index("idx_organization")
-    organizationId?: string;
+// export abstract class BaseEntityWithScope<T> extends BaseEntity<T> {
+//     @ManyToOne(() => Organization, (organization: Organization) => organization.resources, { nullable: true })
+//     @Index("idx_organization")
+//     @JoinColumn({ name: 'organizationId' })
+//     organization?: Organization;
 
-    @Column({ nullable: true })
-    @Index("idx_branch")
-    branchId?: string;
+//     @ManyToOne(() => Branch, (branch: Branch) => branch.resources, { nullable: true })
+//     @Index("idx_branch")
+//     @JoinColumn({ name: 'branchId' })
+//     branch?: Branch;
 
-    @Column({ nullable: true })
-    @Index("idx_department")
-    departmentId?: string;
+//     @ManyToOne(() => Department, (department: Department) => department.resources, { nullable: true })
+//     @Index("idx_department")
+//     @JoinColumn({ name: 'departmentId' })
+//     department?: Department;
 
-    @Column({ nullable: true })
-    @Index("idx_user")
-    userId?: string;
-}
+//     @ManyToOne(() => User, (user: User) => user.resources, { nullable: true })
+//     @Index("idx_user")
+//     @JoinColumn({ name: 'userId' })
+//     user?: User;
+// }

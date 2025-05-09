@@ -12,6 +12,7 @@ import { Repository } from 'typeorm';
 import { ConnectDeviceDto } from '../dtos/connect-device.dto';
 import { BiometricDevice } from '../entities/biometric-device.entity';
 import { BiometricTemplate } from '../entities/biometric-template.entity';
+import { BiometricsGateway } from '../gateways/biometrics.gateway';
 import { AttendanceRecord, IBiometricTemplate, IBiometricUser } from '../interfaces/biometric.interface';
 import { BaseBiometricsService, BiometricException } from './base-biometrics.service';
 import { BiometricsPollingService } from './biometrics-polling.service';
@@ -31,8 +32,9 @@ export class ZKTecoBiometricsService extends BaseBiometricsService {
         @InjectRepository(BiometricTemplate)
         protected readonly templateRepository: Repository<BiometricTemplate>,
         protected readonly eventEmitter: EventEmitter2,
+        protected readonly biometricsGateway: BiometricsGateway,
     ) {
-        super(deviceRepository, eventEmitter);
+        super(deviceRepository, eventEmitter, biometricsGateway);
         // Listen for attendance events from polling service
         this.eventEmitter.on('attendance.recorded', (record: AttendanceRecord) => {
             this.emitAttendanceEvent(record);

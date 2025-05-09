@@ -37,7 +37,7 @@ export type WsResponseData = {
 
 export abstract class BaseGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect, OnModuleInit, OnModuleDestroy {
     @WebSocketServer() server!: Server;
-    protected logger = new Logger(this.constructor.name);
+    protected logger = new Logger(BaseGateway.name);
     private readonly connections = new Map<string, { count: number, lastConnect: Date }>();
     // Organized client tracking
     protected connectedClients = new Map<string, AuthenticatedSocket>();
@@ -183,8 +183,7 @@ export abstract class BaseGateway implements OnGatewayInit, OnGatewayConnection,
                 this.connectedClients.set(user, client);
                 this.messageRateLimit.set(user, 0);
                 
-                this.logger.log(`Client connected: ${user} (${client.connectionId})`);
-                this.logger.log(`Total active connections: ${this.metrics.activeConnections}`);
+                this.logger.log(`${this.constructor.name} active connections: ${this.metrics.activeConnections}`);
 
                 this.afterConnect(client);
             });
@@ -278,8 +277,7 @@ export abstract class BaseGateway implements OnGatewayInit, OnGatewayConnection,
                 this.userRooms.delete(user);
             }
             
-            this.logger.log(`Client disconnected: ${user} (${client.connectionId})`);
-            this.logger.log(`Total active connections: ${this.metrics.activeConnections}`);
+            this.logger.log(`${this.constructor.name} total active connections: ${this.metrics.activeConnections}`);
             this.afterDisconnect(client);
         } catch (error: unknown) {
             if (error instanceof Error) {

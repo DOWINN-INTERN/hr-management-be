@@ -4,7 +4,8 @@ import { AttendanceRecord } from "@/modules/biometrics/interfaces/biometric.inte
 export const ATTENDANCE_EVENTS = {
   ATTENDANCE_RECORDED: 'attendance.recorded',
   ATTENDANCE_PROCESSED: 'attendance.processed',
-  FINAL_WORK_HOURS_CALCULATION: 'attendance.final_work_hours_calculation'
+  FINAL_WORK_HOURS_CALCULATION: 'attendance.final_work_hours_calculation',
+  RECALCULATE_FINAL_WORK_HOURS: 'attendance.recalculate_final_work_hours',
 };
   
 export class AttendanceRecordedEvent {
@@ -26,5 +27,12 @@ export class FinalWorkHoursCalculationEvent {
     public readonly attendanceIds: string[],
     public readonly batchId: string,
     public readonly processedBy: string
+  ) {}
+}
+
+export class RecalculateFinalWorkHoursEvent {
+  constructor(
+    public readonly cutoffId: string,
+    public readonly recalculatedBy: string
   ) {}
 }

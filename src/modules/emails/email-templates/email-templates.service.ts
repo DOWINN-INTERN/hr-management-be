@@ -26,6 +26,7 @@ export class EmailTemplatesService extends BaseService<EmailTemplate> {
     
       async findDepartmentTemplate(name: string, departmentId: string): Promise<EmailTemplate> {
         const template = await this.emailTemplatesRepository.findOne({ 
+          // maybe error here
           where: { name, departmentId, isActive: true } 
         });
         

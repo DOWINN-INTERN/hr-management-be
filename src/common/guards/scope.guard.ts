@@ -1,3 +1,4 @@
+import { IRole } from '@/modules/employee-management/roles/interface/role.interface';
 import {
   CanActivate,
   ExecutionContext,
@@ -8,7 +9,6 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { RoleScopeType } from '../enums/role-scope-type.enum';
-import { Role } from '../enums/role.enum';
 import { ResourceScope } from '../interceptors/scope.interceptor';
 import { IJwtPayload } from '../interfaces/jwt-payload.interface';
 
@@ -22,19 +22,60 @@ export class ScopeGuard implements CanActivate {
     try {
       const request = context.switchToHttp().getRequest();
       const user = request.user as IJwtPayload;
-      const { resourceScope } = request;
       const method = request.method;
       const path = request.path;
+
+      if (user)
+      {
+        try {
+        
+              this.logger.log(`Processing ${method} request to ${path}`);
+              request.resourceScope = {
+                type: RoleScopeType.OWNED,
+                userId: user?.sub  // This will be undefined if no user
+              };
+
+              this.logger.log(`Setting resource scope for user: ${user.sub}`);
+              
+              try {
+                // Determine effective scope
+                const roleScope = this.determineEffectiveScope(user.roles || []);
+                this.logger.debug(`Determined effective scope: ${roleScope.scopeType}`);
+                
+                // Store scope information with correct property names
+                const resourceScope: ResourceScope = {
+                  type: roleScope.scopeType,
+                  userId: user.sub,
+                  departments: user.roles?.flatMap(role => role.departmentId).filter((id): id is string => id !== undefined && id !== null) || [],
+                  branches: user.roles?.flatMap(role => role.branchId).filter((id): id is string => id !== undefined && id !== null) || [],
+                  organizations: user.roles?.flatMap(role => role.organizationId).filter((id): id is string => id !== undefined && id !== null) || [],
+                };
+                
+                request.resourceScope = resourceScope;
+                // log resource scope
+                this.logger.log(`Resource scope set: ${JSON.stringify(resourceScope)}`);
+                
+                this.logger.debug(`Applied filters for scope type: ${resourceScope.type}`);
+              } catch (error: any) {
+                this.logger.error(`Error setting up resource scope: ${error.message}`, error.stack);
+                throw new InternalServerErrorException('Failed to process authorization scope');
+              }
+            } catch (error: any) {
+              this.logger.error(`ScopeInterceptor error: ${error.message}`, error.stack);
+              throw error;
+            }
+      }
 
       // Log access attempt
       this.logger.debug(`Access attempt: ${method} ${path}`);
 
       // Check if role is super admin
-      const hasSuperAdminRole = user.roles?.some(role => role.name === Role.SUPERADMIN);
-      if (hasSuperAdminRole) {
-        return true;
-      }
+      // const hasSuperAdminRole = user.roles?.some(role => role.name === Role.SUPERADMIN);
+      // if (hasSuperAdminRole) {
+      //   return true;
+      // }
       // Check if resourceScope exists
+      const resourceScope = request.resourceScope as ResourceScope;
       if (!resourceScope) {
         this.logger.warn(`Missing resourceScope in request`);
         // For GET requests, allow access without resourceScope
@@ -60,7 +101,7 @@ export class ScopeGuard implements CanActivate {
       // Check creation permissions based on scope
       if (!this.canDoInScope(body, resourceScope)) {
         const errorMessage = this.generateErrorMessage(resourceScope.type, body);
-        this.logger.warn(`Permission denied: ${errorMessage} for user with scope ${resourceScope.type}`);
+        this.logger.warn(`Permission denied: ${errorMessage} with your scope ${resourceScope.type}`);
         throw new ForbiddenException(errorMessage);
       }
       
@@ -164,4 +205,52 @@ export class ScopeGuard implements CanActivate {
         return `You don't have permission to manage this resource`;
     }
   }
+
+  private determineEffectiveScope(roles: Partial<IRole>[]): { scopeType: RoleScopeType; scopeConfig?: any } {
+      try {
+        if (!roles.length) {
+          this.logger.debug('No roles provided, using OWNED scope by default');
+          return { scopeType: RoleScopeType.OWNED };
+        }
+  
+        let effectiveScopeType = RoleScopeType.OWNED;
+        
+        for (const role of roles) {
+          const roleScope = role.scope || RoleScopeType.OWNED;
+          
+          if (roleScope === RoleScopeType.GLOBAL) {
+            this.logger.debug('Found GLOBAL role - assigning highest scope privilege');
+            return { scopeType: RoleScopeType.GLOBAL };
+          }
+          
+          if (this.isBroaderScope(roleScope, effectiveScopeType)) {
+            this.logger.debug(`Upgrading scope from ${effectiveScopeType} to broader scope ${roleScope}`);
+            effectiveScopeType = roleScope;
+          }
+        }
+        
+        this.logger.debug(`Final determined scope: ${effectiveScopeType}`);
+        return { scopeType: effectiveScopeType };
+      } catch (error: any) {
+        this.logger.error(`Error determining effective scope: ${error.message}`, error.stack);
+        throw new InternalServerErrorException('Failed to determine user access scope');
+      }
+    }
+    
+    private isBroaderScope(scopeA: RoleScopeType, scopeB: RoleScopeType): boolean {
+      try {
+        const scopePriority = {
+          [RoleScopeType.GLOBAL]: 4,
+          [RoleScopeType.ORGANIZATION]: 3,
+          [RoleScopeType.BRANCH]: 2,
+          [RoleScopeType.DEPARTMENT]: 1,
+          [RoleScopeType.OWNED]: 0
+        };
+        
+        return scopePriority[scopeA] > scopePriority[scopeB];
+      } catch (error: any) {
+        this.logger.error(`Error comparing scopes: ${error.message}`, error.stack);
+        return false;
+      }
+    }
 }

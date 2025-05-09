@@ -4,6 +4,7 @@ import { RolesGuard } from '@/common/guards/roles.guard';
 import { applyDecorators, SetMetadata, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth } from '@nestjs/swagger';
 import { Action } from '../enums/action.enum';
+import { ScopeGuard } from '../guards/scope.guard';
 import { IPermission } from '../interfaces/permission.interface';
 import { AccessOptions } from './departments.decorator';
 import { Permissions } from './permissions.decorator';
@@ -19,8 +20,8 @@ export interface AuthorizeOptions extends Omit<AccessOptions, 'permissions'> {
 
 export function Authorize(options?: AuthorizeOptions): MethodDecorator {
   const decorators = [
+    UseGuards(JwtAuthGuard, RolesGuard, PermissionsGuard, ScopeGuard),
     // UseInterceptors(ScopeInterceptor),
-    UseGuards(JwtAuthGuard, RolesGuard, PermissionsGuard),
     Roles(options?.roles),
     ApiBearerAuth('access-token'),
   ];

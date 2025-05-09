@@ -10,7 +10,7 @@ export class WorkTimeResponse extends BaseEntity<WorkTimeResponse> {
     @Column()
     message!: string;
 
-    @OneToOne(() => WorkTimeRequest, (workTimeRequest: WorkTimeRequest) => workTimeRequest.workTimeResponse)
+    @OneToOne(() => WorkTimeRequest, (workTimeRequest: WorkTimeRequest) => workTimeRequest.workTimeResponse, { cascade: true})
     @JoinColumn({ name: 'workTimeRequestId' })
     workTimeRequest!: WorkTimeRequest;
 }

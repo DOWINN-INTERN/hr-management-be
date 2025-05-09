@@ -1,3 +1,4 @@
+import { CutoffsModule } from '@/modules/payroll-management/cutoffs/cutoffs.module';
 import { BullModule } from '@nestjs/bull';
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -11,7 +12,8 @@ import { WorkHourCalculationService } from './services/work-hour-calculation.ser
         TypeOrmModule.forFeature([FinalWorkHour]),
         BullModule.registerQueue({
             name: 'work-hour-calculation'
-          }),
+        }),
+        CutoffsModule,
     ],
     providers: [FinalWorkHoursService, WorkHourCalculationService],
     exports: [FinalWorkHoursService, WorkHourCalculationService],

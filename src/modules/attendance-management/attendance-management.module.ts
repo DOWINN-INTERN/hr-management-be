@@ -9,6 +9,8 @@ import { AttendancesController } from './attendances.controller';
 import { AttendancesService } from './attendances.service';
 import { Attendance } from './entities/attendance.entity';
 import { FinalWorkHoursModule } from './final-work-hours/final-work-hours.module';
+import { AttendanceDataSeederService } from './final-work-hours/services/attendance-data-seeder.service';
+import { WorkHourCalculationProcessor } from './final-work-hours/services/work-hour-calculation.service';
 import { AttendanceListener } from './listeners/attendance.listener';
 import { WorkTimeRequestsModule } from './work-time-requests/work-time-requests.module';
 import { WorkTimeResponsesModule } from './work-time-requests/work-time-responses/work-time-responses.module';
@@ -50,7 +52,7 @@ import { WorkTimeResponsesModule } from './work-time-requests/work-time-response
         EmployeeManagementModule,
         ShiftManagementModule,
     ],
-    providers: [AttendancesService, AttendanceListener],
+    providers: [AttendancesService, AttendanceListener, AttendanceDataSeederService, WorkHourCalculationProcessor],
     exports: [
         AttendancesService,
         AttendancePunchesModule,
