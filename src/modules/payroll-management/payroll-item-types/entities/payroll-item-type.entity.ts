@@ -1,5 +1,8 @@
+import { GovernmentContributionType } from '@/common/enums/government-contribution-type.enum';
+import { Occurrence } from '@/common/enums/occurrence.enum';
 import { PayrollItemCategory } from '@/common/enums/payroll-item-category.enum';
 import { BaseEntity } from '@/database/entities/base.entity';
+import { EmployeePayrollItemType } from '@/modules/employee-management/employee-payroll-item-types/entities/employee-payroll-item-type.entity';
 import { Column, Entity, OneToMany } from 'typeorm';
 import { PayrollItem } from '../../payroll-items/entities/payroll-item.entity';
 
@@ -17,55 +20,27 @@ export class PayrollItemType extends BaseEntity<PayrollItemType> {
     })
     category!: PayrollItemCategory;
 
-    @Column()
-    defaultOccurrence!: string;
+    @Column({ type: 'enum', enum: Occurrence, default: Occurrence.MONTHLY })
+    defaultOccurrence!: Occurrence;
 
     @Column()
     unit!: string;
 
-    @Column('text')
-    computationFormula!: string;
+    @Column()
+    type!: 'fixed' | 'formula';
 
     @Column('decimal', { 
         precision: 10, 
         scale: 2, 
         nullable: true 
     })
-    defaultAmount?: number | null;
+    defaultAmount?: number;
 
     @Column({ default: true })
-    isActive: boolean = true;
+    isActive!: boolean;
     
-    // New fields for dynamic configuration
-    @Column({ default: false })
-    isSystemGenerated!: boolean;
-    
-    @Column({ default: false })
-    isGovernmentMandated!: boolean;
-    
-    @Column({ nullable: true })
-    governmentContributionType?: string; // SSS, PHILHEALTH, PAGIBIG, TAX, etc.
-    
-    @Column({ default: false })
-    hasEmployerShare!: boolean;
-    
-    @Column('text', { nullable: true })
-    employerFormulaPercentage?: string;
-    
-    @Column({ default: false })
-    isPartOfTaxCalculation!: boolean;
-    
-    @Column({ default: true })
-    isTaxable!: boolean;
-    
-    @Column({ default: false })
-    isTaxDeductible!: boolean;
-    
-    @Column({ default: true })
-    isDisplayedInPayslip!: boolean;
-    
-    @Column('simple-array', { nullable: true })
-    applicableTo?: string[];
+    @Column({ type: 'enum', enum: GovernmentContributionType, nullable: true })
+    governmentContributionType?: GovernmentContributionType;
     
     @Column({ default: true })
     isRequired!: boolean;
@@ -75,18 +50,81 @@ export class PayrollItemType extends BaseEntity<PayrollItemType> {
     
     @Column({ nullable: true })
     effectiveTo?: Date;
-    
-    @Column('json', { nullable: true })
-    calculationParameters?: Record<string, any>;
-    
-    @Column('json', { nullable: true })
-    validationRules?: {
-        minAmount?: number;
-        maxAmount?: number;
-        minSalary?: number;
-        maxSalary?: number;
-    };
 
-    @OneToMany(() => PayrollItem, (payrollItem: PayrollItem) => payrollItem.payrollItemType)
+    @Column('decimal', 
+    { 
+        precision: 10, 
+        scale: 2,
+        nullable: true
+    })
+    percentage?: number;
+    
+    @Column('decimal', 
+    { 
+        precision: 10, 
+        scale: 2,
+        nullable: true
+    })
+    employerPercentage?: number;
+    
+    @Column({ default: true })
+    isTaxable!: boolean;
+    
+    @Column({ default: false })
+    isTaxDeductible!: boolean;
+
+    // Calculation Params
+    @Column('decimal', 
+    { 
+        precision: 10, 
+        scale: 2,
+        nullable: true
+    })
+    minAmount?: number;
+
+    @Column('decimal', 
+    { 
+        precision: 10, 
+        scale: 2,
+        nullable: true
+    })
+    maxAmount?: number;
+
+    @Column('decimal', 
+    { 
+        precision: 10, 
+        scale: 2,
+        nullable: true
+    })
+    minAdditionalAmount?: number;
+
+    @Column('decimal', 
+    { 
+        precision: 10, 
+        scale: 2,
+        nullable: true
+    })
+    maxAdditionalAmount?: number;
+
+    @Column('decimal', 
+    { 
+        precision: 10, 
+        scale: 2,
+        nullable: true
+    })
+    minContribution?: number;
+
+    @Column('decimal', 
+    { 
+        precision: 10, 
+        scale: 2,
+        nullable: true
+    })
+    maxContribution?: number;
+    
+    @OneToMany(() => PayrollItem, (payrollItem: PayrollItem) => payrollItem.payrollItemType, { nullable: true })
     payrollItems?: PayrollItem[];
+
+    @OneToMany(() => EmployeePayrollItemType, (employeePayrollItemType: EmployeePayrollItemType) => employeePayrollItemType.payrollItemType, { nullable: true })
+    employeePayrollItemTypes?: EmployeePayrollItemType[];
 }

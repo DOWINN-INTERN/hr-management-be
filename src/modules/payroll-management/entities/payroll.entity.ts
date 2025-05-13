@@ -1,7 +1,8 @@
+import { PayrollProcessingState } from '@/common/enums/payroll-processing-state.enum';
 import { PayrollStatus } from '@/common/enums/payroll-status.enum';
 import { BaseEntity } from '@/database/entities/base.entity';
 import { Employee } from '@/modules/employee-management/entities/employee.entity';
-import { AfterLoad, Column, Entity, JoinColumn, ManyToOne, OneToMany } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, OneToMany } from 'typeorm';
 import { Cutoff } from '../cutoffs/entities/cutoff.entity';
 import { PayrollItem } from '../payroll-items/entities/payroll-item.entity';
 
@@ -31,39 +32,54 @@ export class Payroll extends BaseEntity<Payroll> {
     @Column('decimal', { precision: 15, scale: 2, default: 0 })
     hourlyRate!: number;
     
+    // Deduction hours
+    @Column('decimal', { precision: 10, scale: 2, default: 0 })
+    totalNoTimeInHours!: number;
+
+    @Column('decimal', { precision: 10, scale: 2, default: 0 })
+    totalNoTimeOutHours!: number;
+
+    @Column('decimal', { precision: 10, scale: 2, default: 0 })
+    totalAbsentHours!: number;
+
+    @Column('decimal', { precision: 10, scale: 2, default: 0 })
+    totalTardinessHours!: number;
+
+    @Column('decimal', { precision: 10, scale: 2, default: 0 })
+    totalUndertimeHours!: number;
+    
     // Summary of work hours
     @Column('decimal', { precision: 10, scale: 2, default: 0 })
     totalRegularHours!: number;
+
+    @Column('decimal', { precision: 10, scale: 2, default: 0 })
+    totalHolidayHours!: number;
+    
+    @Column('decimal', { precision: 10, scale: 2, default: 0 })
+    totalSpecialHolidayHours!: number;
+    
+    @Column('decimal', { precision: 10, scale: 2, default: 0 })
+    totalRestDayHours!: number;
     
     @Column('decimal', { precision: 10, scale: 2, default: 0 })
     totalOvertimeHours!: number;
     
     @Column('decimal', { precision: 10, scale: 2, default: 0 })
-    totalHolidayHours!: number;
-
-    @Column('decimal', { precision: 10, scale: 2, default: 0 })
     totalHolidayOvertimeHours!: number;
-
-    @Column('decimal', { precision: 10, scale: 2, default: 0 })
-    totalSpecialHolidayHours!: number;
-
-    @Column('decimal', { precision: 10, scale: 2, default: 0 })
-    totalSpecialHolidayOvertimeHours!: number;
     
     @Column('decimal', { precision: 10, scale: 2, default: 0 })
-    totalRestDayHours!: number;
+    totalSpecialHolidayOvertimeHours!: number;
     
     @Column('decimal', { precision: 10, scale: 2, default: 0 })
     totalRestDayOvertimeHours!: number;
     
     @Column('decimal', { precision: 10, scale: 2, default: 0 })
     totalNightDifferentialHours!: number;
-
-    // Total hours
+    
     @Column('decimal', { precision: 10, scale: 2, default: 0 })
     totalHours!: number;
     
-    // Core earnings
+    // Pay components
     @Column('decimal', { precision: 15, scale: 2, default: 0 })
     basicPay!: number;
     
@@ -72,32 +88,42 @@ export class Payroll extends BaseEntity<Payroll> {
     
     @Column('decimal', { precision: 15, scale: 2, default: 0 })
     holidayPay!: number;
-
+    
     @Column('decimal', { precision: 15, scale: 2, default: 0 })
     holidayOvertimePay!: number;
-
+    
     @Column('decimal', { precision: 15, scale: 2, default: 0 })
     specialHolidayPay!: number;
-
+    
     @Column('decimal', { precision: 15, scale: 2, default: 0 })
     specialHolidayOvertimePay!: number;
     
     @Column('decimal', { precision: 15, scale: 2, default: 0 })
     restDayPay!: number;
-
+    
     @Column('decimal', { precision: 15, scale: 2, default: 0 })
     restDayOvertimePay!: number;
     
     @Column('decimal', { precision: 15, scale: 2, default: 0 })
     nightDifferentialPay!: number;
-    
-    // Summary calculations
+
+    // Deductions
     @Column('decimal', { precision: 15, scale: 2, default: 0 })
-    grossPay!: number;
-    
+    absences!: number;
+
     @Column('decimal', { precision: 15, scale: 2, default: 0 })
-    taxableIncome!: number;
+    tardiness!: number;
+
+    @Column('decimal', { precision: 15, scale: 2, default: 0 })
+    undertime!: number;
+
+    @Column('decimal', { precision: 15, scale: 2, default: 0 })
+    noTimeIn!: number;
+
+    @Column('decimal', { precision: 15, scale: 2, default: 0 })
+    noTimeOut!: number;
     
+    // Summarized pay components by category
     @Column('decimal', { precision: 15, scale: 2, default: 0 })
     totalAllowances!: number;
     
@@ -116,22 +142,17 @@ export class Payroll extends BaseEntity<Payroll> {
     @Column('decimal', { precision: 15, scale: 2, default: 0 })
     totalTaxes!: number;
     
+    // Payment totals
+    @Column('decimal', { precision: 15, scale: 2, default: 0 })
+    grossPay!: number;
+    
+    @Column('decimal', { precision: 15, scale: 2, default: 0 })
+    taxableIncome!: number;
+    
     @Column('decimal', { precision: 15, scale: 2, default: 0 })
     netPay!: number;
     
-    // Accruals for future payments
-    @Column('decimal', { precision: 15, scale: 2, default: 0 })
-    thirteenthMonthAccrual!: number;
-    
-    // Status tracking
-    @Column({
-        type: 'enum',
-        enum: PayrollStatus,
-        default: PayrollStatus.DRAFT
-    })
-    status!: PayrollStatus;
-    
-    // Payment details
+    // Payment information
     @Column({ nullable: true })
     paymentMethod?: string;
     
@@ -139,15 +160,39 @@ export class Payroll extends BaseEntity<Payroll> {
     bankAccount?: string;
     
     @Column({ nullable: true })
-    checkNumber?: string;
+    bankReferenceNumber?: string;
     
     @Column({ nullable: true })
-    bankReferenceNumber?: string;
+    checkNumber?: string;
     
     @Column({ nullable: true })
     paymentDate?: Date;
     
-    // Process tracking
+    // Processing metadata
+    @Column({
+        type: 'enum',
+        enum: PayrollStatus,
+        default: PayrollStatus.DRAFT
+    })
+    status!: PayrollStatus;
+    
+    // State machine status
+    @Column({
+        type: 'enum',
+        enum: PayrollProcessingState,
+        default: PayrollProcessingState.DRAFT
+    })
+    processingState!: PayrollProcessingState;
+    
+    @Column('json', { nullable: true })
+    stateHistory?: Array<{
+        from: PayrollProcessingState;
+        to: PayrollProcessingState;
+        timestamp: Date;
+        note?: string;
+        details?: any;
+    }>;
+    
     @Column({ nullable: true })
     processedAt?: Date;
     
@@ -166,88 +211,50 @@ export class Payroll extends BaseEntity<Payroll> {
     @Column({ nullable: true })
     releasedBy?: string;
     
-    // Additional info
+    @Column('json', { nullable: true })
+    calculationDetails?: any;
+    
     @Column({ nullable: true })
     notes?: string;
     
-    @Column('json', { nullable: true })
-    calculationDetails?: Record<string, any>;
-
-    // Virtual getters for government contributions
-  @AfterLoad()
-  computeGovtContributions() {
-    if (!this.payrollItems) return;
+    // Virtual properties for better contribution access
+    get sssContribution(): { employee: number; employer: number; total: number } {
+        const sssItem = this.payrollItems?.find(item => 
+            item.payrollItemType?.governmentContributionType === 'SSS'
+        );
+        return {
+            employee: sssItem?.amount || 0,
+            employer: sssItem?.employerAmount || 0,
+            total: (sssItem?.amount || 0) + (sssItem?.employerAmount || 0)
+        };
+    }
     
-    // SSS
-    const sssItem = this.payrollItems.find(item => 
-      item.payrollItemType.governmentContributionType === 'SSS'
-    );
-    this._sssContribution = {
-      employee: sssItem?.amount || 0,
-      employer: sssItem?.employerAmount || 0,
-      total: (sssItem?.amount || 0) + (sssItem?.employerAmount || 0)
-    };
+    get philHealthContribution(): { employee: number; employer: number; total: number } {
+        const philhealthItem = this.payrollItems?.find(item => 
+            item.payrollItemType?.governmentContributionType === 'PHILHEALTH'
+        );
+        return {
+            employee: philhealthItem?.amount || 0,
+            employer: philhealthItem?.employerAmount || 0,
+            total: (philhealthItem?.amount || 0) + (philhealthItem?.employerAmount || 0)
+        };
+    }
     
-    // PhilHealth
-    const philHealthItem = this.payrollItems.find(item => 
-      item.payrollItemType.governmentContributionType === 'PHILHEALTH'
-    );
-    this._philHealthContribution = {
-      employee: philHealthItem?.amount || 0,
-      employer: philHealthItem?.employerAmount || 0,
-      total: (philHealthItem?.amount || 0) + (philHealthItem?.employerAmount || 0)
-    };
+    get pagIbigContribution(): { employee: number; employer: number; total: number } {
+        const pagibigItem = this.payrollItems?.find(item => 
+            item.payrollItemType?.governmentContributionType === 'PAGIBIG'
+        );
+        return {
+            employee: pagibigItem?.amount || 0,
+            employer: pagibigItem?.employerAmount || 0,
+            total: (pagibigItem?.amount || 0) + (pagibigItem?.employerAmount || 0)
+        };
+    }
     
-    // Pag-IBIG
-    const pagibigItem = this.payrollItems.find(item => 
-      item.payrollItemType.governmentContributionType === 'PAGIBIG'
-    );
-    this._pagIbigContribution = {
-      employee: pagibigItem?.amount || 0,
-      employer: pagibigItem?.employerAmount || 0,
-      total: (pagibigItem?.amount || 0) + (pagibigItem?.employerAmount || 0)
-    };
-    
-    // Tax
-    const taxItem = this.payrollItems.find(item => 
-      item.payrollItemType.governmentContributionType === 'TAX'
-    );
-    this._withHoldingTax = taxItem?.amount || 0;
-  }
-  
-  private _sssContribution: { employee: number; employer: number; total: number } = {
-    employee: 0,
-    employer: 0,
-    total: 0
-  };
-  
-  get sssContribution() {
-    return this._sssContribution;
-  }
-  
-  private _philHealthContribution: { employee: number; employer: number; total: number } = {
-    employee: 0,
-    employer: 0,
-    total: 0
-  };
-  
-  get philHealthContribution() {
-    return this._philHealthContribution;
-  }
-  
-  private _pagIbigContribution: { employee: number; employer: number; total: number } = {
-    employee: 0,
-    employer: 0,
-    total: 0
-  };
-  
-  get pagIbigContribution() {
-    return this._pagIbigContribution;
-  }
-  
-  private _withHoldingTax: number = 0;
-  
-  get withHoldingTax() {
-    return this._withHoldingTax;
-  }
+    get withHoldingTax(): number {
+        const taxItem = this.payrollItems?.find(item => 
+            item.payrollItemType?.governmentContributionType === 'TAX'
+        );
+        return taxItem?.amount || 0;
+    }
 }

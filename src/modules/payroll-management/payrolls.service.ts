@@ -1,5 +1,7 @@
 import { CutoffStatus } from '@/common/enums/cutoff-status.enum';
 import { CutoffType } from '@/common/enums/cutoff-type.enum';
+import { GovernmentContributionType } from '@/common/enums/government-contribution-type.enum';
+import { Occurrence } from '@/common/enums/occurrence.enum';
 import { PayrollItemCategory } from '@/common/enums/payroll-item-category.enum';
 import { PayrollStatus } from '@/common/enums/payroll-status.enum';
 import { RoleScopeType } from '@/common/enums/role-scope-type.enum';
@@ -10,8 +12,9 @@ import { FinalWorkHour } from '@/modules/attendance-management/final-work-hours/
 import { FinalWorkHoursService } from '@/modules/attendance-management/final-work-hours/final-work-hours.service';
 import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { evaluate } from 'mathjs';
+import { type } from 'os';
 import { DataSource, Repository } from 'typeorm';
+import { EmployeePayrollItemTypesService } from '../employee-management/employee-payroll-item-types/employee-payroll-item-types.service';
 import { EmployeesService } from '../employee-management/employees.service';
 import { Employee } from '../employee-management/entities/employee.entity';
 import { Role } from '../employee-management/roles/entities/role.entity';
@@ -20,7 +23,6 @@ import { Cutoff } from './cutoffs/entities/cutoff.entity';
 import { Payroll } from './entities/payroll.entity';
 import { PayrollItemTypesService } from './payroll-item-types/payroll-item-types.service';
 import { PayrollItem } from './payroll-items/entities/payroll-item.entity';
-import { PayrollItemsService } from './payroll-items/payroll-items.service';
 
 // Add these types to your system using PayrollItemType entity
 const salaryCompensationTypes = [
@@ -218,73 +220,11 @@ export class PayrollsService extends BaseService<Payroll> {
     private readonly employeesService: EmployeesService,
     private readonly cutoffsService: CutoffsService,
     private readonly finalWorkHoursService: FinalWorkHoursService,
-    private readonly payrollItemsService: PayrollItemsService,
+    private readonly employeePayrollItemTypesService: EmployeePayrollItemTypesService,
     private readonly payrollItemTypesService: PayrollItemTypesService,
     protected readonly usersService: UsersService
   ) {
     super(payrollsRepository, usersService);
-  }
-
-  /**
-   * Gets the base compensation item for an employee
-   */
-  async getEmployeeBaseCompensation(
-    employeeId: string
-  ): Promise<{ type: string; amount: number } | null> {
-    // Find the employee's active compensation item
-    const compensationItems = await this.payrollItemsService.getRepository().find({
-      where: {
-        employee: { id: employeeId },
-        payrollItemType: { category: PayrollItemCategory.COMPENSATION },
-        isActive: true
-      },
-      relations: { payrollItemType: true },
-      order: { createdAt: 'DESC' }
-    });
-    
-    if (!compensationItems.length) {
-      return null;
-    }
-    
-    // Prioritize Monthly Salary over Daily Rate over Hourly Rate
-    const monthlyItem = compensationItems.find(item => 
-      item.payrollItemType.name === 'Monthly Salary'
-    );
-    
-    if (monthlyItem) {
-      return {
-        type: 'MONTHLY',
-        amount: monthlyItem.amount
-      };
-    }
-    
-    const dailyItem = compensationItems.find(item => 
-      item.payrollItemType.name === 'Daily Rate'
-    );
-    
-    if (dailyItem) {
-      return {
-        type: 'DAILY',
-        amount: dailyItem.amount
-      };
-    }
-    
-    const hourlyItem = compensationItems.find(item => 
-      item.payrollItemType.name === 'Hourly Rate'
-    );
-    
-    if (hourlyItem) {
-      return {
-        type: 'HOURLY',
-        amount: hourlyItem.amount
-      };
-    }
-    
-    // Default to the first compensation item found
-    return {
-      type: compensationItems[0].payrollItemType.name.toUpperCase(),
-      amount: compensationItems[0].amount
-    };
   }
 
   /**
@@ -297,13 +237,9 @@ export class PayrollsService extends BaseService<Payroll> {
     baseCompensationType: string;
     baseCompensationAmount: number;
   }> {
-    const baseCompensation = await this.getEmployeeBaseCompensation(employeeId);
+    const baseCompensation = await this.employeePayrollItemTypesService.getEmployeeBaseCompensation(employeeId);
     
-    if (!baseCompensation) {
-      throw new BadRequestException(`No compensation defined for employee ${employeeId}`);
-    }
-    
-    const { type, amount } = baseCompensation;
+    const { rateType, amount } = baseCompensation;
     const businessDaysInPeriod = UtilityHelper.getBusinessDays(cutoff.startDate, cutoff.endDate);
     const businessDaysInMonth = UtilityHelper.getBusinessDaysInMonth(cutoff.startDate);
     
@@ -313,8 +249,8 @@ export class PayrollsService extends BaseService<Payroll> {
     let hourlyRate = 0;
     
     // Calculate rates based on compensation type
-    switch (type) {
-      case 'MONTHLY':
+    switch (rateType) {
+      case Occurrence.MONTHLY:
         monthlyRate = amount;
         
         // Calculate daily rate based on cutoff type
@@ -338,13 +274,13 @@ export class PayrollsService extends BaseService<Payroll> {
         hourlyRate = dailyRate / 8;
         break;
         
-      case 'DAILY':
+      case Occurrence.DAILY:
         dailyRate = amount;
         monthlyRate = dailyRate * businessDaysInMonth;
         hourlyRate = dailyRate / 8;
         break;
         
-      case 'HOURLY':
+      case Occurrence.HOURLY:
         hourlyRate = amount;
         dailyRate = hourlyRate * 8;
         monthlyRate = dailyRate * businessDaysInMonth;
@@ -358,9 +294,89 @@ export class PayrollsService extends BaseService<Payroll> {
       monthlyRate,
       dailyRate,
       hourlyRate,
-      baseCompensationType: type,
+      baseCompensationType: rateType,
       baseCompensationAmount: amount
     };
+  }
+
+  
+  /**
+   * Calculate SSS contribution based on 2025 rules
+   */
+  private calculateSSSContribution(salary: number, params?: Record<string, any>): number {
+    const employeeRate = (params?.employeeRate || 5) / 100;
+    const mscCeiling = params?.mscCeiling || 35000;
+    
+    // Apply MSC ceiling
+    const msc = Math.min(salary, mscCeiling);
+    
+    // Calculate employee's share
+    return msc * employeeRate;
+  }
+  
+  /**
+   * Calculate PhilHealth contribution based on 2025 rules
+   */
+  private calculatePhilHealthContribution(salary: number, params?: Record<string, any>): number {
+    const premiumRate = (params?.premiumRate || 5) / 100;
+    const floorSalary = params?.floorSalary || 10000;
+    const ceilingSalary = params?.ceilingSalary || 100000;
+    
+    // Apply floor and ceiling
+    let computationBase = salary;
+    if (computationBase < floorSalary) {
+      computationBase = floorSalary;
+    } else if (computationBase > ceilingSalary) {
+      computationBase = ceilingSalary;
+    }
+    
+    // Calculate total contribution then divide by 2 for employee's share
+    return (computationBase * premiumRate) / 2;
+  }
+  
+  /**
+   * Calculate Pag-IBIG contribution based on 2025 rules
+   */
+  private calculatePagIBIGContribution(salary: number, params?: Record<string, any>): number {
+    const employeeRate1 = (params?.employeeRate1 || 1) / 100;
+    const employeeRate2 = (params?.employeeRate2 || 2) / 100;
+    const maxSalary = params?.maxSalary || 10000;
+    
+    // Apply ceiling
+    const computationBase = Math.min(salary, maxSalary);
+    
+    // Apply rate based on salary
+    const rate = salary <= 1500 ? employeeRate1 : employeeRate2;
+    
+    return computationBase * rate;
+  }
+  
+  /**
+   * Calculate withholding tax based on TRAIN Law
+   */
+  private calculateWithholdingTax(monthlyTaxableIncome: number): number {
+    // Annualize taxable income
+    const annualTaxableIncome = monthlyTaxableIncome * 12;
+    
+    // Apply tax table
+    let annualTax = 0;
+    
+    if (annualTaxableIncome <= 250000) {
+      annualTax = 0;
+    } else if (annualTaxableIncome <= 400000) {
+      annualTax = (annualTaxableIncome - 250000) * 0.2;
+    } else if (annualTaxableIncome <= 800000) {
+      annualTax = 30000 + (annualTaxableIncome - 400000) * 0.25;
+    } else if (annualTaxableIncome <= 2000000) {
+      annualTax = 130000 + (annualTaxableIncome - 800000) * 0.3;
+    } else if (annualTaxableIncome <= 8000000) {
+      annualTax = 490000 + (annualTaxableIncome - 2000000) * 0.32;
+    } else {
+      annualTax = 2410000 + (annualTaxableIncome - 8000000) * 0.35;
+    }
+    
+    // Get monthly tax
+    return annualTax / 12;
   }
 
   /**
@@ -374,6 +390,13 @@ export class PayrollsService extends BaseService<Payroll> {
     payroll.monthlyRate = rates.monthlyRate;
     payroll.dailyRate = rates.dailyRate;
     payroll.hourlyRate = rates.hourlyRate;
+
+    // Reset deduction hours
+    payroll.totalNoTimeInHours = 0;
+    payroll.totalNoTimeOutHours = 0;
+    payroll.totalAbsentHours = 0;
+    payroll.totalTardinessHours = 0;
+    payroll.totalUndertimeHours = 0;
     
     // Reset hour totals
     payroll.totalRegularHours = 0;
@@ -396,6 +419,13 @@ export class PayrollsService extends BaseService<Payroll> {
     payroll.restDayPay = 0;
     payroll.restDayOvertimePay = 0;
     payroll.nightDifferentialPay = 0;
+
+    // Reset deduction totals
+    payroll.absences = 0;
+    payroll.tardiness = 0;
+    payroll.undertime = 0;
+    payroll.noTimeIn = 0;
+    payroll.noTimeOut = 0;
     
     // Process each work hour record
     for (const workHour of finalWorkHours) {
@@ -410,7 +440,14 @@ export class PayrollsService extends BaseService<Payroll> {
       payroll.totalHolidayOvertimeHours += +workHour.overtimeRegularHolidayHours || 0;
       payroll.totalSpecialHolidayOvertimeHours += +workHour.overtimeSpecialHolidayHours || 0;
       payroll.totalRestDayOvertimeHours += +workHour.overtimeRestDayHours || 0;
-      
+
+      // Aggregate deductions
+      payroll.totalNoTimeInHours += +workHour.noTimeInHours || 0;
+      payroll.totalNoTimeOutHours += +workHour.noTimeOutHours || 0;
+      payroll.totalAbsentHours += +workHour.absentHours || 0;
+      payroll.totalTardinessHours += +workHour.tardinessHours || 0;
+      payroll.totalUndertimeHours += +workHour.undertimeHours || 0;
+
       // Night differential
       payroll.totalNightDifferentialHours += +workHour.nightDifferentialHours || 0;
     }
@@ -443,6 +480,13 @@ export class PayrollsService extends BaseService<Payroll> {
     
     // 9. Night differential (10% of hourly rate)
     payroll.nightDifferentialPay = payroll.totalNightDifferentialHours * payroll.hourlyRate * this.NightDifferentialPayMultiplier;
+
+    // 10. Deduction hours
+    payroll.absences = payroll.totalAbsentHours * payroll.hourlyRate;
+    payroll.tardiness = payroll.totalTardinessHours * payroll.hourlyRate;
+    payroll.undertime = payroll.totalUndertimeHours * payroll.hourlyRate;
+    payroll.noTimeIn = payroll.totalNoTimeInHours * payroll.hourlyRate;
+    payroll.noTimeOut = payroll.totalNoTimeOutHours * payroll.hourlyRate;
     
     // 10. Initial gross pay from basic components
     payroll.grossPay = payroll.basicPay + payroll.restDayPay + payroll.holidayPay
@@ -460,235 +504,292 @@ export class PayrollsService extends BaseService<Payroll> {
     payroll.taxableIncome = payroll.grossPay;
   }
   
-  /**
-   * Evaluate formula for a payroll item, with BaseCompensation available
-   */
-  async evaluateFormula(
-    formula: string,
-    payroll: Payroll,
-    parameters?: Record<string, any>
-  ): Promise<{ result: number; details: any }> {
-    try {
-      // Get base compensation amount
-      const baseCompensation = await this.getEmployeeBaseCompensation(payroll.employee.id);
+/**
+ * Process all payroll items for an employee
+ */
+async processPayrollItems(payroll: Payroll, userId: string): Promise<PayrollItem[]> {
+  // Get all payroll item types
+  const allPayrollItemTypes = await this.payrollItemTypesService.getRepository().find({
+    where: { isActive: true, isDeleted: false },
+    order: { category: 'ASC', name: 'ASC' }
+  });
+  
+  // Get employee specific payroll item configurations
+  const employeePayrollItems = await this.employeePayrollItemTypesService.getRepository().find({
+    where: { 
+      employee: { id: payroll.employee.id },
+      isActive: true,
+      isDeleted: false
+    },
+    relations: {
+      payrollItemType: true
+    }
+  });
+  
+  // Map employee payroll items by payroll item type ID for quick lookup
+  const employeePayrollItemMap = new Map(
+    employeePayrollItems.map(item => [item.payrollItemType.id, item])
+  );
+  
+  // Order for processing categories
+  const processingOrder = [
+    PayrollItemCategory.GOVERNMENT,
+    PayrollItemCategory.ALLOWANCE,
+    PayrollItemCategory.BONUS,
+    PayrollItemCategory.COMMISSION,
+    PayrollItemCategory.TIP,
+    PayrollItemCategory.BENEFIT,
+    PayrollItemCategory.DEDUCTION,
+    PayrollItemCategory.REIMBURSEMENT,
+    PayrollItemCategory.TAX,
+    PayrollItemCategory.OTHER,
+  ];
+  
+  const newPayrollItems: PayrollItem[] = [];
+  const calculationLog: any[] = [];
+  
+  // First, track original values for reference
+  const originalValues = {
+    grossPay: payroll.grossPay,
+    taxableIncome: payroll.taxableIncome
+  };
+  
+  // Process each category in order
+  for (const category of processingOrder) {
+    // Get item types for this category
+    const categoryItemTypes = allPayrollItemTypes.filter(
+      type => type.category === category
+    );
+    
+    for (const itemType of categoryItemTypes) {
+      // Check if this employee has a specific configuration for this item type
+      const employeeItemConfig = employeePayrollItemMap.get(itemType.id);
       
-      // Create comprehensive scope for formula evaluation
-      const scope: Record<string, any> = {
-        // Base compensation
-        BaseCompensation: baseCompensation?.amount || 0,
-        
-        // Employee data
-        MonthlyRate: payroll.monthlyRate,
-        DailyRate: payroll.dailyRate,
-        HourlyRate: payroll.hourlyRate,
-        
-        // Work hours
-        RegularHours: payroll.totalRegularHours,
-        HolidayHours: payroll.totalHolidayHours,
-        SpecialHolidayHours: payroll.totalSpecialHolidayHours,
-        RestDayHours: payroll.totalRestDayHours,
-        NightDiffHours: payroll.totalNightDifferentialHours,
-        OvertimeHours: payroll.totalOvertimeHours,
-        HolidayOvertimeHours: payroll.totalHolidayOvertimeHours,
-        SpecialHolidayOvertimeHours: payroll.totalSpecialHolidayOvertimeHours,
-        RestDayOvertimeHours: payroll.totalRestDayOvertimeHours,
-        TotalHours: payroll.totalHours || 0,
-
-        // Pay components
-        BasicPay: payroll.basicPay,
-        HolidayPay: payroll.holidayPay,
-        SpecialHolidayPay: payroll.specialHolidayPay,
-        RestDayPay: payroll.restDayPay,
-        NightDifferentialPay: payroll.nightDifferentialPay,
-        OvertimePay: payroll.overtimePay,
-        HolidayOvertimePay: payroll.holidayOvertimePay,
-        SpecialHolidayOvertimePay: payroll.specialHolidayOvertimePay,
-        RestDayOvertimePay: payroll.restDayOvertimePay,
-        
-        // Totals
-        GrossPay: payroll.grossPay,
-        TaxableIncome: payroll.taxableIncome,
-        
-        // Cutoff info
-        CutoffType: payroll.cutoff.cutoffType,
-        WorkingDaysInPeriod: UtilityHelper.getBusinessDays(
-          payroll.cutoff.startDate, 
-          payroll.cutoff.endDate
-        ),
-        
-        // Add custom parameters
-        ...parameters
-      };
+      // Skip if not applicable for this employee
+      // Only process required items or items that have employee-specific configuration
+      if (!employeeItemConfig) {
+        continue;
+      }
       
-      // Execute formula
-      const result = evaluate(formula, scope);
-      const numericResult = parseFloat(Number(result).toFixed(2));
+      // Create new payroll item
+      const payrollItem = new PayrollItem({});
+      payrollItem.payrollItemType = itemType;
+      payrollItem.payroll = payroll;
       
-      return {
-        result: numericResult,
-        details: {
-          formula,
-          scope: { ...scope },
-          result: numericResult
+      // Calculate item amount
+      let calculatedAmount = 0;
+      let employerAmount = 0;
+      let calculationDetail: any = {};
+      
+      // If employee has specific amount configured, use it
+      if (employeeItemConfig?.amount !== undefined && employeeItemConfig?.amount !== null) {
+        calculatedAmount = employeeItemConfig.amount;
+      } 
+      // Otherwise, calculate based on item type
+      else {
+        if (itemType.governmentContributionType) {
+          // Calculate government contributions based on 2025 rates from the item type properties
+          switch (itemType.governmentContributionType) {
+            case GovernmentContributionType.SSS:
+              // SSS calculation based on 2025 rates
+              const sssEmployeeRate = (itemType.percentage || 5) / 100;
+              const sssEmployerRate = (itemType.employerPercentage || 10) / 100;
+              const mssCeiling = itemType.maxAmount || 35000;
+              
+              // Apply MSC ceiling
+              const msc = Math.min(payroll.monthlyRate, mssCeiling);
+              
+              // Calculate employee and employer shares
+              calculatedAmount = parseFloat((msc * sssEmployeeRate).toFixed(2));
+              employerAmount = parseFloat((msc * sssEmployerRate).toFixed(2));
+              
+              // Add EC contribution (employer only)
+              const ecContribution = msc <= 14500 ? 10 : 30;
+              employerAmount += ecContribution;
+              
+              calculationDetail = {
+                calculationType: 'SSS_2025',
+                monthlyRate: payroll.monthlyRate,
+                msc: msc,
+                employeeRate: `${sssEmployeeRate * 100}%`,
+                employerRate: `${sssEmployerRate * 100}%`,
+                employeeContribution: calculatedAmount,
+                employerContribution: employerAmount,
+                ecContribution: ecContribution,
+                totalContribution: calculatedAmount + employerAmount
+              };
+              break;
+              
+            case GovernmentContributionType.PHILHEALTH:
+              // PhilHealth calculation based on 2025 rates
+              const philHealthRate = (itemType.percentage || 2.5) / 100; 
+              const philHealthEmployerRate = (itemType.employerPercentage || 2.5) / 100;
+              const floorSalary = itemType.minAmount || 10000;
+              const ceilingSalary = itemType.maxAmount || 100000;
+              
+              // Apply floor and ceiling
+              let philHealthBase = payroll.monthlyRate;
+              if (philHealthBase < floorSalary) {
+                philHealthBase = floorSalary;
+              } else if (philHealthBase > ceilingSalary) {
+                philHealthBase = ceilingSalary;
+              }
+              
+              // Calculate contributions
+              calculatedAmount = parseFloat((philHealthBase * philHealthRate).toFixed(2));
+              employerAmount = parseFloat((philHealthBase * philHealthEmployerRate).toFixed(2));
+              
+              calculationDetail = {
+                calculationType: 'PHILHEALTH_2025',
+                monthlyRate: payroll.monthlyRate,
+                computationBase: philHealthBase,
+                employeeRate: `${philHealthRate * 100}%`,
+                employerRate: `${philHealthEmployerRate * 100}%`,
+                employeeContribution: calculatedAmount,
+                employerContribution: employerAmount,
+                totalContribution: calculatedAmount + employerAmount
+              };
+              break;
+              
+            case GovernmentContributionType.PAGIBIG:
+              // Pag-IBIG calculation based on 2025 rates
+              const pagibigBaseSalary = Math.min(payroll.monthlyRate, itemType.maxAmount || 10000);
+              
+              // Employee rate depends on salary (1% if ≤ 1500, 2% otherwise)
+              const employeePagibigRate = payroll.monthlyRate <= 1500 ? 
+                (itemType.minContribution || 1) / 100 : 
+                (itemType.maxContribution || 2) / 100;
+                
+              const employerPagibigRate = (itemType.employerPercentage || 2) / 100;
+              
+              calculatedAmount = parseFloat((pagibigBaseSalary * employeePagibigRate).toFixed(2));
+              employerAmount = parseFloat((pagibigBaseSalary * employerPagibigRate).toFixed(2));
+              
+              calculationDetail = {
+                calculationType: 'PAGIBIG_2025',
+                monthlyRate: payroll.monthlyRate,
+                computationBase: pagibigBaseSalary,
+                employeeRate: `${employeePagibigRate * 100}%`,
+                employerRate: `${employerPagibigRate * 100}%`,
+                employeeContribution: calculatedAmount,
+                employerContribution: employerAmount,
+                totalContribution: calculatedAmount + employerAmount
+              };
+              break;
+              
+            case GovernmentContributionType.TAX:
+              // Withholding tax calculation based on TRAIN Law
+              // Compute annual taxable income from monthly
+              const annualTaxableIncome = payroll.taxableIncome * 12;
+              
+              // Apply tax table
+              let annualTax = 0;
+              
+              if (annualTaxableIncome <= 250000) {
+                annualTax = 0;
+              } else if (annualTaxableIncome <= 400000) {
+                annualTax = (annualTaxableIncome - 250000) * 0.2;
+              } else if (annualTaxableIncome <= 800000) {
+                annualTax = 30000 + (annualTaxableIncome - 400000) * 0.25;
+              } else if (annualTaxableIncome <= 2000000) {
+                annualTax = 130000 + (annualTaxableIncome - 800000) * 0.3;
+              } else if (annualTaxableIncome <= 8000000) {
+                annualTax = 490000 + (annualTaxableIncome - 2000000) * 0.32;
+              } else {
+                annualTax = 2410000 + (annualTaxableIncome - 8000000) * 0.35;
+              }
+              
+              // Get monthly tax
+              calculatedAmount = parseFloat((annualTax / 12).toFixed(2));
+              
+              calculationDetail = {
+                calculationType: 'WITHHOLDING_TAX_2025',
+                monthlyTaxableIncome: payroll.taxableIncome,
+                annualTaxableIncome: annualTaxableIncome,
+                annualTax: annualTax,
+                monthlyTax: calculatedAmount
+              };
+              break;
+          }
+        } else if (itemType.type === 'fixed') {
+          // For fixed type items
+          calculatedAmount = itemType.defaultAmount || 0;
+          calculationDetail = {
+            source: 'default_amount',
+            amount: calculatedAmount
+          };
+        } else if (itemType.type === 'formula') {
+          // For formula types without actual formula in entity, 
+          // use percentage-based calculation on monthly rate
+          if (itemType.percentage) {
+            calculatedAmount = parseFloat(((payroll.monthlyRate * itemType.percentage) / 100).toFixed(2));
+            
+            calculationDetail = {
+              source: 'percentage_calculation',
+              baseAmount: payroll.monthlyRate,
+              percentage: `${itemType.percentage}%`,
+              result: calculatedAmount
+            };
+            
+            // Calculate employer share if applicable
+            if (itemType.employerPercentage) {
+              employerAmount = parseFloat(((payroll.monthlyRate * itemType.employerPercentage) / 100).toFixed(2));
+              
+              calculationDetail.employerCalculation = {
+                percentage: `${itemType.employerPercentage}%`,
+                baseAmount: payroll.monthlyRate,
+                result: employerAmount
+              };
+            }
+          } else {
+            // Fallback to default amount if no percentage
+            calculatedAmount = itemType.defaultAmount || 0;
+            calculationDetail = {
+              source: 'default_amount',
+              amount: calculatedAmount
+            };
+          }
         }
-      };
-    } catch (error) {
-      // Error handling...
-      this.logger.error(`Error evaluating formula: ${formula}`, error);
-      return {
-        result: 0,
-        details: {
-          formula,
-          error: error instanceof Error ? error.message : String(error),
-          result: 0
-        }
-      };
+      }
+      
+      // Set calculated amounts
+      payrollItem.amount = calculatedAmount;
+      payrollItem.employerAmount = employerAmount;
+      
+      // Save to log
+      calculationLog.push({
+        id: itemType.id,
+        name: itemType.name,
+        category: itemType.category,
+        amount: calculatedAmount,
+        employerAmount,
+        details: calculationDetail
+      });
+      
+      // Add to return array
+      newPayrollItems.push(payrollItem);
     }
   }
   
-  /**
-   * Process all payroll items for an employee
-   */
-  async processPayrollItems(payroll: Payroll, userId: string): Promise<PayrollItem[]> {
-    // Get all payroll item types
-    const allPayrollItemTypes = await this.payrollItemTypesService.getRepository().find({
-      where: { isActive: true, isDeleted: false },
-      order: { category: 'ASC', name: 'ASC' }
-    });
-    
-    // Get employee's assigned payroll items including base compensation
-    const employeePayrollItems = await this.payrollItemsService.getRepository().find({
-      where: {
-        employee: { id: payroll.employee.id },
-        isDeleted: false
-      },
-      relations: {
-        payrollItemType: true
-      }
-    });
-    
-    // Find base compensation - Prioritize compensation items
-    const baseCompensationItem = employeePayrollItems.find(item => 
-      item.payrollItemType.category === PayrollItemCategory.COMPENSATION
-    );
-    
-    if (!baseCompensationItem) {
-      throw new Error(`No base compensation defined for employee ${payroll.employee.id}`);
-    }
-    
-    // Clear existing payroll items if reprocessing
-    if (payroll.payrollItems?.length) {
-      for (const item of payroll.payrollItems) {
-        await this.payrollItemsService.delete(item.id);
-      }
-    }
-    
-    // Order for processing categories
-    const processingOrder = [
-      PayrollItemCategory.COMPENSATION,
-      PayrollItemCategory.ALLOWANCE,
-      PayrollItemCategory.BONUS,
-      PayrollItemCategory.COMMISSION,
-      PayrollItemCategory.TIP,
-      PayrollItemCategory.BENEFIT,
-      PayrollItemCategory.DEDUCTION,
-      PayrollItemCategory.REIMBURSEMENT,
-      PayrollItemCategory.TAX,
-      PayrollItemCategory.OTHER,
-    ];
-    
-    const newPayrollItems: PayrollItem[] = [];
-    const calculationLog: any[] = [];
-    
-    // First, track original values for reference
-    const originalValues = {
+  // Save calculated totals and details
+  payroll.calculationDetails = {
+    items: calculationLog,
+    original: originalValues,
+    final: {
       grossPay: payroll.grossPay,
-      taxableIncome: payroll.taxableIncome
-    };
-    
-    // Process each category in order
-    for (const category of processingOrder) {
-      // Get item types for this category
-      const categoryItemTypes = allPayrollItemTypes.filter(
-        type => type.category === category
-      );
-      
-      for (const itemType of categoryItemTypes) {
-        // Check if this item type is assigned to employee or is system-generated
-        const employeeItem = employeePayrollItems.find(
-          item => item.payrollItemType.id === itemType.id
-        );
-        
-        // If not assigned and not system-generated, skip
-        if (!employeeItem && !itemType.isSystemGenerated) {
-          continue;
-        }
-        
-        // Create new payroll item
-        const payrollItem = new PayrollItem({});
-        payrollItem.employee = payroll.employee;
-        payrollItem.payrollItemType = itemType;
-        payrollItem.payroll = payroll;
-        payrollItem.occurrence = employeeItem?.occurrence || itemType.defaultOccurrence;
-        payrollItem.parameters = employeeItem?.parameters || {};
-        
-        // Evaluate the formula
-        const { result, details } = await this.evaluateFormula(
-          itemType.computationFormula,
-          payroll,
-          payrollItem.parameters
-        );
-        
-        payrollItem.amount = result;
-        payrollItem.calculationDetails = details;
-        
-        // For government-mandated contributions with employer share
-        if (itemType.isGovernmentMandated && itemType.hasEmployerShare && itemType.employerFormulaPercentage) {
-          const { result: employerAmount } = await this.evaluateFormula(
-            itemType.employerFormulaPercentage,
-            payroll,
-            { ...payrollItem.parameters, Amount: result }
-          );
-          payrollItem.employerAmount = employerAmount;
-        }
-        
-        // Save the payroll item
-        const savedItem = await this.payrollItemsService.create(payrollItem, userId);
-        newPayrollItems.push(savedItem);
-        
-        // Track calculation
-        calculationLog.push({
-          itemType: itemType.name,
-          category: itemType.category,
-          formula: itemType.computationFormula,
-          amount: result,
-          parameters: payrollItem.parameters
-        });
-        
-        // Update payroll totals based on this item
-        this.updatePayrollTotals(payroll, savedItem);
-      }
+      taxableIncome: payroll.taxableIncome,
+      totalAllowances: payroll.totalAllowances,
+      totalBonuses: payroll.totalBonuses,
+      totalBenefits: payroll.totalBenefits,
+      totalDeductions: payroll.totalDeductions,
+      totalGovernmentContributions: payroll.totalGovernmentContributions,
+      totalTaxes: payroll.totalTaxes,
+      netPay: payroll.netPay
     }
-    
-    // Save calculated totals and details
-    payroll.calculationDetails = {
-      items: calculationLog,
-      original: originalValues,
-      final: {
-        grossPay: payroll.grossPay,
-        taxableIncome: payroll.taxableIncome,
-        totalAllowances: payroll.totalAllowances,
-        totalBonuses: payroll.totalBonuses,
-        totalBenefits: payroll.totalBenefits,
-        totalDeductions: payroll.totalDeductions,
-        totalGovernmentContributions: payroll.totalGovernmentContributions,
-        totalTaxes: payroll.totalTaxes,
-        netPay: payroll.netPay
-      }
-    };
-    
-    return newPayrollItems;
-  }
+  };
+  
+  return newPayrollItems;
+}
 
   /**
  * Generate a detailed view of a payroll for an employee
@@ -921,107 +1022,12 @@ private determineEmployeePosition(employee: Employee): string {
         amount: item.amount,
         employerAmount: item.employerAmount || 0,
         total: item.amount + (item.employerAmount || 0),
-        isGovernmentMandated: item.payrollItemType.isGovernmentMandated,
-        isTaxable: item.isTaxable,
         govType: item.payrollItemType.governmentContributionType,
         description: item.payrollItemType.description
       });
     });
     
     return result;
-  }
-    
-  /**
-   * Update payroll totals based on a single payroll item
-   */
-  private updatePayrollTotals(payroll: Payroll, item: PayrollItem): void {
-    const category = item.payrollItemType.category;
-    const amount = +item.amount;
-    
-    // Update category totals
-    switch (category) {
-      case PayrollItemCategory.ALLOWANCE:
-        payroll.totalAllowances += amount;
-        payroll.grossPay += amount;
-        
-        // Update taxable income if this allowance is taxable
-        if (item.isTaxable) {
-          payroll.taxableIncome += amount;
-        }
-        break;
-        
-      case PayrollItemCategory.BONUS:
-        payroll.totalBonuses += amount;
-        payroll.grossPay += amount;
-        
-        // Update taxable income if this bonus is taxable (some bonuses like 13th month up to 90k are non-taxable)
-        if (item.isTaxable) {
-          payroll.taxableIncome += amount;
-        }
-        break;
-        
-      case PayrollItemCategory.BENEFIT:
-        payroll.totalBenefits += amount;
-        // Benefits typically aren't part of gross pay
-        break;
-        
-      case PayrollItemCategory.DEDUCTION:
-        payroll.totalDeductions += amount;
-        // Deductions don't affect gross pay, only net pay
-        break;
-        
-      case PayrollItemCategory.TAX:
-        payroll.totalTaxes += amount;
-        // Taxes don't affect taxable income
-        break;
-        
-      default:
-        // For other categories like REIMBURSEMENT, COMMISSION, etc.
-        // Handle based on specific rules
-        
-        // For government contributions
-        if (item.payrollItemType.isGovernmentMandated) {
-          payroll.totalGovernmentContributions += amount;
-          
-          // Government contributions typically reduce taxable income
-          if (item.payrollItemType.isTaxDeductible) {
-            payroll.taxableIncome -= amount;
-          }
-          
-          // // Update specific contribution tracking for reporting
-          // if (item.payrollItemType.governmentContributionType) {
-          //   const type = item.payrollItemType.governmentContributionType.toLowerCase();
-            
-          //   if (type.includes('sss')) {
-          //     payroll.sssEmployeeContribution = amount;
-          //     if (item.employerAmount) {
-          //       payroll.sssEmployerContribution = +item.employerAmount;
-          //     }
-          //   } else if (type.includes('philhealth')) {
-          //     payroll.philHealthEmployeeContribution = amount;
-          //     if (item.employerAmount) {
-          //       payroll.philHealthEmployerContribution = +item.employerAmount;
-          //     }
-          //   } else if (type.includes('pagibig')) {
-          //     payroll.pagIbigEmployeeContribution = amount;
-          //     if (item.employerAmount) {
-          //       payroll.pagIbigContribution = +item.employerAmount;
-          //     }
-          //   } else if (type.includes('tax')) {
-          //     payroll.withHoldingTax = amount;
-          //   }
-          // }
-        }
-        break;
-    }
-    
-    // Ensure taxable income doesn't go negative
-    payroll.taxableIncome = Math.max(0, payroll.taxableIncome);
-    
-    // Update net pay
-    payroll.netPay = payroll.grossPay + payroll.totalBenefits - 
-                     payroll.totalDeductions - payroll.totalGovernmentContributions - 
-                     payroll.totalTaxes;
   }
   
   /**
@@ -1053,9 +1059,9 @@ private determineEmployeePosition(employee: Employee): string {
       const cutoff = await this.cutoffsService.findOneByOrFail({ id: cutoffId });
       
       // Get base compensation
-      const baseCompensation = await this.getEmployeeBaseCompensation(employeeId);
+      const baseCompensation = await this.employeePayrollItemTypesService.getEmployeeBaseCompensation(employeeId);
       if (!baseCompensation) {
-        throw new BadRequestException(`No base compensation defined for employee ${employeeId}`);
+        throw new BadRequestException(`No base compensation defined for employee ${employeeId}. Please define employee's base compensation first.`);
       }
       
       // If exists and already processed, prevent re-processing
@@ -1065,9 +1071,9 @@ private determineEmployeePosition(employee: Employee): string {
         );
       }
       
-      if (cutoff.status !== CutoffStatus.PROCESSING) {
-        throw new BadRequestException('Cutoff is not in processing status');
-      }
+      // if (cutoff.status !== CutoffStatus.PROCESSING) {
+      //   throw new BadRequestException('Cutoff is not in processing status');
+      // }
 
       // Get final work hours for this employee and cutoff
       const finalWorkHours = await this.finalWorkHoursService.getRepository().findBy({
@@ -1077,7 +1083,7 @@ private determineEmployeePosition(employee: Employee): string {
       });
       
       if (!finalWorkHours.length) {
-        throw new BadRequestException('No approved work hours found for this cutoff period');
+        throw new BadRequestException(`No approved work hours found for employee ${employeeId} in cutoff ${cutoffId}`);
       }
       
       // Use existing payroll or create new one
@@ -1087,30 +1093,32 @@ private determineEmployeePosition(employee: Employee): string {
       payroll.employee = employee;
       payroll.cutoff = cutoff;
       payroll.status = PayrollStatus.PROCESSING;
+
       
       // Calculate basic pay from work hours
       await this.calculateBasicPay(payroll, finalWorkHours);
+
       
       // Save payroll to get an ID if new
       const savedPayroll = await transactionManager.save(payroll);
       
       // Process all payroll items
-      const payrollItems = await this.processPayrollItems(savedPayroll, userId);
-      savedPayroll.payrollItems = payrollItems;
+      // const payrollItems = await this.processPayrollItems(savedPayroll, userId);
+      // savedPayroll.payrollItems = payrollItems;
+
       
-      // Mark work hours as processed
-      for (const workHour of finalWorkHours) {
-        await this.finalWorkHoursService.update(
-          workHour.id, 
-          { isProcessed: true },
-          userId
-        );
-      }
+      // // Mark work hours as processed
+      // for (const workHour of finalWorkHours) {
+      //   await this.finalWorkHoursService.update(
+      //     workHour.id, 
+      //     { isProcessed: true },
+      //     userId
+      //   );
+      // }
       
       // Finalize payroll
       savedPayroll.processedAt = new Date();
       savedPayroll.processedBy = userId;
-      savedPayroll.status = PayrollStatus.APPROVED;
       
       // Save the final payroll
       return await transactionManager.save(savedPayroll);
@@ -1196,7 +1204,6 @@ private determineEmployeePosition(employee: Employee): string {
       itemsByCategory[category].push({
         name: item.payrollItemType.name,
         amount: item.amount,
-        isDisplayed: item.payrollItemType.isDisplayedInPayslip !== false
       });
     }
     
@@ -1240,7 +1247,7 @@ private determineEmployeePosition(employee: Employee): string {
       deductions: {
         taxes: itemsByCategory[PayrollItemCategory.TAX] || [],
         governmentContributions: payroll.payrollItems?.filter(
-          item => item.payrollItemType.isGovernmentMandated
+          item => item.payrollItemType.governmentContributionType
         ).map(item => ({
           name: item.payrollItemType.name,
           amount: item.amount,

@@ -35,29 +35,52 @@ export class UtilityHelper {
             .join(', ');
     }
 
-    // Helper method to calculate business days in a month
-    static getBusinessDaysInMonth(date: Date): number {
-        const year = date.getFullYear();
-        const month = date.getMonth();
-        const firstDay = new Date(year, month, 1);
-        const lastDay = new Date(year, month + 1, 0);
-        
-        return this.getBusinessDays(firstDay, lastDay);
+    /**
+     * Ensures a value is a Date object
+     */
+    static ensureDate(date: string | Date): Date {
+        if (date instanceof Date) {
+        return date;
+        }
+        return new Date(date);
     }
 
-    static getBusinessDays(start: Date, end: Date): number {
-        let count = 0;
-        const current = new Date(start.getTime());
+    /**
+     * Calculate business days between two dates
+     */
+    static getBusinessDays(start: string | Date, end: string | Date): number {
+        const startDate = this.ensureDate(start);
+        const endDate = this.ensureDate(end);
         
-        while (current.getTime() <= end.getTime()) {
-            const dayOfWeek = current.getDay();
-            if (dayOfWeek !== 0 && dayOfWeek !== 6) { // Exclude Sundays (0) and Saturdays (6)
-                count++;
-            }
-            current.setDate(current.getDate() + 1);
+        let count = 0;
+        const currentDate = new Date(startDate.getTime());
+        
+        // Iterate from start to end date
+        while (currentDate <= endDate) {
+        const dayOfWeek = currentDate.getDay();
+        // Count if it's not a weekend (0 = Sunday, 6 = Saturday)
+        if (dayOfWeek !== 0 && dayOfWeek !== 6) {
+            count++;
+        }
+        // Move to the next day
+        currentDate.setDate(currentDate.getDate() + 1);
         }
         
         return count;
+    }
+
+    /**
+     * Get business days in a month of a given date
+     */
+    static getBusinessDaysInMonth(date: string | Date): number {
+        const inputDate = this.ensureDate(date);
+        
+        // Create first and last day of the month
+        const firstDay = new Date(inputDate.getFullYear(), inputDate.getMonth(), 1);
+        const lastDay = new Date(inputDate.getFullYear(), inputDate.getMonth() + 1, 0);
+        
+        // Calculate business days between these dates
+        return this.getBusinessDays(firstDay, lastDay);
     }
 
     // Helper method to parse relations string into TypeORM relations object

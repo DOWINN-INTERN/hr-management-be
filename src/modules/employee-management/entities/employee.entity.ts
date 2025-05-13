@@ -8,10 +8,10 @@ import { FinalWorkHour } from '@/modules/attendance-management/final-work-hours/
 import { WorkTimeRequest } from '@/modules/attendance-management/work-time-requests/entities/work-time-request.entity';
 import { Role } from '@/modules/employee-management/roles/entities/role.entity';
 import { Payroll } from '@/modules/payroll-management/entities/payroll.entity';
-import { PayrollItem } from '@/modules/payroll-management/payroll-items/entities/payroll-item.entity';
 import { Group } from '@/modules/shift-management/groups/entities/group.entity';
 import { Schedule } from '@/modules/shift-management/schedules/entities/schedule.entity';
 import { Column, Entity, JoinColumn, JoinTable, ManyToMany, ManyToOne, OneToMany, OneToOne } from 'typeorm';
+import { EmployeePayrollItemType } from '../employee-payroll-item-types/entities/employee-payroll-item-type.entity';
 
 @Entity('employees')
 export class Employee extends BaseEntity<Employee> {
@@ -69,8 +69,8 @@ export class Employee extends BaseEntity<Employee> {
     })
     roles?: Role[];
 
-    @OneToMany(() => PayrollItem, (payrollItem: PayrollItem) => payrollItem.employee, { nullable: true })
-    payrollItems?: PayrollItem[];
+    @OneToMany(() => EmployeePayrollItemType, (employeePayrollItemType: EmployeePayrollItemType) => employeePayrollItemType.employee, { nullable: true })
+    payrollItemTypes?: EmployeePayrollItemType[];
 
     @ManyToOne(() => Group, (group: Group) => group.employees, { nullable: true, eager: true })
     @JoinColumn({ name: 'groupId' })

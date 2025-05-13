@@ -1,4 +1,5 @@
 import { BaseDto } from "@/common/dtos/base.dto";
+import { Occurrence } from "@/common/enums/occurrence.enum";
 import { createGetDto } from "@/common/factories/create-get-dto.factory";
 import { ApiProperty, PartialType } from "@nestjs/swagger";
 import { Type } from "class-transformer";
@@ -61,12 +62,12 @@ export class PayrollItemDto extends PartialType(BaseDto) {
 
     @ApiProperty({ 
         description: 'How often the item is applied (ONCE, DAILY, WEEKLY, MONTHLY, etc.)',
-        example: 'MONTHLY',
-        default: 'MONTHLY'
+        enum: Occurrence,
+        example: Occurrence.MONTHLY,
+        type: String
     })
-    @IsString()
     @IsNotEmpty()
-    occurrence!: string;
+    occurrence!: Occurrence;
 
     @ApiProperty({ 
         description: 'Whether the payroll item is active',
