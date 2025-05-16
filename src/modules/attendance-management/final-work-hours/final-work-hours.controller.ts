@@ -19,7 +19,11 @@ export class FinalWorkHoursController extends createController(FinalWorkHour, Fi
         return await super.delete(id);
     }
 
-    @Post('recalculate/:cutoffId')
+    override async softDelete(id: string, deletedBy: string): Promise<GeneralResponseDto> {
+        return await super.softDelete(id, deletedBy);
+    }
+
+    @Post('recalculate/cutoff/:cutoffId')
     @Authorize({ endpointType: Action.MANAGE })
     @ApiOperation({
         summary: 'Recalculate Final Work Hours',

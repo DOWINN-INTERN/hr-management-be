@@ -69,6 +69,9 @@ export class CutoffsService extends BaseService<Cutoff> {
             cutoffType = CutoffType.BI_WEEKLY,
             save = true
         } = options;
+
+        // cutoff count
+        let cutoffCount = await this.cutoffsRepository.count();
         
         const cutoffs: Cutoff[] = [];
         
@@ -77,6 +80,11 @@ export class CutoffsService extends BaseService<Cutoff> {
             const periodCutoffs = this.generateCutoffsForMonth(year, month, cutoffType);
             cutoffs.push(...periodCutoffs);
         }
+
+        // for each generated cutoff, set the cutoff number
+        cutoffs.forEach((cutoff, index) => {
+            cutoff.cutoffNumber = cutoffCount + index + 1;
+        });
         
         // Save to database if requested
         if (save && cutoffs.length > 0) {
@@ -111,6 +119,7 @@ export class CutoffsService extends BaseService<Cutoff> {
                 firstHalf.startDate = firstHalfStart;
                 firstHalf.endDate = firstHalfEnd;
                 firstHalf.status = CutoffStatus.ACTIVE;
+                firstHalf.cutoffPlace = 1;
                 firstHalf.cutoffType = cutoffType;
                 firstHalf.description = `${monthName} 1-15, ${year} (${firstHalfBusinessDays} business days)`;
                 
@@ -119,6 +128,7 @@ export class CutoffsService extends BaseService<Cutoff> {
                 secondHalf.endDate = secondHalfEnd;
                 secondHalf.status = CutoffStatus.ACTIVE;
                 secondHalf.cutoffType = cutoffType;
+                secondHalf.cutoffPlace = 2;
                 secondHalf.description = `${monthName} 16-${secondHalfEnd.getDate()}, ${year} (${secondHalfBusinessDays} business days)`;
                 
                 cutoffs.push(firstHalf, secondHalf);

@@ -9,6 +9,7 @@ import { PayrollItemTypesModule } from './payroll-item-types/payroll-item-types.
 import { PayrollItemsModule } from './payroll-items/payroll-items.module';
 import { PayrollsController } from './payrolls.controller';
 import { PayrollsService } from './payrolls.service';
+import { WorkTimeRequestsModule } from '../attendance-management/work-time-requests/work-time-requests.module';
 
 @Module({
     imports: [
@@ -38,6 +39,7 @@ import { PayrollsService } from './payrolls.service';
         CutoffsModule,
         EmployeeManagementModule,
         FinalWorkHoursModule,
+        WorkTimeRequestsModule,
     ],
     providers: [PayrollsService],
     exports: [

@@ -9,4 +9,16 @@ export class WorkTimeResponsesController extends createController(WorkTimeRespon
     override async delete(id: string): Promise<GeneralResponseDto> {
         return await super.delete(id);
     }
+
+    override async deleteMany(ids: string[], hardDelete?: boolean): Promise<void> {
+        return await super.deleteMany(ids, hardDelete);
+    }
+
+    override async softDelete(id: string, deletedBy: string): Promise<GeneralResponseDto> {
+        return await super.softDelete(id, deletedBy);
+    }
+
+    override async findOne(fieldsString: string, relations?: string, select?: string): Promise<GetWorkTimeResponseDto> {
+        return await super.findOne(fieldsString, relations, select);
+    }
 }

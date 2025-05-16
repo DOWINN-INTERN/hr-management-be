@@ -1,4 +1,4 @@
-import { BadRequestException, HttpStatus, Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, HttpStatus, Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
 import { DeepPartial, FindOneOptions, FindOptionsOrder, FindOptionsRelationByString, FindOptionsRelations, FindOptionsSelect, FindOptionsSelectByString, FindOptionsWhere, In, Repository, SelectQueryBuilder } from 'typeorm';
 import dataSource from '../../database/data-source';
 import { BaseEntity } from '../../database/entities/base.entity';
@@ -922,7 +922,7 @@ export abstract class BaseService<T extends BaseEntity<T>> {
   ): Promise<T | null> {
     const findOptions: FindOneOptions<T> = {
       where: {
-        ...(!options?.withDeleted && 'isDeleted' in criteria ? {} : { isDeleted: false }),
+        ...(options?.withDeleted || 'isDeleted' in criteria ? { } : { isDeleted: false }),
         ...(criteria as FindOptionsWhere<T>)
       },
       ...options
@@ -948,8 +948,115 @@ export abstract class BaseService<T extends BaseEntity<T>> {
     return entity;
   }
 
+  async validateBefore(dto: DeepPartial<T>): Promise<void> {
+      // Default implementation does nothing
+      // Child classes can override this to implement specific validations
+  }
+
+
+  // Enhanced reference validation with additional validation capabilities
+  async validateReferences<D extends object = DeepPartial<T>>(
+    dto: D,
+    referenceFields: Array<{
+      field: string;                 // Field name in the DTO
+      service: any;                  // Service to validate with
+      required?: boolean;            // Is this reference required?
+      unique?: {                     // Uniqueness constraint
+        field: string;               // Field to check uniqueness against
+        message?: string;            // Custom error message
+      };
+      customValidator?: (entity: any, dto: D) => Promise<void> | void; // Custom validation
+      errorMessage?: string;         // Custom error message for not found
+      transform?: (entity: any) => any; // Transform the entity before assignment
+    }>
+  ): Promise<D> {
+    // Create a copy to avoid mutating the input
+    const result = { ...dto } as Record<string, any>;
+    
+    for (const config of referenceFields) {
+      // Extract values from config with defaults
+      const { 
+        field, 
+        service, 
+        required = false,
+        unique,
+        customValidator,
+        transform = (e) => e
+      } = config;
+      
+      // Get the reference from the DTO (handles nested paths like 'request.id')
+      const fieldParts = field.split('.');
+      let reference: Record<string, any> = dto as Record<string, any>;
+      for (const part of fieldParts) {
+        reference = reference?.[part];
+        if (reference === undefined) break;
+      }
+      
+      // Check if reference is required but missing
+      if (required && (!reference || !reference.id)) {
+        throw new BadRequestException(`${field} reference is required`);
+      }
+      
+      // Skip validation if no reference or no ID
+      if (!reference || !reference.id) continue;
+      
+      // Find the referenced entity
+      const referenceId = reference.id;
+      const entity = await service.findOneByOrFail({ id: referenceId });
+
+      reference = entity;
+      
+      // Check uniqueness constraints if specified
+      if (unique) {
+        const { field: uniqueField, message } = unique;
+        
+        // Get value to check uniqueness against
+        const checkValue = entity[uniqueField];
+        if (checkValue !== undefined) {
+          // Query for existing entities with this reference
+          const existing = await this.repository.findOne({
+            where: { [uniqueField]: checkValue } as any
+          });
+          
+          if (existing) {
+            throw new ConflictException(
+              message || `A record with this ${uniqueField} ${checkValue} already exists`
+            );
+          }
+        }
+      }
+      
+      // Run custom validator if provided
+      if (customValidator) {
+        await Promise.resolve(customValidator(entity, dto));
+      }
+      
+      // Set the field value in the result object (with optional transformation)
+      // This handles nested paths too
+      if (fieldParts.length === 1) {
+        // Simple field assignment
+        result[field] = transform(entity);
+      } else {
+        // Nested field assignment
+        let current = result;
+        for (let i = 0; i < fieldParts.length - 1; i++) {
+          const part = fieldParts[i];
+          if (!current[part]) current[part] = {};
+          current = current[part];
+        }
+        
+        // Set the innermost field
+        const lastPart = fieldParts[fieldParts.length - 1];
+        current[lastPart] = transform(entity);
+      }
+    }
+    
+    return result as unknown as D;
+  }
+
   // DONE
   async create(createDto: DeepPartial<T>, createdBy?: string): Promise<T> {
+    await this.validateBefore(createDto);
     const entity = this.repository.create({
         ...createDto,
         createdBy
@@ -957,14 +1064,15 @@ export abstract class BaseService<T extends BaseEntity<T>> {
     
     try {
       return await this.repository.save(entity);
-    } catch (error) {
-      console.log('Full error object:', JSON.stringify(error, null, 2));
-      throw error;
+    } catch (error: any) {
+      // console.log('Full error object:', JSON.stringify(error, null, 2));
+      throw new ConflictException(error.message)
     }
   }
 
   // DONE
   async update(id: string, updateDto: DeepPartial<T>, updatedBy?: string): Promise<T> {
+    await this.validateBefore(updateDto);
     const entity = await this.findOneByOrFail({ id } as Partial<T>);
     const updatedEntity = await this.repository.save({
         ...entity,

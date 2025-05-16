@@ -11,6 +11,7 @@ import {
     Logger,
     NotFoundException,
     Param,
+    ParseUUIDPipe,
     Post,
     Put,
     Query
@@ -66,7 +67,10 @@ export abstract class BaseController<T extends BaseEntity<T>, K extends BaseServ
     @Put(':id')
     @Authorize({ endpointType: Action.UPDATE })
     async update(
-        @Param('id') id: string,
+        @Param('id', new ParseUUIDPipe({ 
+            version: '4',
+            errorHttpStatusCode: HttpStatus.BAD_REQUEST
+        })) id: string,
         @Body() entityDto: UpdateDto,
         @CurrentUser('sub') updatedById: string
     ): Promise<GetDto> {

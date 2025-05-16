@@ -5,18 +5,13 @@ import { Action } from '@/common/enums/action.enum';
 import { createController } from '@/common/factories/create-controller.factory';
 import { Body, Get, HttpStatus, Param, Post, Query, Res } from '@nestjs/common';
 import { ApiBody, ApiOperation, ApiParam, ApiQuery, ApiResponse } from '@nestjs/swagger';
-import { plainToInstance } from 'class-transformer';
 import { Response } from 'express';
 import { GetPayrollDto, PayrollDto, UpdatePayrollDto } from "./dtos/payroll.dto";
 import { Payroll } from "./entities/payroll.entity";
-import { PayrollsService } from "./payrolls.service";
+import { PayrollsService } from './payrolls.service';
 
 export class PayrollsController extends createController(Payroll, PayrollsService, GetPayrollDto, PayrollDto, UpdatePayrollDto)
 {
-    constructor(private readonly payrollsService: PayrollsService) {
-        super(payrollsService);
-    }
-
     @Post('process/employee/:employeeId/cutoff/:cutoffId')
     @Authorize({ endpointType: Action.CREATE })
     @ApiOperation({
@@ -50,9 +45,11 @@ export class PayrollsController extends createController(Payroll, PayrollsServic
         @Param('employeeId') employeeId: string,
         @Param('cutoffId') cutoffId: string,
         @CurrentUser('sub') userId: string
-    ): Promise<GetPayrollDto> {
-        const payroll = await this.payrollsService.processPayrollForEmployee(employeeId, cutoffId, userId);
-        return payroll as GetPayrollDto;
+    ): Promise<Partial<GeneralResponseDto>> {
+        const payroll = await this.baseService.processPayrollForEmployee(employeeId, cutoffId, userId);
+        return {
+            message: 'Payroll processed successfully',
+        }
     }
 
     @Post('process/cutoff/:cutoffId')
@@ -79,33 +76,8 @@ export class PayrollsController extends createController(Payroll, PayrollsServic
         @Param('cutoffId') cutoffId: string,
         @CurrentUser('sub') userId: string
     ): Promise<GetPayrollDto[]> {
-        const payrolls = await this.payrollsService.processPayrollForCutoff(cutoffId, userId);
+        const payrolls = await this.baseService.processPayrollForCutoff(cutoffId, userId);
         return payrolls as GetPayrollDto[];
-    }
-
-    @Get(':id/details')
-    @Authorize({ endpointType: Action.READ })
-    @ApiOperation({
-        summary: 'Get detailed payroll information',
-        description: 'Retrieves comprehensive payroll details including all calculated components'
-    })
-    @ApiParam({
-        name: 'id',
-        description: 'ID of the payroll to get details for',
-        required: true
-    })
-    @ApiResponse({
-        status: HttpStatus.OK,
-        description: 'Payroll details retrieved successfully'
-    })
-    @ApiResponse({
-        status: HttpStatus.NOT_FOUND,
-        description: 'Payroll not found'
-    })
-    async getPayrollDetails(
-        @Param('id') id: string
-    ): Promise<any> {
-        return await this.payrollsService.getPayrollDetails(id);
     }
 
     @Get(':id/payslip')
@@ -130,7 +102,7 @@ export class PayrollsController extends createController(Payroll, PayrollsServic
     async generatePayslipData(
         @Param('id') id: string
     ): Promise<any> {
-        return await this.payrollsService.generatePayslipData(id);
+        return await this.baseService.generatePayslipData(id);
     }
 
     @Get(':id/payslip/download')
@@ -156,9 +128,9 @@ export class PayrollsController extends createController(Payroll, PayrollsServic
         @Param('id') id: string,
         @Res() res: Response
     ): Promise<void> {
-        const payroll = await this.payrollsService.findOneByOrFail({ id });
+        const payroll = await this.baseService.findOneByOrFail({ id });
         const employee = payroll.employee;
-        const payslipData = await this.payrollsService.generatePayslipData(id);
+        const payslipData = await this.baseService.generatePayslipData(id);
         
         // You would need to implement PDF generation logic here
         // For example: const pdfBuffer = await generatePayslipPdf(payslipData);
@@ -206,7 +178,7 @@ export class PayrollsController extends createController(Payroll, PayrollsServic
         @Param('id') id: string,
         @CurrentUser('sub') userId: string
     ): Promise<Partial<GeneralResponseDto>> {
-        await this.payrollsService.update(id, {
+        await this.baseService.update(id, {
             status: 'APPROVED',
             approvedAt: new Date(),
             approvedBy: userId
@@ -253,7 +225,7 @@ export class PayrollsController extends createController(Payroll, PayrollsServic
         },
         @CurrentUser('sub') userId: string
     ): Promise<Partial<GeneralResponseDto>> {
-        await this.payrollsService.update(id, {
+        await this.baseService.update(id, {
             status: 'RELEASED',
             releasedAt: new Date(),
             releasedBy: userId,
@@ -295,7 +267,7 @@ export class PayrollsController extends createController(Payroll, PayrollsServic
         @Query('reason') reason: string,
         @CurrentUser('sub') userId: string
     ): Promise<Partial<GeneralResponseDto>> {
-        await this.payrollsService.update(id, {
+        await this.baseService.update(id, {
             status: 'REJECTED',
             notes: `Rejected: ${reason}`,
             updatedBy: userId
@@ -304,72 +276,5 @@ export class PayrollsController extends createController(Payroll, PayrollsServic
         return {
             message: 'Payroll rejected successfully'
         };
-    }
-
-    @Get('employee/:employeeId')
-    @Authorize({ endpointType: Action.READ })
-    @ApiOperation({
-        summary: 'Get all payrolls for an employee',
-        description: 'Retrieves all payrolls for a specific employee'
-    })
-    @ApiParam({
-        name: 'employeeId',
-        description: 'ID of the employee',
-        required: true
-    })
-    @ApiQuery({
-        name: 'year',
-        required: false,
-        description: 'Filter by year'
-    })
-    @ApiQuery({
-        name: 'month',
-        required: false,
-        description: 'Filter by month (1-12)'
-    })
-    @ApiResponse({
-        status: HttpStatus.OK,
-        description: 'Employee payrolls retrieved successfully',
-        type: [GetPayrollDto]
-    })
-    async getEmployeePayrolls(
-        @Param('employeeId') employeeId: string,
-        @Query('year') year?: number,
-        @Query('month') month?: number
-    ): Promise<GetPayrollDto[]> {
-        // Build filter criteria
-        const criteria: any = { 
-            employee: { id: employeeId }
-        };
-        
-        // Convert month and year to cutoff date range if provided
-        if (year || month) {
-            criteria.cutoff = {};
-            
-            if (year && month) {
-                const startDate = new Date(year, month - 1, 1);
-                const endDate = new Date(year, month, 0);
-                criteria.cutoff.startDate = { gte: startDate };
-                criteria.cutoff.endDate = { lte: endDate };
-            } else if (year) {
-                const startDate = new Date(year, 0, 1);
-                const endDate = new Date(year, 11, 31);
-                criteria.cutoff.startDate = { gte: startDate };
-                criteria.cutoff.endDate = { lte: endDate };
-            }
-        }
-        
-        const payrolls = await this.payrollsService.getRepository().findBy({ ...criteria,
-            relations: {
-                cutoff: true
-            },
-            order: {
-                cutoff: {
-                    startDate: 'DESC'
-                }
-            }
-        });
-        
-        return plainToInstance(GetPayrollDto, payrolls);
     }
 }

@@ -27,15 +27,11 @@ export class EmployeePayrollItemTypesController extends createController(
         return super.delete(id);
     }
 
-    override async create(entityDto: EmployeePayrollItemTypeDto, createdById: string): Promise<GetEmployeePayrollItemTypeDto> {
-        return await super.create(entityDto, createdById);
-    }
-
-    @Post('employee/:employeeId/setup-compensation')
+    @Post('employee/:employeeId/base-compensation')
     @Authorize({ endpointType: Action.CREATE })
     @ApiOperation({
-        summary: 'Setup employee compensation',
-        description: 'Set up default compensation for an employee. Deactivates any existing compensation items before creating a new one.'
+        summary: 'Setup employee base compensation',
+        description: 'Set up default compensation for an employee. Deactivates any existing base compensation items before creating a new one.'
     })
     @ApiParam({
         name: 'employeeId',

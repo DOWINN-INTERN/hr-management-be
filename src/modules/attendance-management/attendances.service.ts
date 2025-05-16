@@ -10,7 +10,7 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { InjectRepository } from '@nestjs/typeorm';
 import { differenceInMinutes, endOfDay, format, startOfDay } from 'date-fns';
-import { Between, Repository } from 'typeorm';
+import { Between, LessThan, Repository } from 'typeorm';
 import { EmployeesService } from '../employee-management/employees.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { SchedulesService } from '../shift-management/schedules/schedules.service';
@@ -47,15 +47,18 @@ export class AttendancesService extends BaseService<Attendance> {
     // Run at midnight
     @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
     async processAttendanceRecords(processedBy?: string): Promise<boolean> {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
         // Get all attendance records for the day that has no final work hours yet
         const attendances = await this.attendancesRepository.find({
-            // where: {
-            //     isProcessed: false,
-            //     // schedule: {
-            //     //     endTime: LessThan(format(new Date(), 'HH:mm:ss')) // Ensure the schedule end time has already passed
-            //     // }
-            // },
-            relations: { employee: { user: true }, schedule: true },
+            where: {
+                isProcessed: false,
+                schedule: {
+                    date: LessThan(today),
+                }
+            },
+            relations: { cutoff: true, employee: { user: true }, schedule: true },
         });
         
         if (attendances.length === 0) {
@@ -82,12 +85,14 @@ export class AttendancesService extends BaseService<Attendance> {
         // Process employees that has no attendance record or absent
         await this.handleAbsentEmployees();
 
-        // // mark attendance records as processed
-        // for (const attendance of attendances) {
-        //     attendance.isProcessed = true;
-        // }
+        // mark attendance records as processed
+        for (const attendance of attendances) {
+            attendance.isProcessed = true;
+            attendance.processedBy = processedBy;
+            attendance.processedAt = new Date();
+        }
 
-        // await this.attendancesRepository.save(attendances);
+        await this.attendancesRepository.save(attendances);
 
         // log attendance processing
         this.logger.log(`Attendance records processed successfully`);
@@ -142,6 +147,7 @@ export class AttendancesService extends BaseService<Attendance> {
                         type: AttendanceStatus.UNDER_TIME,
                         duration: undertimeMinutes,
                         status: RequestStatus.PENDING,
+                        cutoff: attendance.cutoff,
                         dayType: attendance.dayType,
                         createdBy: attendance.employee.id,
                         employee: attendance.employee
@@ -207,6 +213,7 @@ export class AttendancesService extends BaseService<Attendance> {
                         duration: overtimeMinutes,
                         status: RequestStatus.PENDING,
                         dayType: attendance.dayType,
+                        cutoff: attendance.cutoff,
                         createdBy: attendance.employee.id,
                         employee: attendance.employee
                     });
@@ -265,6 +272,7 @@ export class AttendancesService extends BaseService<Attendance> {
                         attendance,
                         type: AttendanceStatus.NO_CHECKED_OUT,
                         status: RequestStatus.PENDING,
+                        cutoff: attendance.cutoff,
                         dayType: attendance.dayType,
                         createdBy: attendance.employee.id,
                         employee: { id: attendance.employee.id },
@@ -391,30 +399,34 @@ export class AttendancesService extends BaseService<Attendance> {
     }
 
     async handleAbsentEmployees() {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
         // Find all schedules for the given date that should have attendance
-        let absentSchedules = await this.schedulesService.getRepository().find({
+        let previousSchedules = await this.schedulesService.getRepository().find({
             where: { 
-                restDay: false,
-                attendance: true,
-                // date: LessThan(new Date()),
-                // endTime: LessThan(format(new Date(), 'HH:mm:ss')), // Ensure the schedule end time has already passed
+                date: LessThan(today),
             },
-            relations: { employee: { user: true }, attendance: true }
+            relations: { cutoff: true, employee: { user: true }, attendance: true }
         });
 
-        // for each absent schedules get the attendances
-        absentSchedules = await Promise.all(
-            absentSchedules.map(async (schedule) => {
-                const attendance = await this.attendancesRepository.findOne({
-                    where: { schedule: { id: schedule.id } },
-                    relations: { schedule: true }
-                });
-                return attendance ? (attendance.statuses?.includes(AttendanceStatus.ABSENT) === true ? schedule : null ) : schedule;
-            })
-        ).then((schedules) => schedules.filter((schedule) => schedule !== null));
+       // First resolve all attendance checks with Promise.all
+        const schedulesWithAbsenceInfo = await Promise.all(previousSchedules.map(async (schedule) => {
+            const attendance = await this.attendancesRepository.findOne({
+                where: { schedule: { id: schedule.id } },
+                relations: { schedule: true }
+            });
 
+            const isAbsent = attendance ? attendance.statuses?.includes(AttendanceStatus.ABSENT) : true;
 
-        
+            return { schedule, isAbsent };
+        }));
+
+        // Then filter based on the resolved absence status
+        const absentSchedules = schedulesWithAbsenceInfo
+            .filter(item => item.isAbsent)
+            .map(item => item.schedule);
+
         if (absentSchedules.length === 0) {
             this.logger.log(`No schedules found for absence processing`);
             return;
@@ -450,11 +462,25 @@ export class AttendancesService extends BaseService<Attendance> {
                 }
                 // Create new attendance record with absent status
                 let attendance = await this.attendancesRepository.findOne({ where: { schedule: { id: schedule.id } } });
-                let newAttendance = false;
                 if (!attendance) {
                     this.logger.log(`No attendance record found for employee ${schedule.employee.user.email} on ${format(schedule.date, 'MMMM dd, yyyy')}`);
                     attendance = new Attendance({});
-                    newAttendance = true;
+                }
+                attendance.employee = schedule.employee;
+                attendance.schedule = schedule;
+                attendance.dayType = dayType;
+                attendance.isProcessed = true;
+                attendance.cutoff = schedule.cutoff;
+                attendance.statuses = [AttendanceStatus.ABSENT];
+                
+                const savedAttendance = await this.attendancesRepository.save(attendance);
+                
+                // Check if there is already worktime request for absence
+                const existingRequest = await this.workTimeRequestsService.findOneBy({
+                    attendance: new Attendance({ id: savedAttendance.id }),
+                    type: AttendanceStatus.ABSENT,
+                }, { relations: { attendance: true } });
+                if (!existingRequest) {
                     // Notify the employee about their recorded absence
                     await this.notificationsService.create({
                         user: { id: schedule.employee.user.id },
@@ -463,15 +489,6 @@ export class AttendancesService extends BaseService<Attendance> {
                         message: `You were marked absent for ${format(schedule.date, 'MMMM dd, yyyy')}`,
                         type: NotificationType.DANGER
                     });
-                }
-                attendance.employee = schedule.employee;
-                attendance.schedule = schedule;
-                attendance.dayType = dayType;
-                attendance.statuses = [AttendanceStatus.ABSENT];
-                
-                const savedAttendance = await this.attendancesRepository.save(attendance);
-        
-                if (newAttendance) {
                     this.logger.log(`New attendance record created for employee ${schedule.employee.user.email} on ${format(schedule.date, 'MMMM dd, yyyy')}`);
                     // Create work time request for the absence
                     const workTimeRequest = new WorkTimeRequest({});
@@ -479,6 +496,7 @@ export class AttendancesService extends BaseService<Attendance> {
                     workTimeRequest.attendance = savedAttendance;
                     workTimeRequest.type = AttendanceStatus.ABSENT;
                     workTimeRequest.status = RequestStatus.PENDING;
+                    workTimeRequest.cutoff = schedule.cutoff;
                     workTimeRequest.dayType = dayType;
                     workTimeRequest.createdBy = schedule.employee.id;
                     

@@ -1677,7 +1677,10 @@ __decorate([
 __decorate([
     (0, common_1.Put)(':id'),
     (0, authorize_decorator_1.Authorize)({ endpointType: action_enum_1.Action.UPDATE }),
-    __param(0, (0, common_1.Param)('id')),
+    __param(0, (0, common_1.Param)('id', new common_1.ParseUUIDPipe({
+        version: '4',
+        errorHttpStatusCode: common_1.HttpStatus.BAD_REQUEST
+    }))),
     __param(1, (0, common_1.Body)()),
     __param(2, (0, current_user_decorator_1.CurrentUser)('sub')),
     __metadata("design:type", Function),
@@ -2899,15 +2902,16 @@ var EmploymentType;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.GovernmentContributionType = void 0;
-var GovernmentContributionType;
-(function (GovernmentContributionType) {
-    GovernmentContributionType["SSS"] = "SSS";
-    GovernmentContributionType["PHILHEALTH"] = "PHILHEALTH";
-    GovernmentContributionType["PAGIBIG"] = "PAGIBIG";
-    GovernmentContributionType["TAX"] = "TAX";
-    GovernmentContributionType["OTHER"] = "OTHER";
-})(GovernmentContributionType || (exports.GovernmentContributionType = GovernmentContributionType = {}));
+exports.GovernmentMandatedType = void 0;
+var GovernmentMandatedType;
+(function (GovernmentMandatedType) {
+    GovernmentMandatedType["SSS"] = "SSS";
+    GovernmentMandatedType["PHILHEALTH"] = "PHILHEALTH";
+    GovernmentMandatedType["PAGIBIG"] = "PAGIBIG";
+    GovernmentMandatedType["TAX"] = "TAX";
+    GovernmentMandatedType["THIRTEENTH_MONTH_PAY"] = "THIRTEENTH_MONTH_PAY";
+    GovernmentMandatedType["OTHER"] = "OTHER";
+})(GovernmentMandatedType || (exports.GovernmentMandatedType = GovernmentMandatedType = {}));
 
 
 /***/ }),
@@ -3019,8 +3023,8 @@ var PayrollItemCategory;
 (function (PayrollItemCategory) {
     PayrollItemCategory["COMPENSATION"] = "Compensation";
     PayrollItemCategory["BENEFIT"] = "Benefit";
+    PayrollItemCategory["ADJUSTMENT"] = "Adjustment";
     PayrollItemCategory["DEDUCTION"] = "Deduction";
-    PayrollItemCategory["GOVERNMENT"] = "Government";
     PayrollItemCategory["ALLOWANCE"] = "Allowance";
     PayrollItemCategory["REIMBURSEMENT"] = "Reimbursement";
     PayrollItemCategory["TAX"] = "Tax";
@@ -3340,6 +3344,32 @@ class EmployeeAssignedEvent {
     }
 }
 exports.EmployeeAssignedEvent = EmployeeAssignedEvent;
+
+
+/***/ }),
+
+/***/ "./src/common/events/work-time.event.ts":
+/*!**********************************************!*\
+  !*** ./src/common/events/work-time.event.ts ***!
+  \**********************************************/
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.WorkTimeRespondedEvent = exports.WORK_TIME_EVENTS = void 0;
+exports.WORK_TIME_EVENTS = {
+    WORK_TIME_RESPONDED: 'work_time.responded',
+    WORK_TIME_REQUESTED: 'work_time.requested',
+};
+class WorkTimeRespondedEvent {
+    constructor(workTimeRequestId, isApproved, respondedBy) {
+        this.workTimeRequestId = workTimeRequestId;
+        this.isApproved = isApproved;
+        this.respondedBy = respondedBy;
+    }
+}
+exports.WorkTimeRespondedEvent = WorkTimeRespondedEvent;
 
 
 /***/ }),
@@ -4996,6 +5026,7 @@ exports.ScopeGuard = void 0;
 const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
 const core_1 = __webpack_require__(/*! @nestjs/core */ "@nestjs/core");
 const role_scope_type_enum_1 = __webpack_require__(/*! ../enums/role-scope-type.enum */ "./src/common/enums/role-scope-type.enum.ts");
+const utility_helper_1 = __webpack_require__(/*! ../helpers/utility.helper */ "./src/common/helpers/utility.helper.ts");
 let ScopeGuard = ScopeGuard_1 = class ScopeGuard {
     constructor(reflector) {
         this.reflector = reflector;
@@ -5010,19 +5041,20 @@ let ScopeGuard = ScopeGuard_1 = class ScopeGuard {
             const path = request.path;
             if (user) {
                 try {
-                    this.logger.log(`Processing ${method} request to ${path}`);
+                    // this.logger.log(`Processing ${method} request to ${path}`);
                     request.resourceScope = {
                         type: role_scope_type_enum_1.RoleScopeType.OWNED,
                         userId: user === null || user === void 0 ? void 0 : user.sub // This will be undefined if no user
                     };
-                    this.logger.log(`Setting resource scope for user: ${user.sub}`);
+                    // this.logger.log(`Setting resource scope for user: ${user.sub}`);
                     try {
                         // Determine effective scope
-                        const roleScope = this.determineEffectiveScope(user.roles || []);
-                        this.logger.debug(`Determined effective scope: ${roleScope.scopeType}`);
+                        const roleScope = utility_helper_1.UtilityHelper.determineEffectiveScope(user.roles || []);
+                        this.logger.debug(`Determined effective scope: ${roleScope.scope}`);
                         // Store scope information with correct property names
                         const resourceScope = {
-                            type: roleScope.scopeType,
+                            roleName: roleScope.name,
+                            type: (roleScope === null || roleScope === void 0 ? void 0 : roleScope.scope) || role_scope_type_enum_1.RoleScopeType.OWNED,
                             userId: user.sub,
                             departments: ((_a = user.roles) === null || _a === void 0 ? void 0 : _a.flatMap(role => role.departmentId).filter((id) => id !== undefined && id !== null)) || [],
                             branches: ((_b = user.roles) === null || _b === void 0 ? void 0 : _b.flatMap(role => role.branchId).filter((id) => id !== undefined && id !== null)) || [],
@@ -5168,48 +5200,6 @@ let ScopeGuard = ScopeGuard_1 = class ScopeGuard {
                 return `You don't have permission to manage this resource`;
         }
     }
-    determineEffectiveScope(roles) {
-        try {
-            if (!roles.length) {
-                this.logger.debug('No roles provided, using OWNED scope by default');
-                return { scopeType: role_scope_type_enum_1.RoleScopeType.OWNED };
-            }
-            let effectiveScopeType = role_scope_type_enum_1.RoleScopeType.OWNED;
-            for (const role of roles) {
-                const roleScope = role.scope || role_scope_type_enum_1.RoleScopeType.OWNED;
-                if (roleScope === role_scope_type_enum_1.RoleScopeType.GLOBAL) {
-                    this.logger.debug('Found GLOBAL role - assigning highest scope privilege');
-                    return { scopeType: role_scope_type_enum_1.RoleScopeType.GLOBAL };
-                }
-                if (this.isBroaderScope(roleScope, effectiveScopeType)) {
-                    this.logger.debug(`Upgrading scope from ${effectiveScopeType} to broader scope ${roleScope}`);
-                    effectiveScopeType = roleScope;
-                }
-            }
-            this.logger.debug(`Final determined scope: ${effectiveScopeType}`);
-            return { scopeType: effectiveScopeType };
-        }
-        catch (error) {
-            this.logger.error(`Error determining effective scope: ${error.message}`, error.stack);
-            throw new common_1.InternalServerErrorException('Failed to determine user access scope');
-        }
-    }
-    isBroaderScope(scopeA, scopeB) {
-        try {
-            const scopePriority = {
-                [role_scope_type_enum_1.RoleScopeType.GLOBAL]: 4,
-                [role_scope_type_enum_1.RoleScopeType.ORGANIZATION]: 3,
-                [role_scope_type_enum_1.RoleScopeType.BRANCH]: 2,
-                [role_scope_type_enum_1.RoleScopeType.DEPARTMENT]: 1,
-                [role_scope_type_enum_1.RoleScopeType.OWNED]: 0
-            };
-            return scopePriority[scopeA] > scopePriority[scopeB];
-        }
-        catch (error) {
-            this.logger.error(`Error comparing scopes: ${error.message}`, error.stack);
-            return false;
-        }
-    }
 };
 exports.ScopeGuard = ScopeGuard;
 exports.ScopeGuard = ScopeGuard = ScopeGuard_1 = __decorate([
@@ -5224,12 +5214,13 @@ exports.ScopeGuard = ScopeGuard = ScopeGuard_1 = __decorate([
 /*!**********************************************!*\
   !*** ./src/common/helpers/utility.helper.ts ***!
   \**********************************************/
-/***/ ((__unused_webpack_module, exports) => {
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.UtilityHelper = void 0;
+const role_scope_type_enum_1 = __webpack_require__(/*! ../enums/role-scope-type.enum */ "./src/common/enums/role-scope-type.enum.ts");
 class UtilityHelper {
     static isEmpty(value) {
         return value === null || value === undefined || value === '';
@@ -5258,6 +5249,32 @@ class UtilityHelper {
         return Object.entries(criteria)
             .map(([key, value]) => `${key}: ${value}`)
             .join(', ');
+    }
+    static determineEffectiveScope(roles) {
+        if (!roles.length) {
+            return { scope: role_scope_type_enum_1.RoleScopeType.OWNED, name: 'Staff' };
+        }
+        let effectiveScopeType = role_scope_type_enum_1.RoleScopeType.OWNED;
+        for (const role of roles) {
+            const roleScope = role.scope || role_scope_type_enum_1.RoleScopeType.OWNED;
+            if (roleScope === role_scope_type_enum_1.RoleScopeType.GLOBAL) {
+                return role;
+            }
+            if (this.isBroaderScope(roleScope, effectiveScopeType)) {
+                effectiveScopeType = roleScope;
+            }
+        }
+        return roles[0];
+    }
+    static isBroaderScope(scopeA, scopeB) {
+        const scopePriority = {
+            [role_scope_type_enum_1.RoleScopeType.GLOBAL]: 4,
+            [role_scope_type_enum_1.RoleScopeType.ORGANIZATION]: 3,
+            [role_scope_type_enum_1.RoleScopeType.BRANCH]: 2,
+            [role_scope_type_enum_1.RoleScopeType.DEPARTMENT]: 1,
+            [role_scope_type_enum_1.RoleScopeType.OWNED]: 0
+        };
+        return scopePriority[scopeA] > scopePriority[scopeB];
     }
     /**
      * Ensures a value is a Date object
@@ -6386,7 +6403,7 @@ let BaseService = class BaseService {
      * );
      */
     async findOneBy(criteria, options) {
-        const findOptions = Object.assign({ where: Object.assign(Object.assign({}, (!(options === null || options === void 0 ? void 0 : options.withDeleted) && 'isDeleted' in criteria ? {} : { isDeleted: false })), criteria) }, options);
+        const findOptions = Object.assign({ where: Object.assign(Object.assign({}, ((options === null || options === void 0 ? void 0 : options.withDeleted) || 'isDeleted' in criteria ? {} : { isDeleted: false })), criteria) }, options);
         return await this.repository.findOne(findOptions);
     }
     async findOneByOrFail(criteria, options) {
@@ -6396,19 +6413,92 @@ let BaseService = class BaseService {
         }
         return entity;
     }
+    async validateBefore(dto) {
+        // Default implementation does nothing
+        // Child classes can override this to implement specific validations
+    }
+    // Enhanced reference validation with additional validation capabilities
+    async validateReferences(dto, referenceFields) {
+        // Create a copy to avoid mutating the input
+        const result = Object.assign({}, dto);
+        for (const config of referenceFields) {
+            // Extract values from config with defaults
+            const { field, service, required = false, unique, customValidator, transform = (e) => e } = config;
+            // Get the reference from the DTO (handles nested paths like 'request.id')
+            const fieldParts = field.split('.');
+            let reference = dto;
+            for (const part of fieldParts) {
+                reference = reference === null || reference === void 0 ? void 0 : reference[part];
+                if (reference === undefined)
+                    break;
+            }
+            // Check if reference is required but missing
+            if (required && (!reference || !reference.id)) {
+                throw new common_1.BadRequestException(`${field} reference is required`);
+            }
+            // Skip validation if no reference or no ID
+            if (!reference || !reference.id)
+                continue;
+            // Find the referenced entity
+            const referenceId = reference.id;
+            const entity = await service.findOneByOrFail({ id: referenceId });
+            reference = entity;
+            // Check uniqueness constraints if specified
+            if (unique) {
+                const { field: uniqueField, message } = unique;
+                // Get value to check uniqueness against
+                const checkValue = entity[uniqueField];
+                if (checkValue !== undefined) {
+                    // Query for existing entities with this reference
+                    const existing = await this.repository.findOne({
+                        where: { [uniqueField]: checkValue }
+                    });
+                    if (existing) {
+                        throw new common_1.ConflictException(message || `A record with this ${uniqueField} ${checkValue} already exists`);
+                    }
+                }
+            }
+            // Run custom validator if provided
+            if (customValidator) {
+                await Promise.resolve(customValidator(entity, dto));
+            }
+            // Set the field value in the result object (with optional transformation)
+            // This handles nested paths too
+            if (fieldParts.length === 1) {
+                // Simple field assignment
+                result[field] = transform(entity);
+            }
+            else {
+                // Nested field assignment
+                let current = result;
+                for (let i = 0; i < fieldParts.length - 1; i++) {
+                    const part = fieldParts[i];
+                    if (!current[part])
+                        current[part] = {};
+                    current = current[part];
+                }
+                // Set the innermost field
+                const lastPart = fieldParts[fieldParts.length - 1];
+                current[lastPart] = transform(entity);
+            }
+        }
+        return result;
+    }
     // DONE
     async create(createDto, createdBy) {
+        await this.validateBefore(createDto);
         const entity = this.repository.create(Object.assign(Object.assign({}, createDto), { createdBy }));
         try {
             return await this.repository.save(entity);
         }
         catch (error) {
-            console.log('Full error object:', JSON.stringify(error, null, 2));
-            throw error;
+            // console.log('Full error object:', JSON.stringify(error, null, 2));
+            throw new common_1.ConflictException(error.message);
         }
     }
     // DONE
     async update(id, updateDto, updatedBy) {
+        await this.validateBefore(updateDto);
         const entity = await this.findOneByOrFail({ id });
         const updatedEntity = await this.repository.save(Object.assign(Object.assign(Object.assign({}, entity), updateDto), { updatedBy }));
         return updatedEntity;
@@ -9092,6 +9182,13 @@ const typeorm_1 = __webpack_require__(/*! typeorm */ "typeorm");
 const address_entity_1 = __webpack_require__(/*! ../../../addresses/entities/address.entity */ "./src/modules/addresses/entities/address.entity.ts");
 const user_entity_1 = __webpack_require__(/*! ../../users/entities/user.entity */ "./src/modules/account-management/users/entities/user.entity.ts");
 let Profile = class Profile extends base_entity_1.BaseEntity {
+    generateFullName() {
+        this.fullName = [
+            this.firstName,
+            this.middleName || '',
+            this.lastName
+        ].filter(Boolean).join(' ');
+    }
 };
 exports.Profile = Profile;
 __decorate([
@@ -9161,6 +9258,13 @@ __decorate([
     }),
     __metadata("design:type", typeof (_c = typeof address_entity_1.Address !== "undefined" && address_entity_1.Address) === "function" ? _c : Object)
 ], Profile.prototype, "address", void 0);
+__decorate([
+    (0, typeorm_1.BeforeInsert)(),
+    (0, typeorm_1.BeforeUpdate)(),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", void 0)
+], Profile.prototype, "generateFullName", null);
 exports.Profile = Profile = __decorate([
     (0, typeorm_1.Entity)('profiles')
 ], Profile);
@@ -10458,9 +10562,9 @@ const attendances_controller_1 = __webpack_require__(/*! ./attendances.controlle
 const attendances_service_1 = __webpack_require__(/*! ./attendances.service */ "./src/modules/attendance-management/attendances.service.ts");
 const attendance_entity_1 = __webpack_require__(/*! ./entities/attendance.entity */ "./src/modules/attendance-management/entities/attendance.entity.ts");
 const final_work_hours_module_1 = __webpack_require__(/*! ./final-work-hours/final-work-hours.module */ "./src/modules/attendance-management/final-work-hours/final-work-hours.module.ts");
-const attendance_data_seeder_service_1 = __webpack_require__(/*! ./final-work-hours/services/attendance-data-seeder.service */ "./src/modules/attendance-management/final-work-hours/services/attendance-data-seeder.service.ts");
 const work_hour_calculation_service_1 = __webpack_require__(/*! ./final-work-hours/services/work-hour-calculation.service */ "./src/modules/attendance-management/final-work-hours/services/work-hour-calculation.service.ts");
 const attendance_listener_1 = __webpack_require__(/*! ./listeners/attendance.listener */ "./src/modules/attendance-management/listeners/attendance.listener.ts");
+const attendance_data_seeder_service_1 = __webpack_require__(/*! ./services/attendance-data-seeder.service */ "./src/modules/attendance-management/services/attendance-data-seeder.service.ts");
 const work_time_requests_module_1 = __webpack_require__(/*! ./work-time-requests/work-time-requests.module */ "./src/modules/attendance-management/work-time-requests/work-time-requests.module.ts");
 const work_time_responses_module_1 = __webpack_require__(/*! ./work-time-requests/work-time-responses/work-time-responses.module */ "./src/modules/attendance-management/work-time-requests/work-time-responses/work-time-responses.module.ts");
 let AttendanceManagementModule = class AttendanceManagementModule {
@@ -10545,6 +10649,12 @@ class AttendancePunchesController extends (0, create_controller_factory_1.create
     }
     async softDelete(id, deletedBy) {
         return await super.softDelete(id, deletedBy);
+    }
+    async findById(id, relations, select) {
+        return await super.findById(id, relations, select);
+    }
+    async findOne(fieldsString, relations, select) {
+        return await super.findOne(fieldsString, relations, select);
     }
 }
 exports.AttendancePunchesController = AttendancePunchesController;
@@ -10831,15 +10941,21 @@ const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
 const attendances_service_1 = __webpack_require__(/*! ./attendances.service */ "./src/modules/attendance-management/attendances.service.ts");
 const attendance_dto_1 = __webpack_require__(/*! ./dtos/attendance.dto */ "./src/modules/attendance-management/dtos/attendance.dto.ts");
 const attendance_entity_1 = __webpack_require__(/*! ./entities/attendance.entity */ "./src/modules/attendance-management/entities/attendance.entity.ts");
-class AttendancesController extends (0, create_controller_factory_1.createController)(attendance_entity_1.Attendance, attendances_service_1.AttendancesService, attendance_dto_1.GetAttendanceDto, undefined, attendance_dto_1.UpdateAttendanceDto) {
+class AttendancesController extends (0, create_controller_factory_1.createController)(attendance_entity_1.Attendance, attendances_service_1.AttendancesService, attendance_dto_1.GetAttendanceDto, undefined, undefined) {
     async create(entityDto, createdById) {
         return await super.create(entityDto, createdById);
     }
     async delete(id) {
         return await super.delete(id);
     }
+    async update(id, entityDto, updatedById) {
+        return await super.update(id, entityDto, updatedById);
+    }
     async deleteMany(ids, hardDelete) {
         await super.deleteMany(ids, hardDelete);
+    }
+    async softDelete(id, deletedBy) {
+        return await super.softDelete(id, deletedBy);
     }
     async processAttendanceRecords(userId) {
         try {
@@ -10853,7 +10969,7 @@ class AttendancesController extends (0, create_controller_factory_1.createContro
         catch (error) {
             return {
                 message: 'An error occurred while processing attendance records: ' + error.message,
-                statusCode: common_1.HttpStatus.INTERNAL_SERVER_ERROR
+                statusCode: error.status || common_1.HttpStatus.INTERNAL_SERVER_ERROR
             };
         }
     }
@@ -10864,7 +10980,7 @@ __decorate([
     (0, authorize_decorator_1.Authorize)({ endpointType: action_enum_1.Action.MANAGE }),
     (0, swagger_1.ApiOperation)({
         summary: 'Manually process attendance records',
-        description: 'Triggers processing of attendance records for undertime, overtime, missing checkouts, rest days, and absences'
+        description: 'Triggers processing of attendance records for undertime, overtime, missing checkins/checkouts, and absences. This also calculates final work hours per day.'
     }),
     (0, swagger_1.ApiResponse)({
         status: common_1.HttpStatus.OK,
@@ -10873,11 +10989,13 @@ __decorate([
     }),
     (0, swagger_1.ApiResponse)({
         status: common_1.HttpStatus.UNAUTHORIZED,
-        description: 'User is not authorized to process attendance records'
+        description: 'User is not authorized to process attendance records',
+        type: generalresponse_dto_1.GeneralResponseDto
     }),
     (0, swagger_1.ApiResponse)({
         status: common_1.HttpStatus.INTERNAL_SERVER_ERROR,
-        description: 'An error occurred while processing attendance records'
+        description: 'An error occurred while processing attendance records',
+        type: generalresponse_dto_1.GeneralResponseDto
     }),
     __param(0, (0, current_user_decorator_1.CurrentUser)('sub')),
     __metadata("design:type", Function),
@@ -10953,15 +11071,17 @@ let AttendancesService = class AttendancesService extends base_service_1.BaseSer
     }
     // Run at midnight
     async processAttendanceRecords(processedBy) {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
         // Get all attendance records for the day that has no final work hours yet
         const attendances = await this.attendancesRepository.find({
-            // where: {
-            //     isProcessed: false,
-            //     // schedule: {
-            //     //     endTime: LessThan(format(new Date(), 'HH:mm:ss')) // Ensure the schedule end time has already passed
-            //     // }
-            // },
-            relations: { employee: { user: true }, schedule: true },
+            where: {
+                isProcessed: false,
+                schedule: {
+                    date: (0, typeorm_2.LessThan)(today),
+                }
+            },
+            relations: { cutoff: true, employee: { user: true }, schedule: true },
         });
         if (attendances.length === 0) {
             this.logger.log(`No attendance records to process`);
@@ -10979,11 +11099,13 @@ let AttendancesService = class AttendancesService extends base_service_1.BaseSer
         await this.handleRestDayEmployees(attendances);
         // Process employees that has no attendance record or absent
         await this.handleAbsentEmployees();
-        // // mark attendance records as processed
-        // for (const attendance of attendances) {
-        //     attendance.isProcessed = true;
-        // }
-        // await this.attendancesRepository.save(attendances);
+        // mark attendance records as processed
+        for (const attendance of attendances) {
+            attendance.isProcessed = true;
+            attendance.processedBy = processedBy;
+            attendance.processedAt = new Date();
+        }
+        await this.attendancesRepository.save(attendances);
         // log attendance processing
         this.logger.log(`Attendance records processed successfully`);
         // Emit event for attendance processing
@@ -11023,6 +11145,7 @@ let AttendancesService = class AttendancesService extends base_service_1.BaseSer
                         type: attendance_status_enum_1.AttendanceStatus.UNDER_TIME,
                         duration: undertimeMinutes,
                         status: request_status_enum_1.RequestStatus.PENDING,
+                        cutoff: attendance.cutoff,
                         dayType: attendance.dayType,
                         createdBy: attendance.employee.id,
                         employee: attendance.employee
@@ -11076,6 +11199,7 @@ let AttendancesService = class AttendancesService extends base_service_1.BaseSer
                         duration: overtimeMinutes,
                         status: request_status_enum_1.RequestStatus.PENDING,
                         dayType: attendance.dayType,
+                        cutoff: attendance.cutoff,
                         createdBy: attendance.employee.id,
                         employee: attendance.employee
                     });
@@ -11126,6 +11250,7 @@ let AttendancesService = class AttendancesService extends base_service_1.BaseSer
                         attendance,
                         type: attendance_status_enum_1.AttendanceStatus.NO_CHECKED_OUT,
                         status: request_status_enum_1.RequestStatus.PENDING,
+                        cutoff: attendance.cutoff,
                         dayType: attendance.dayType,
                         createdBy: attendance.employee.id,
                         employee: { id: attendance.employee.id },
@@ -11236,25 +11361,29 @@ let AttendancesService = class AttendancesService extends base_service_1.BaseSer
     }
     async handleAbsentEmployees() {
         var _a;
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
         // Find all schedules for the given date that should have attendance
-        let absentSchedules = await this.schedulesService.getRepository().find({
+        let previousSchedules = await this.schedulesService.getRepository().find({
             where: {
-                restDay: false,
-                attendance: true,
-                // date: LessThan(new Date()),
-                // endTime: LessThan(format(new Date(), 'HH:mm:ss')), // Ensure the schedule end time has already passed
+                date: (0, typeorm_2.LessThan)(today),
             },
-            relations: { employee: { user: true }, attendance: true }
+            relations: { cutoff: true, employee: { user: true }, attendance: true }
         });
-        // for each absent schedules get the attendances
-        absentSchedules = await Promise.all(absentSchedules.map(async (schedule) => {
+        // First resolve all attendance checks with Promise.all
+        const schedulesWithAbsenceInfo = await Promise.all(previousSchedules.map(async (schedule) => {
             var _a;
             const attendance = await this.attendancesRepository.findOne({
                 where: { schedule: { id: schedule.id } },
                 relations: { schedule: true }
             });
-            return attendance ? (((_a = attendance.statuses) === null || _a === void 0 ? void 0 : _a.includes(attendance_status_enum_1.AttendanceStatus.ABSENT)) === true ? schedule : null) : schedule;
-        })).then((schedules) => schedules.filter((schedule) => schedule !== null));
+            const isAbsent = attendance ? (_a = attendance.statuses) === null || _a === void 0 ? void 0 : _a.includes(attendance_status_enum_1.AttendanceStatus.ABSENT) : true;
+            return { schedule, isAbsent };
+        }));
+        // Then filter based on the resolved absence status
+        const absentSchedules = schedulesWithAbsenceInfo
+            .filter(item => item.isAbsent)
+            .map(item => item.schedule);
         if (absentSchedules.length === 0) {
             this.logger.log(`No schedules found for absence processing`);
             return;
@@ -11286,11 +11415,23 @@ let AttendancesService = class AttendancesService extends base_service_1.BaseSer
                 }
                 // Create new attendance record with absent status
                 let attendance = await this.attendancesRepository.findOne({ where: { schedule: { id: schedule.id } } });
-                let newAttendance = false;
                 if (!attendance) {
                     this.logger.log(`No attendance record found for employee ${schedule.employee.user.email} on ${(0, date_fns_1.format)(schedule.date, 'MMMM dd, yyyy')}`);
                     attendance = new attendance_entity_1.Attendance({});
-                    newAttendance = true;
+                }
+                attendance.employee = schedule.employee;
+                attendance.schedule = schedule;
+                attendance.dayType = dayType;
+                attendance.isProcessed = true;
+                attendance.cutoff = schedule.cutoff;
+                attendance.statuses = [attendance_status_enum_1.AttendanceStatus.ABSENT];
+                const savedAttendance = await this.attendancesRepository.save(attendance);
+                // Check if there is already worktime request for absence
+                const existingRequest = await this.workTimeRequestsService.findOneBy({
+                    attendance: new attendance_entity_1.Attendance({ id: savedAttendance.id }),
+                    type: attendance_status_enum_1.AttendanceStatus.ABSENT,
+                }, { relations: { attendance: true } });
+                if (!existingRequest) {
                     // Notify the employee about their recorded absence
                     await this.notificationsService.create({
                         user: { id: schedule.employee.user.id },
@@ -11299,13 +11440,6 @@ let AttendancesService = class AttendancesService extends base_service_1.BaseSer
                         message: `You were marked absent for ${(0, date_fns_1.format)(schedule.date, 'MMMM dd, yyyy')}`,
                         type: notification_type_enum_1.NotificationType.DANGER
                     });
-                }
-                attendance.employee = schedule.employee;
-                attendance.schedule = schedule;
-                attendance.dayType = dayType;
-                attendance.statuses = [attendance_status_enum_1.AttendanceStatus.ABSENT];
-                const savedAttendance = await this.attendancesRepository.save(attendance);
-                if (newAttendance) {
                     this.logger.log(`New attendance record created for employee ${schedule.employee.user.email} on ${(0, date_fns_1.format)(schedule.date, 'MMMM dd, yyyy')}`);
                     // Create work time request for the absence
                     const workTimeRequest = new work_time_request_entity_1.WorkTimeRequest({});
@@ -11313,6 +11447,7 @@ let AttendancesService = class AttendancesService extends base_service_1.BaseSer
                     workTimeRequest.attendance = savedAttendance;
                     workTimeRequest.type = attendance_status_enum_1.AttendanceStatus.ABSENT;
                     workTimeRequest.status = request_status_enum_1.RequestStatus.PENDING;
+                    workTimeRequest.cutoff = schedule.cutoff;
                     workTimeRequest.dayType = dayType;
                     workTimeRequest.createdBy = schedule.employee.id;
                     await this.workTimeRequestsService.save(workTimeRequest);
@@ -11453,7 +11588,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
-var _a, _b, _c, _d, _e, _f, _g;
+var _a, _b, _c, _d, _e, _f, _g, _h;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Attendance = void 0;
 const base_entity_1 = __webpack_require__(/*! @/database/entities/base.entity */ "./src/database/entities/base.entity.ts");
@@ -11492,18 +11627,26 @@ __decorate([
     __metadata("design:type", Boolean)
 ], Attendance.prototype, "isProcessed", void 0);
 __decorate([
+    (0, typeorm_1.Column)({ nullable: true }),
+    __metadata("design:type", String)
+], Attendance.prototype, "processedBy", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'timestamp', nullable: true }),
+    __metadata("design:type", typeof (_d = typeof Date !== "undefined" && Date) === "function" ? _d : Object)
+], Attendance.prototype, "processedAt", void 0);
+__decorate([
     (0, typeorm_1.Column)({ type: 'enum', enum: final_work_hour_entity_1.DayType }),
-    __metadata("design:type", typeof (_d = typeof final_work_hour_entity_1.DayType !== "undefined" && final_work_hour_entity_1.DayType) === "function" ? _d : Object)
+    __metadata("design:type", typeof (_e = typeof final_work_hour_entity_1.DayType !== "undefined" && final_work_hour_entity_1.DayType) === "function" ? _e : Object)
 ], Attendance.prototype, "dayType", void 0);
 __decorate([
     (0, typeorm_1.OneToOne)(() => schedule_entity_1.Schedule, (schedule) => schedule.attendance, { eager: true }),
     (0, typeorm_1.JoinColumn)({ name: 'scheduleId' }),
-    __metadata("design:type", typeof (_e = typeof schedule_entity_1.Schedule !== "undefined" && schedule_entity_1.Schedule) === "function" ? _e : Object)
+    __metadata("design:type", typeof (_f = typeof schedule_entity_1.Schedule !== "undefined" && schedule_entity_1.Schedule) === "function" ? _f : Object)
 ], Attendance.prototype, "schedule", void 0);
 __decorate([
     (0, typeorm_1.ManyToOne)(() => cutoff_entity_1.Cutoff, (cutoff) => cutoff.attendances),
     (0, typeorm_1.JoinColumn)({ name: 'cutoffId' }),
-    __metadata("design:type", typeof (_f = typeof cutoff_entity_1.Cutoff !== "undefined" && cutoff_entity_1.Cutoff) === "function" ? _f : Object)
+    __metadata("design:type", typeof (_g = typeof cutoff_entity_1.Cutoff !== "undefined" && cutoff_entity_1.Cutoff) === "function" ? _g : Object)
 ], Attendance.prototype, "cutoff", void 0);
 __decorate([
     (0, typeorm_1.OneToMany)(() => attendance_punch_entity_1.AttendancePunch, (attendancePunches) => attendancePunches.attendance, { cascade: true }),
@@ -11515,7 +11658,7 @@ __decorate([
 ], Attendance.prototype, "workTimeRequests", void 0);
 __decorate([
     (0, typeorm_1.OneToOne)(() => final_work_hour_entity_1.FinalWorkHour, (finalWorkHour) => finalWorkHour.attendance, { nullable: true }),
-    __metadata("design:type", typeof (_g = typeof final_work_hour_entity_1.FinalWorkHour !== "undefined" && final_work_hour_entity_1.FinalWorkHour) === "function" ? _g : Object)
+    __metadata("design:type", typeof (_h = typeof final_work_hour_entity_1.FinalWorkHour !== "undefined" && final_work_hour_entity_1.FinalWorkHour) === "function" ? _h : Object)
 ], Attendance.prototype, "finalWorkHour", void 0);
 exports.Attendance = Attendance = __decorate([
     (0, typeorm_1.Entity)('attendances')
@@ -11541,26 +11684,226 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
+var _a, _b, _c, _d, _e, _f, _g, _h;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.GetFinalWorkHourDto = exports.UpdateFinalWorkHourDto = exports.FinalWorkHourDto = void 0;
 const base_dto_1 = __webpack_require__(/*! @/common/dtos/base.dto */ "./src/common/dtos/base.dto.ts");
+const reference_dto_1 = __webpack_require__(/*! @/common/dtos/reference.dto */ "./src/common/dtos/reference.dto.ts");
 const create_get_dto_factory_1 = __webpack_require__(/*! @/common/factories/create-get-dto.factory */ "./src/common/factories/create-get-dto.factory.ts");
 const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
+const class_transformer_1 = __webpack_require__(/*! class-transformer */ "class-transformer");
 const class_validator_1 = __webpack_require__(/*! class-validator */ "class-validator");
-const swagger_2 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
-class FinalWorkHourDto extends (0, swagger_2.PartialType)(base_dto_1.BaseDto) {
+const final_work_hour_entity_1 = __webpack_require__(/*! ../entities/final-work-hour.entity */ "./src/modules/attendance-management/final-work-hours/entities/final-work-hour.entity.ts");
+class FinalWorkHourDto extends (0, swagger_1.PartialType)(base_dto_1.BaseDto) {
 }
 exports.FinalWorkHourDto = FinalWorkHourDto;
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Name of the final-work-hour' }),
+    (0, swagger_1.ApiProperty)({ type: () => reference_dto_1.ReferenceDto, description: 'Employee reference' }),
+    (0, class_validator_1.ValidateNested)(),
     (0, class_validator_1.IsNotEmpty)(),
+    (0, class_transformer_1.Type)(() => reference_dto_1.ReferenceDto),
+    __metadata("design:type", typeof (_a = typeof reference_dto_1.ReferenceDto !== "undefined" && reference_dto_1.ReferenceDto) === "function" ? _a : Object)
+], FinalWorkHourDto.prototype, "employee", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ type: () => reference_dto_1.ReferenceDto, description: 'Attendance reference' }),
+    (0, class_validator_1.ValidateNested)(),
+    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_transformer_1.Type)(() => reference_dto_1.ReferenceDto),
+    __metadata("design:type", typeof (_b = typeof reference_dto_1.ReferenceDto !== "undefined" && reference_dto_1.ReferenceDto) === "function" ? _b : Object)
+], FinalWorkHourDto.prototype, "attendance", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ type: () => reference_dto_1.ReferenceDto, description: 'Cutoff reference' }),
+    (0, class_validator_1.ValidateNested)(),
+    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_transformer_1.Type)(() => reference_dto_1.ReferenceDto),
+    __metadata("design:type", typeof (_c = typeof reference_dto_1.ReferenceDto !== "undefined" && reference_dto_1.ReferenceDto) === "function" ? _c : Object)
+], FinalWorkHourDto.prototype, "cutoff", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ description: 'Time in', type: Date }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsDate)(),
+    (0, class_transformer_1.Type)(() => Date),
+    __metadata("design:type", typeof (_d = typeof Date !== "undefined" && Date) === "function" ? _d : Object)
+], FinalWorkHourDto.prototype, "timeIn", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ description: 'Time out', type: Date }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsDate)(),
+    (0, class_transformer_1.Type)(() => Date),
+    __metadata("design:type", typeof (_e = typeof Date !== "undefined" && Date) === "function" ? _e : Object)
+], FinalWorkHourDto.prototype, "timeOut", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ description: 'Overtime out', type: Date }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsDate)(),
+    (0, class_transformer_1.Type)(() => Date),
+    __metadata("design:type", typeof (_f = typeof Date !== "undefined" && Date) === "function" ? _f : Object)
+], FinalWorkHourDto.prototype, "overTimeOut", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'No time in hours', example: 0.00 }),
+    (0, class_validator_1.IsDecimal)({ decimal_digits: '2' }),
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.IsNotEmpty)(),
+    __metadata("design:type", Number)
+], FinalWorkHourDto.prototype, "noTimeInHours", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'No time out hours', example: 0.00 }),
+    (0, class_validator_1.IsDecimal)({ decimal_digits: '2' }),
+    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsNumber)(),
+    __metadata("design:type", Number)
+], FinalWorkHourDto.prototype, "noTimeOutHours", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Absent hours', example: 0.00 }),
+    (0, class_validator_1.IsDecimal)({ decimal_digits: '2' }),
+    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsNumber)(),
+    __metadata("design:type", Number)
+], FinalWorkHourDto.prototype, "absentHours", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Tardiness hours', example: 0.00 }),
+    (0, class_validator_1.IsDecimal)({ decimal_digits: '2' }),
+    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsNumber)(),
+    __metadata("design:type", Number)
+], FinalWorkHourDto.prototype, "tardinessHours", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Undertime hours', example: 0.00 }),
+    (0, class_validator_1.IsDecimal)({ decimal_digits: '2' }),
+    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsNumber)(),
+    __metadata("design:type", Number)
+], FinalWorkHourDto.prototype, "undertimeHours", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Regular day hours', example: 8.00 }),
+    (0, class_validator_1.IsDecimal)({ decimal_digits: '2' }),
+    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsNumber)(),
+    __metadata("design:type", Number)
+], FinalWorkHourDto.prototype, "regularDayHours", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Rest day hours', example: 0.00 }),
+    (0, class_validator_1.IsDecimal)({ decimal_digits: '2' }),
+    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsNumber)(),
+    __metadata("design:type", Number)
+], FinalWorkHourDto.prototype, "restDayHours", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Special holiday hours', example: 0.00 }),
+    (0, class_validator_1.IsDecimal)({ decimal_digits: '2' }),
+    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsNumber)(),
+    __metadata("design:type", Number)
+], FinalWorkHourDto.prototype, "specialHolidayHours", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Regular holiday hours', example: 0.00 }),
+    (0, class_validator_1.IsDecimal)({ decimal_digits: '2' }),
+    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsNumber)(),
+    __metadata("design:type", Number)
+], FinalWorkHourDto.prototype, "regularHolidayHours", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Overtime regular day hours', example: 0.00 }),
+    (0, class_validator_1.IsDecimal)({ decimal_digits: '2' }),
+    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsNumber)(),
+    __metadata("design:type", Number)
+], FinalWorkHourDto.prototype, "overtimeRegularDayHours", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Overtime rest day hours', example: 0.00 }),
+    (0, class_validator_1.IsDecimal)({ decimal_digits: '2' }),
+    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsNumber)(),
+    __metadata("design:type", Number)
+], FinalWorkHourDto.prototype, "overtimeRestDayHours", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Overtime special holiday hours', example: 0.00 }),
+    (0, class_validator_1.IsDecimal)({ decimal_digits: '2' }),
+    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsNumber)(),
+    __metadata("design:type", Number)
+], FinalWorkHourDto.prototype, "overtimeSpecialHolidayHours", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Overtime regular holiday hours', example: 0.00 }),
+    (0, class_validator_1.IsDecimal)({ decimal_digits: '2' }),
+    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsNumber)(),
+    __metadata("design:type", Number)
+], FinalWorkHourDto.prototype, "overtimeRegularHolidayHours", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Night differential hours', example: 0.00 }),
+    (0, class_validator_1.IsDecimal)({ decimal_digits: '2' }),
+    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsNumber)(),
+    __metadata("design:type", Number)
+], FinalWorkHourDto.prototype, "nightDifferentialHours", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Day type',
+        enum: final_work_hour_entity_1.DayType,
+        example: final_work_hour_entity_1.DayType.REGULAR_DAY
+    }),
+    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsEnum)(final_work_hour_entity_1.DayType),
+    __metadata("design:type", typeof (_g = typeof final_work_hour_entity_1.DayType !== "undefined" && final_work_hour_entity_1.DayType) === "function" ? _g : Object)
+], FinalWorkHourDto.prototype, "dayType", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Total regular hours', example: 8.00 }),
+    (0, class_validator_1.IsDecimal)({ decimal_digits: '2' }),
+    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsNumber)(),
+    __metadata("design:type", Number)
+], FinalWorkHourDto.prototype, "totalRegularHours", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Total overtime hours', example: 1.00 }),
+    (0, class_validator_1.IsDecimal)({ decimal_digits: '2' }),
+    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsNumber)(),
+    __metadata("design:type", Number)
+], FinalWorkHourDto.prototype, "totalOvertimeHours", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Total hours', example: 9.00 }),
+    (0, class_validator_1.IsDecimal)({ decimal_digits: '2' }),
+    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsNumber)(),
+    __metadata("design:type", Number)
+], FinalWorkHourDto.prototype, "totalHours", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ description: 'Is approved', example: false }),
+    (0, class_validator_1.IsBoolean)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Boolean)
+], FinalWorkHourDto.prototype, "isApproved", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Batch ID' }),
+    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsUUID)('4'),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
-], FinalWorkHourDto.prototype, "name", void 0);
-class UpdateFinalWorkHourDto extends (0, swagger_2.PartialType)(FinalWorkHourDto) {
+], FinalWorkHourDto.prototype, "batchId", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ description: 'Is processed', example: true }),
+    (0, class_validator_1.IsBoolean)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Boolean)
+], FinalWorkHourDto.prototype, "isProcessed", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Work date', type: Date }),
+    (0, class_validator_1.IsDate)(),
+    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_transformer_1.Type)(() => Date),
+    __metadata("design:type", typeof (_h = typeof Date !== "undefined" && Date) === "function" ? _h : Object)
+], FinalWorkHourDto.prototype, "workDate", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ description: 'Notes' }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], FinalWorkHourDto.prototype, "notes", void 0);
+class UpdateFinalWorkHourDto extends (0, swagger_1.PartialType)(FinalWorkHourDto) {
 }
 exports.UpdateFinalWorkHourDto = UpdateFinalWorkHourDto;
-class GetFinalWorkHourDto extends (0, create_get_dto_factory_1.createGetDto)(FinalWorkHourDto) {
+class GetFinalWorkHourDto extends (0, create_get_dto_factory_1.createGetDto)(UpdateFinalWorkHourDto, 'final work hour') {
 }
 exports.GetFinalWorkHourDto = GetFinalWorkHourDto;
 
@@ -11584,7 +11927,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
-var _a, _b, _c, _d, _e, _f, _g;
+var _a, _b, _c, _d, _e, _f, _g, _h, _j;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.FinalWorkHour = exports.DayType = void 0;
 const base_entity_1 = __webpack_require__(/*! @/database/entities/base.entity */ "./src/database/entities/base.entity.ts");
@@ -11728,6 +12071,14 @@ __decorate([
     __metadata("design:type", Boolean)
 ], FinalWorkHour.prototype, "isApproved", void 0);
 __decorate([
+    (0, typeorm_1.Column)({ nullable: true }),
+    __metadata("design:type", String)
+], FinalWorkHour.prototype, "approvedBy", void 0);
+__decorate([
+    (0, typeorm_1.Column)('timestamp', { nullable: true }),
+    __metadata("design:type", typeof (_g = typeof Date !== "undefined" && Date) === "function" ? _g : Object)
+], FinalWorkHour.prototype, "approvedAt", void 0);
+__decorate([
     (0, typeorm_1.Column)(),
     __metadata("design:type", String)
 ], FinalWorkHour.prototype, "batchId", void 0);
@@ -11736,8 +12087,16 @@ __decorate([
     __metadata("design:type", Boolean)
 ], FinalWorkHour.prototype, "isProcessed", void 0);
 __decorate([
+    (0, typeorm_1.Column)({ nullable: true }),
+    __metadata("design:type", String)
+], FinalWorkHour.prototype, "processedBy", void 0);
+__decorate([
+    (0, typeorm_1.Column)('timestamp', { nullable: true }),
+    __metadata("design:type", typeof (_h = typeof Date !== "undefined" && Date) === "function" ? _h : Object)
+], FinalWorkHour.prototype, "processedAt", void 0);
+__decorate([
     (0, typeorm_1.Column)({ type: 'date' }),
-    __metadata("design:type", typeof (_g = typeof Date !== "undefined" && Date) === "function" ? _g : Object)
+    __metadata("design:type", typeof (_j = typeof Date !== "undefined" && Date) === "function" ? _j : Object)
 ], FinalWorkHour.prototype, "workDate", void 0);
 __decorate([
     (0, typeorm_1.Column)({ nullable: true }),
@@ -11796,6 +12155,9 @@ class FinalWorkHoursController extends (0, create_controller_factory_1.createCon
     async delete(id) {
         return await super.delete(id);
     }
+    async softDelete(id, deletedBy) {
+        return await super.softDelete(id, deletedBy);
+    }
     async recalculateByCutoffId(cutoffId, userId) {
         await this.baseService.recalculateByCutoffId(cutoffId, userId);
         return {
@@ -11806,7 +12168,7 @@ class FinalWorkHoursController extends (0, create_controller_factory_1.createCon
 }
 exports.FinalWorkHoursController = FinalWorkHoursController;
 __decorate([
-    (0, common_1.Post)('recalculate/:cutoffId'),
+    (0, common_1.Post)('recalculate/cutoff/:cutoffId'),
     (0, authorize_decorator_1.Authorize)({ endpointType: action_enum_1.Action.MANAGE }),
     (0, swagger_1.ApiOperation)({
         summary: 'Recalculate Final Work Hours',
@@ -12073,8 +12435,16 @@ let FinalWorkHoursService = class FinalWorkHoursService extends base_service_1.B
         return Math.round(totalHours * 100) / 100;
     }
     async recalculateByCutoffId(cutoffId, updatedBy) {
+        var _a;
         // Check if cutoff exists
-        await this.cutoffsService.findOneByOrFail({ id: cutoffId });
+        const cutoff = await this.cutoffsService.findOneByOrFail({ id: cutoffId }, { relations: { attendances: true } });
+        // get all processed attendances
+        const processedAttendances = (_a = cutoff.attendances) === null || _a === void 0 ? void 0 : _a.filter(attendance => {
+            return attendance.isProcessed;
+        });
+        if (!processedAttendances || processedAttendances.length === 0) {
+            throw new common_1.NotFoundException(`No processed attendances found for cutoff ID: ${cutoffId}`);
+        }
         // emit event to recalculate final work hours
         this.eventEmitter.emit(attendance_event_1.ATTENDANCE_EVENTS.RECALCULATE_FINAL_WORK_HOURS, new attendance_event_1.RecalculateFinalWorkHoursEvent(cutoffId, updatedBy));
     }
@@ -12113,346 +12483,6 @@ exports.FinalWorkHoursService = FinalWorkHoursService = __decorate([
     __param(0, (0, typeorm_1.InjectRepository)(final_work_hour_entity_1.FinalWorkHour)),
     __metadata("design:paramtypes", [typeof (_a = typeof typeorm_2.Repository !== "undefined" && typeorm_2.Repository) === "function" ? _a : Object, typeof (_b = typeof users_service_1.UsersService !== "undefined" && users_service_1.UsersService) === "function" ? _b : Object, typeof (_c = typeof event_emitter_1.EventEmitter2 !== "undefined" && event_emitter_1.EventEmitter2) === "function" ? _c : Object, typeof (_d = typeof cutoffs_service_1.CutoffsService !== "undefined" && cutoffs_service_1.CutoffsService) === "function" ? _d : Object])
 ], FinalWorkHoursService);
-
-
-/***/ }),
-
-/***/ "./src/modules/attendance-management/final-work-hours/services/attendance-data-seeder.service.ts":
-/*!*******************************************************************************************************!*\
-  !*** ./src/modules/attendance-management/final-work-hours/services/attendance-data-seeder.service.ts ***!
-  \*******************************************************************************************************/
-/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
-
-"use strict";
-
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-var __metadata = (this && this.__metadata) || function (k, v) {
-    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
-};
-var __param = (this && this.__param) || function (paramIndex, decorator) {
-    return function (target, key) { decorator(target, key, paramIndex); }
-};
-var AttendanceDataSeederService_1;
-var _a, _b, _c, _d, _e;
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.AttendanceDataSeederService = void 0;
-const attendance_status_enum_1 = __webpack_require__(/*! @/common/enums/attendance-status.enum */ "./src/common/enums/attendance-status.enum.ts");
-const holiday_type_enum_1 = __webpack_require__(/*! @/common/enums/holiday-type.enum */ "./src/common/enums/holiday-type.enum.ts");
-const punch_method_enum_1 = __webpack_require__(/*! @/common/enums/punch-method.enum */ "./src/common/enums/punch-method.enum.ts");
-const punch_type_enum_1 = __webpack_require__(/*! @/common/enums/punch-type.enum */ "./src/common/enums/punch-type.enum.ts");
-const biometric_devices_service_1 = __webpack_require__(/*! @/modules/biometrics/services/biometric-devices.service */ "./src/modules/biometrics/services/biometric-devices.service.ts");
-const schedules_service_1 = __webpack_require__(/*! @/modules/shift-management/schedules/schedules.service */ "./src/modules/shift-management/schedules/schedules.service.ts");
-const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
-const config_1 = __webpack_require__(/*! @nestjs/config */ "@nestjs/config");
-const typeorm_1 = __webpack_require__(/*! @nestjs/typeorm */ "@nestjs/typeorm");
-const date_fns_1 = __webpack_require__(/*! date-fns */ "date-fns");
-const typeorm_2 = __webpack_require__(/*! typeorm */ "typeorm");
-const attendance_punches_service_1 = __webpack_require__(/*! ../../attendance-punches/attendance-punches.service */ "./src/modules/attendance-management/attendance-punches/attendance-punches.service.ts");
-const attendance_punch_entity_1 = __webpack_require__(/*! ../../attendance-punches/entities/attendance-punch.entity */ "./src/modules/attendance-management/attendance-punches/entities/attendance-punch.entity.ts");
-const attendance_entity_1 = __webpack_require__(/*! ../../entities/attendance.entity */ "./src/modules/attendance-management/entities/attendance.entity.ts");
-const final_work_hour_entity_1 = __webpack_require__(/*! ../entities/final-work-hour.entity */ "./src/modules/attendance-management/final-work-hours/entities/final-work-hour.entity.ts");
-let AttendanceDataSeederService = AttendanceDataSeederService_1 = class AttendanceDataSeederService {
-    constructor(configService, schedulesService, biometricDevicesService, attendanceRepository, attendancePunchesService) {
-        this.configService = configService;
-        this.schedulesService = schedulesService;
-        this.biometricDevicesService = biometricDevicesService;
-        this.attendanceRepository = attendanceRepository;
-        this.attendancePunchesService = attendancePunchesService;
-        this.logger = new common_1.Logger(AttendanceDataSeederService_1.name);
-        this.EMPLOYEE_ID = 'fa985931-6d3f-4468-a1d9-f071a3cb930c';
-        this.EMPLOYEE_NUMBER = 1;
-        this.DEFAULT_DEVICE_ID = 'DEVICE001';
-        this.GRACE_PERIOD_MINUTES = 5; // Consider late after 5 minutes
-        this.OVER_TIME_THRESHOLD_MINUTES = 30; // Consider overtime if more than 30 minutes
-        this.UNDER_TIME_THRESHOLD_MINUTES = 15; // Consider under time if less than 15 minutes
-    }
-    async onModuleInit() {
-        // Only run in development mode or when explicitly enabled
-        const seedAttendance = this.configService.get('SEED_ATTENDANCE') === 'true';
-        const isDevelopment = this.configService.get('NODE_ENV') === 'development';
-        // Check if there is attendance data to seed
-        const attendanceCount = await this.attendanceRepository.count({
-            where: {
-                employee: { id: this.EMPLOYEE_ID },
-            },
-        });
-        if (attendanceCount > 0) {
-            this.logger.log('Attendance data already exists, skipping seeding');
-            return;
-        }
-        if (seedAttendance || isDevelopment) {
-            await this.seedAttendanceData();
-        }
-    }
-    async seedAttendanceData() {
-        this.logger.log('Starting to seed attendance data...');
-        try {
-            // Ensure we have a biometric device to associate with punches
-            const biometricDevice = await this.ensureBiometricDeviceExists();
-            // Get the employee's schedules
-            const schedules = await this.schedulesService.getRepository().find({
-                where: {
-                    employee: { id: this.EMPLOYEE_ID },
-                },
-                relations: {
-                    employee: true,
-                    holiday: true,
-                    shift: true,
-                    cutoff: true
-                }
-            });
-            if (schedules.length === 0) {
-                this.logger.warn('No schedules found for the target employee');
-                return;
-            }
-            this.logger.log(`Found ${schedules.length} schedules to seed attendance for`);
-            // Create test scenarios for each schedule
-            for (let i = 0; i < schedules.length; i++) {
-                const schedule = schedules[i];
-                // Vary the scenario based on index to create different test cases
-                const scenario = this.getScenarioForSchedule(schedule, i);
-                await this.createAttendanceForSchedule(schedule, scenario, biometricDevice);
-            }
-            this.logger.log('Attendance data seeding completed successfully');
-        }
-        catch (error) {
-            this.logger.error(`Failed to seed attendance data: ${error instanceof Error ? error.message : String(error)}`);
-        }
-    }
-    getScenarioForSchedule(schedule, index) {
-        // Parse the schedule date and times
-        const scheduleDate = schedule.date;
-        const startTime = schedule.startTime;
-        const endTime = schedule.endTime;
-        // Create the base datetime objects
-        const scheduleDateObj = new Date(scheduleDate);
-        const scheduleStartTime = (0, date_fns_1.parseISO)(`${(0, date_fns_1.format)(scheduleDateObj, 'yyyy-MM-dd')}T${startTime}`);
-        const scheduleEndTime = (0, date_fns_1.parseISO)(`${(0, date_fns_1.format)(scheduleDateObj, 'yyyy-MM-dd')}T${endTime}`);
-        // Select scenario based on the index (to get variety)
-        switch (index % 5) {
-            case 0:
-                // Regular attendance (on time, leave on time)
-                return {
-                    name: 'Regular Attendance',
-                    description: 'Employee arrives and leaves on time',
-                    timeIn: scheduleStartTime,
-                    timeOut: scheduleEndTime
-                };
-            case 1:
-                // Late attendance
-                return {
-                    name: 'Late Attendance',
-                    description: 'Employee arrives 15 minutes late and leaves on time',
-                    timeIn: (0, date_fns_1.addMinutes)(scheduleStartTime, 15),
-                    timeOut: scheduleEndTime
-                };
-            case 2:
-                // Overtime
-                return {
-                    name: 'Overtime',
-                    description: 'Employee arrives on time and works 45 minutes overtime',
-                    timeIn: scheduleStartTime,
-                    timeOut: (0, date_fns_1.addMinutes)(scheduleEndTime, 45)
-                };
-            case 3:
-                // Undertime
-                return {
-                    name: 'Undertime',
-                    description: 'Employee arrives on time but leaves 30 minutes early',
-                    timeIn: scheduleStartTime,
-                    timeOut: (0, date_fns_1.addMinutes)(scheduleEndTime, -30)
-                };
-            case 4:
-                // No check-out
-                return {
-                    name: 'Missing Check-out',
-                    description: 'Employee checks in but forgets to check out',
-                    timeIn: scheduleStartTime,
-                    timeOut: null
-                };
-            default:
-                // Default to regular attendance
-                return {
-                    name: 'Regular Attendance',
-                    description: 'Employee arrives and leaves on time',
-                    timeIn: scheduleStartTime,
-                    timeOut: scheduleEndTime
-                };
-        }
-    }
-    async createAttendanceForSchedule(schedule, scenario, biometricDevice) {
-        this.logger.log(`Creating ${scenario.name} scenario for schedule on ${(0, date_fns_1.format)(schedule.date, 'yyyy-MM-dd')}`);
-        // Determine day type based on schedule
-        const dayType = this.determineDayType(schedule);
-        // Determine attendance statuses
-        const statuses = this.determineAttendanceStatuses(schedule, scenario);
-        // Create the attendance record
-        const attendance = new attendance_entity_1.Attendance({});
-        attendance.employee = schedule.employee;
-        attendance.schedule = schedule;
-        attendance.timeIn = scenario.timeIn || undefined;
-        attendance.timeOut = scenario.timeOut || undefined;
-        attendance.statuses = statuses;
-        attendance.isProcessed = false;
-        attendance.dayType = dayType;
-        // Save the attendance record to get an ID
-        const savedAttendance = await this.attendanceRepository.save(attendance);
-        // Create attendance punches if applicable
-        const punches = [];
-        if (scenario.timeIn) {
-            const inPunch = new attendance_punch_entity_1.AttendancePunch({});
-            inPunch.attendance = savedAttendance;
-            inPunch.time = scenario.timeIn;
-            inPunch.punchMethod = punch_method_enum_1.PunchMethod.FINGERPRINT;
-            inPunch.punchType = punch_type_enum_1.PunchType.CHECK_IN;
-            inPunch.employeeNumber = this.EMPLOYEE_NUMBER;
-            inPunch.biometricDevice = biometricDevice;
-            punches.push(inPunch);
-        }
-        if (scenario.timeOut) {
-            const outPunch = new attendance_punch_entity_1.AttendancePunch({});
-            outPunch.attendance = savedAttendance;
-            outPunch.time = scenario.timeOut;
-            outPunch.punchMethod = punch_method_enum_1.PunchMethod.FINGERPRINT;
-            outPunch.punchType = punch_type_enum_1.PunchType.CHECK_OUT;
-            outPunch.employeeNumber = this.EMPLOYEE_NUMBER;
-            outPunch.biometricDevice = biometricDevice;
-            punches.push(outPunch);
-        }
-        // Save all punches
-        if (punches.length > 0) {
-            await this.attendancePunchesService.getRepository().save(punches);
-            this.logger.log(`Created ${punches.length} attendance punches for attendance ${savedAttendance.id}`);
-        }
-        this.logger.log(`Created attendance record ${savedAttendance.id} for ${scenario.name} scenario`);
-    }
-    determineDayType(schedule) {
-        var _a;
-        const isRestDay = schedule.restDay === true;
-        const holidayType = (_a = schedule.holiday) === null || _a === void 0 ? void 0 : _a.type;
-        if (isRestDay && holidayType === holiday_type_enum_1.HolidayType.REGULAR) {
-            return final_work_hour_entity_1.DayType.REGULAR_HOLIDAY_REST_DAY;
-        }
-        else if (isRestDay && (holidayType === holiday_type_enum_1.HolidayType.SPECIAL_NON_WORKING || holidayType === holiday_type_enum_1.HolidayType.SPECIAL_WORKING)) {
-            return final_work_hour_entity_1.DayType.SPECIAL_HOLIDAY_REST_DAY;
-        }
-        else if (isRestDay) {
-            return final_work_hour_entity_1.DayType.REST_DAY;
-        }
-        else if (holidayType === holiday_type_enum_1.HolidayType.REGULAR) {
-            return final_work_hour_entity_1.DayType.REGULAR_HOLIDAY;
-        }
-        else if (holidayType === holiday_type_enum_1.HolidayType.SPECIAL_NON_WORKING || holidayType === holiday_type_enum_1.HolidayType.SPECIAL_WORKING) {
-            return final_work_hour_entity_1.DayType.SPECIAL_HOLIDAY;
-        }
-        else {
-            return final_work_hour_entity_1.DayType.REGULAR_DAY;
-        }
-    }
-    determineAttendanceStatuses(schedule, scenario) {
-        const statuses = [];
-        // No time in means absent
-        if (!scenario.timeIn) {
-            statuses.push(attendance_status_enum_1.AttendanceStatus.ABSENT);
-            return statuses;
-        }
-        // Check for late
-        const scheduleStartTime = (0, date_fns_1.parseISO)(`${(0, date_fns_1.format)(schedule.date, 'yyyy-MM-dd')}T${schedule.startTime}`);
-        const lateThreshold = (0, date_fns_1.addMinutes)(scheduleStartTime, this.GRACE_PERIOD_MINUTES);
-        if (scenario.timeIn > lateThreshold) {
-            statuses.push(attendance_status_enum_1.AttendanceStatus.LATE);
-        }
-        // Check for no check-out
-        if (scenario.timeIn && !scenario.timeOut) {
-            statuses.push(attendance_status_enum_1.AttendanceStatus.NO_CHECKED_OUT);
-            return statuses;
-        }
-        // Check for undertime
-        if (scenario.timeOut) {
-            const scheduleEndTime = (0, date_fns_1.parseISO)(`${(0, date_fns_1.format)(schedule.date, 'yyyy-MM-dd')}T${schedule.endTime}`);
-            const undertimeThreshold = (0, date_fns_1.addMinutes)(scheduleEndTime, -this.UNDER_TIME_THRESHOLD_MINUTES);
-            if (scenario.timeOut < undertimeThreshold) {
-                statuses.push(attendance_status_enum_1.AttendanceStatus.UNDER_TIME);
-            }
-            // Check for overtime
-            const overtimeThreshold = (0, date_fns_1.addMinutes)(scheduleEndTime, this.OVER_TIME_THRESHOLD_MINUTES);
-            if (scenario.timeOut > overtimeThreshold) {
-                statuses.push(attendance_status_enum_1.AttendanceStatus.OVERTIME);
-            }
-        }
-        // If no special statuses are applied, mark as present
-        if (statuses.length === 0) {
-            statuses.push(attendance_status_enum_1.AttendanceStatus.HOLIDAY);
-        }
-        return statuses;
-    }
-    async ensureBiometricDeviceExists() {
-        // Check if our test biometric device exists
-        let biometricDevice = await this.biometricDevicesService.findOneBy({ deviceId: this.DEFAULT_DEVICE_ID });
-        if (!biometricDevice) {
-            // Create a test biometric device if it doesn't exist
-            biometricDevice = await this.biometricDevicesService.create({
-                deviceId: this.DEFAULT_DEVICE_ID,
-                name: 'Test Biometric Device',
-                ipAddress: '10.10.10.45',
-                port: 5010,
-                isOffline: false,
-            });
-            this.logger.log(`Created test biometric device with ID: ${this.DEFAULT_DEVICE_ID}`);
-        }
-        return biometricDevice;
-    }
-    // Method to manually simulate historical data
-    async seedHistoricalData(days = 5) {
-        this.logger.log(`Seeding historical attendance data for past ${days} days`);
-        const biometricDevice = await this.ensureBiometricDeviceExists();
-        const today = new Date();
-        for (let i = 1; i <= days; i++) {
-            const targetDate = (0, date_fns_1.format)((0, date_fns_1.subDays)(today, i), 'yyyy-MM-dd');
-            // Find schedules for that day
-            const schedules = await this.schedulesService.getRepository().find({
-                where: {
-                    employee: { id: this.EMPLOYEE_ID },
-                    date: (0, date_fns_1.parseISO)(targetDate)
-                },
-                relations: {
-                    employee: true,
-                    holiday: true,
-                    shift: true,
-                    cutoff: true
-                }
-            });
-            if (schedules.length === 0) {
-                continue;
-            }
-            // For each schedule, create a random scenario
-            for (const schedule of schedules) {
-                const scenarioIndex = Math.floor(Math.random() * 5); // 0-4
-                const scenario = this.getScenarioForSchedule(schedule, scenarioIndex);
-                // For historical data, we may want to adjust the attendance dates
-                if (scenario.timeIn) {
-                    scenario.timeIn = (0, date_fns_1.parseISO)(`${targetDate}T${(0, date_fns_1.format)(scenario.timeIn, 'HH:mm:ss')}`);
-                }
-                if (scenario.timeOut) {
-                    scenario.timeOut = (0, date_fns_1.parseISO)(`${targetDate}T${(0, date_fns_1.format)(scenario.timeOut, 'HH:mm:ss')}`);
-                }
-                await this.createAttendanceForSchedule(schedule, scenario, biometricDevice);
-            }
-        }
-        this.logger.log('Historical attendance data seeding completed');
-    }
-};
-exports.AttendanceDataSeederService = AttendanceDataSeederService;
-exports.AttendanceDataSeederService = AttendanceDataSeederService = AttendanceDataSeederService_1 = __decorate([
-    (0, common_1.Injectable)(),
-    __param(3, (0, typeorm_1.InjectRepository)(attendance_entity_1.Attendance)),
-    __metadata("design:paramtypes", [typeof (_a = typeof config_1.ConfigService !== "undefined" && config_1.ConfigService) === "function" ? _a : Object, typeof (_b = typeof schedules_service_1.SchedulesService !== "undefined" && schedules_service_1.SchedulesService) === "function" ? _b : Object, typeof (_c = typeof biometric_devices_service_1.BiometricDevicesService !== "undefined" && biometric_devices_service_1.BiometricDevicesService) === "function" ? _c : Object, typeof (_d = typeof typeorm_2.Repository !== "undefined" && typeorm_2.Repository) === "function" ? _d : Object, typeof (_e = typeof attendance_punches_service_1.AttendancePunchesService !== "undefined" && attendance_punches_service_1.AttendancePunchesService) === "function" ? _e : Object])
-], AttendanceDataSeederService);
 
 
 /***/ }),
@@ -12862,13 +12892,14 @@ let AttendanceListener = AttendanceListener_1 = class AttendanceListener {
                 let existingAttendance = await this.attendancesService.findOneBy({
                     employee: new employee_entity_1.Employee({ id: employee.id }),
                     schedule: new schedule_entity_1.Schedule({ id: todaySchedule.id }),
-                });
+                }, { relations: { cutoff: true } });
                 // If no existing attendance create an attendance
                 if (!existingAttendance) {
                     this.logger.log(`Creating new attendance for employee ${employee.user.email} on ${punchDate}`);
                     existingAttendance = await this.attendancesService.create({
                         employee: { id: employee.id },
                         schedule: { id: todaySchedule.id },
+                        cutoff: { id: todaySchedule.cutoff.id },
                         dayType,
                         createdBy: employee.user.id,
                     });
@@ -12888,7 +12919,7 @@ let AttendanceListener = AttendanceListener_1 = class AttendanceListener {
                                 attendanceStatuses.push(attendance_status_enum_1.AttendanceStatus.LATE);
                                 this.logger.log(`Employee ${employee.user.email} is late by ${minutesLate} minutes`);
                                 // Create work time request for late arrival
-                                await this.createWorkTimeRequest(dayType, employee.id, attendance_status_enum_1.AttendanceStatus.LATE, existingAttendance.id, minutesLate);
+                                await this.createWorkTimeRequest(dayType, employee.id, attendance_status_enum_1.AttendanceStatus.LATE, existingAttendance, minutesLate);
                                 // Notify employee
                                 await this.notificationsService.create({
                                     title: 'Late Check-in',
@@ -12920,7 +12951,7 @@ let AttendanceListener = AttendanceListener_1 = class AttendanceListener {
                     if (!existingAttendance.timeIn && !((_b = existingAttendance.statuses) === null || _b === void 0 ? void 0 : _b.includes(attendance_status_enum_1.AttendanceStatus.NO_CHECKED_IN))) {
                         attendanceStatuses.push(attendance_status_enum_1.AttendanceStatus.NO_CHECKED_IN);
                         // Create work time request for no check in
-                        await this.createWorkTimeRequest(dayType, employee.id, attendance_status_enum_1.AttendanceStatus.NO_CHECKED_IN, existingAttendance.id);
+                        await this.createWorkTimeRequest(dayType, employee.id, attendance_status_enum_1.AttendanceStatus.NO_CHECKED_IN, existingAttendance);
                         // Notify employee
                         await this.notificationsService.create({
                             title: 'No Check-in',
@@ -13017,9 +13048,9 @@ let AttendanceListener = AttendanceListener_1 = class AttendanceListener {
     }
     async handleRecalculateFinalWorkHoursEvent(event) {
         this.logger.log(`Handling recalculation of final work hours for cutoff ID ${event.cutoffId}`);
-        // Fetch all attendances for the given cutoff
+        // Fetch all attendances for the given cutoff that is already processed
         const attendances = await this.attendancesService.getRepository().find({
-            where: { schedule: { cutoff: { id: event.cutoffId } } },
+            where: { isProcessed: true, cutoff: { id: event.cutoffId } },
         });
         const attendanceIds = attendances.map(attendance => attendance.id);
         // Queue the attendances for final work hour calculation
@@ -13027,10 +13058,11 @@ let AttendanceListener = AttendanceListener_1 = class AttendanceListener {
         );
     }
     // Helper methods for notifications and work time requests
-    async createWorkTimeRequest(dayType, employeeId, type, attendanceId, duration) {
+    async createWorkTimeRequest(dayType, employeeId, type, attendance, duration) {
         try {
             await this.workTimeRequestsService.create({
-                attendance: { id: attendanceId },
+                attendance,
+                cutoff: attendance.cutoff,
                 type,
                 duration,
                 dayType,
@@ -13072,6 +13104,347 @@ exports.AttendanceListener = AttendanceListener = AttendanceListener_1 = __decor
 
 /***/ }),
 
+/***/ "./src/modules/attendance-management/services/attendance-data-seeder.service.ts":
+/*!**************************************************************************************!*\
+  !*** ./src/modules/attendance-management/services/attendance-data-seeder.service.ts ***!
+  \**************************************************************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+"use strict";
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
+var AttendanceDataSeederService_1;
+var _a, _b, _c, _d, _e;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.AttendanceDataSeederService = void 0;
+const attendance_status_enum_1 = __webpack_require__(/*! @/common/enums/attendance-status.enum */ "./src/common/enums/attendance-status.enum.ts");
+const holiday_type_enum_1 = __webpack_require__(/*! @/common/enums/holiday-type.enum */ "./src/common/enums/holiday-type.enum.ts");
+const punch_method_enum_1 = __webpack_require__(/*! @/common/enums/punch-method.enum */ "./src/common/enums/punch-method.enum.ts");
+const punch_type_enum_1 = __webpack_require__(/*! @/common/enums/punch-type.enum */ "./src/common/enums/punch-type.enum.ts");
+const biometric_devices_service_1 = __webpack_require__(/*! @/modules/biometrics/services/biometric-devices.service */ "./src/modules/biometrics/services/biometric-devices.service.ts");
+const schedules_service_1 = __webpack_require__(/*! @/modules/shift-management/schedules/schedules.service */ "./src/modules/shift-management/schedules/schedules.service.ts");
+const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
+const config_1 = __webpack_require__(/*! @nestjs/config */ "@nestjs/config");
+const typeorm_1 = __webpack_require__(/*! @nestjs/typeorm */ "@nestjs/typeorm");
+const date_fns_1 = __webpack_require__(/*! date-fns */ "date-fns");
+const typeorm_2 = __webpack_require__(/*! typeorm */ "typeorm");
+const attendance_punches_service_1 = __webpack_require__(/*! ../attendance-punches/attendance-punches.service */ "./src/modules/attendance-management/attendance-punches/attendance-punches.service.ts");
+const attendance_punch_entity_1 = __webpack_require__(/*! ../attendance-punches/entities/attendance-punch.entity */ "./src/modules/attendance-management/attendance-punches/entities/attendance-punch.entity.ts");
+const attendance_entity_1 = __webpack_require__(/*! ../entities/attendance.entity */ "./src/modules/attendance-management/entities/attendance.entity.ts");
+const final_work_hour_entity_1 = __webpack_require__(/*! ../final-work-hours/entities/final-work-hour.entity */ "./src/modules/attendance-management/final-work-hours/entities/final-work-hour.entity.ts");
+let AttendanceDataSeederService = AttendanceDataSeederService_1 = class AttendanceDataSeederService {
+    constructor(configService, schedulesService, biometricDevicesService, attendanceRepository, attendancePunchesService) {
+        this.configService = configService;
+        this.schedulesService = schedulesService;
+        this.biometricDevicesService = biometricDevicesService;
+        this.attendanceRepository = attendanceRepository;
+        this.attendancePunchesService = attendancePunchesService;
+        this.logger = new common_1.Logger(AttendanceDataSeederService_1.name);
+        this.EMPLOYEE_ID = 'fa985931-6d3f-4468-a1d9-f071a3cb930c';
+        this.EMPLOYEE_NUMBER = 1;
+        this.DEFAULT_DEVICE_ID = 'DEVICE001';
+        this.GRACE_PERIOD_MINUTES = 5; // Consider late after 5 minutes
+        this.OVER_TIME_THRESHOLD_MINUTES = 30; // Consider overtime if more than 30 minutes
+        this.UNDER_TIME_THRESHOLD_MINUTES = 15; // Consider under time if less than 15 minutes
+    }
+    async onModuleInit() {
+        // Only run in development mode or when explicitly enabled
+        const seedAttendance = this.configService.get('SEED_ATTENDANCE') === 'true';
+        const isDevelopment = this.configService.get('NODE_ENV') === 'development';
+        // Check if there is attendance data to seed
+        const attendanceCount = await this.attendanceRepository.count({
+            where: {
+                employee: { id: this.EMPLOYEE_ID },
+            },
+        });
+        if (attendanceCount > 0) {
+            this.logger.log('Attendance data already exists, skipping seeding');
+            return;
+        }
+        if (seedAttendance || isDevelopment) {
+            await this.seedAttendanceData();
+        }
+    }
+    async seedAttendanceData() {
+        this.logger.log('Starting to seed attendance data...');
+        try {
+            // Ensure we have a biometric device to associate with punches
+            const biometricDevice = await this.ensureBiometricDeviceExists();
+            // Get the employee's schedules
+            const schedules = await this.schedulesService.getRepository().find({
+                where: {
+                    employee: { id: this.EMPLOYEE_ID },
+                },
+                relations: {
+                    employee: true,
+                    holiday: true,
+                    shift: true,
+                    cutoff: true
+                }
+            });
+            if (schedules.length === 0) {
+                this.logger.warn('No schedules found for the target employee');
+                return;
+            }
+            this.logger.log(`Found ${schedules.length} schedules to seed attendance for`);
+            // Create test scenarios for each schedule
+            for (let i = 0; i < schedules.length; i++) {
+                const schedule = schedules[i];
+                // Vary the scenario based on index to create different test cases
+                const scenario = this.getScenarioForSchedule(schedule, i);
+                await this.createAttendanceForSchedule(schedule, scenario, biometricDevice);
+            }
+            this.logger.log('Attendance data seeding completed successfully');
+        }
+        catch (error) {
+            this.logger.error(`Failed to seed attendance data: ${error instanceof Error ? error.message : String(error)}`);
+        }
+    }
+    getScenarioForSchedule(schedule, index) {
+        // Parse the schedule date and times
+        const scheduleDate = schedule.date;
+        const startTime = schedule.startTime;
+        const endTime = schedule.endTime;
+        // Create the base datetime objects
+        const scheduleDateObj = new Date(scheduleDate);
+        const scheduleStartTime = (0, date_fns_1.parseISO)(`${(0, date_fns_1.format)(scheduleDateObj, 'yyyy-MM-dd')}T${startTime}`);
+        const scheduleEndTime = (0, date_fns_1.parseISO)(`${(0, date_fns_1.format)(scheduleDateObj, 'yyyy-MM-dd')}T${endTime}`);
+        // Select scenario based on the index (to get variety)
+        switch (index % 5) {
+            case 0:
+                // Regular attendance (on time, leave on time)
+                return {
+                    name: 'Regular Attendance',
+                    description: 'Employee arrives and leaves on time',
+                    timeIn: scheduleStartTime,
+                    timeOut: scheduleEndTime
+                };
+            case 1:
+                // Late attendance
+                return {
+                    name: 'Late Attendance',
+                    description: 'Employee arrives 15 minutes late and leaves on time',
+                    timeIn: (0, date_fns_1.addMinutes)(scheduleStartTime, 15),
+                    timeOut: scheduleEndTime
+                };
+            case 2:
+                // Overtime
+                return {
+                    name: 'Overtime',
+                    description: 'Employee arrives on time and works 45 minutes overtime',
+                    timeIn: scheduleStartTime,
+                    timeOut: (0, date_fns_1.addMinutes)(scheduleEndTime, 45)
+                };
+            case 3:
+                // Undertime
+                return {
+                    name: 'Undertime',
+                    description: 'Employee arrives on time but leaves 30 minutes early',
+                    timeIn: scheduleStartTime,
+                    timeOut: (0, date_fns_1.addMinutes)(scheduleEndTime, -30)
+                };
+            case 4:
+                // No check-out
+                return {
+                    name: 'Missing Check-out',
+                    description: 'Employee checks in but forgets to check out',
+                    timeIn: scheduleStartTime,
+                    timeOut: null
+                };
+            default:
+                // Default to regular attendance
+                return {
+                    name: 'Regular Attendance',
+                    description: 'Employee arrives and leaves on time',
+                    timeIn: scheduleStartTime,
+                    timeOut: scheduleEndTime
+                };
+        }
+    }
+    async createAttendanceForSchedule(schedule, scenario, biometricDevice) {
+        this.logger.log(`Creating ${scenario.name} scenario for schedule on ${(0, date_fns_1.format)(schedule.date, 'yyyy-MM-dd')}`);
+        // Determine day type based on schedule
+        const dayType = this.determineDayType(schedule);
+        // Determine attendance statuses
+        const statuses = this.determineAttendanceStatuses(schedule, scenario);
+        // Create the attendance record
+        const attendance = new attendance_entity_1.Attendance({});
+        attendance.employee = schedule.employee;
+        attendance.schedule = schedule;
+        attendance.timeIn = scenario.timeIn || undefined;
+        attendance.timeOut = scenario.timeOut || undefined;
+        attendance.statuses = statuses;
+        attendance.isProcessed = false;
+        attendance.dayType = dayType;
+        attendance.cutoff = schedule.cutoff;
+        // Save the attendance record to get an ID
+        const savedAttendance = await this.attendanceRepository.save(attendance);
+        // Create attendance punches if applicable
+        const punches = [];
+        if (scenario.timeIn) {
+            const inPunch = new attendance_punch_entity_1.AttendancePunch({});
+            inPunch.attendance = savedAttendance;
+            inPunch.time = scenario.timeIn;
+            inPunch.punchMethod = punch_method_enum_1.PunchMethod.FINGERPRINT;
+            inPunch.punchType = punch_type_enum_1.PunchType.CHECK_IN;
+            inPunch.employeeNumber = this.EMPLOYEE_NUMBER;
+            inPunch.biometricDevice = biometricDevice;
+            punches.push(inPunch);
+        }
+        if (scenario.timeOut) {
+            const outPunch = new attendance_punch_entity_1.AttendancePunch({});
+            outPunch.attendance = savedAttendance;
+            outPunch.time = scenario.timeOut;
+            outPunch.punchMethod = punch_method_enum_1.PunchMethod.FINGERPRINT;
+            outPunch.punchType = punch_type_enum_1.PunchType.CHECK_OUT;
+            outPunch.employeeNumber = this.EMPLOYEE_NUMBER;
+            outPunch.biometricDevice = biometricDevice;
+            punches.push(outPunch);
+        }
+        // Save all punches
+        if (punches.length > 0) {
+            await this.attendancePunchesService.getRepository().save(punches);
+            this.logger.log(`Created ${punches.length} attendance punches for attendance ${savedAttendance.id}`);
+        }
+        this.logger.log(`Created attendance record ${savedAttendance.id} for ${scenario.name} scenario`);
+    }
+    determineDayType(schedule) {
+        var _a;
+        const isRestDay = schedule.restDay === true;
+        const holidayType = (_a = schedule.holiday) === null || _a === void 0 ? void 0 : _a.type;
+        if (isRestDay && holidayType === holiday_type_enum_1.HolidayType.REGULAR) {
+            return final_work_hour_entity_1.DayType.REGULAR_HOLIDAY_REST_DAY;
+        }
+        else if (isRestDay && (holidayType === holiday_type_enum_1.HolidayType.SPECIAL_NON_WORKING || holidayType === holiday_type_enum_1.HolidayType.SPECIAL_WORKING)) {
+            return final_work_hour_entity_1.DayType.SPECIAL_HOLIDAY_REST_DAY;
+        }
+        else if (isRestDay) {
+            return final_work_hour_entity_1.DayType.REST_DAY;
+        }
+        else if (holidayType === holiday_type_enum_1.HolidayType.REGULAR) {
+            return final_work_hour_entity_1.DayType.REGULAR_HOLIDAY;
+        }
+        else if (holidayType === holiday_type_enum_1.HolidayType.SPECIAL_NON_WORKING || holidayType === holiday_type_enum_1.HolidayType.SPECIAL_WORKING) {
+            return final_work_hour_entity_1.DayType.SPECIAL_HOLIDAY;
+        }
+        else {
+            return final_work_hour_entity_1.DayType.REGULAR_DAY;
+        }
+    }
+    determineAttendanceStatuses(schedule, scenario) {
+        const statuses = [];
+        // No time in means absent
+        if (!scenario.timeIn) {
+            statuses.push(attendance_status_enum_1.AttendanceStatus.ABSENT);
+            return statuses;
+        }
+        // Check for late
+        const scheduleStartTime = (0, date_fns_1.parseISO)(`${(0, date_fns_1.format)(schedule.date, 'yyyy-MM-dd')}T${schedule.startTime}`);
+        const lateThreshold = (0, date_fns_1.addMinutes)(scheduleStartTime, this.GRACE_PERIOD_MINUTES);
+        if (scenario.timeIn > lateThreshold) {
+            statuses.push(attendance_status_enum_1.AttendanceStatus.LATE);
+        }
+        // Check for no check-out
+        if (scenario.timeIn && !scenario.timeOut) {
+            statuses.push(attendance_status_enum_1.AttendanceStatus.NO_CHECKED_OUT);
+            return statuses;
+        }
+        // Check for undertime
+        if (scenario.timeOut) {
+            const scheduleEndTime = (0, date_fns_1.parseISO)(`${(0, date_fns_1.format)(schedule.date, 'yyyy-MM-dd')}T${schedule.endTime}`);
+            const undertimeThreshold = (0, date_fns_1.addMinutes)(scheduleEndTime, -this.UNDER_TIME_THRESHOLD_MINUTES);
+            if (scenario.timeOut < undertimeThreshold) {
+                statuses.push(attendance_status_enum_1.AttendanceStatus.UNDER_TIME);
+            }
+            // Check for overtime
+            const overtimeThreshold = (0, date_fns_1.addMinutes)(scheduleEndTime, this.OVER_TIME_THRESHOLD_MINUTES);
+            if (scenario.timeOut > overtimeThreshold) {
+                statuses.push(attendance_status_enum_1.AttendanceStatus.OVERTIME);
+            }
+        }
+        // If no special statuses are applied, mark as present
+        if (statuses.length === 0) {
+            statuses.push(attendance_status_enum_1.AttendanceStatus.HOLIDAY);
+        }
+        return statuses;
+    }
+    async ensureBiometricDeviceExists() {
+        // Check if our test biometric device exists
+        let biometricDevice = await this.biometricDevicesService.findOneBy({ deviceId: this.DEFAULT_DEVICE_ID });
+        if (!biometricDevice) {
+            // Create a test biometric device if it doesn't exist
+            biometricDevice = await this.biometricDevicesService.create({
+                deviceId: this.DEFAULT_DEVICE_ID,
+                name: 'Test Biometric Device',
+                ipAddress: '10.10.10.45',
+                port: 5010,
+                isOffline: false,
+            });
+            this.logger.log(`Created test biometric device with ID: ${this.DEFAULT_DEVICE_ID}`);
+        }
+        return biometricDevice;
+    }
+    // Method to manually simulate historical data
+    async seedHistoricalData(days = 5) {
+        this.logger.log(`Seeding historical attendance data for past ${days} days`);
+        const biometricDevice = await this.ensureBiometricDeviceExists();
+        const today = new Date();
+        for (let i = 1; i <= days; i++) {
+            const targetDate = (0, date_fns_1.format)((0, date_fns_1.subDays)(today, i), 'yyyy-MM-dd');
+            // Find schedules for that day
+            const schedules = await this.schedulesService.getRepository().find({
+                where: {
+                    employee: { id: this.EMPLOYEE_ID },
+                    date: (0, date_fns_1.parseISO)(targetDate)
+                },
+                relations: {
+                    employee: true,
+                    holiday: true,
+                    shift: true,
+                    cutoff: true
+                }
+            });
+            if (schedules.length === 0) {
+                continue;
+            }
+            // For each schedule, create a random scenario
+            for (const schedule of schedules) {
+                const scenarioIndex = Math.floor(Math.random() * 5); // 0-4
+                const scenario = this.getScenarioForSchedule(schedule, scenarioIndex);
+                // For historical data, we may want to adjust the attendance dates
+                if (scenario.timeIn) {
+                    scenario.timeIn = (0, date_fns_1.parseISO)(`${targetDate}T${(0, date_fns_1.format)(scenario.timeIn, 'HH:mm:ss')}`);
+                }
+                if (scenario.timeOut) {
+                    scenario.timeOut = (0, date_fns_1.parseISO)(`${targetDate}T${(0, date_fns_1.format)(scenario.timeOut, 'HH:mm:ss')}`);
+                }
+                await this.createAttendanceForSchedule(schedule, scenario, biometricDevice);
+            }
+        }
+        this.logger.log('Historical attendance data seeding completed');
+    }
+};
+exports.AttendanceDataSeederService = AttendanceDataSeederService;
+exports.AttendanceDataSeederService = AttendanceDataSeederService = AttendanceDataSeederService_1 = __decorate([
+    (0, common_1.Injectable)(),
+    __param(3, (0, typeorm_1.InjectRepository)(attendance_entity_1.Attendance)),
+    __metadata("design:paramtypes", [typeof (_a = typeof config_1.ConfigService !== "undefined" && config_1.ConfigService) === "function" ? _a : Object, typeof (_b = typeof schedules_service_1.SchedulesService !== "undefined" && schedules_service_1.SchedulesService) === "function" ? _b : Object, typeof (_c = typeof biometric_devices_service_1.BiometricDevicesService !== "undefined" && biometric_devices_service_1.BiometricDevicesService) === "function" ? _c : Object, typeof (_d = typeof typeorm_2.Repository !== "undefined" && typeorm_2.Repository) === "function" ? _d : Object, typeof (_e = typeof attendance_punches_service_1.AttendancePunchesService !== "undefined" && attendance_punches_service_1.AttendancePunchesService) === "function" ? _e : Object])
+], AttendanceDataSeederService);
+
+
+/***/ }),
+
 /***/ "./src/modules/attendance-management/work-time-requests/dtos/work-time-request.dto.ts":
 /*!********************************************************************************************!*\
   !*** ./src/modules/attendance-management/work-time-requests/dtos/work-time-request.dto.ts ***!
@@ -13089,28 +13462,40 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
-var _a, _b;
+var _a, _b, _c, _d, _e;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.GetWorkTimeRequestDto = exports.UpdateWorkTimeRequestDto = exports.WorkTimeRequestDto = void 0;
 const base_dto_1 = __webpack_require__(/*! @/common/dtos/base.dto */ "./src/common/dtos/base.dto.ts");
+const reference_dto_1 = __webpack_require__(/*! @/common/dtos/reference.dto */ "./src/common/dtos/reference.dto.ts");
 const attendance_status_enum_1 = __webpack_require__(/*! @/common/enums/attendance-status.enum */ "./src/common/enums/attendance-status.enum.ts");
 const request_status_enum_1 = __webpack_require__(/*! @/common/enums/request-status.enum */ "./src/common/enums/request-status.enum.ts");
 const create_get_dto_factory_1 = __webpack_require__(/*! @/common/factories/create-get-dto.factory */ "./src/common/factories/create-get-dto.factory.ts");
 const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
+const class_transformer_1 = __webpack_require__(/*! class-transformer */ "class-transformer");
 const class_validator_1 = __webpack_require__(/*! class-validator */ "class-validator");
+const final_work_hour_entity_1 = __webpack_require__(/*! ../../final-work-hours/entities/final-work-hour.entity */ "./src/modules/attendance-management/final-work-hours/entities/final-work-hour.entity.ts");
 class WorkTimeRequestDto extends (0, swagger_1.PartialType)(base_dto_1.BaseDto) {
 }
 exports.WorkTimeRequestDto = WorkTimeRequestDto;
 __decorate([
     (0, swagger_1.ApiProperty)({
+        description: 'Employee reference',
+        type: reference_dto_1.ReferenceDto
+    }),
+    (0, class_validator_1.ValidateNested)(),
+    (0, class_transformer_1.Type)(() => reference_dto_1.ReferenceDto),
+    (0, class_validator_1.IsNotEmpty)(),
+    __metadata("design:type", typeof (_a = typeof reference_dto_1.ReferenceDto !== "undefined" && reference_dto_1.ReferenceDto) === "function" ? _a : Object)
+], WorkTimeRequestDto.prototype, "employee", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
         description: 'Status of the work time request',
         enum: request_status_enum_1.RequestStatus,
-        default: request_status_enum_1.RequestStatus.PENDING,
-        example: request_status_enum_1.RequestStatus.PENDING
+        example: request_status_enum_1.RequestStatus.PENDING,
     }),
-    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsEnum)(request_status_enum_1.RequestStatus),
-    __metadata("design:type", typeof (_a = typeof request_status_enum_1.RequestStatus !== "undefined" && request_status_enum_1.RequestStatus) === "function" ? _a : Object)
+    __metadata("design:type", typeof (_b = typeof request_status_enum_1.RequestStatus !== "undefined" && request_status_enum_1.RequestStatus) === "function" ? _b : Object)
 ], WorkTimeRequestDto.prototype, "status", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({
@@ -13120,17 +13505,61 @@ __decorate([
     }),
     (0, class_validator_1.IsNotEmpty)(),
     (0, class_validator_1.IsEnum)(attendance_status_enum_1.AttendanceStatus),
-    __metadata("design:type", typeof (_b = typeof attendance_status_enum_1.AttendanceStatus !== "undefined" && attendance_status_enum_1.AttendanceStatus) === "function" ? _b : Object)
+    __metadata("design:type", typeof (_c = typeof attendance_status_enum_1.AttendanceStatus !== "undefined" && attendance_status_enum_1.AttendanceStatus) === "function" ? _c : Object)
 ], WorkTimeRequestDto.prototype, "type", void 0);
 __decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'Duration in minutes',
+        example: 120,
+    }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsNumber)({ maxDecimalPlaces: 2 }),
+    __metadata("design:type", Number)
+], WorkTimeRequestDto.prototype, "duration", void 0);
+__decorate([
     (0, swagger_1.ApiProperty)({
-        description: 'ID of the linked attendance record',
-        example: '123e4567-e89b-12d3-a456-426614174000'
+        description: 'Day type',
+        enum: final_work_hour_entity_1.DayType,
+        default: final_work_hour_entity_1.DayType.REGULAR_DAY,
+        example: final_work_hour_entity_1.DayType.REGULAR_DAY
     }),
     (0, class_validator_1.IsNotEmpty)(),
-    (0, class_validator_1.IsUUID)(),
+    (0, class_validator_1.IsEnum)(final_work_hour_entity_1.DayType),
+    __metadata("design:type", typeof (_d = typeof final_work_hour_entity_1.DayType !== "undefined" && final_work_hour_entity_1.DayType) === "function" ? _d : Object)
+], WorkTimeRequestDto.prototype, "dayType", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Attendance reference',
+        type: reference_dto_1.ReferenceDto
+    }),
+    (0, class_validator_1.ValidateNested)(),
+    (0, class_transformer_1.Type)(() => reference_dto_1.ReferenceDto),
+    (0, class_validator_1.IsNotEmpty)(),
+    __metadata("design:type", typeof (_e = typeof reference_dto_1.ReferenceDto !== "undefined" && reference_dto_1.ReferenceDto) === "function" ? _e : Object)
+], WorkTimeRequestDto.prototype, "attendance", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'Documents associated with the work time request',
+        type: [reference_dto_1.ReferenceDto],
+        example: [
+            { id: '123e4567-e89b-12d3-a456-426614174000' },
+            { id: '123e4567-e89b-12d3-a456-426614174001' }
+        ]
+    }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.ValidateNested)({ each: true }),
+    (0, class_transformer_1.Type)(() => reference_dto_1.ReferenceDto),
+    __metadata("design:type", Array)
+], WorkTimeRequestDto.prototype, "documents", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Reason for the request',
+        example: 'Urgent project completion required overtime',
+    }),
+    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
-], WorkTimeRequestDto.prototype, "attendanceId", void 0);
+], WorkTimeRequestDto.prototype, "reason", void 0);
 class UpdateWorkTimeRequestDto extends (0, swagger_1.PartialType)(WorkTimeRequestDto) {
 }
 exports.UpdateWorkTimeRequestDto = UpdateWorkTimeRequestDto;
@@ -13158,7 +13587,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
-var _a, _b, _c, _d, _e, _f;
+var _a, _b, _c, _d, _e, _f, _g;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.WorkTimeRequest = void 0;
 const attendance_status_enum_1 = __webpack_require__(/*! @/common/enums/attendance-status.enum */ "./src/common/enums/attendance-status.enum.ts");
@@ -13166,6 +13595,7 @@ const request_status_enum_1 = __webpack_require__(/*! @/common/enums/request-sta
 const base_entity_1 = __webpack_require__(/*! @/database/entities/base.entity */ "./src/database/entities/base.entity.ts");
 const document_entity_1 = __webpack_require__(/*! @/modules/documents/entities/document.entity */ "./src/modules/documents/entities/document.entity.ts");
 const employee_entity_1 = __webpack_require__(/*! @/modules/employee-management/entities/employee.entity */ "./src/modules/employee-management/entities/employee.entity.ts");
+const cutoff_entity_1 = __webpack_require__(/*! @/modules/payroll-management/cutoffs/entities/cutoff.entity */ "./src/modules/payroll-management/cutoffs/entities/cutoff.entity.ts");
 const typeorm_1 = __webpack_require__(/*! typeorm */ "typeorm");
 const attendance_entity_1 = __webpack_require__(/*! ../../entities/attendance.entity */ "./src/modules/attendance-management/entities/attendance.entity.ts");
 const final_work_hour_entity_1 = __webpack_require__(/*! ../../final-work-hours/entities/final-work-hour.entity */ "./src/modules/attendance-management/final-work-hours/entities/final-work-hour.entity.ts");
@@ -13204,6 +13634,11 @@ __decorate([
     __metadata("design:type", typeof (_e = typeof attendance_entity_1.Attendance !== "undefined" && attendance_entity_1.Attendance) === "function" ? _e : Object)
 ], WorkTimeRequest.prototype, "attendance", void 0);
 __decorate([
+    (0, typeorm_1.ManyToOne)(() => cutoff_entity_1.Cutoff, (cutoff) => cutoff.workTimeRequests),
+    (0, typeorm_1.JoinColumn)({ name: 'cutoffId' }),
+    __metadata("design:type", typeof (_f = typeof cutoff_entity_1.Cutoff !== "undefined" && cutoff_entity_1.Cutoff) === "function" ? _f : Object)
+], WorkTimeRequest.prototype, "cutoff", void 0);
+__decorate([
     (0, typeorm_1.OneToMany)(() => document_entity_1.Document, (document) => document.workTimeRequest, { nullable: true }),
     __metadata("design:type", Array)
 ], WorkTimeRequest.prototype, "documents", void 0);
@@ -13213,11 +13648,72 @@ __decorate([
 ], WorkTimeRequest.prototype, "reason", void 0);
 __decorate([
     (0, typeorm_1.OneToOne)(() => work_time_response_entity_1.WorkTimeResponse, (workTimeResponse) => workTimeResponse.workTimeRequest, { eager: true, nullable: true }),
-    __metadata("design:type", typeof (_f = typeof work_time_response_entity_1.WorkTimeResponse !== "undefined" && work_time_response_entity_1.WorkTimeResponse) === "function" ? _f : Object)
+    __metadata("design:type", typeof (_g = typeof work_time_response_entity_1.WorkTimeResponse !== "undefined" && work_time_response_entity_1.WorkTimeResponse) === "function" ? _g : Object)
 ], WorkTimeRequest.prototype, "workTimeResponse", void 0);
 exports.WorkTimeRequest = WorkTimeRequest = __decorate([
     (0, typeorm_1.Entity)('work-time-requests')
 ], WorkTimeRequest);
+
+
+/***/ }),
+
+/***/ "./src/modules/attendance-management/work-time-requests/listener/work-time.listener.ts":
+/*!*********************************************************************************************!*\
+  !*** ./src/modules/attendance-management/work-time-requests/listener/work-time.listener.ts ***!
+  \*********************************************************************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+"use strict";
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var WorkTimeListener_1;
+var _a, _b, _c, _d;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.WorkTimeListener = void 0;
+const request_status_enum_1 = __webpack_require__(/*! @/common/enums/request-status.enum */ "./src/common/enums/request-status.enum.ts");
+const work_time_event_1 = __webpack_require__(/*! @/common/events/work-time.event */ "./src/common/events/work-time.event.ts");
+const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
+const event_emitter_1 = __webpack_require__(/*! @nestjs/event-emitter */ "@nestjs/event-emitter");
+const final_work_hours_service_1 = __webpack_require__(/*! ../../final-work-hours/final-work-hours.service */ "./src/modules/attendance-management/final-work-hours/final-work-hours.service.ts");
+const work_time_requests_service_1 = __webpack_require__(/*! ../work-time-requests.service */ "./src/modules/attendance-management/work-time-requests/work-time-requests.service.ts");
+let WorkTimeListener = WorkTimeListener_1 = class WorkTimeListener {
+    constructor(workTimeRequestsService, finalWorkHoursService) {
+        this.workTimeRequestsService = workTimeRequestsService;
+        this.finalWorkHoursService = finalWorkHoursService;
+        this.logger = new common_1.Logger(WorkTimeListener_1.name);
+    }
+    async handleWorkTimeResponded(event) {
+        // log
+        this.logger.log(`Work time request responded: ${event.workTimeRequestId}, approved: ${event.isApproved}`);
+        if (!event.workTimeRequestId) {
+            this.logger.warn('Work time request ID is missing');
+            return;
+        }
+        await this.workTimeRequestsService.update(event.workTimeRequestId, {
+            status: event.isApproved === true ? request_status_enum_1.RequestStatus.APPROVED : (event.isApproved === false ? request_status_enum_1.RequestStatus.REJECTED : request_status_enum_1.RequestStatus.PENDING),
+        }, event.respondedBy);
+        // recalculate final work hours for the attendance only
+    }
+};
+exports.WorkTimeListener = WorkTimeListener;
+__decorate([
+    (0, event_emitter_1.OnEvent)(work_time_event_1.WORK_TIME_EVENTS.WORK_TIME_RESPONDED),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [typeof (_c = typeof work_time_event_1.WorkTimeRespondedEvent !== "undefined" && work_time_event_1.WorkTimeRespondedEvent) === "function" ? _c : Object]),
+    __metadata("design:returntype", typeof (_d = typeof Promise !== "undefined" && Promise) === "function" ? _d : Object)
+], WorkTimeListener.prototype, "handleWorkTimeResponded", null);
+exports.WorkTimeListener = WorkTimeListener = WorkTimeListener_1 = __decorate([
+    (0, common_1.Injectable)(),
+    __metadata("design:paramtypes", [typeof (_a = typeof work_time_requests_service_1.WorkTimeRequestsService !== "undefined" && work_time_requests_service_1.WorkTimeRequestsService) === "function" ? _a : Object, typeof (_b = typeof final_work_hours_service_1.FinalWorkHoursService !== "undefined" && final_work_hours_service_1.FinalWorkHoursService) === "function" ? _b : Object])
+], WorkTimeListener);
 
 
 /***/ }),
@@ -13239,6 +13735,9 @@ const work_time_requests_service_1 = __webpack_require__(/*! ./work-time-request
 class WorkTimeRequestsController extends (0, create_controller_factory_1.createController)(work_time_request_entity_1.WorkTimeRequest, work_time_requests_service_1.WorkTimeRequestsService, work_time_request_dto_1.GetWorkTimeRequestDto, work_time_request_dto_1.WorkTimeRequestDto, work_time_request_dto_1.UpdateWorkTimeRequestDto) {
     async delete(id) {
         return await super.delete(id);
+    }
+    async softDelete(id, deletedBy) {
+        return await super.softDelete(id, deletedBy);
     }
 }
 exports.WorkTimeRequestsController = WorkTimeRequestsController;
@@ -13264,10 +13763,11 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.WorkTimeRequestsModule = void 0;
 const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
 const typeorm_1 = __webpack_require__(/*! @nestjs/typeorm */ "@nestjs/typeorm");
+const final_work_hours_module_1 = __webpack_require__(/*! ../final-work-hours/final-work-hours.module */ "./src/modules/attendance-management/final-work-hours/final-work-hours.module.ts");
 const work_time_request_entity_1 = __webpack_require__(/*! ./entities/work-time-request.entity */ "./src/modules/attendance-management/work-time-requests/entities/work-time-request.entity.ts");
+const work_time_listener_1 = __webpack_require__(/*! ./listener/work-time.listener */ "./src/modules/attendance-management/work-time-requests/listener/work-time.listener.ts");
 const work_time_requests_controller_1 = __webpack_require__(/*! ./work-time-requests.controller */ "./src/modules/attendance-management/work-time-requests/work-time-requests.controller.ts");
 const work_time_requests_service_1 = __webpack_require__(/*! ./work-time-requests.service */ "./src/modules/attendance-management/work-time-requests/work-time-requests.service.ts");
-const work_time_responses_module_1 = __webpack_require__(/*! ./work-time-responses/work-time-responses.module */ "./src/modules/attendance-management/work-time-requests/work-time-responses/work-time-responses.module.ts");
 let WorkTimeRequestsModule = class WorkTimeRequestsModule {
 };
 exports.WorkTimeRequestsModule = WorkTimeRequestsModule;
@@ -13275,12 +13775,11 @@ exports.WorkTimeRequestsModule = WorkTimeRequestsModule = __decorate([
     (0, common_1.Module)({
         imports: [
             typeorm_1.TypeOrmModule.forFeature([work_time_request_entity_1.WorkTimeRequest]),
-            work_time_responses_module_1.WorkTimeResponsesModule,
+            final_work_hours_module_1.FinalWorkHoursModule
         ],
-        providers: [work_time_requests_service_1.WorkTimeRequestsService],
+        providers: [work_time_requests_service_1.WorkTimeRequestsService, work_time_listener_1.WorkTimeListener],
         exports: [
             work_time_requests_service_1.WorkTimeRequestsService,
-            work_time_responses_module_1.WorkTimeResponsesModule,
         ],
         controllers: [work_time_requests_controller_1.WorkTimeRequestsController],
     })
@@ -13323,6 +13822,12 @@ let WorkTimeRequestsService = class WorkTimeRequestsService extends base_service
         super(workTimeRequestsRepository, usersService);
         this.workTimeRequestsRepository = workTimeRequestsRepository;
         this.usersService = usersService;
+    }
+    async update(id, updateDto, updatedBy) {
+        // Perform any additional logic before updating
+        // For example, you might want to check if the request is already approved or denied
+        // Call the base class update method
+        return super.update(id, updateDto, updatedBy);
     }
 };
 exports.WorkTimeRequestsService = WorkTimeRequestsService;
@@ -13387,7 +13892,7 @@ __decorate([
         description: 'Work time request associated with this response',
         type: reference_dto_1.ReferenceDto,
     }),
-    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsNotEmpty)(),
     (0, class_validator_1.ValidateNested)(),
     (0, class_transformer_1.Type)(() => reference_dto_1.ReferenceDto),
     __metadata("design:type", typeof (_a = typeof reference_dto_1.ReferenceDto !== "undefined" && reference_dto_1.ReferenceDto) === "function" ? _a : Object)
@@ -13466,6 +13971,15 @@ class WorkTimeResponsesController extends (0, create_controller_factory_1.create
     async delete(id) {
         return await super.delete(id);
     }
+    async deleteMany(ids, hardDelete) {
+        return await super.deleteMany(ids, hardDelete);
+    }
+    async softDelete(id, deletedBy) {
+        return await super.softDelete(id, deletedBy);
+    }
+    async findOne(fieldsString, relations, select) {
+        return await super.findOne(fieldsString, relations, select);
+    }
 }
 exports.WorkTimeResponsesController = WorkTimeResponsesController;
 
@@ -13490,6 +14004,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.WorkTimeResponsesModule = void 0;
 const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
 const typeorm_1 = __webpack_require__(/*! @nestjs/typeorm */ "@nestjs/typeorm");
+const work_time_requests_module_1 = __webpack_require__(/*! ../work-time-requests.module */ "./src/modules/attendance-management/work-time-requests/work-time-requests.module.ts");
 const work_time_response_entity_1 = __webpack_require__(/*! ./entities/work-time-response.entity */ "./src/modules/attendance-management/work-time-requests/work-time-responses/entities/work-time-response.entity.ts");
 const work_time_responses_controller_1 = __webpack_require__(/*! ./work-time-responses.controller */ "./src/modules/attendance-management/work-time-requests/work-time-responses/work-time-responses.controller.ts");
 const work_time_responses_service_1 = __webpack_require__(/*! ./work-time-responses.service */ "./src/modules/attendance-management/work-time-requests/work-time-responses/work-time-responses.service.ts");
@@ -13499,7 +14014,8 @@ exports.WorkTimeResponsesModule = WorkTimeResponsesModule;
 exports.WorkTimeResponsesModule = WorkTimeResponsesModule = __decorate([
     (0, common_1.Module)({
         imports: [
-            typeorm_1.TypeOrmModule.forFeature([work_time_response_entity_1.WorkTimeResponse])
+            typeorm_1.TypeOrmModule.forFeature([work_time_response_entity_1.WorkTimeResponse]),
+            work_time_requests_module_1.WorkTimeRequestsModule,
         ],
         providers: [work_time_responses_service_1.WorkTimeResponsesService],
         exports: [work_time_responses_service_1.WorkTimeResponsesService],
@@ -13530,27 +14046,69 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-var _a, _b;
+var _a, _b, _c, _d;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.WorkTimeResponsesService = void 0;
+const work_time_event_1 = __webpack_require__(/*! @/common/events/work-time.event */ "./src/common/events/work-time.event.ts");
 const base_service_1 = __webpack_require__(/*! @/common/services/base.service */ "./src/common/services/base.service.ts");
 const users_service_1 = __webpack_require__(/*! @/modules/account-management/users/users.service */ "./src/modules/account-management/users/users.service.ts");
 const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
+const event_emitter_1 = __webpack_require__(/*! @nestjs/event-emitter */ "@nestjs/event-emitter");
 const typeorm_1 = __webpack_require__(/*! @nestjs/typeorm */ "@nestjs/typeorm");
 const typeorm_2 = __webpack_require__(/*! typeorm */ "typeorm");
+const work_time_requests_service_1 = __webpack_require__(/*! ../work-time-requests.service */ "./src/modules/attendance-management/work-time-requests/work-time-requests.service.ts");
 const work_time_response_entity_1 = __webpack_require__(/*! ./entities/work-time-response.entity */ "./src/modules/attendance-management/work-time-requests/work-time-responses/entities/work-time-response.entity.ts");
 let WorkTimeResponsesService = class WorkTimeResponsesService extends base_service_1.BaseService {
-    constructor(workTimeResponsesRepository, usersService) {
+    constructor(workTimeResponsesRepository, usersService, workTimeRequestsService, eventEmitter) {
         super(workTimeResponsesRepository, usersService);
         this.workTimeResponsesRepository = workTimeResponsesRepository;
         this.usersService = usersService;
+        this.workTimeRequestsService = workTimeRequestsService;
+        this.eventEmitter = eventEmitter;
+    }
+    async validateBefore(dto) {
+        // Validate that the worktime request exists and doesn't already have a response
+        dto = await this.validateReferences(dto, [
+            {
+                field: 'workTimeRequest',
+                service: this.workTimeRequestsService,
+                required: true,
+                unique: {
+                    field: 'id',
+                    message: 'This work time request already has a response'
+                }
+            }
+        ]);
+    }
+    async create(createDto, createdBy) {
+        // Check if the work time request exists
+        // if (createDto.workTimeRequest) {
+        //     await this.workTimeRequestsService.findOneByOrFail({
+        //         id: createDto.workTimeRequest?.id,
+        //     });
+        // }
+        var _a;
+        const workTimeResponse = await super.create(createDto, createdBy);
+        this.eventEmitter.emit(work_time_event_1.WORK_TIME_EVENTS.WORK_TIME_RESPONDED, new work_time_event_1.WorkTimeRespondedEvent((_a = createDto.workTimeRequest) === null || _a === void 0 ? void 0 : _a.id, createDto.approved, createdBy));
+        return workTimeResponse;
+    }
+    async update(id, updateDto, updatedBy) {
+        var _a, _b;
+        if (updateDto.workTimeRequest) {
+            await this.workTimeRequestsService.findOneByOrFail({
+                id: (_a = updateDto.workTimeRequest) === null || _a === void 0 ? void 0 : _a.id,
+            });
+        }
+        const workTimeResponse = await super.update(id, updateDto, updatedBy);
+        this.eventEmitter.emit(work_time_event_1.WORK_TIME_EVENTS.WORK_TIME_RESPONDED, new work_time_event_1.WorkTimeRespondedEvent((_b = updateDto.workTimeRequest) === null || _b === void 0 ? void 0 : _b.id, updateDto.approved, updatedBy));
+        return workTimeResponse;
     }
 };
 exports.WorkTimeResponsesService = WorkTimeResponsesService;
 exports.WorkTimeResponsesService = WorkTimeResponsesService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, typeorm_1.InjectRepository)(work_time_response_entity_1.WorkTimeResponse)),
-    __metadata("design:paramtypes", [typeof (_a = typeof typeorm_2.Repository !== "undefined" && typeorm_2.Repository) === "function" ? _a : Object, typeof (_b = typeof users_service_1.UsersService !== "undefined" && users_service_1.UsersService) === "function" ? _b : Object])
+    __metadata("design:paramtypes", [typeof (_a = typeof typeorm_2.Repository !== "undefined" && typeorm_2.Repository) === "function" ? _a : Object, typeof (_b = typeof users_service_1.UsersService !== "undefined" && users_service_1.UsersService) === "function" ? _b : Object, typeof (_c = typeof work_time_requests_service_1.WorkTimeRequestsService !== "undefined" && work_time_requests_service_1.WorkTimeRequestsService) === "function" ? _c : Object, typeof (_d = typeof event_emitter_1.EventEmitter2 !== "undefined" && event_emitter_1.EventEmitter2) === "function" ? _d : Object])
 ], WorkTimeResponsesService);
 
 
@@ -20088,21 +20646,137 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
+var _a, _b;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.GetEmployeePayrollItemTypeDto = exports.UpdateEmployeePayrollItemTypeDto = exports.EmployeePayrollItemTypeDto = void 0;
 const base_dto_1 = __webpack_require__(/*! @/common/dtos/base.dto */ "./src/common/dtos/base.dto.ts");
+const reference_dto_1 = __webpack_require__(/*! @/common/dtos/reference.dto */ "./src/common/dtos/reference.dto.ts");
 const create_get_dto_factory_1 = __webpack_require__(/*! @/common/factories/create-get-dto.factory */ "./src/common/factories/create-get-dto.factory.ts");
 const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
+const class_transformer_1 = __webpack_require__(/*! class-transformer */ "class-transformer");
 const class_validator_1 = __webpack_require__(/*! class-validator */ "class-validator");
 class EmployeePayrollItemTypeDto extends (0, swagger_1.PartialType)(base_dto_1.BaseDto) {
 }
 exports.EmployeePayrollItemTypeDto = EmployeePayrollItemTypeDto;
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Name of the employee-payroll-item-type' }),
+    (0, swagger_1.ApiProperty)({
+        description: 'Employee reference',
+        required: true
+    }),
+    (0, class_validator_1.ValidateNested)(),
+    (0, class_transformer_1.Type)(() => reference_dto_1.ReferenceDto),
     (0, class_validator_1.IsNotEmpty)(),
+    __metadata("design:type", typeof (_a = typeof reference_dto_1.ReferenceDto !== "undefined" && reference_dto_1.ReferenceDto) === "function" ? _a : Object)
+], EmployeePayrollItemTypeDto.prototype, "employee", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Payroll item type reference',
+        required: true
+    }),
+    (0, class_validator_1.ValidateNested)(),
+    (0, class_transformer_1.Type)(() => reference_dto_1.ReferenceDto),
+    (0, class_validator_1.IsNotEmpty)(),
+    __metadata("design:type", typeof (_b = typeof reference_dto_1.ReferenceDto !== "undefined" && reference_dto_1.ReferenceDto) === "function" ? _b : Object)
+], EmployeePayrollItemTypeDto.prototype, "payrollItemType", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Reference number for this payroll item type',
+        example: 'REF-12345',
+        required: false
+    }),
     (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
     __metadata("design:type", String)
-], EmployeePayrollItemTypeDto.prototype, "name", void 0);
+], EmployeePayrollItemTypeDto.prototype, "referenceNumber", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Whether this payroll item type is active',
+        example: true,
+        default: true
+    }),
+    (0, class_validator_1.IsBoolean)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Boolean)
+], EmployeePayrollItemTypeDto.prototype, "isActive", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Whether this payroll item type is exempted',
+        example: false,
+        default: false
+    }),
+    (0, class_validator_1.IsBoolean)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Boolean)
+], EmployeePayrollItemTypeDto.prototype, "exempted", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Amount value for this payroll item type',
+        example: 1000.50,
+        required: false,
+        type: Number
+    }),
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Number)
+], EmployeePayrollItemTypeDto.prototype, "amount", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Accrual amount for this payroll item type',
+        example: 500.25,
+        required: false,
+        type: Number
+    }),
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Number)
+], EmployeePayrollItemTypeDto.prototype, "accrualAmount", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Accrual count for this payroll item type',
+        example: 5,
+        required: false,
+        type: Number
+    }),
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Number)
+], EmployeePayrollItemTypeDto.prototype, "accrualCount", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Percentage value for this payroll item type',
+        example: 15.5,
+        required: false,
+        type: Number,
+        minimum: 0,
+        maximum: 100
+    }),
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.Min)(0),
+    (0, class_validator_1.Max)(100),
+    __metadata("design:type", Number)
+], EmployeePayrollItemTypeDto.prototype, "percentage", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Fee amount for this payroll item type',
+        example: 25.99,
+        required: false,
+        type: Number
+    }),
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Number)
+], EmployeePayrollItemTypeDto.prototype, "fee", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Term information for this payroll item type',
+        example: 'Monthly',
+        required: false
+    }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], EmployeePayrollItemTypeDto.prototype, "term", void 0);
 class UpdateEmployeePayrollItemTypeDto extends (0, swagger_1.PartialType)(EmployeePayrollItemTypeDto) {
 }
 exports.UpdateEmployeePayrollItemTypeDto = UpdateEmployeePayrollItemTypeDto;
@@ -20160,9 +20834,6 @@ employee_payroll_item_type_dto_1.UpdateEmployeePayrollItemTypeDto) {
     async delete(id) {
         return super.delete(id);
     }
-    async create(entityDto, createdById) {
-        return await super.create(entityDto, createdById);
-    }
     async setupEmployeeCompensation(employeeId, dto, userId) {
         const compensation = await this.baseService.setupEmployeeCompensation(dto, employeeId, userId);
         return (0, class_transformer_1.plainToInstance)(payroll_item_dto_1.GetPayrollItemDto, compensation);
@@ -20170,11 +20841,11 @@ employee_payroll_item_type_dto_1.UpdateEmployeePayrollItemTypeDto) {
 }
 exports.EmployeePayrollItemTypesController = EmployeePayrollItemTypesController;
 __decorate([
-    (0, common_1.Post)('employee/:employeeId/setup-compensation'),
+    (0, common_1.Post)('employee/:employeeId/base-compensation'),
     (0, authorize_decorator_1.Authorize)({ endpointType: action_enum_1.Action.CREATE }),
     (0, swagger_1.ApiOperation)({
-        summary: 'Setup employee compensation',
-        description: 'Set up default compensation for an employee. Deactivates any existing compensation items before creating a new one.'
+        summary: 'Setup employee base compensation',
+        description: 'Set up default compensation for an employee. Deactivates any existing base compensation items before creating a new one.'
     }),
     (0, swagger_1.ApiParam)({
         name: 'employeeId',
@@ -20305,11 +20976,8 @@ let EmployeePayrollItemTypesService = class EmployeePayrollItemTypesService exte
                 payrollItemType: { category: payroll_item_category_enum_1.PayrollItemCategory.COMPENSATION },
                 isActive: true
             },
-            relations: { payrollItemType: true }
+            relations: { payrollItemType: true, employee: true },
         });
-        for (const item of existingItems) {
-            await this.update(item.id, { isActive: false }, userId);
-        }
         // Get the appropriate payroll item type
         let itemTypeName;
         switch (rateType) {
@@ -20336,6 +21004,9 @@ let EmployeePayrollItemTypesService = class EmployeePayrollItemTypesService exte
             amount,
             isActive: true,
         });
+        for (const item of existingItems) {
+            await this.update(item.id, { isActive: false }, userId);
+        }
         return this.create(newItem, userId);
     }
     /**
@@ -20349,11 +21020,11 @@ let EmployeePayrollItemTypesService = class EmployeePayrollItemTypesService exte
                 payrollItemType: { category: payroll_item_category_enum_1.PayrollItemCategory.COMPENSATION },
                 isActive: true
             },
-            relations: { payrollItemType: true },
+            relations: { payrollItemType: true, employee: true },
             order: { createdAt: 'DESC' }
         });
         if (!compensationItems.length) {
-            throw new common_1.BadRequestException(`No active compensation defined for employee ${employeeId}`);
+            throw new common_1.BadRequestException(`No active base compensation defined for employee ${employeeId}`);
         }
         let compensation = new employee_compensation_dto_1.EmployeeCompensationDto();
         // Prioritize Monthly Salary over Daily Rate over Hourly Rate
@@ -20413,21 +21084,26 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.EmployeePayrollItemType = void 0;
 const base_entity_1 = __webpack_require__(/*! @/database/entities/base.entity */ "./src/database/entities/base.entity.ts");
 const payroll_item_type_entity_1 = __webpack_require__(/*! @/modules/payroll-management/payroll-item-types/entities/payroll-item-type.entity */ "./src/modules/payroll-management/payroll-item-types/entities/payroll-item-type.entity.ts");
+const payroll_item_entity_1 = __webpack_require__(/*! @/modules/payroll-management/payroll-items/entities/payroll-item.entity */ "./src/modules/payroll-management/payroll-items/entities/payroll-item.entity.ts");
 const typeorm_1 = __webpack_require__(/*! typeorm */ "typeorm");
 const employee_entity_1 = __webpack_require__(/*! ../../entities/employee.entity */ "./src/modules/employee-management/entities/employee.entity.ts");
 let EmployeePayrollItemType = class EmployeePayrollItemType extends base_entity_1.BaseEntity {
 };
 exports.EmployeePayrollItemType = EmployeePayrollItemType;
 __decorate([
-    (0, typeorm_1.ManyToOne)(() => employee_entity_1.Employee, (employee) => employee.payrollItemTypes),
+    (0, typeorm_1.ManyToOne)(() => employee_entity_1.Employee, (employee) => employee.payrollItemTypes, { cascade: true }),
     (0, typeorm_1.JoinColumn)({ name: 'employeeId' }),
     __metadata("design:type", typeof (_a = typeof employee_entity_1.Employee !== "undefined" && employee_entity_1.Employee) === "function" ? _a : Object)
 ], EmployeePayrollItemType.prototype, "employee", void 0);
 __decorate([
-    (0, typeorm_1.ManyToOne)(() => payroll_item_type_entity_1.PayrollItemType, (payrollItemType) => payrollItemType.employeePayrollItemTypes),
+    (0, typeorm_1.ManyToOne)(() => payroll_item_type_entity_1.PayrollItemType, (payrollItemType) => payrollItemType.employeePayrollItemTypes, { cascade: true }),
     (0, typeorm_1.JoinColumn)({ name: 'payrollItemTypeId' }),
     __metadata("design:type", typeof (_b = typeof payroll_item_type_entity_1.PayrollItemType !== "undefined" && payroll_item_type_entity_1.PayrollItemType) === "function" ? _b : Object)
 ], EmployeePayrollItemType.prototype, "payrollItemType", void 0);
+__decorate([
+    (0, typeorm_1.OneToMany)(() => payroll_item_entity_1.PayrollItem, (payrollItem) => payrollItem.employeePayrollItemType, { nullable: true }),
+    __metadata("design:type", Array)
+], EmployeePayrollItemType.prototype, "payrollItems", void 0);
 __decorate([
     (0, typeorm_1.Column)({ nullable: true }),
     __metadata("design:type", String)
@@ -20437,6 +21113,10 @@ __decorate([
     __metadata("design:type", Boolean)
 ], EmployeePayrollItemType.prototype, "isActive", void 0);
 __decorate([
+    (0, typeorm_1.Column)({ default: false }),
+    __metadata("design:type", Boolean)
+], EmployeePayrollItemType.prototype, "exempted", void 0);
+__decorate([
     (0, typeorm_1.Column)('decimal', {
         precision: 15,
         scale: 2,
@@ -20444,6 +21124,38 @@ __decorate([
     }),
     __metadata("design:type", Number)
 ], EmployeePayrollItemType.prototype, "amount", void 0);
+__decorate([
+    (0, typeorm_1.Column)('decimal', {
+        precision: 15,
+        scale: 2,
+        nullable: true
+    }),
+    __metadata("design:type", Number)
+], EmployeePayrollItemType.prototype, "accrualAmount", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ nullable: true }),
+    __metadata("design:type", Number)
+], EmployeePayrollItemType.prototype, "accrualCount", void 0);
+__decorate([
+    (0, typeorm_1.Column)('decimal', {
+        precision: 15,
+        scale: 2,
+        nullable: true
+    }),
+    __metadata("design:type", Number)
+], EmployeePayrollItemType.prototype, "percentage", void 0);
+__decorate([
+    (0, typeorm_1.Column)('decimal', {
+        precision: 15,
+        scale: 2,
+        nullable: true
+    }),
+    __metadata("design:type", Number)
+], EmployeePayrollItemType.prototype, "fee", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ nullable: true }),
+    __metadata("design:type", String)
+], EmployeePayrollItemType.prototype, "term", void 0);
 exports.EmployeePayrollItemType = EmployeePayrollItemType = __decorate([
     (0, typeorm_1.Entity)('employee-payroll-item-types')
 ], EmployeePayrollItemType);
@@ -26717,12 +27429,18 @@ let CutoffsService = CutoffsService_1 = class CutoffsService extends base_servic
     }
     async generateYearlyCutoffs(options = {}) {
         const { year = new Date().getFullYear(), startMonth = new Date().getMonth(), cutoffType = cutoff_type_enum_1.CutoffType.BI_WEEKLY, save = true } = options;
+        // cutoff count
+        let cutoffCount = await this.cutoffsRepository.count();
         const cutoffs = [];
         // Generate cutoffs for each month from startMonth to December
         for (let month = startMonth; month < 12; month++) {
             const periodCutoffs = this.generateCutoffsForMonth(year, month, cutoffType);
             cutoffs.push(...periodCutoffs);
         }
+        // for each generated cutoff, set the cutoff number
+        cutoffs.forEach((cutoff, index) => {
+            cutoff.cutoffNumber = cutoffCount + index + 1;
+        });
         // Save to database if requested
         if (save && cutoffs.length > 0) {
             await this.cutoffsRepository.save(cutoffs);
@@ -26747,6 +27465,7 @@ let CutoffsService = CutoffsService_1 = class CutoffsService extends base_servic
                 firstHalf.startDate = firstHalfStart;
                 firstHalf.endDate = firstHalfEnd;
                 firstHalf.status = cutoff_status_enum_1.CutoffStatus.ACTIVE;
+                firstHalf.cutoffPlace = 1;
                 firstHalf.cutoffType = cutoffType;
                 firstHalf.description = `${monthName} 1-15, ${year} (${firstHalfBusinessDays} business days)`;
                 const secondHalf = new cutoff_entity_1.Cutoff({});
@@ -26754,6 +27473,7 @@ let CutoffsService = CutoffsService_1 = class CutoffsService extends base_servic
                 secondHalf.endDate = secondHalfEnd;
                 secondHalf.status = cutoff_status_enum_1.CutoffStatus.ACTIVE;
                 secondHalf.cutoffType = cutoffType;
+                secondHalf.cutoffPlace = 2;
                 secondHalf.description = `${monthName} 16-${secondHalfEnd.getDate()}, ${year} (${secondHalfBusinessDays} business days)`;
                 cutoffs.push(firstHalf, secondHalf);
                 break;
@@ -27051,6 +27771,7 @@ const cutoff_type_enum_1 = __webpack_require__(/*! @/common/enums/cutoff-type.en
 const base_entity_1 = __webpack_require__(/*! @/database/entities/base.entity */ "./src/database/entities/base.entity.ts");
 const attendance_entity_1 = __webpack_require__(/*! @/modules/attendance-management/entities/attendance.entity */ "./src/modules/attendance-management/entities/attendance.entity.ts");
 const final_work_hour_entity_1 = __webpack_require__(/*! @/modules/attendance-management/final-work-hours/entities/final-work-hour.entity */ "./src/modules/attendance-management/final-work-hours/entities/final-work-hour.entity.ts");
+const work_time_request_entity_1 = __webpack_require__(/*! @/modules/attendance-management/work-time-requests/entities/work-time-request.entity */ "./src/modules/attendance-management/work-time-requests/entities/work-time-request.entity.ts");
 const shift_entity_1 = __webpack_require__(/*! @/modules/shift-management/entities/shift.entity */ "./src/modules/shift-management/entities/shift.entity.ts");
 const schedule_entity_1 = __webpack_require__(/*! @/modules/shift-management/schedules/entities/schedule.entity */ "./src/modules/shift-management/schedules/entities/schedule.entity.ts");
 const typeorm_1 = __webpack_require__(/*! typeorm */ "typeorm");
@@ -27070,6 +27791,14 @@ __decorate([
     (0, typeorm_1.Column)({ type: 'date' }),
     __metadata("design:type", typeof (_b = typeof Date !== "undefined" && Date) === "function" ? _b : Object)
 ], Cutoff.prototype, "endDate", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ default: 1 }),
+    __metadata("design:type", Number)
+], Cutoff.prototype, "cutoffPlace", void 0);
+__decorate([
+    (0, typeorm_1.Column)(),
+    __metadata("design:type", Number)
+], Cutoff.prototype, "cutoffNumber", void 0);
 __decorate([
     (0, typeorm_1.Column)({ type: 'enum', enum: cutoff_status_enum_1.CutoffStatus, default: cutoff_status_enum_1.CutoffStatus.ACTIVE }),
     __metadata("design:type", typeof (_c = typeof cutoff_status_enum_1.CutoffStatus !== "undefined" && cutoff_status_enum_1.CutoffStatus) === "function" ? _c : Object)
@@ -27098,6 +27827,10 @@ __decorate([
     (0, typeorm_1.OneToMany)(() => attendance_entity_1.Attendance, (attendance) => attendance.cutoff, { nullable: true }),
     __metadata("design:type", Array)
 ], Cutoff.prototype, "attendances", void 0);
+__decorate([
+    (0, typeorm_1.OneToMany)(() => work_time_request_entity_1.WorkTimeRequest, (workTimeRequest) => workTimeRequest.cutoff, { nullable: true }),
+    __metadata("design:type", Array)
+], Cutoff.prototype, "workTimeRequests", void 0);
 exports.Cutoff = Cutoff = __decorate([
     (0, typeorm_1.Entity)('cutoffs')
 ], Cutoff);
@@ -27168,10 +27901,12 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var _a, _b, _c, _d, _e, _f, _g, _h, _j;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Payroll = void 0;
+const government_contribution_type_enum_1 = __webpack_require__(/*! @/common/enums/government-contribution-type.enum */ "./src/common/enums/government-contribution-type.enum.ts");
 const payroll_processing_state_enum_1 = __webpack_require__(/*! @/common/enums/payroll-processing-state.enum */ "./src/common/enums/payroll-processing-state.enum.ts");
 const payroll_status_enum_1 = __webpack_require__(/*! @/common/enums/payroll-status.enum */ "./src/common/enums/payroll-status.enum.ts");
 const base_entity_1 = __webpack_require__(/*! @/database/entities/base.entity */ "./src/database/entities/base.entity.ts");
 const employee_entity_1 = __webpack_require__(/*! @/modules/employee-management/entities/employee.entity */ "./src/modules/employee-management/entities/employee.entity.ts");
+const class_transformer_1 = __webpack_require__(/*! class-transformer */ "class-transformer");
 const typeorm_1 = __webpack_require__(/*! typeorm */ "typeorm");
 const cutoff_entity_1 = __webpack_require__(/*! ../cutoffs/entities/cutoff.entity */ "./src/modules/payroll-management/cutoffs/entities/cutoff.entity.ts");
 const payroll_item_entity_1 = __webpack_require__(/*! ../payroll-items/entities/payroll-item.entity */ "./src/modules/payroll-management/payroll-items/entities/payroll-item.entity.ts");
@@ -27179,35 +27914,41 @@ let Payroll = class Payroll extends base_entity_1.BaseEntity {
     // Virtual properties for better contribution access
     get sssContribution() {
         var _a;
-        const sssItem = (_a = this.payrollItems) === null || _a === void 0 ? void 0 : _a.find(item => { var _a; return ((_a = item.payrollItemType) === null || _a === void 0 ? void 0 : _a.governmentContributionType) === 'SSS'; });
+        const sssItem = (_a = this.payrollItems) === null || _a === void 0 ? void 0 : _a.find(item => { var _a; return ((_a = item.payrollItemType) === null || _a === void 0 ? void 0 : _a.governmentMandatedType) === government_contribution_type_enum_1.GovernmentMandatedType.SSS; });
+        const employee = Number(Number((sssItem === null || sssItem === void 0 ? void 0 : sssItem.amount) || 0).toFixed(2));
+        const employer = Number(Number((sssItem === null || sssItem === void 0 ? void 0 : sssItem.employerAmount) || 0).toFixed(2));
         return {
-            employee: (sssItem === null || sssItem === void 0 ? void 0 : sssItem.amount) || 0,
-            employer: (sssItem === null || sssItem === void 0 ? void 0 : sssItem.employerAmount) || 0,
-            total: ((sssItem === null || sssItem === void 0 ? void 0 : sssItem.amount) || 0) + ((sssItem === null || sssItem === void 0 ? void 0 : sssItem.employerAmount) || 0)
+            employee,
+            employer,
+            total: Number((employee + employer).toFixed(2))
         };
     }
     get philHealthContribution() {
         var _a;
-        const philhealthItem = (_a = this.payrollItems) === null || _a === void 0 ? void 0 : _a.find(item => { var _a; return ((_a = item.payrollItemType) === null || _a === void 0 ? void 0 : _a.governmentContributionType) === 'PHILHEALTH'; });
+        const philhealthItem = (_a = this.payrollItems) === null || _a === void 0 ? void 0 : _a.find(item => { var _a; return ((_a = item.payrollItemType) === null || _a === void 0 ? void 0 : _a.governmentMandatedType) === government_contribution_type_enum_1.GovernmentMandatedType.PHILHEALTH; });
+        const employee = Number(Number((philhealthItem === null || philhealthItem === void 0 ? void 0 : philhealthItem.amount) || 0).toFixed(2));
+        const employer = Number(Number((philhealthItem === null || philhealthItem === void 0 ? void 0 : philhealthItem.employerAmount) || 0).toFixed(2));
         return {
-            employee: (philhealthItem === null || philhealthItem === void 0 ? void 0 : philhealthItem.amount) || 0,
-            employer: (philhealthItem === null || philhealthItem === void 0 ? void 0 : philhealthItem.employerAmount) || 0,
-            total: ((philhealthItem === null || philhealthItem === void 0 ? void 0 : philhealthItem.amount) || 0) + ((philhealthItem === null || philhealthItem === void 0 ? void 0 : philhealthItem.employerAmount) || 0)
+            employee,
+            employer,
+            total: Number((employee + employer).toFixed(2))
         };
     }
     get pagIbigContribution() {
         var _a;
-        const pagibigItem = (_a = this.payrollItems) === null || _a === void 0 ? void 0 : _a.find(item => { var _a; return ((_a = item.payrollItemType) === null || _a === void 0 ? void 0 : _a.governmentContributionType) === 'PAGIBIG'; });
+        const pagibigItem = (_a = this.payrollItems) === null || _a === void 0 ? void 0 : _a.find(item => { var _a; return ((_a = item.payrollItemType) === null || _a === void 0 ? void 0 : _a.governmentMandatedType) === government_contribution_type_enum_1.GovernmentMandatedType.PAGIBIG; });
+        const employee = Number(Number((pagibigItem === null || pagibigItem === void 0 ? void 0 : pagibigItem.amount) || 0).toFixed(2));
+        const employer = Number(Number((pagibigItem === null || pagibigItem === void 0 ? void 0 : pagibigItem.employerAmount) || 0).toFixed(2));
         return {
-            employee: (pagibigItem === null || pagibigItem === void 0 ? void 0 : pagibigItem.amount) || 0,
-            employer: (pagibigItem === null || pagibigItem === void 0 ? void 0 : pagibigItem.employerAmount) || 0,
-            total: ((pagibigItem === null || pagibigItem === void 0 ? void 0 : pagibigItem.amount) || 0) + ((pagibigItem === null || pagibigItem === void 0 ? void 0 : pagibigItem.employerAmount) || 0)
+            employee,
+            employer,
+            total: Number((employee + employer).toFixed(2))
         };
     }
     get withHoldingTax() {
         var _a;
-        const taxItem = (_a = this.payrollItems) === null || _a === void 0 ? void 0 : _a.find(item => { var _a; return ((_a = item.payrollItemType) === null || _a === void 0 ? void 0 : _a.governmentContributionType) === 'TAX'; });
-        return (taxItem === null || taxItem === void 0 ? void 0 : taxItem.amount) || 0;
+        const taxItem = (_a = this.payrollItems) === null || _a === void 0 ? void 0 : _a.find(item => { var _a; return ((_a = item.payrollItemType) === null || _a === void 0 ? void 0 : _a.governmentMandatedType) === government_contribution_type_enum_1.GovernmentMandatedType.TAX; });
+        return Number(Number((taxItem === null || taxItem === void 0 ? void 0 : taxItem.amount) || 0).toFixed(2));
     }
 };
 exports.Payroll = Payroll;
@@ -27224,8 +27965,9 @@ __decorate([
 __decorate([
     (0, typeorm_1.OneToMany)(() => payroll_item_entity_1.PayrollItem, (payrollItem) => payrollItem.payroll, {
         cascade: true,
-        eager: true
+        nullable: true
     }),
+    (0, class_transformer_1.Type)(() => payroll_item_entity_1.PayrollItem),
     __metadata("design:type", Array)
 ], Payroll.prototype, "payrollItems", void 0);
 __decorate([
@@ -27359,27 +28101,27 @@ __decorate([
 __decorate([
     (0, typeorm_1.Column)('decimal', { precision: 15, scale: 2, default: 0 }),
     __metadata("design:type", Number)
+], Payroll.prototype, "totalBasicDeductions", void 0);
+__decorate([
+    (0, typeorm_1.Column)('json', { nullable: true }),
+    __metadata("design:type", Object)
+], Payroll.prototype, "comparisonWithPreviousPayroll", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ nullable: true }),
+    __metadata("design:type", String)
+], Payroll.prototype, "currency", void 0);
+__decorate([
+    (0, typeorm_1.Column)('decimal', { precision: 10, scale: 6, nullable: true }),
+    __metadata("design:type", Number)
+], Payroll.prototype, "exchangeRate", void 0);
+__decorate([
+    (0, typeorm_1.Column)('decimal', { precision: 15, scale: 2, default: 0 }),
+    __metadata("design:type", Number)
 ], Payroll.prototype, "totalAllowances", void 0);
 __decorate([
     (0, typeorm_1.Column)('decimal', { precision: 15, scale: 2, default: 0 }),
     __metadata("design:type", Number)
-], Payroll.prototype, "totalBonuses", void 0);
-__decorate([
-    (0, typeorm_1.Column)('decimal', { precision: 15, scale: 2, default: 0 }),
-    __metadata("design:type", Number)
-], Payroll.prototype, "totalBenefits", void 0);
-__decorate([
-    (0, typeorm_1.Column)('decimal', { precision: 15, scale: 2, default: 0 }),
-    __metadata("design:type", Number)
 ], Payroll.prototype, "totalDeductions", void 0);
-__decorate([
-    (0, typeorm_1.Column)('decimal', { precision: 15, scale: 2, default: 0 }),
-    __metadata("design:type", Number)
-], Payroll.prototype, "totalGovernmentContributions", void 0);
-__decorate([
-    (0, typeorm_1.Column)('decimal', { precision: 15, scale: 2, default: 0 }),
-    __metadata("design:type", Number)
-], Payroll.prototype, "totalTaxes", void 0);
 __decorate([
     (0, typeorm_1.Column)('decimal', { precision: 15, scale: 2, default: 0 }),
     __metadata("design:type", Number)
@@ -27788,10 +28530,6 @@ __decorate([
 __decorate([
     (0, typeorm_1.Column)(),
     __metadata("design:type", String)
-], PayrollItemType.prototype, "unit", void 0);
-__decorate([
-    (0, typeorm_1.Column)(),
-    __metadata("design:type", String)
 ], PayrollItemType.prototype, "type", void 0);
 __decorate([
     (0, typeorm_1.Column)('decimal', {
@@ -27806,9 +28544,9 @@ __decorate([
     __metadata("design:type", Boolean)
 ], PayrollItemType.prototype, "isActive", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ type: 'enum', enum: government_contribution_type_enum_1.GovernmentContributionType, nullable: true }),
-    __metadata("design:type", typeof (_c = typeof government_contribution_type_enum_1.GovernmentContributionType !== "undefined" && government_contribution_type_enum_1.GovernmentContributionType) === "function" ? _c : Object)
-], PayrollItemType.prototype, "governmentContributionType", void 0);
+    (0, typeorm_1.Column)({ type: 'enum', enum: government_contribution_type_enum_1.GovernmentMandatedType, nullable: true }),
+    __metadata("design:type", typeof (_c = typeof government_contribution_type_enum_1.GovernmentMandatedType !== "undefined" && government_contribution_type_enum_1.GovernmentMandatedType) === "function" ? _c : Object)
+], PayrollItemType.prototype, "governmentMandatedType", void 0);
 __decorate([
     (0, typeorm_1.Column)({ default: true }),
     __metadata("design:type", Boolean)
@@ -27830,6 +28568,10 @@ __decorate([
     __metadata("design:type", Number)
 ], PayrollItemType.prototype, "percentage", void 0);
 __decorate([
+    (0, typeorm_1.Column)({ nullable: true }),
+    __metadata("design:type", Number)
+], PayrollItemType.prototype, "processEvery", void 0);
+__decorate([
     (0, typeorm_1.Column)('decimal', {
         precision: 10,
         scale: 2,
@@ -27840,11 +28582,23 @@ __decorate([
 __decorate([
     (0, typeorm_1.Column)({ default: true }),
     __metadata("design:type", Boolean)
+], PayrollItemType.prototype, "includeInPayrollItemsProcessing", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ default: false }),
+    __metadata("design:type", Boolean)
 ], PayrollItemType.prototype, "isTaxable", void 0);
 __decorate([
     (0, typeorm_1.Column)({ default: false }),
     __metadata("design:type", Boolean)
 ], PayrollItemType.prototype, "isTaxDeductible", void 0);
+__decorate([
+    (0, typeorm_1.Column)('decimal', {
+        precision: 10,
+        scale: 2,
+        nullable: true
+    }),
+    __metadata("design:type", Number)
+], PayrollItemType.prototype, "taxExemptionAmount", void 0);
 __decorate([
     (0, typeorm_1.Column)('decimal', {
         precision: 10,
@@ -28019,17 +28773,17 @@ let PayrollItemTypesService = class PayrollItemTypesService extends base_service
             const sssContribution = new payroll_item_type_entity_1.PayrollItemType({
                 name: 'SSS Contribution',
                 description: 'Social Security System contribution (2025)',
-                category: payroll_item_category_enum_1.PayrollItemCategory.GOVERNMENT,
+                category: payroll_item_category_enum_1.PayrollItemCategory.DEDUCTION,
                 defaultOccurrence: occurrence_enum_1.Occurrence.MONTHLY,
-                unit: 'PHP',
                 type: 'formula',
-                governmentContributionType: government_contribution_type_enum_1.GovernmentContributionType.SSS,
+                governmentMandatedType: government_contribution_type_enum_1.GovernmentMandatedType.SSS,
                 percentage: 5,
                 employerPercentage: 10,
+                processEvery: 2,
                 isTaxable: false,
                 isTaxDeductible: true,
                 isRequired: true,
-                minAmount: 0,
+                minAmount: 5000,
                 maxAmount: 35000,
                 minAdditionalAmount: 10,
                 maxAdditionalAmount: 30,
@@ -28042,14 +28796,15 @@ let PayrollItemTypesService = class PayrollItemTypesService extends base_service
             const philhealthContribution = new payroll_item_type_entity_1.PayrollItemType({
                 name: 'PhilHealth Contribution',
                 description: 'Philippine Health Insurance Corporation contribution (2025)',
-                category: payroll_item_category_enum_1.PayrollItemCategory.GOVERNMENT,
+                category: payroll_item_category_enum_1.PayrollItemCategory.DEDUCTION,
                 defaultOccurrence: occurrence_enum_1.Occurrence.MONTHLY,
-                unit: 'PHP',
-                governmentContributionType: government_contribution_type_enum_1.GovernmentContributionType.PHILHEALTH,
+                governmentMandatedType: government_contribution_type_enum_1.GovernmentMandatedType.PHILHEALTH,
                 percentage: 2.5,
                 employerPercentage: 2.5,
+                processEvery: 2,
                 isTaxable: false,
                 isTaxDeductible: true,
+                type: 'formula',
                 isRequired: true,
                 minAmount: 10000,
                 maxAmount: 100000
@@ -28060,17 +28815,18 @@ let PayrollItemTypesService = class PayrollItemTypesService extends base_service
             const pagibigContribution = new payroll_item_type_entity_1.PayrollItemType({
                 name: 'Pag-IBIG Contribution',
                 description: 'Home Development Mutual Fund contribution (2025)',
-                category: payroll_item_category_enum_1.PayrollItemCategory.GOVERNMENT,
+                category: payroll_item_category_enum_1.PayrollItemCategory.DEDUCTION,
                 defaultOccurrence: occurrence_enum_1.Occurrence.MONTHLY,
-                unit: 'PHP',
-                governmentContributionType: government_contribution_type_enum_1.GovernmentContributionType.PAGIBIG,
+                governmentMandatedType: government_contribution_type_enum_1.GovernmentMandatedType.PAGIBIG,
                 percentage: 1,
                 employerPercentage: 2,
+                processEvery: 2,
                 isTaxable: false,
                 isTaxDeductible: true,
                 isRequired: true,
+                type: 'formula',
                 minAmount: 1500,
-                maxAmount: 1500,
+                maxAmount: 10000,
                 minContribution: 1,
                 maxContribution: 2
             });
@@ -28085,6 +28841,7 @@ let PayrollItemTypesService = class PayrollItemTypesService extends base_service
                     defaultOccurrence: occurrence_enum_1.Occurrence.MONTHLY,
                     type: 'fixed',
                     isRequired: true,
+                    includeInPayrollItemsProcessing: false,
                     isTaxable: true,
                 },
                 {
@@ -28093,6 +28850,7 @@ let PayrollItemTypesService = class PayrollItemTypesService extends base_service
                     unit: 'PHP',
                     defaultOccurrence: occurrence_enum_1.Occurrence.DAILY,
                     type: 'fixed',
+                    includeInPayrollItemsProcessing: false,
                     isTaxable: true,
                 },
                 {
@@ -28100,6 +28858,7 @@ let PayrollItemTypesService = class PayrollItemTypesService extends base_service
                     category: payroll_item_category_enum_1.PayrollItemCategory.COMPENSATION,
                     unit: 'PHP',
                     defaultOccurrence: occurrence_enum_1.Occurrence.HOURLY,
+                    includeInPayrollItemsProcessing: false,
                     type: 'fixed',
                     isTaxable: true,
                 }
@@ -28109,6 +28868,34 @@ let PayrollItemTypesService = class PayrollItemTypesService extends base_service
                 const savedSalary = await this.create(salaryType, userId);
                 newTypes.push(savedSalary);
             }
+            // 5. 13th Month Pay
+            const thirteenthMonthPay = new payroll_item_type_entity_1.PayrollItemType({
+                name: '13th Month Pay',
+                description: '13th month pay',
+                category: payroll_item_category_enum_1.PayrollItemCategory.COMPENSATION,
+                governmentMandatedType: government_contribution_type_enum_1.GovernmentMandatedType.THIRTEENTH_MONTH_PAY,
+                defaultOccurrence: occurrence_enum_1.Occurrence.ANNUALLY,
+                isTaxable: true,
+                isTaxDeductible: false,
+                taxExemptionAmount: 90000,
+                type: 'fixed',
+                isRequired: true,
+            });
+            const savedThirteenthMonthPay = await this.create(thirteenthMonthPay, userId);
+            newTypes.push(savedThirteenthMonthPay);
+            // 6. Withholding Tax
+            const withholdingTax = new payroll_item_type_entity_1.PayrollItemType({
+                name: 'Withholding Tax',
+                description: 'Withholding tax deduction',
+                category: payroll_item_category_enum_1.PayrollItemCategory.DEDUCTION,
+                governmentMandatedType: government_contribution_type_enum_1.GovernmentMandatedType.TAX,
+                processEvery: 1,
+                defaultOccurrence: occurrence_enum_1.Occurrence.MONTHLY,
+                type: 'formula',
+                isRequired: true,
+            });
+            const savedWithholdingTax = await this.create(withholdingTax, userId);
+            newTypes.push(savedWithholdingTax);
         }
     }
 };
@@ -28326,14 +29113,36 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
-var _a, _b;
+var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.PayrollItem = void 0;
 const base_entity_1 = __webpack_require__(/*! @/database/entities/base.entity */ "./src/database/entities/base.entity.ts");
+const user_entity_1 = __webpack_require__(/*! @/modules/account-management/users/entities/user.entity */ "./src/modules/account-management/users/entities/user.entity.ts");
+const employee_payroll_item_type_entity_1 = __webpack_require__(/*! @/modules/employee-management/employee-payroll-item-types/entities/employee-payroll-item-type.entity */ "./src/modules/employee-management/employee-payroll-item-types/entities/employee-payroll-item-type.entity.ts");
+const class_transformer_1 = __webpack_require__(/*! class-transformer */ "class-transformer");
 const typeorm_1 = __webpack_require__(/*! typeorm */ "typeorm");
 const payroll_entity_1 = __webpack_require__(/*! ../../entities/payroll.entity */ "./src/modules/payroll-management/entities/payroll.entity.ts");
 const payroll_item_type_entity_1 = __webpack_require__(/*! ../../payroll-item-types/entities/payroll-item-type.entity */ "./src/modules/payroll-management/payroll-item-types/entities/payroll-item-type.entity.ts");
+const calculation_details_type_1 = __webpack_require__(/*! ../../types/calculation-details.type */ "./src/modules/payroll-management/types/calculation-details.type.ts");
 let PayrollItem = class PayrollItem extends base_entity_1.BaseEntity {
+    getCalculationType() {
+        var _a;
+        return (_a = this.calculationDetails) === null || _a === void 0 ? void 0 : _a.calculationType;
+    }
+    getEmployeeContribution() {
+        if (this.calculationDetails &&
+            'employeeContribution' in this.calculationDetails) {
+            return this.calculationDetails.employeeContribution;
+        }
+        return this.amount;
+    }
+    getEmployerContribution() {
+        if (this.calculationDetails &&
+            'employerContribution' in this.calculationDetails) {
+            return this.calculationDetails.employerContribution;
+        }
+        return this.employerAmount || 0;
+    }
 };
 exports.PayrollItem = PayrollItem;
 __decorate([
@@ -28342,9 +29151,15 @@ __decorate([
     __metadata("design:type", typeof (_a = typeof payroll_item_type_entity_1.PayrollItemType !== "undefined" && payroll_item_type_entity_1.PayrollItemType) === "function" ? _a : Object)
 ], PayrollItem.prototype, "payrollItemType", void 0);
 __decorate([
+    (0, typeorm_1.ManyToOne)(() => employee_payroll_item_type_entity_1.EmployeePayrollItemType, (employeePayrollItemType) => employeePayrollItemType.payrollItems),
+    (0, typeorm_1.JoinColumn)({ name: 'employeePayrollItemTypeId' }),
+    __metadata("design:type", typeof (_b = typeof employee_payroll_item_type_entity_1.EmployeePayrollItemType !== "undefined" && employee_payroll_item_type_entity_1.EmployeePayrollItemType) === "function" ? _b : Object)
+], PayrollItem.prototype, "employeePayrollItemType", void 0);
+__decorate([
     (0, typeorm_1.ManyToOne)(() => payroll_entity_1.Payroll, (payroll) => payroll.payrollItems, { nullable: true }),
     (0, typeorm_1.JoinColumn)({ name: 'payrollId' }),
-    __metadata("design:type", typeof (_b = typeof payroll_entity_1.Payroll !== "undefined" && payroll_entity_1.Payroll) === "function" ? _b : Object)
+    (0, class_transformer_1.Exclude)({ toPlainOnly: true }),
+    __metadata("design:type", typeof (_c = typeof payroll_entity_1.Payroll !== "undefined" && payroll_entity_1.Payroll) === "function" ? _c : Object)
 ], PayrollItem.prototype, "payroll", void 0);
 __decorate([
     (0, typeorm_1.Column)('decimal', {
@@ -28362,6 +29177,75 @@ __decorate([
     }),
     __metadata("design:type", Number)
 ], PayrollItem.prototype, "employerAmount", void 0);
+__decorate([
+    (0, typeorm_1.Column)('json', { nullable: true }),
+    __metadata("design:type", typeof (_d = typeof calculation_details_type_1.CalculationDetails !== "undefined" && calculation_details_type_1.CalculationDetails) === "function" ? _d : Object)
+], PayrollItem.prototype, "calculationDetails", void 0);
+__decorate([
+    (0, typeorm_1.Column)('decimal', {
+        precision: 10,
+        scale: 2,
+        nullable: true
+    }),
+    __metadata("design:type", Number)
+], PayrollItem.prototype, "taxableAmount", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ nullable: true }),
+    __metadata("design:type", String)
+], PayrollItem.prototype, "paymentStatus", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ nullable: true }),
+    __metadata("design:type", typeof (_e = typeof Date !== "undefined" && Date) === "function" ? _e : Object)
+], PayrollItem.prototype, "paymentDate", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ nullable: true }),
+    __metadata("design:type", String)
+], PayrollItem.prototype, "paymentReferenceNumber", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ nullable: true }),
+    __metadata("design:type", String)
+], PayrollItem.prototype, "paymentMethod", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ nullable: true }),
+    __metadata("design:type", String)
+], PayrollItem.prototype, "batchNumber", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ nullable: true }),
+    __metadata("design:type", typeof (_f = typeof Date !== "undefined" && Date) === "function" ? _f : Object)
+], PayrollItem.prototype, "dueDate", void 0);
+__decorate([
+    (0, typeorm_1.ManyToOne)(() => user_entity_1.User, { nullable: true }),
+    (0, typeorm_1.JoinColumn)({ name: 'processedById' }),
+    __metadata("design:type", typeof (_g = typeof user_entity_1.User !== "undefined" && user_entity_1.User) === "function" ? _g : Object)
+], PayrollItem.prototype, "processedBy", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ nullable: true }),
+    __metadata("design:type", typeof (_h = typeof Date !== "undefined" && Date) === "function" ? _h : Object)
+], PayrollItem.prototype, "processedAt", void 0);
+__decorate([
+    (0, typeorm_1.Column)('json', { nullable: true }),
+    __metadata("design:type", typeof (_j = typeof Record !== "undefined" && Record) === "function" ? _j : Object)
+], PayrollItem.prototype, "processingDetails", void 0);
+__decorate([
+    (0, typeorm_1.Column)('text', { nullable: true }),
+    __metadata("design:type", String)
+], PayrollItem.prototype, "processingNotes", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ nullable: true }),
+    __metadata("design:type", String)
+], PayrollItem.prototype, "remittanceId", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ nullable: true }),
+    __metadata("design:type", typeof (_k = typeof Date !== "undefined" && Date) === "function" ? _k : Object)
+], PayrollItem.prototype, "remittanceDate", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ default: false }),
+    __metadata("design:type", Boolean)
+], PayrollItem.prototype, "isIncludedInReport", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ nullable: true }),
+    __metadata("design:type", String)
+], PayrollItem.prototype, "reportId", void 0);
 exports.PayrollItem = PayrollItem = __decorate([
     (0, typeorm_1.Entity)('payroll-items')
 ], PayrollItem);
@@ -28511,6 +29395,7 @@ const payroll_item_types_module_1 = __webpack_require__(/*! ./payroll-item-types
 const payroll_items_module_1 = __webpack_require__(/*! ./payroll-items/payroll-items.module */ "./src/modules/payroll-management/payroll-items/payroll-items.module.ts");
 const payrolls_controller_1 = __webpack_require__(/*! ./payrolls.controller */ "./src/modules/payroll-management/payrolls.controller.ts");
 const payrolls_service_1 = __webpack_require__(/*! ./payrolls.service */ "./src/modules/payroll-management/payrolls.service.ts");
+const work_time_requests_module_1 = __webpack_require__(/*! ../attendance-management/work-time-requests/work-time-requests.module */ "./src/modules/attendance-management/work-time-requests/work-time-requests.module.ts");
 let PayrollManagementModule = class PayrollManagementModule {
 };
 exports.PayrollManagementModule = PayrollManagementModule;
@@ -28543,6 +29428,7 @@ exports.PayrollManagementModule = PayrollManagementModule = __decorate([
             cutoffs_module_1.CutoffsModule,
             employee_management_module_1.EmployeeManagementModule,
             final_work_hours_module_1.FinalWorkHoursModule,
+            work_time_requests_module_1.WorkTimeRequestsModule,
         ],
         providers: [payrolls_service_1.PayrollsService],
         exports: [
@@ -28578,7 +29464,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k;
+var _a, _b, _c, _d, _e, _f, _g, _h;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.PayrollsController = void 0;
 const authorize_decorator_1 = __webpack_require__(/*! @/common/decorators/authorize.decorator */ "./src/common/decorators/authorize.decorator.ts");
@@ -28588,34 +29474,28 @@ const action_enum_1 = __webpack_require__(/*! @/common/enums/action.enum */ "./s
 const create_controller_factory_1 = __webpack_require__(/*! @/common/factories/create-controller.factory */ "./src/common/factories/create-controller.factory.ts");
 const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
 const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
-const class_transformer_1 = __webpack_require__(/*! class-transformer */ "class-transformer");
 const express_1 = __webpack_require__(/*! express */ "express");
 const payroll_dto_1 = __webpack_require__(/*! ./dtos/payroll.dto */ "./src/modules/payroll-management/dtos/payroll.dto.ts");
 const payroll_entity_1 = __webpack_require__(/*! ./entities/payroll.entity */ "./src/modules/payroll-management/entities/payroll.entity.ts");
 const payrolls_service_1 = __webpack_require__(/*! ./payrolls.service */ "./src/modules/payroll-management/payrolls.service.ts");
 class PayrollsController extends (0, create_controller_factory_1.createController)(payroll_entity_1.Payroll, payrolls_service_1.PayrollsService, payroll_dto_1.GetPayrollDto, payroll_dto_1.PayrollDto, payroll_dto_1.UpdatePayrollDto) {
-    constructor(payrollsService) {
-        super(payrollsService);
-        this.payrollsService = payrollsService;
-    }
     async processPayrollForEmployee(employeeId, cutoffId, userId) {
-        const payroll = await this.payrollsService.processPayrollForEmployee(employeeId, cutoffId, userId);
-        return payroll;
+        const payroll = await this.baseService.processPayrollForEmployee(employeeId, cutoffId, userId);
+        return {
+            message: 'Payroll processed successfully',
+        };
     }
     async processPayrollForCutoff(cutoffId, userId) {
-        const payrolls = await this.payrollsService.processPayrollForCutoff(cutoffId, userId);
+        const payrolls = await this.baseService.processPayrollForCutoff(cutoffId, userId);
         return payrolls;
     }
-    async getPayrollDetails(id) {
-        return await this.payrollsService.getPayrollDetails(id);
-    }
     async generatePayslipData(id) {
-        return await this.payrollsService.generatePayslipData(id);
+        return await this.baseService.generatePayslipData(id);
     }
     async downloadPayslip(id, res) {
-        const payroll = await this.payrollsService.findOneByOrFail({ id });
+        const payroll = await this.baseService.findOneByOrFail({ id });
         const employee = payroll.employee;
-        const payslipData = await this.payrollsService.generatePayslipData(id);
+        const payslipData = await this.baseService.generatePayslipData(id);
         // You would need to implement PDF generation logic here
         // For example: const pdfBuffer = await generatePayslipPdf(payslipData);
         const fileName = `Payslip_${employee.employeeNumber}_${payroll.cutoff.startDate.toISOString().slice(0, 10)}.pdf`;
@@ -28631,7 +29511,7 @@ class PayrollsController extends (0, create_controller_factory_1.createControlle
         });
     }
     async approvePayroll(id, userId) {
-        await this.payrollsService.update(id, {
+        await this.baseService.update(id, {
             status: 'APPROVED',
             approvedAt: new Date(),
             approvedBy: userId
@@ -28641,7 +29521,7 @@ class PayrollsController extends (0, create_controller_factory_1.createControlle
         };
     }
     async releasePayroll(id, releaseData, userId) {
-        await this.payrollsService.update(id, {
+        await this.baseService.update(id, {
             status: 'RELEASED',
             releasedAt: new Date(),
             releasedBy: userId,
@@ -28656,7 +29536,7 @@ class PayrollsController extends (0, create_controller_factory_1.createControlle
         };
     }
     async rejectPayroll(id, reason, userId) {
-        await this.payrollsService.update(id, {
+        await this.baseService.update(id, {
             status: 'REJECTED',
             notes: `Rejected: ${reason}`,
             updatedBy: userId
@@ -28664,36 +29544,6 @@ class PayrollsController extends (0, create_controller_factory_1.createControlle
         return {
             message: 'Payroll rejected successfully'
         };
-    }
-    async getEmployeePayrolls(employeeId, year, month) {
-        // Build filter criteria
-        const criteria = {
-            employee: { id: employeeId }
-        };
-        // Convert month and year to cutoff date range if provided
-        if (year || month) {
-            criteria.cutoff = {};
-            if (year && month) {
-                const startDate = new Date(year, month - 1, 1);
-                const endDate = new Date(year, month, 0);
-                criteria.cutoff.startDate = { gte: startDate };
-                criteria.cutoff.endDate = { lte: endDate };
-            }
-            else if (year) {
-                const startDate = new Date(year, 0, 1);
-                const endDate = new Date(year, 11, 31);
-                criteria.cutoff.startDate = { gte: startDate };
-                criteria.cutoff.endDate = { lte: endDate };
-            }
-        }
-        const payrolls = await this.payrollsService.getRepository().findBy(Object.assign(Object.assign({}, criteria), { relations: {
-                cutoff: true
-            }, order: {
-                cutoff: {
-                    startDate: 'DESC'
-                }
-            } }));
-        return (0, class_transformer_1.plainToInstance)(payroll_dto_1.GetPayrollDto, payrolls);
     }
 }
 exports.PayrollsController = PayrollsController;
@@ -28762,31 +29612,6 @@ __decorate([
     __metadata("design:returntype", typeof (_b = typeof Promise !== "undefined" && Promise) === "function" ? _b : Object)
 ], PayrollsController.prototype, "processPayrollForCutoff", null);
 __decorate([
-    (0, common_1.Get)(':id/details'),
-    (0, authorize_decorator_1.Authorize)({ endpointType: action_enum_1.Action.READ }),
-    (0, swagger_1.ApiOperation)({
-        summary: 'Get detailed payroll information',
-        description: 'Retrieves comprehensive payroll details including all calculated components'
-    }),
-    (0, swagger_1.ApiParam)({
-        name: 'id',
-        description: 'ID of the payroll to get details for',
-        required: true
-    }),
-    (0, swagger_1.ApiResponse)({
-        status: common_1.HttpStatus.OK,
-        description: 'Payroll details retrieved successfully'
-    }),
-    (0, swagger_1.ApiResponse)({
-        status: common_1.HttpStatus.NOT_FOUND,
-        description: 'Payroll not found'
-    }),
-    __param(0, (0, common_1.Param)('id')),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
-    __metadata("design:returntype", typeof (_c = typeof Promise !== "undefined" && Promise) === "function" ? _c : Object)
-], PayrollsController.prototype, "getPayrollDetails", null);
-__decorate([
     (0, common_1.Get)(':id/payslip'),
     (0, authorize_decorator_1.Authorize)({ endpointType: action_enum_1.Action.READ }),
     (0, swagger_1.ApiOperation)({
@@ -28809,7 +29634,7 @@ __decorate([
     __param(0, (0, common_1.Param)('id')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
-    __metadata("design:returntype", typeof (_d = typeof Promise !== "undefined" && Promise) === "function" ? _d : Object)
+    __metadata("design:returntype", typeof (_c = typeof Promise !== "undefined" && Promise) === "function" ? _c : Object)
 ], PayrollsController.prototype, "generatePayslipData", null);
 __decorate([
     (0, common_1.Get)(':id/payslip/download'),
@@ -28834,8 +29659,8 @@ __decorate([
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Res)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, typeof (_e = typeof express_1.Response !== "undefined" && express_1.Response) === "function" ? _e : Object]),
-    __metadata("design:returntype", typeof (_f = typeof Promise !== "undefined" && Promise) === "function" ? _f : Object)
+    __metadata("design:paramtypes", [String, typeof (_d = typeof express_1.Response !== "undefined" && express_1.Response) === "function" ? _d : Object]),
+    __metadata("design:returntype", typeof (_e = typeof Promise !== "undefined" && Promise) === "function" ? _e : Object)
 ], PayrollsController.prototype, "downloadPayslip", null);
 __decorate([
     (0, common_1.Post)(':id/approve'),
@@ -28866,7 +29691,7 @@ __decorate([
     __param(1, (0, current_user_decorator_1.CurrentUser)('sub')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, String]),
-    __metadata("design:returntype", typeof (_g = typeof Promise !== "undefined" && Promise) === "function" ? _g : Object)
+    __metadata("design:returntype", typeof (_f = typeof Promise !== "undefined" && Promise) === "function" ? _f : Object)
 ], PayrollsController.prototype, "approvePayroll", null);
 __decorate([
     (0, common_1.Post)(':id/release'),
@@ -28899,7 +29724,7 @@ __decorate([
     __param(2, (0, current_user_decorator_1.CurrentUser)('sub')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, Object, String]),
-    __metadata("design:returntype", typeof (_h = typeof Promise !== "undefined" && Promise) === "function" ? _h : Object)
+    __metadata("design:returntype", typeof (_g = typeof Promise !== "undefined" && Promise) === "function" ? _g : Object)
 ], PayrollsController.prototype, "releasePayroll", null);
 __decorate([
     (0, common_1.Post)(':id/reject'),
@@ -28928,42 +29753,8 @@ __decorate([
     __param(2, (0, current_user_decorator_1.CurrentUser)('sub')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, String, String]),
-    __metadata("design:returntype", typeof (_j = typeof Promise !== "undefined" && Promise) === "function" ? _j : Object)
+    __metadata("design:returntype", typeof (_h = typeof Promise !== "undefined" && Promise) === "function" ? _h : Object)
 ], PayrollsController.prototype, "rejectPayroll", null);
-__decorate([
-    (0, common_1.Get)('employee/:employeeId'),
-    (0, authorize_decorator_1.Authorize)({ endpointType: action_enum_1.Action.READ }),
-    (0, swagger_1.ApiOperation)({
-        summary: 'Get all payrolls for an employee',
-        description: 'Retrieves all payrolls for a specific employee'
-    }),
-    (0, swagger_1.ApiParam)({
-        name: 'employeeId',
-        description: 'ID of the employee',
-        required: true
-    }),
-    (0, swagger_1.ApiQuery)({
-        name: 'year',
-        required: false,
-        description: 'Filter by year'
-    }),
-    (0, swagger_1.ApiQuery)({
-        name: 'month',
-        required: false,
-        description: 'Filter by month (1-12)'
-    }),
-    (0, swagger_1.ApiResponse)({
-        status: common_1.HttpStatus.OK,
-        description: 'Employee payrolls retrieved successfully',
-        type: [payroll_dto_1.GetPayrollDto]
-    }),
-    __param(0, (0, common_1.Param)('employeeId')),
-    __param(1, (0, common_1.Query)('year')),
-    __param(2, (0, common_1.Query)('month')),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, Number, Number]),
-    __metadata("design:returntype", typeof (_k = typeof Promise !== "undefined" && Promise) === "function" ? _k : Object)
-], PayrollsController.prototype, "getEmployeePayrolls", null);
 
 
 /***/ }),
@@ -28989,16 +29780,17 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
 var PayrollsService_1;
-var _a, _b, _c, _d, _e, _f, _g, _h;
+var _a, _b, _c, _d, _e, _f, _g, _h, _j;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.PayrollsService = void 0;
+const attendance_status_enum_1 = __webpack_require__(/*! @/common/enums/attendance-status.enum */ "./src/common/enums/attendance-status.enum.ts");
 const cutoff_status_enum_1 = __webpack_require__(/*! @/common/enums/cutoff-status.enum */ "./src/common/enums/cutoff-status.enum.ts");
 const cutoff_type_enum_1 = __webpack_require__(/*! @/common/enums/cutoff-type.enum */ "./src/common/enums/cutoff-type.enum.ts");
 const government_contribution_type_enum_1 = __webpack_require__(/*! @/common/enums/government-contribution-type.enum */ "./src/common/enums/government-contribution-type.enum.ts");
 const occurrence_enum_1 = __webpack_require__(/*! @/common/enums/occurrence.enum */ "./src/common/enums/occurrence.enum.ts");
 const payroll_item_category_enum_1 = __webpack_require__(/*! @/common/enums/payroll-item-category.enum */ "./src/common/enums/payroll-item-category.enum.ts");
 const payroll_status_enum_1 = __webpack_require__(/*! @/common/enums/payroll-status.enum */ "./src/common/enums/payroll-status.enum.ts");
-const role_scope_type_enum_1 = __webpack_require__(/*! @/common/enums/role-scope-type.enum */ "./src/common/enums/role-scope-type.enum.ts");
+const request_status_enum_1 = __webpack_require__(/*! @/common/enums/request-status.enum */ "./src/common/enums/request-status.enum.ts");
 const utility_helper_1 = __webpack_require__(/*! @/common/helpers/utility.helper */ "./src/common/helpers/utility.helper.ts");
 const base_service_1 = __webpack_require__(/*! @/common/services/base.service */ "./src/common/services/base.service.ts");
 const users_service_1 = __webpack_require__(/*! @/modules/account-management/users/users.service */ "./src/modules/account-management/users/users.service.ts");
@@ -29007,186 +29799,15 @@ const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
 const typeorm_1 = __webpack_require__(/*! @nestjs/typeorm */ "@nestjs/typeorm");
 const os_1 = __webpack_require__(/*! os */ "os");
 const typeorm_2 = __webpack_require__(/*! typeorm */ "typeorm");
+const work_time_requests_service_1 = __webpack_require__(/*! ../attendance-management/work-time-requests/work-time-requests.service */ "./src/modules/attendance-management/work-time-requests/work-time-requests.service.ts");
 const employee_payroll_item_types_service_1 = __webpack_require__(/*! ../employee-management/employee-payroll-item-types/employee-payroll-item-types.service */ "./src/modules/employee-management/employee-payroll-item-types/employee-payroll-item-types.service.ts");
 const employees_service_1 = __webpack_require__(/*! ../employee-management/employees.service */ "./src/modules/employee-management/employees.service.ts");
 const cutoffs_service_1 = __webpack_require__(/*! ./cutoffs/cutoffs.service */ "./src/modules/payroll-management/cutoffs/cutoffs.service.ts");
 const payroll_entity_1 = __webpack_require__(/*! ./entities/payroll.entity */ "./src/modules/payroll-management/entities/payroll.entity.ts");
 const payroll_item_types_service_1 = __webpack_require__(/*! ./payroll-item-types/payroll-item-types.service */ "./src/modules/payroll-management/payroll-item-types/payroll-item-types.service.ts");
 const payroll_item_entity_1 = __webpack_require__(/*! ./payroll-items/entities/payroll-item.entity */ "./src/modules/payroll-management/payroll-items/entities/payroll-item.entity.ts");
-// Add these types to your system using PayrollItemType entity
-const salaryCompensationTypes = [
-    {
-        name: 'Monthly Salary',
-        category: payroll_item_category_enum_1.PayrollItemCategory.COMPENSATION,
-        unit: 'PHP',
-        computationFormula: 'return Amount;', // Simply return the configured amount
-        isSystemGenerated: true,
-        isRequired: true
-    },
-    {
-        name: 'Daily Rate',
-        category: payroll_item_category_enum_1.PayrollItemCategory.COMPENSATION,
-        unit: 'PHP',
-        computationFormula: 'return Amount * WorkingDaysInPeriod;',
-        isSystemGenerated: true,
-        isRequired: true
-    },
-    {
-        name: 'Hourly Rate',
-        category: payroll_item_category_enum_1.PayrollItemCategory.COMPENSATION,
-        unit: 'PHP',
-        computationFormula: 'return Amount * WorkHoursInPeriod;',
-        isSystemGenerated: true,
-        isRequired: true
-    }
-];
-const sssEmployeeContribution = {
-    name: 'SSS Employee Contribution',
-    description: 'Social Security System employee contribution',
-    category: payroll_item_category_enum_1.PayrollItemCategory.GOVERNMENT,
-    defaultOccurrence: 'MONTHLY',
-    unit: 'PHP',
-    computationFormula: `
-    // 2023 SSS Contribution Table
-    const msw = Employee.MonthlyRate;
-    let contribution = 0;
-    
-    if (msw <= 3249.99) contribution = 135;
-    else if (msw <= 3749.99) contribution = 157.50;
-    else if (msw <= 4249.99) contribution = 180;
-    else if (msw <= 4749.99) contribution = 202.50;
-    // ... more brackets
-    else if (msw >= 24750) contribution = 1125;
-    
-    return contribution;
-  `,
-    isSystemGenerated: true,
-    isGovernmentMandated: true,
-    governmentContributionType: 'SSS',
-    hasEmployerShare: true,
-    employerFormulaPercentage: `
-    // 2023 SSS Employer Contribution Table
-    const msw = Employee.MonthlyRate;
-    let contribution = 0;
-    
-    if (msw <= 3249.99) contribution = 315;
-    else if (msw <= 3749.99) contribution = 367.50;
-    else if (msw <= 4249.99) contribution = 420;
-    // ... more brackets
-    else if (msw >= 24750) contribution = 2625;
-    
-    return contribution;
-  `,
-    isPartOfTaxCalculation: true,
-    isTaxable: false,
-    isTaxDeductible: true,
-    isDisplayedInPayslip: true,
-    isRequired: true,
-    calculationParameters: {
-        sssTable: '2023',
-        includingEC: true,
-        includingMPF: false
-    }
-};
-const philhealthContribution = {
-    name: 'PhilHealth Contribution',
-    description: 'Philippine Health Insurance Corporation contribution',
-    category: payroll_item_category_enum_1.PayrollItemCategory.GOVERNMENT,
-    defaultOccurrence: 'MONTHLY',
-    unit: 'PHP',
-    computationFormula: `
-    // 2023 PhilHealth Contribution - shared equally by employer and employee
-    const msw = Employee.MonthlyRate;
-    let totalContribution = 0;
-    
-    if (msw <= 10000) totalContribution = 400;
-    else if (msw <= 59999.99) totalContribution = msw * 0.04;
-    else totalContribution = 2400;
-    
-    return totalContribution / 2; // Employee share only
-  `,
-    isSystemGenerated: true,
-    isGovernmentMandated: true,
-    governmentContributionType: 'PHILHEALTH',
-    hasEmployerShare: true,
-    employerFormulaPercentage: `return Amount;`, // Equal share: employee and employer
-    isPartOfTaxCalculation: true,
-    isTaxable: false,
-    isTaxDeductible: true,
-    isDisplayedInPayslip: true,
-    isRequired: true,
-    calculationParameters: {
-        philhealthTable: '2023',
-        premiumRate: 4 // percent
-    }
-};
-const pagibigContribution = {
-    name: 'Pag-IBIG Contribution',
-    description: 'Home Development Mutual Fund contribution',
-    category: payroll_item_category_enum_1.PayrollItemCategory.GOVERNMENT,
-    defaultOccurrence: 'MONTHLY',
-    unit: 'PHP',
-    computationFormula: `
-    // Pag-IBIG Contribution - 2% of monthly salary
-    const msw = Math.min(Employee.MonthlyRate, 5000);
-    return msw * 0.02;
-  `,
-    isSystemGenerated: true,
-    isGovernmentMandated: true,
-    governmentContributionType: 'PAGIBIG',
-    hasEmployerShare: true,
-    employerFormulaPercentage: `
-    // Employer share is also 2% of monthly salary
-    const msw = Math.min(Employee.MonthlyRate, 5000);
-    return msw * 0.02;
-  `,
-    isPartOfTaxCalculation: true,
-    isTaxable: false,
-    isTaxDeductible: true,
-    isDisplayedInPayslip: true,
-    isRequired: true,
-    calculationParameters: {
-        pagibigTable: '2023',
-        rate: 2 // percent
-    }
-};
-const withholdingTax = {
-    name: 'Withholding Tax',
-    description: 'BIR withholding tax for compensation income',
-    category: payroll_item_category_enum_1.PayrollItemCategory.TAX,
-    defaultOccurrence: 'MONTHLY',
-    unit: 'PHP',
-    computationFormula: `
-    // 2023 Withholding Tax Table
-    // Get taxable income (after deducting government contributions)
-    const taxableIncome = TaxableIncome;
-    let tax = 0;
-    
-    if (taxableIncome <= 20833) tax = 0;
-    else if (taxableIncome <= 33332) tax = (taxableIncome - 20833) * 0.15;
-    else if (taxableIncome <= 66666) tax = 1875 + (taxableIncome - 33333) * 0.20;
-    else if (taxableIncome <= 166666) tax = 8541.80 + (taxableIncome - 66667) * 0.25;
-    else if (taxableIncome <= 666666) tax = 33541.80 + (taxableIncome - 166667) * 0.30;
-    else tax = 183541.80 + (taxableIncome - 666667) * 0.35;
-    
-    return tax;
-  `,
-    isSystemGenerated: true,
-    isGovernmentMandated: true,
-    governmentContributionType: 'TAX',
-    hasEmployerShare: false,
-    isPartOfTaxCalculation: false, // Not part of taxable income computation
-    isTaxable: false,
-    isTaxDeductible: false,
-    isDisplayedInPayslip: true,
-    isRequired: true,
-    calculationParameters: {
-        taxTable: '2023',
-        applicableTaxExemptions: ['de_minimis', 'thirteenth_month']
-    }
-};
 let PayrollsService = PayrollsService_1 = class PayrollsService extends base_service_1.BaseService {
-    constructor(payrollsRepository, dataSource, employeesService, cutoffsService, finalWorkHoursService, employeePayrollItemTypesService, payrollItemTypesService, usersService) {
+    constructor(payrollsRepository, dataSource, employeesService, cutoffsService, finalWorkHoursService, employeePayrollItemTypesService, payrollItemTypesService, usersService, workTimeRequestsService) {
         super(payrollsRepository, usersService);
         this.payrollsRepository = payrollsRepository;
         this.dataSource = dataSource;
@@ -29196,6 +29817,7 @@ let PayrollsService = PayrollsService_1 = class PayrollsService extends base_ser
         this.employeePayrollItemTypesService = employeePayrollItemTypesService;
         this.payrollItemTypesService = payrollItemTypesService;
         this.usersService = usersService;
+        this.workTimeRequestsService = workTimeRequestsService;
         this.logger = new common_1.Logger(PayrollsService_1.name);
         this.RestDayPayMultiplier = 1.3;
         this.HolidayPayMultiplier = 2.0;
@@ -29204,7 +29826,8 @@ let PayrollsService = PayrollsService_1 = class PayrollsService extends base_ser
         this.HolidayOvertimePayMultiplier = 2.3;
         this.SpecialHolidayOvertimePayMultiplier = 1.3;
         this.RestDayOvertimePayMultiplier = 1.69;
-        this.NightDifferentialPayMultiplier = 0.1;
+        this.NightDifferentialPayMultiplier = 1.1;
+        this.BaseAmount = 'monthlyRate';
     }
     /**
      * Calculate rates based on employee's compensation type and cutoff period
@@ -29265,73 +29888,134 @@ let PayrollsService = PayrollsService_1 = class PayrollsService extends base_ser
     /**
      * Calculate SSS contribution based on 2025 rules
      */
-    calculateSSSContribution(salary, params) {
-        const employeeRate = ((params === null || params === void 0 ? void 0 : params.employeeRate) || 5) / 100;
-        const mscCeiling = (params === null || params === void 0 ? void 0 : params.mscCeiling) || 35000;
-        // Apply MSC ceiling
-        const msc = Math.min(salary, mscCeiling);
-        // Calculate employee's share
-        return msc * employeeRate;
-    }
-    /**
-     * Calculate PhilHealth contribution based on 2025 rules
-     */
-    calculatePhilHealthContribution(salary, params) {
-        const premiumRate = ((params === null || params === void 0 ? void 0 : params.premiumRate) || 5) / 100;
-        const floorSalary = (params === null || params === void 0 ? void 0 : params.floorSalary) || 10000;
-        const ceilingSalary = (params === null || params === void 0 ? void 0 : params.ceilingSalary) || 100000;
-        // Apply floor and ceiling
-        let computationBase = salary;
-        if (computationBase < floorSalary) {
-            computationBase = floorSalary;
-        }
-        else if (computationBase > ceilingSalary) {
-            computationBase = ceilingSalary;
-        }
-        // Calculate total contribution then divide by 2 for employee's share
-        return (computationBase * premiumRate) / 2;
-    }
-    /**
-     * Calculate Pag-IBIG contribution based on 2025 rules
-     */
-    calculatePagIBIGContribution(salary, params) {
-        const employeeRate1 = ((params === null || params === void 0 ? void 0 : params.employeeRate1) || 1) / 100;
-        const employeeRate2 = ((params === null || params === void 0 ? void 0 : params.employeeRate2) || 2) / 100;
-        const maxSalary = (params === null || params === void 0 ? void 0 : params.maxSalary) || 10000;
-        // Apply ceiling
-        const computationBase = Math.min(salary, maxSalary);
-        // Apply rate based on salary
-        const rate = salary <= 1500 ? employeeRate1 : employeeRate2;
-        return computationBase * rate;
+    calculateSSSContribution(itemType, baseAmount) {
+        // SSS calculation based on 2025 rates
+        const sssEmployeeRate = (itemType.percentage || 5) / 100;
+        const sssEmployerRate = (itemType.employerPercentage || 10) / 100;
+        const mscCeiling = itemType.maxAmount || 35000;
+        const mscFloor = itemType.minAmount || 5000;
+        // Apply MSC ceiling based on gross pay
+        let msc = Math.max(baseAmount, mscFloor);
+        msc = Math.min(msc, mscCeiling);
+        // Calculate employee and employer shares
+        const calculatedAmount = parseFloat((msc * sssEmployeeRate).toFixed(2));
+        let employerAmount = parseFloat((msc * sssEmployerRate).toFixed(2));
+        // Add EC contribution (employer only)
+        const ecContribution = msc <= (itemType.minContribution || 14500) ? 10 : 30;
+        employerAmount += ecContribution;
+        const calculationDetail = {
+            calculationType: 'SSS',
+            baseAmount: baseAmount,
+            msc: msc,
+            employeeRate: `${sssEmployeeRate * 100}%`,
+            employerRate: `${sssEmployerRate * 100}%`,
+            employeeContribution: calculatedAmount,
+            employerContribution: employerAmount,
+            ecContribution: ecContribution,
+            totalContribution: calculatedAmount + employerAmount
+        };
+        return { calculatedAmount, employerAmount, calculationDetail };
     }
     /**
      * Calculate withholding tax based on TRAIN Law
      */
+    // Function to calculate withholding tax based on 2025 tax brackets
     calculateWithholdingTax(monthlyTaxableIncome) {
-        // Annualize taxable income
+        // Compute annual taxable income from monthly
         const annualTaxableIncome = monthlyTaxableIncome * 12;
-        // Apply tax table
+        // Apply 2025 tax table
         let annualTax = 0;
         if (annualTaxableIncome <= 250000) {
-            annualTax = 0;
+            annualTax = 0; // Exempt
         }
         else if (annualTaxableIncome <= 400000) {
-            annualTax = (annualTaxableIncome - 250000) * 0.2;
+            annualTax = (annualTaxableIncome - 250000) * 0.15; // 15% of excess over 250,000
         }
         else if (annualTaxableIncome <= 800000) {
-            annualTax = 30000 + (annualTaxableIncome - 400000) * 0.25;
+            annualTax = 22500 + (annualTaxableIncome - 400000) * 0.2; // 22,500 + 20% of excess over 400,000
         }
         else if (annualTaxableIncome <= 2000000) {
-            annualTax = 130000 + (annualTaxableIncome - 800000) * 0.3;
+            annualTax = 102500 + (annualTaxableIncome - 800000) * 0.25; // 102,500 + 25% of excess over 800,000
         }
         else if (annualTaxableIncome <= 8000000) {
-            annualTax = 490000 + (annualTaxableIncome - 2000000) * 0.32;
+            annualTax = 402500 + (annualTaxableIncome - 2000000) * 0.3; // 402,500 + 30% of excess over 2,000,000
         }
         else {
-            annualTax = 2410000 + (annualTaxableIncome - 8000000) * 0.35;
+            annualTax = 2202500 + (annualTaxableIncome - 8000000) * 0.35; // 2,202,500 + 35% of excess over 8,000,000
         }
         // Get monthly tax
-        return annualTax / 12;
+        const calculatedAmount = parseFloat((annualTax / 12).toFixed(2));
+        const calculationDetail = {
+            calculationType: 'WITHHOLDING_TAX',
+            monthlyTaxableIncome: monthlyTaxableIncome,
+            annualTaxableIncome: annualTaxableIncome,
+            annualTax: annualTax,
+            monthlyTax: calculatedAmount
+        };
+        return { calculatedAmount, calculationDetail };
+    }
+    /**
+     * Calculates PhilHealth contributions based on 2025 rates
+     * @param baseAmount Employee's base salary amount
+     * @param itemType Configuration object with rates and thresholds
+     * @returns Object containing calculated amounts and detailed breakdown
+     */
+    calculatePhilHealthContribution(baseAmount, itemType) {
+        // PhilHealth calculation based on 2025 rates
+        const philHealthRate = (itemType.percentage || 2.5) / 100;
+        const philHealthEmployerRate = (itemType.employerPercentage || 2.5) / 100;
+        const floorSalary = itemType.minAmount || 10000;
+        const ceilingSalary = itemType.maxAmount || 100000;
+        // Apply floor and ceiling
+        let philHealthBase = baseAmount;
+        philHealthBase = Math.max(philHealthBase, floorSalary);
+        philHealthBase = Math.min(philHealthBase, ceilingSalary);
+        // Calculate contributions
+        const calculatedAmount = parseFloat((philHealthBase * philHealthRate).toFixed(2));
+        const employerAmount = parseFloat((philHealthBase * philHealthEmployerRate).toFixed(2));
+        const calculationDetail = {
+            calculationType: 'PHILHEALTH',
+            baseAmount: baseAmount,
+            computationBase: philHealthBase,
+            employeeRate: `${philHealthRate * 100}%`,
+            employerRate: `${philHealthEmployerRate * 100}%`,
+            employeeContribution: calculatedAmount,
+            employerContribution: employerAmount,
+            totalContribution: calculatedAmount + employerAmount
+        };
+        return { calculatedAmount, employerAmount, calculationDetail };
+    }
+    /**
+     * Calculates PAGIBIG contributions for both employee and employer
+     * @param baseAmount The employee's base salary
+     * @param itemType Configuration object containing rates and limits
+     * @returns Object containing calculated amounts and detailed breakdown
+     */
+    calculatePagibigContribution(baseAmount, itemType) {
+        // Pag-IBIG calculation based on 2025 rates
+        const pagibigBaseSalary = Math.min(baseAmount, itemType.maxAmount || 10000);
+        // Employee rate depends on salary (1% if ≤ 1500, 2% otherwise)
+        const employeePagibigRate = baseAmount <= (itemType.minAmount || 1500) ?
+            (itemType.minContribution || 1) / 100 :
+            (itemType.maxContribution || 2) / 100;
+        const employerPagibigRate = (itemType.employerPercentage || 2) / 100;
+        const calculatedAmount = parseFloat((pagibigBaseSalary * employeePagibigRate).toFixed(2));
+        const employerAmount = parseFloat((pagibigBaseSalary * employerPagibigRate).toFixed(2));
+        const calculationDetail = {
+            calculationType: 'PAGIBIG',
+            baseAmount: baseAmount,
+            computationBase: pagibigBaseSalary,
+            employeeRate: `${employeePagibigRate * 100}%`,
+            employerRate: `${employerPagibigRate * 100}%`,
+            employeeContribution: calculatedAmount,
+            employerContribution: employerAmount,
+            totalContribution: calculatedAmount + employerAmount
+        };
+        return {
+            calculatedAmount,
+            employerAmount,
+            calculationDetail
+        };
     }
     /**
      * Calculate basic pay components from work hours
@@ -29375,6 +30059,9 @@ let PayrollsService = PayrollsService_1 = class PayrollsService extends base_ser
         payroll.undertime = 0;
         payroll.noTimeIn = 0;
         payroll.noTimeOut = 0;
+        payroll.totalBasicDeductions = 0;
+        payroll.totalDeductions = 0;
+        payroll.totalAllowances = 0;
         // Process each work hour record
         for (const workHour of finalWorkHours) {
             // Fix the hours mapping - you had these swapped
@@ -29421,6 +30108,8 @@ let PayrollsService = PayrollsService_1 = class PayrollsService extends base_ser
         payroll.undertime = payroll.totalUndertimeHours * payroll.hourlyRate;
         payroll.noTimeIn = payroll.totalNoTimeInHours * payroll.hourlyRate;
         payroll.noTimeOut = payroll.totalNoTimeOutHours * payroll.hourlyRate;
+        payroll.totalBasicDeductions = payroll.absences + payroll.tardiness + payroll.undertime
+            + payroll.noTimeIn + payroll.noTimeOut;
         // 10. Initial gross pay from basic components
         payroll.grossPay = payroll.basicPay + payroll.restDayPay + payroll.holidayPay
             + payroll.specialHolidayPay + payroll.overtimePay
@@ -29433,14 +30122,21 @@ let PayrollsService = PayrollsService_1 = class PayrollsService extends base_ser
             payroll.totalHolidayOvertimeHours + payroll.totalSpecialHolidayOvertimeHours;
         // 12. Initial taxable income (will be adjusted for non-taxable items)
         payroll.taxableIncome = payroll.grossPay;
+        // 13. Initial net pay
+        payroll.netPay = payroll.grossPay;
     }
     /**
      * Process all payroll items for an employee
      */
     async processPayrollItems(payroll, userId) {
+        // check if cutoff is available
+        const { cutoff } = payroll;
+        if (!cutoff) {
+            throw new common_1.NotFoundException(`Cutoff not found for payroll ID: ${payroll.id}`);
+        }
         // Get all payroll item types
         const allPayrollItemTypes = await this.payrollItemTypesService.getRepository().find({
-            where: { isActive: true, isDeleted: false },
+            where: { isActive: true, isDeleted: false, includeInPayrollItemsProcessing: true },
             order: { category: 'ASC', name: 'ASC' }
         });
         // Get employee specific payroll item configurations
@@ -29451,23 +30147,50 @@ let PayrollsService = PayrollsService_1 = class PayrollsService extends base_ser
                 isDeleted: false
             },
             relations: {
-                payrollItemType: true
+                payrollItemType: true,
+                employee: true
             }
         });
+        // For government mandated contributions on second cutoff, get combined income
+        let combinedGrossPay = payroll.grossPay;
+        let combinedTaxableIncome = payroll.taxableIncome;
+        if (cutoff.cutoffPlace === 2) {
+            // Find the first cutoff payroll in the same month
+            const firstCutoffDate = new Date(cutoff.startDate);
+            firstCutoffDate.setDate(1); // Set to first day of month
+            const previousPayroll = await this.payrollsRepository.findOne({
+                where: {
+                    employee: { id: payroll.employee.id },
+                    cutoff: {
+                        cutoffNumber: cutoff.cutoffNumber - 1,
+                    },
+                    status: payroll_status_enum_1.PayrollStatus.RELEASED
+                },
+                relations: {
+                    employee: true,
+                    cutoff: true
+                }
+            });
+            if (previousPayroll) {
+                // Add the gross pay from the first cutoff
+                combinedGrossPay += previousPayroll.grossPay;
+                combinedTaxableIncome += previousPayroll.taxableIncome;
+            }
+        }
+        // Check if employee has the required payroll item types
+        const requiredPayrollItemTypes = allPayrollItemTypes.filter(item => item.isRequired);
+        let missingRequiredItems = requiredPayrollItemTypes.filter(item => !employeePayrollItems.some(empItem => empItem.payrollItemType.id === item.id));
+        if (missingRequiredItems.length > 0) {
+            throw new common_1.BadRequestException(`Employee ${payroll.employee.id} is missing required payroll item types: ${missingRequiredItems.map(item => item.name).join(', ')}`);
+        }
         // Map employee payroll items by payroll item type ID for quick lookup
         const employeePayrollItemMap = new Map(employeePayrollItems.map(item => [item.payrollItemType.id, item]));
         // Order for processing categories
         const processingOrder = [
-            payroll_item_category_enum_1.PayrollItemCategory.GOVERNMENT,
-            payroll_item_category_enum_1.PayrollItemCategory.ALLOWANCE,
-            payroll_item_category_enum_1.PayrollItemCategory.BONUS,
-            payroll_item_category_enum_1.PayrollItemCategory.COMMISSION,
-            payroll_item_category_enum_1.PayrollItemCategory.TIP,
-            payroll_item_category_enum_1.PayrollItemCategory.BENEFIT,
+            payroll_item_category_enum_1.PayrollItemCategory.COMPENSATION,
+            payroll_item_category_enum_1.PayrollItemCategory.ADJUSTMENT,
             payroll_item_category_enum_1.PayrollItemCategory.DEDUCTION,
-            payroll_item_category_enum_1.PayrollItemCategory.REIMBURSEMENT,
-            payroll_item_category_enum_1.PayrollItemCategory.TAX,
-            payroll_item_category_enum_1.PayrollItemCategory.OTHER,
+            payroll_item_category_enum_1.PayrollItemCategory.ALLOWANCE,
         ];
         const newPayrollItems = [];
         const calculationLog = [];
@@ -29485,178 +30208,156 @@ let PayrollsService = PayrollsService_1 = class PayrollsService extends base_ser
                 const employeeItemConfig = employeePayrollItemMap.get(itemType.id);
                 // Skip if not applicable for this employee
                 // Only process required items or items that have employee-specific configuration
-                if (!employeeItemConfig) {
+                if (!employeeItemConfig || employeeItemConfig.exempted || (itemType.processEvery && cutoff.cutoffPlace !== itemType.processEvery)) {
                     continue;
                 }
                 // Create new payroll item
                 const payrollItem = new payroll_item_entity_1.PayrollItem({});
                 payrollItem.payrollItemType = itemType;
-                payrollItem.payroll = payroll;
+                payrollItem.employeePayrollItemType = employeeItemConfig;
                 // Calculate item amount
-                let calculatedAmount = 0;
-                let employerAmount = 0;
-                let calculationDetail = {};
-                // If employee has specific amount configured, use it
-                if ((employeeItemConfig === null || employeeItemConfig === void 0 ? void 0 : employeeItemConfig.amount) !== undefined && (employeeItemConfig === null || employeeItemConfig === void 0 ? void 0 : employeeItemConfig.amount) !== null) {
-                    calculatedAmount = employeeItemConfig.amount;
-                }
+                let calculatedAmount = employeeItemConfig.amount || itemType.defaultAmount || 0;
+                let employerAmount;
+                let calculationDetail;
+                // the base amount for calculation gross or monthly rate
+                const baseAmount = this.BaseAmount === 'grossPay' ? combinedGrossPay : payroll.monthlyRate;
                 // Otherwise, calculate based on item type
-                else {
-                    if (itemType.governmentContributionType) {
-                        // Calculate government contributions based on 2025 rates from the item type properties
-                        switch (itemType.governmentContributionType) {
-                            case government_contribution_type_enum_1.GovernmentContributionType.SSS:
-                                // SSS calculation based on 2025 rates
-                                const sssEmployeeRate = (itemType.percentage || 5) / 100;
-                                const sssEmployerRate = (itemType.employerPercentage || 10) / 100;
-                                const mssCeiling = itemType.maxAmount || 35000;
-                                // Apply MSC ceiling
-                                const msc = Math.min(payroll.monthlyRate, mssCeiling);
-                                // Calculate employee and employer shares
-                                calculatedAmount = parseFloat((msc * sssEmployeeRate).toFixed(2));
-                                employerAmount = parseFloat((msc * sssEmployerRate).toFixed(2));
-                                // Add EC contribution (employer only)
-                                const ecContribution = msc <= 14500 ? 10 : 30;
-                                employerAmount += ecContribution;
-                                calculationDetail = {
-                                    calculationType: 'SSS_2025',
-                                    monthlyRate: payroll.monthlyRate,
-                                    msc: msc,
-                                    employeeRate: `${sssEmployeeRate * 100}%`,
-                                    employerRate: `${sssEmployerRate * 100}%`,
-                                    employeeContribution: calculatedAmount,
-                                    employerContribution: employerAmount,
-                                    ecContribution: ecContribution,
-                                    totalContribution: calculatedAmount + employerAmount
-                                };
-                                break;
-                            case government_contribution_type_enum_1.GovernmentContributionType.PHILHEALTH:
-                                // PhilHealth calculation based on 2025 rates
-                                const philHealthRate = (itemType.percentage || 2.5) / 100;
-                                const philHealthEmployerRate = (itemType.employerPercentage || 2.5) / 100;
-                                const floorSalary = itemType.minAmount || 10000;
-                                const ceilingSalary = itemType.maxAmount || 100000;
-                                // Apply floor and ceiling
-                                let philHealthBase = payroll.monthlyRate;
-                                if (philHealthBase < floorSalary) {
-                                    philHealthBase = floorSalary;
-                                }
-                                else if (philHealthBase > ceilingSalary) {
-                                    philHealthBase = ceilingSalary;
-                                }
-                                // Calculate contributions
-                                calculatedAmount = parseFloat((philHealthBase * philHealthRate).toFixed(2));
-                                employerAmount = parseFloat((philHealthBase * philHealthEmployerRate).toFixed(2));
-                                calculationDetail = {
-                                    calculationType: 'PHILHEALTH_2025',
-                                    monthlyRate: payroll.monthlyRate,
-                                    computationBase: philHealthBase,
-                                    employeeRate: `${philHealthRate * 100}%`,
-                                    employerRate: `${philHealthEmployerRate * 100}%`,
-                                    employeeContribution: calculatedAmount,
-                                    employerContribution: employerAmount,
-                                    totalContribution: calculatedAmount + employerAmount
-                                };
-                                break;
-                            case government_contribution_type_enum_1.GovernmentContributionType.PAGIBIG:
-                                // Pag-IBIG calculation based on 2025 rates
-                                const pagibigBaseSalary = Math.min(payroll.monthlyRate, itemType.maxAmount || 10000);
-                                // Employee rate depends on salary (1% if ≤ 1500, 2% otherwise)
-                                const employeePagibigRate = payroll.monthlyRate <= 1500 ?
-                                    (itemType.minContribution || 1) / 100 :
-                                    (itemType.maxContribution || 2) / 100;
-                                const employerPagibigRate = (itemType.employerPercentage || 2) / 100;
-                                calculatedAmount = parseFloat((pagibigBaseSalary * employeePagibigRate).toFixed(2));
-                                employerAmount = parseFloat((pagibigBaseSalary * employerPagibigRate).toFixed(2));
-                                calculationDetail = {
-                                    calculationType: 'PAGIBIG_2025',
-                                    monthlyRate: payroll.monthlyRate,
-                                    computationBase: pagibigBaseSalary,
-                                    employeeRate: `${employeePagibigRate * 100}%`,
-                                    employerRate: `${employerPagibigRate * 100}%`,
-                                    employeeContribution: calculatedAmount,
-                                    employerContribution: employerAmount,
-                                    totalContribution: calculatedAmount + employerAmount
-                                };
-                                break;
-                            case government_contribution_type_enum_1.GovernmentContributionType.TAX:
-                                // Withholding tax calculation based on TRAIN Law
-                                // Compute annual taxable income from monthly
-                                const annualTaxableIncome = payroll.taxableIncome * 12;
-                                // Apply tax table
-                                let annualTax = 0;
-                                if (annualTaxableIncome <= 250000) {
-                                    annualTax = 0;
-                                }
-                                else if (annualTaxableIncome <= 400000) {
-                                    annualTax = (annualTaxableIncome - 250000) * 0.2;
-                                }
-                                else if (annualTaxableIncome <= 800000) {
-                                    annualTax = 30000 + (annualTaxableIncome - 400000) * 0.25;
-                                }
-                                else if (annualTaxableIncome <= 2000000) {
-                                    annualTax = 130000 + (annualTaxableIncome - 800000) * 0.3;
-                                }
-                                else if (annualTaxableIncome <= 8000000) {
-                                    annualTax = 490000 + (annualTaxableIncome - 2000000) * 0.32;
-                                }
-                                else {
-                                    annualTax = 2410000 + (annualTaxableIncome - 8000000) * 0.35;
-                                }
-                                // Get monthly tax
-                                calculatedAmount = parseFloat((annualTax / 12).toFixed(2));
-                                calculationDetail = {
-                                    calculationType: 'WITHHOLDING_TAX_2025',
-                                    monthlyTaxableIncome: payroll.taxableIncome,
-                                    annualTaxableIncome: annualTaxableIncome,
-                                    annualTax: annualTax,
-                                    monthlyTax: calculatedAmount
-                                };
-                                break;
-                        }
-                    }
-                    else if (itemType.type === 'fixed') {
-                        // For fixed type items
-                        calculatedAmount = itemType.defaultAmount || 0;
-                        calculationDetail = {
-                            source: 'default_amount',
-                            amount: calculatedAmount
-                        };
-                    }
-                    else if (itemType.type === 'formula') {
-                        // For formula types without actual formula in entity, 
-                        // use percentage-based calculation on monthly rate
-                        if (itemType.percentage) {
-                            calculatedAmount = parseFloat(((payroll.monthlyRate * itemType.percentage) / 100).toFixed(2));
-                            calculationDetail = {
-                                source: 'percentage_calculation',
-                                baseAmount: payroll.monthlyRate,
-                                percentage: `${itemType.percentage}%`,
-                                result: calculatedAmount
-                            };
-                            // Calculate employer share if applicable
-                            if (itemType.employerPercentage) {
-                                employerAmount = parseFloat(((payroll.monthlyRate * itemType.employerPercentage) / 100).toFixed(2));
-                                calculationDetail.employerCalculation = {
-                                    percentage: `${itemType.employerPercentage}%`,
-                                    baseAmount: payroll.monthlyRate,
-                                    result: employerAmount
-                                };
+                if (itemType.governmentMandatedType) {
+                    // log type
+                    this.logger.log(`Processing government mandated type: ${itemType.governmentMandatedType} for ${payroll.employee.id} for cutoff ${cutoff.cutoffNumber}`);
+                    // Calculate government contributions based on 2025 rates from the item type properties
+                    switch (itemType.governmentMandatedType) {
+                        case government_contribution_type_enum_1.GovernmentMandatedType.SSS:
+                            const sssResult = this.calculateSSSContribution(itemType, baseAmount);
+                            calculatedAmount = sssResult.calculatedAmount;
+                            employerAmount = sssResult.employerAmount;
+                            calculationDetail = sssResult.calculationDetail;
+                            break;
+                        case government_contribution_type_enum_1.GovernmentMandatedType.PHILHEALTH:
+                            const philHealthResult = this.calculatePhilHealthContribution(baseAmount, itemType);
+                            calculatedAmount = philHealthResult.calculatedAmount;
+                            employerAmount = philHealthResult.employerAmount;
+                            calculationDetail = philHealthResult.calculationDetail;
+                            break;
+                        case government_contribution_type_enum_1.GovernmentMandatedType.PAGIBIG:
+                            const pagibigResult = this.calculatePagibigContribution(baseAmount, itemType);
+                            calculatedAmount = pagibigResult.calculatedAmount;
+                            employerAmount = pagibigResult.employerAmount;
+                            calculationDetail = pagibigResult.calculationDetail;
+                            break;
+                        case government_contribution_type_enum_1.GovernmentMandatedType.THIRTEENTH_MONTH_PAY:
+                            // 13th month pay calculation
+                            // Check if it is december and first cutoff
+                            const isDecember = utility_helper_1.UtilityHelper.ensureDate(cutoff.startDate).getMonth() === 12;
+                            const isFirstCutoff = cutoff.cutoffPlace === 1;
+                            if (!isDecember || !isFirstCutoff) {
+                                // log that 13th month pay is not applicable
+                                this.logger.log(`13th month pay is not applicable for ${payroll.employee.id} for cutoff ${cutoff.cutoffNumber} as it is not the first cutoff of December.`);
+                                continue;
                             }
-                        }
-                        else {
-                            // Fallback to default amount if no percentage
-                            calculatedAmount = itemType.defaultAmount || 0;
+                            // Get all payroll net pay of the employee for the year
+                            const yearStartDate = new Date(cutoff.startDate.getFullYear(), 0, 1);
+                            const yearEndDate = new Date(cutoff.startDate.getFullYear(), 11, 31);
+                            const yearPayrolls = await this.payrollsRepository.find({
+                                where: {
+                                    employee: { id: payroll.employee.id },
+                                    cutoff: {
+                                        startDate: (0, typeorm_2.MoreThan)(yearStartDate),
+                                        endDate: (0, typeorm_2.LessThan)(yearEndDate)
+                                    },
+                                    status: payroll_status_enum_1.PayrollStatus.RELEASED
+                                },
+                                relations: {
+                                    employee: true,
+                                    cutoff: true
+                                }
+                            });
+                            // Calculate total net pay for the year
+                            const totalNetPay = yearPayrolls.reduce((total, p) => total + p.netPay, 0);
+                            // Calculate 13th month pay
+                            calculatedAmount = parseFloat((totalNetPay / 12).toFixed(2));
                             calculationDetail = {
-                                source: 'default_amount',
-                                amount: calculatedAmount
+                                calculationType: 'THIRTEENTH_MONTH',
+                                totalNetPay: totalNetPay,
+                                thirteenthMonthPay: calculatedAmount
                             };
-                        }
+                            break;
+                        case government_contribution_type_enum_1.GovernmentMandatedType.TAX:
+                            // Withholding tax calculation based on 2025 Tax Brackets
+                            const { calculatedAmount: taxAmount, calculationDetail: taxDetail } = this.calculateWithholdingTax(combinedTaxableIncome);
+                            calculatedAmount = taxAmount;
+                            calculationDetail = taxDetail;
+                            break;
                     }
+                }
+                else if (itemType.type === 'fixed') {
+                    // For fixed type items
+                    calculatedAmount = employeeItemConfig.amount || itemType.defaultAmount || 0;
+                    calculationDetail = {
+                        calculationType: 'DEFAULT',
+                        amount: calculatedAmount
+                    };
+                }
+                else if (itemType.type === 'formula') {
+                    // // For formula types without actual formula in entity, 
+                    // // use percentage-based calculation on monthly rate
+                    // if (itemType.percentage) {
+                    //   calculatedAmount = parseFloat(((payroll.monthlyRate * itemType.percentage) / 100).toFixed(2));
+                    //   calculationDetail = {
+                    //     source: 'percentage_calculation',
+                    //     baseAmount: payroll.monthlyRate,
+                    //     percentage: `${itemType.percentage}%`,
+                    //     result: calculatedAmount
+                    //   };
+                    //   // Calculate employer share if applicable
+                    //   if (itemType.employerPercentage) {
+                    //     employerAmount = parseFloat(((payroll.monthlyRate * itemType.employerPercentage) / 100).toFixed(2));
+                    //     calculationDetail.employerCalculation = {
+                    //       percentage: `${itemType.employerPercentage}%`,
+                    //       baseAmount: payroll.monthlyRate,
+                    //       result: employerAmount
+                    //     };
+                    //   }
+                    // } else {
+                    //   // Fallback to default amount if no percentage
+                    //   calculatedAmount = itemType.defaultAmount || 0;
+                    //   calculationDetail = {
+                    //     source: 'default_amount',
+                    //     amount: calculatedAmount
+                    //   };
+                    // }
+                }
+                // log calculated ammount
+                this.logger.log(`Calculated amount for ${itemType.name}: ${calculatedAmount}`);
+                if (itemType.category === payroll_item_category_enum_1.PayrollItemCategory.DEDUCTION) {
+                    // Deduct from net pay
+                    payroll.netPay -= Number(calculatedAmount);
+                    payroll.totalDeductions = (Number(payroll.totalDeductions) || 0) + Number(calculatedAmount);
+                }
+                else if (itemType.category === payroll_item_category_enum_1.PayrollItemCategory.ALLOWANCE) {
+                    // Add to net pay
+                    payroll.netPay += Number(calculatedAmount);
+                    payroll.totalAllowances = (Number(payroll.totalAllowances) || 0) + Number(calculatedAmount);
+                }
+                else if (itemType.category === payroll_item_category_enum_1.PayrollItemCategory.COMPENSATION) {
+                    // Add to gross pay
+                    payroll.grossPay += Number(calculatedAmount);
+                }
+                if (itemType.isTaxable) {
+                    // Add to taxable income
+                    const taxExempt = Number(itemType.taxExemptionAmount) || 0;
+                    payrollItem.taxableAmount = taxExempt <= calculatedAmount ?
+                        Number(calculatedAmount) - taxExempt : 0;
+                    payroll.taxableIncome += Number(payrollItem.taxableAmount);
+                }
+                if (itemType.isTaxDeductible) {
+                    // Deduct from gross pay
+                    payroll.taxableIncome -= Number(calculatedAmount);
                 }
                 // Set calculated amounts
                 payrollItem.amount = calculatedAmount;
                 payrollItem.employerAmount = employerAmount;
+                payrollItem.calculationDetails = calculationDetail;
                 // Save to log
                 calculationLog.push({
                     id: itemType.id,
@@ -29678,229 +30379,11 @@ let PayrollsService = PayrollsService_1 = class PayrollsService extends base_ser
                 grossPay: payroll.grossPay,
                 taxableIncome: payroll.taxableIncome,
                 totalAllowances: payroll.totalAllowances,
-                totalBonuses: payroll.totalBonuses,
-                totalBenefits: payroll.totalBenefits,
                 totalDeductions: payroll.totalDeductions,
-                totalGovernmentContributions: payroll.totalGovernmentContributions,
-                totalTaxes: payroll.totalTaxes,
                 netPay: payroll.netPay
             }
         };
         return newPayrollItems;
-    }
-    /**
-   * Generate a detailed view of a payroll for an employee
-   */
-    async getPayrollDetails(payrollId) {
-        var _a, _b, _c, _d, _e, _f, _g, _h, _j;
-        const payroll = await this.findOneByOrFail({ id: payrollId }, {
-            relations: {
-                employee: {
-                    user: {
-                        profile: true
-                    },
-                    roles: {
-                        department: true,
-                        branch: true,
-                        organization: true,
-                    }
-                },
-                cutoff: true,
-                payrollItems: {
-                    payrollItemType: true
-                }
-            }
-        });
-        // Get the employee's highest scope role
-        const highestRole = this.getHighestScopeRole(payroll.employee.roles || []);
-        // Determine organizational position based on roles and entity relationships
-        const position = this.determineEmployeePosition(payroll.employee);
-        // Get government contributions using the entity's getter methods
-        const sssContribution = payroll.sssContribution;
-        const philHealthContribution = payroll.philHealthContribution;
-        const pagIbigContribution = payroll.pagIbigContribution;
-        const withHoldingTax = payroll.withHoldingTax;
-        // Group items by category for display
-        const itemsByCategory = this.groupPayrollItemsByCategory(payroll.payrollItems || []);
-        // Format dates
-        const startDate = payroll.cutoff.startDate.toLocaleDateString();
-        const endDate = payroll.cutoff.endDate.toLocaleDateString();
-        return {
-            payrollId: payroll.id,
-            employee: {
-                id: payroll.employee.id,
-                name: `${(_a = payroll.employee.user.profile) === null || _a === void 0 ? void 0 : _a.firstName} ${(_b = payroll.employee.user.profile) === null || _b === void 0 ? void 0 : _b.lastName}`,
-                employeeNumber: payroll.employee.employeeNumber,
-                position: position,
-                department: ((_c = highestRole === null || highestRole === void 0 ? void 0 : highestRole.department) === null || _c === void 0 ? void 0 : _c.name) || 'N/A',
-                branch: ((_d = highestRole === null || highestRole === void 0 ? void 0 : highestRole.branch) === null || _d === void 0 ? void 0 : _d.name) || 'N/A',
-                organization: ((_e = highestRole === null || highestRole === void 0 ? void 0 : highestRole.organization) === null || _e === void 0 ? void 0 : _e.name) || 'N/A',
-            },
-            cutoff: {
-                id: payroll.cutoff.id,
-                period: `${startDate} - ${endDate}`,
-                type: payroll.cutoff.cutoffType
-            },
-            rates: {
-                monthly: payroll.monthlyRate,
-                daily: payroll.dailyRate,
-                hourly: payroll.hourlyRate
-            },
-            workHours: {
-                regular: payroll.totalRegularHours,
-                overtime: payroll.totalOvertimeHours,
-                holiday: payroll.totalHolidayHours,
-                specialHoliday: payroll.totalSpecialHolidayHours,
-                restDay: payroll.totalRestDayHours,
-                nightDifferential: payroll.totalNightDifferentialHours,
-                holidayOvertime: payroll.totalHolidayOvertimeHours,
-                specialHolidayOvertime: payroll.totalSpecialHolidayOvertimeHours,
-                restDayOvertime: payroll.totalRestDayOvertimeHours,
-                total: (payroll.totalRegularHours +
-                    payroll.totalOvertimeHours +
-                    payroll.totalHolidayHours +
-                    payroll.totalSpecialHolidayHours +
-                    payroll.totalRestDayHours +
-                    payroll.totalHolidayOvertimeHours +
-                    payroll.totalSpecialHolidayOvertimeHours +
-                    payroll.totalRestDayOvertimeHours)
-            },
-            earnings: {
-                basicPay: payroll.basicPay,
-                overtimePay: payroll.overtimePay,
-                holidayPay: payroll.holidayPay,
-                holidayOvertimePay: payroll.holidayOvertimePay,
-                specialHolidayPay: payroll.specialHolidayPay,
-                specialHolidayOvertimePay: payroll.specialHolidayOvertimePay,
-                restDayPay: payroll.restDayPay,
-                restDayOvertimePay: payroll.restDayOvertimePay,
-                nightDifferentialPay: payroll.nightDifferentialPay,
-                allowances: itemsByCategory[payroll_item_category_enum_1.PayrollItemCategory.ALLOWANCE] || [],
-                bonuses: itemsByCategory[payroll_item_category_enum_1.PayrollItemCategory.BONUS] || [],
-                commissions: itemsByCategory[payroll_item_category_enum_1.PayrollItemCategory.COMMISSION] || [],
-                tips: itemsByCategory[payroll_item_category_enum_1.PayrollItemCategory.TIP] || [],
-            },
-            deductions: {
-                governmentContributions: {
-                    sss: {
-                        employee: sssContribution.employee,
-                        employer: sssContribution.employer,
-                        total: sssContribution.total
-                    },
-                    philhealth: {
-                        employee: philHealthContribution.employee,
-                        employer: philHealthContribution.employer,
-                        total: philHealthContribution.total
-                    },
-                    pagibig: {
-                        employee: pagIbigContribution.employee,
-                        employer: pagIbigContribution.employer,
-                        total: pagIbigContribution.total
-                    },
-                    tax: withHoldingTax
-                },
-                otherDeductions: itemsByCategory[payroll_item_category_enum_1.PayrollItemCategory.DEDUCTION] || []
-            },
-            totals: {
-                grossPay: payroll.grossPay,
-                taxableIncome: payroll.taxableIncome,
-                totalDeductions: (payroll.totalDeductions +
-                    payroll.totalGovernmentContributions +
-                    payroll.totalTaxes),
-                netPay: payroll.netPay
-            },
-            benefits: itemsByCategory[payroll_item_category_enum_1.PayrollItemCategory.BENEFIT] || [],
-            reimbursements: itemsByCategory[payroll_item_category_enum_1.PayrollItemCategory.REIMBURSEMENT] || [],
-            status: payroll.status,
-            paymentDetails: {
-                method: payroll.paymentMethod,
-                bankAccount: payroll.bankAccount,
-                checkNumber: payroll.checkNumber,
-                referenceNumber: payroll.bankReferenceNumber,
-                paymentDate: (_f = payroll.paymentDate) === null || _f === void 0 ? void 0 : _f.toLocaleDateString(),
-            },
-            processing: {
-                processedAt: (_g = payroll.processedAt) === null || _g === void 0 ? void 0 : _g.toLocaleDateString(),
-                processedBy: payroll.processedBy,
-                approvedAt: (_h = payroll.approvedAt) === null || _h === void 0 ? void 0 : _h.toLocaleDateString(),
-                approvedBy: payroll.approvedBy,
-                releasedAt: (_j = payroll.releasedAt) === null || _j === void 0 ? void 0 : _j.toLocaleDateString(),
-                releasedBy: payroll.releasedBy,
-            },
-            notes: payroll.notes,
-        };
-    }
-    /**
-     * Get the highest scope role from the employee's roles
-     */
-    getHighestScopeRole(roles) {
-        if (!roles.length)
-            return undefined;
-        // Define scope priority (higher number = higher priority)
-        const scopePriority = {
-            [role_scope_type_enum_1.RoleScopeType.GLOBAL]: 5,
-            [role_scope_type_enum_1.RoleScopeType.ORGANIZATION]: 4,
-            [role_scope_type_enum_1.RoleScopeType.BRANCH]: 3,
-            [role_scope_type_enum_1.RoleScopeType.DEPARTMENT]: 2,
-            [role_scope_type_enum_1.RoleScopeType.OWNED]: 1
-        };
-        // Sort roles by scope priority (highest first)
-        const sortedRoles = [...roles].sort((a, b) => scopePriority[b.scope] - scopePriority[a.scope]);
-        return sortedRoles[0];
-    }
-    /**
-     * Determine the employee's position based on roles and organizational relationships
-     */
-    determineEmployeePosition(employee) {
-        var _a, _b, _c;
-        if (!employee.roles || employee.roles.length === 0) {
-            return 'Staff';
-        }
-        const highestRole = this.getHighestScopeRole(employee.roles);
-        if (!highestRole)
-            return 'Staff';
-        // Construct position based on role scope and name
-        let positionPrefix = '';
-        switch (highestRole.scope) {
-            case role_scope_type_enum_1.RoleScopeType.GLOBAL:
-                positionPrefix = 'Executive';
-                break;
-            case role_scope_type_enum_1.RoleScopeType.ORGANIZATION:
-                positionPrefix = ((_a = highestRole.organization) === null || _a === void 0 ? void 0 : _a.name) || 'Organizational';
-                break;
-            case role_scope_type_enum_1.RoleScopeType.BRANCH:
-                positionPrefix = ((_b = highestRole.branch) === null || _b === void 0 ? void 0 : _b.name) || 'Branch';
-                break;
-            case role_scope_type_enum_1.RoleScopeType.DEPARTMENT:
-                positionPrefix = ((_c = highestRole.department) === null || _c === void 0 ? void 0 : _c.name) || 'Department';
-                break;
-            case role_scope_type_enum_1.RoleScopeType.OWNED:
-                positionPrefix = 'Team';
-                break;
-        }
-        return `${positionPrefix} ${highestRole.name}`;
-    }
-    /**
-     * Helper method to group payroll items by category
-     */
-    groupPayrollItemsByCategory(payrollItems) {
-        const result = {};
-        payrollItems.forEach(item => {
-            const category = item.payrollItemType.category;
-            if (!result[category]) {
-                result[category] = [];
-            }
-            result[category].push({
-                id: item.id,
-                name: item.payrollItemType.name,
-                amount: item.amount,
-                employerAmount: item.employerAmount || 0,
-                total: item.amount + (item.employerAmount || 0),
-                govType: item.payrollItemType.governmentContributionType,
-                description: item.payrollItemType.description
-            });
-        });
-        return result;
     }
     /**
      * Process payroll for a single employee
@@ -29914,8 +30397,6 @@ let PayrollsService = PayrollsService_1 = class PayrollsService extends base_ser
                     cutoff: { id: cutoffId }
                 },
                 relations: {
-                    employee: true,
-                    cutoff: true,
                     payrollItems: {
                         payrollItemType: true
                     }
@@ -29924,14 +30405,27 @@ let PayrollsService = PayrollsService_1 = class PayrollsService extends base_ser
             // Get employee and cutoff data
             const employee = await this.employeesService.findOneByOrFail({ id: employeeId });
             const cutoff = await this.cutoffsService.findOneByOrFail({ id: cutoffId });
+            // If exists and already processed, prevent re-processing
+            if (existingPayroll && existingPayroll.status === payroll_status_enum_1.PayrollStatus.RELEASED) {
+                throw new common_1.BadRequestException(`Payroll for employee ${employee.id} for cutoff ${cutoff.id} has already been released and cannot be reprocessed`);
+            }
             // Get base compensation
             const baseCompensation = await this.employeePayrollItemTypesService.getEmployeeBaseCompensation(employeeId);
             if (!baseCompensation) {
                 throw new common_1.BadRequestException(`No base compensation defined for employee ${employeeId}. Please define employee's base compensation first.`);
             }
-            // If exists and already processed, prevent re-processing
-            if (existingPayroll && existingPayroll.status === payroll_status_enum_1.PayrollStatus.RELEASED) {
-                throw new common_1.BadRequestException(`Payroll for employee ${employee.id} for cutoff ${cutoff.id} has already been released and cannot be reprocessed`);
+            // Check if there is pending overtime work time requests for this employee
+            const pendingWorkTimeRequests = await this.workTimeRequestsService.getRepository().find({
+                where: {
+                    employee: { id: employeeId },
+                    status: request_status_enum_1.RequestStatus.PENDING,
+                    type: attendance_status_enum_1.AttendanceStatus.OVERTIME,
+                    cutoff: { id: cutoffId }
+                }
+            });
+            if (pendingWorkTimeRequests.length > 0) {
+                // could prevent process or just change payroll status to error
+                throw new common_1.BadRequestException(`There are pending overtime work time requests for employee ${employeeId}. Please approve or reject them first.`);
             }
             // if (cutoff.status !== CutoffStatus.PROCESSING) {
             //   throw new BadRequestException('Cutoff is not in processing status');
@@ -29946,7 +30440,7 @@ let PayrollsService = PayrollsService_1 = class PayrollsService extends base_ser
                 throw new common_1.BadRequestException(`No approved work hours found for employee ${employeeId} in cutoff ${cutoffId}`);
             }
             // Use existing payroll or create new one
-            const payroll = existingPayroll || new payroll_entity_1.Payroll({});
+            const payroll = new payroll_entity_1.Payroll({});
             // Set core properties
             payroll.employee = employee;
             payroll.cutoff = cutoff;
@@ -29955,17 +30449,16 @@ let PayrollsService = PayrollsService_1 = class PayrollsService extends base_ser
             await this.calculateBasicPay(payroll, finalWorkHours);
             // Save payroll to get an ID if new
             const savedPayroll = await transactionManager.save(payroll);
-            // Process all payroll items
-            // const payrollItems = await this.processPayrollItems(savedPayroll, userId);
-            // savedPayroll.payrollItems = payrollItems;
-            // // Mark work hours as processed
-            // for (const workHour of finalWorkHours) {
-            //   await this.finalWorkHoursService.update(
-            //     workHour.id, 
-            //     { isProcessed: true },
-            //     userId
-            //   );
-            // }
+            // In processPayrollForEmployee
+            const payrollItems = await this.processPayrollItems(savedPayroll, userId);
+            // Set the relationship properly
+            payrollItems.forEach(item => {
+                item.payroll = savedPayroll;
+            });
+            // Save items first
+            await transactionManager.save(payrollItems);
+            // Then set on payroll
+            savedPayroll.payrollItems = payrollItems;
             // Finalize payroll
             savedPayroll.processedAt = new Date();
             savedPayroll.processedBy = userId;
@@ -30019,18 +30512,22 @@ let PayrollsService = PayrollsService_1 = class PayrollsService extends base_ser
      */
     async generatePayslipData(payrollId) {
         var _a, _b, _c, _d;
-        const payroll = await this.findOneBy({ id: payrollId }, {
+        const payroll = await this.findOneByOrFail({ id: payrollId }, {
             relations: {
-                employee: true,
+                employee: {
+                    user: {
+                        profile: true
+                    },
+                    roles: true
+                },
                 cutoff: true,
                 payrollItems: {
                     payrollItemType: true
                 }
             }
         });
-        if (!payroll) {
-            throw new common_1.NotFoundException(`Payroll with ID ${payrollId} not found`);
-        }
+        // Get the employee's highest scope role
+        const highestRole = utility_helper_1.UtilityHelper.determineEffectiveScope(payroll.employee.roles || []);
         // Group payroll items by category for organized display
         const itemsByCategory = {};
         for (const item of payroll.payrollItems || []) {
@@ -30044,15 +30541,18 @@ let PayrollsService = PayrollsService_1 = class PayrollsService extends base_ser
             });
         }
         // Format dates
-        const startDate = payroll.cutoff.startDate.toLocaleDateString();
-        const endDate = payroll.cutoff.endDate.toLocaleDateString();
+        const startDate = utility_helper_1.UtilityHelper.ensureDate(payroll.cutoff.startDate).toLocaleDateString();
+        const endDate = utility_helper_1.UtilityHelper.ensureDate(payroll.cutoff.endDate).toLocaleDateString();
+        const name = ((_a = payroll.employee.user.profile) === null || _a === void 0 ? void 0 : _a.fullName) || payroll.employee.user.userName || payroll.employee.user.email;
         // Build payslip data
         return {
             employee: {
-                name: `${(_a = payroll.employee.user.profile) === null || _a === void 0 ? void 0 : _a.firstName} ${(_b = payroll.employee.user.profile) === null || _b === void 0 ? void 0 : _b.lastName}`,
+                name,
                 employeeNumber: payroll.employee.employeeNumber,
-                // position: payroll.employee.roles?.name || '',
-                // department: payroll.employee.departmentId?.name || ''
+                position: highestRole.name,
+                department: ((_b = highestRole === null || highestRole === void 0 ? void 0 : highestRole.department) === null || _b === void 0 ? void 0 : _b.name) || 'N/A',
+                branch: ((_c = highestRole === null || highestRole === void 0 ? void 0 : highestRole.branch) === null || _c === void 0 ? void 0 : _c.name) || 'N/A',
+                organization: ((_d = highestRole === null || highestRole === void 0 ? void 0 : highestRole.organization) === null || _d === void 0 ? void 0 : _d.name) || 'N/A',
             },
             payPeriod: `${startDate} - ${endDate}`,
             rates: {
@@ -30064,42 +30564,53 @@ let PayrollsService = PayrollsService_1 = class PayrollsService extends base_ser
                 regular: payroll.totalRegularHours,
                 overtime: payroll.totalOvertimeHours,
                 holiday: payroll.totalHolidayHours,
+                holidayOvertime: payroll.totalHolidayOvertimeHours,
+                specialHoliday: payroll.totalSpecialHolidayHours,
+                specialHolidayOvertime: payroll.totalSpecialHolidayOvertimeHours,
                 restDay: payroll.totalRestDayHours,
-                nightDifferential: payroll.totalNightDifferentialHours
+                restDayOvertime: payroll.totalRestDayOvertimeHours,
+                nightDifferential: payroll.totalNightDifferentialHours,
             },
             earnings: {
                 basicPay: payroll.basicPay,
                 overtimePay: payroll.overtimePay,
                 holidayPay: payroll.holidayPay,
+                holidayOvertimePay: payroll.holidayOvertimePay,
+                specialHolidayPay: payroll.specialHolidayPay,
+                specialHolidayOvertimePay: payroll.specialHolidayOvertimePay,
                 restDayPay: payroll.restDayPay,
+                restDayOvertimePay: payroll.restDayOvertimePay,
                 nightDifferentialPay: payroll.nightDifferentialPay,
                 allowances: itemsByCategory[payroll_item_category_enum_1.PayrollItemCategory.ALLOWANCE] || [],
-                bonuses: itemsByCategory[payroll_item_category_enum_1.PayrollItemCategory.BONUS] || [],
-                commissions: itemsByCategory[payroll_item_category_enum_1.PayrollItemCategory.COMMISSION] || [],
                 tips: itemsByCategory[payroll_item_category_enum_1.PayrollItemCategory.TIP] || [],
                 others: itemsByCategory[payroll_item_category_enum_1.PayrollItemCategory.OTHER] || []
             },
             deductions: {
-                taxes: itemsByCategory[payroll_item_category_enum_1.PayrollItemCategory.TAX] || [],
-                governmentContributions: ((_c = payroll.payrollItems) === null || _c === void 0 ? void 0 : _c.filter(item => item.payrollItemType.governmentContributionType).map(item => ({
-                    name: item.payrollItemType.name,
-                    amount: item.amount,
-                    employerAmount: item.employerAmount || 0,
-                    total: item.amount + (item.employerAmount || 0)
-                }))) || [],
-                otherDeductions: itemsByCategory[payroll_item_category_enum_1.PayrollItemCategory.DEDUCTION] || []
+                basic: {
+                    absences: payroll.absences,
+                    tardiness: payroll.tardiness,
+                    undertime: payroll.undertime,
+                    noTimeIn: payroll.noTimeIn,
+                    noTimeOut: payroll.noTimeOut,
+                    total: payroll.totalBasicDeductions
+                },
+                governmentMandated: {
+                    sss: payroll.sssContribution.employee,
+                    philhealth: payroll.philHealthContribution.employee,
+                    pagibig: payroll.pagIbigContribution.employee,
+                    tax: payroll.withHoldingTax
+                },
+                otherDeductions: itemsByCategory[payroll_item_category_enum_1.PayrollItemCategory.DEDUCTION].filter((item) => item.governmentMandatedType) || []
             },
             totals: {
                 grossPay: payroll.grossPay,
-                totalDeductions: payroll.totalDeductions +
-                    payroll.totalGovernmentContributions +
-                    payroll.totalTaxes,
+                totalDeductions: payroll.totalDeductions,
+                totalAllowances: payroll.totalAllowances,
+                taxableIncome: payroll.taxableIncome,
                 netPay: payroll.netPay
             },
-            benefits: itemsByCategory[payroll_item_category_enum_1.PayrollItemCategory.BENEFIT] || [],
-            reimbursements: itemsByCategory[payroll_item_category_enum_1.PayrollItemCategory.REIMBURSEMENT] || [],
             year: new Date().getFullYear(),
-            payrollDate: ((_d = payroll.processedAt) === null || _d === void 0 ? void 0 : _d.toLocaleDateString()) || new Date().toLocaleDateString()
+            payrollDate: utility_helper_1.UtilityHelper.ensureDate(payroll.processedAt || new Date).toLocaleDateString()
         };
     }
 };
@@ -30107,8 +30618,21 @@ exports.PayrollsService = PayrollsService;
 exports.PayrollsService = PayrollsService = PayrollsService_1 = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, typeorm_1.InjectRepository)(payroll_entity_1.Payroll)),
-    __metadata("design:paramtypes", [typeof (_a = typeof typeorm_2.Repository !== "undefined" && typeorm_2.Repository) === "function" ? _a : Object, typeof (_b = typeof typeorm_2.DataSource !== "undefined" && typeorm_2.DataSource) === "function" ? _b : Object, typeof (_c = typeof employees_service_1.EmployeesService !== "undefined" && employees_service_1.EmployeesService) === "function" ? _c : Object, typeof (_d = typeof cutoffs_service_1.CutoffsService !== "undefined" && cutoffs_service_1.CutoffsService) === "function" ? _d : Object, typeof (_e = typeof final_work_hours_service_1.FinalWorkHoursService !== "undefined" && final_work_hours_service_1.FinalWorkHoursService) === "function" ? _e : Object, typeof (_f = typeof employee_payroll_item_types_service_1.EmployeePayrollItemTypesService !== "undefined" && employee_payroll_item_types_service_1.EmployeePayrollItemTypesService) === "function" ? _f : Object, typeof (_g = typeof payroll_item_types_service_1.PayrollItemTypesService !== "undefined" && payroll_item_types_service_1.PayrollItemTypesService) === "function" ? _g : Object, typeof (_h = typeof users_service_1.UsersService !== "undefined" && users_service_1.UsersService) === "function" ? _h : Object])
+    __metadata("design:paramtypes", [typeof (_a = typeof typeorm_2.Repository !== "undefined" && typeorm_2.Repository) === "function" ? _a : Object, typeof (_b = typeof typeorm_2.DataSource !== "undefined" && typeorm_2.DataSource) === "function" ? _b : Object, typeof (_c = typeof employees_service_1.EmployeesService !== "undefined" && employees_service_1.EmployeesService) === "function" ? _c : Object, typeof (_d = typeof cutoffs_service_1.CutoffsService !== "undefined" && cutoffs_service_1.CutoffsService) === "function" ? _d : Object, typeof (_e = typeof final_work_hours_service_1.FinalWorkHoursService !== "undefined" && final_work_hours_service_1.FinalWorkHoursService) === "function" ? _e : Object, typeof (_f = typeof employee_payroll_item_types_service_1.EmployeePayrollItemTypesService !== "undefined" && employee_payroll_item_types_service_1.EmployeePayrollItemTypesService) === "function" ? _f : Object, typeof (_g = typeof payroll_item_types_service_1.PayrollItemTypesService !== "undefined" && payroll_item_types_service_1.PayrollItemTypesService) === "function" ? _g : Object, typeof (_h = typeof users_service_1.UsersService !== "undefined" && users_service_1.UsersService) === "function" ? _h : Object, typeof (_j = typeof work_time_requests_service_1.WorkTimeRequestsService !== "undefined" && work_time_requests_service_1.WorkTimeRequestsService) === "function" ? _j : Object])
 ], PayrollsService);
+
+
+/***/ }),
+
+/***/ "./src/modules/payroll-management/types/calculation-details.type.ts":
+/*!**************************************************************************!*\
+  !*** ./src/modules/payroll-management/types/calculation-details.type.ts ***!
+  \**************************************************************************/
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
 
 
 /***/ }),
@@ -31973,7 +32497,7 @@ let SchedulesService = class SchedulesService extends base_service_1.BaseService
                 employee: { id: employeeId },
                 date: (0, date_fns_1.parseISO)((0, date_fns_1.format)(new Date(), 'yyyy-MM-dd'))
             },
-            relations: { shift: { days: true }, holiday: true, employee: true }
+            relations: { shift: { days: true }, cutoff: true, holiday: true, employee: true }
         });
     }
     /**

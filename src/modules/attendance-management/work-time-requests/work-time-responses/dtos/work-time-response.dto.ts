@@ -3,7 +3,7 @@ import { ReferenceDto } from "@/common/dtos/reference.dto";
 import { createGetDto } from "@/common/factories/create-get-dto.factory";
 import { ApiProperty, PartialType } from "@nestjs/swagger";
 import { Type } from "class-transformer";
-import { IsBoolean, IsNotEmpty, IsOptional, IsString, ValidateNested } from "class-validator";
+import { IsBoolean, IsNotEmpty, IsString, ValidateNested } from "class-validator";
 
 export class WorkTimeResponseDto extends PartialType(BaseDto) {
     @ApiProperty({ 
@@ -27,10 +27,10 @@ export class WorkTimeResponseDto extends PartialType(BaseDto) {
         description: 'Work time request associated with this response',
         type: ReferenceDto,
     })
-    @IsOptional()
+    @IsNotEmpty()
     @ValidateNested()
     @Type(() => ReferenceDto)
-    workTimeRequest?: ReferenceDto;
+    workTimeRequest!: ReferenceDto;
 }
 
 export class UpdateWorkTimeResponseDto extends PartialType(WorkTimeResponseDto) {}

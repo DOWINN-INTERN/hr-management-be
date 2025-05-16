@@ -3,6 +3,7 @@ import { RequestStatus } from '@/common/enums/request-status.enum';
 import { BaseEntity } from '@/database/entities/base.entity';
 import { Document } from '@/modules/documents/entities/document.entity';
 import { Employee } from '@/modules/employee-management/entities/employee.entity';
+import { Cutoff } from '@/modules/payroll-management/cutoffs/entities/cutoff.entity';
 import { Column, Entity, JoinColumn, ManyToOne, OneToMany, OneToOne } from 'typeorm';
 import { Attendance } from '../../entities/attendance.entity';
 import { DayType } from '../../final-work-hours/entities/final-work-hour.entity';
@@ -10,7 +11,6 @@ import { WorkTimeResponse } from '../work-time-responses/entities/work-time-resp
 
 @Entity('work-time-requests')
 export class WorkTimeRequest extends BaseEntity<WorkTimeRequest> {
-    // employee
     @ManyToOne(() => Employee, (employee: Employee) => employee.workTimeRequests)
     @JoinColumn({ name: 'employeeId' })
     employee!: Employee;
@@ -34,6 +34,10 @@ export class WorkTimeRequest extends BaseEntity<WorkTimeRequest> {
     @ManyToOne(() => Attendance, (attendance: Attendance) => attendance.workTimeRequests)
     @JoinColumn({ name: 'attendanceId' })
     attendance!: Attendance;
+
+    @ManyToOne(() => Cutoff, (cutoff: Cutoff) => cutoff.workTimeRequests)
+    @JoinColumn({ name: 'cutoffId' })
+    cutoff!: Cutoff;
 
     @OneToMany(() => Document, (document: Document) => document.workTimeRequest, { nullable: true })
     documents?: Document[];

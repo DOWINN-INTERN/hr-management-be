@@ -4,7 +4,7 @@ import { ATTENDANCE_EVENTS, RecalculateFinalWorkHoursEvent } from '@/common/even
 import { BaseService } from '@/common/services/base.service';
 import { UsersService } from '@/modules/account-management/users/users.service';
 import { CutoffsService } from '@/modules/payroll-management/cutoffs/cutoffs.service';
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { InjectRepository } from '@nestjs/typeorm';
 import { format } from 'date-fns';
@@ -243,7 +243,16 @@ export class FinalWorkHoursService extends BaseService<FinalWorkHour> {
 
     async recalculateByCutoffId(cutoffId: string, updatedBy: string) {
         // Check if cutoff exists
-        await this.cutoffsService.findOneByOrFail({ id: cutoffId });
+        const cutoff = await this.cutoffsService.findOneByOrFail({ id: cutoffId }, { relations: { attendances: true } });
+
+        // get all processed attendances
+        const processedAttendances = cutoff.attendances?.filter(attendance => {
+            return attendance.isProcessed;
+        });
+
+        if (!processedAttendances || processedAttendances.length === 0) {
+            throw new NotFoundException(`No processed attendances found for cutoff ID: ${cutoffId}`);
+        }
 
         // emit event to recalculate final work hours
         this.eventEmitter.emit(ATTENDANCE_EVENTS.RECALCULATE_FINAL_WORK_HOURS, new RecalculateFinalWorkHoursEvent(cutoffId, updatedBy));        

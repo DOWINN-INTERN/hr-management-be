@@ -21,4 +21,12 @@ export class AttendancePunchesController extends createController(AttendancePunc
     override async softDelete(id: string, deletedBy: string): Promise<GeneralResponseDto> {
         return await super.softDelete(id, deletedBy);
     }
+
+    override async findById(id: string, relations?: string, select?: string): Promise<GetAttendancePunchDto> {
+        return await super.findById(id, relations, select);
+    }
+
+    override async findOne(fieldsString: string, relations?: string, select?: string): Promise<GetAttendancePunchDto> {
+        return await super.findOne(fieldsString, relations, select);
+    }
 }

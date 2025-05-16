@@ -7,6 +7,7 @@ import { IJwtPayload } from '../interfaces/jwt-payload.interface';
 
 // Define proper interfaces for improved type safety
 export interface ResourceScope {
+  roleName?: string;
   type: RoleScopeType;
   userId?: string;
   departments?: string[];

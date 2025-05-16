@@ -1,4 +1,4 @@
-import { GovernmentContributionType } from '@/common/enums/government-contribution-type.enum';
+import { GovernmentMandatedType } from '@/common/enums/government-contribution-type.enum';
 import { Occurrence } from '@/common/enums/occurrence.enum';
 import { PayrollItemCategory } from '@/common/enums/payroll-item-category.enum';
 import { BaseEntity } from '@/database/entities/base.entity';
@@ -24,9 +24,6 @@ export class PayrollItemType extends BaseEntity<PayrollItemType> {
     defaultOccurrence!: Occurrence;
 
     @Column()
-    unit!: string;
-
-    @Column()
     type!: 'fixed' | 'formula';
 
     @Column('decimal', { 
@@ -39,8 +36,8 @@ export class PayrollItemType extends BaseEntity<PayrollItemType> {
     @Column({ default: true })
     isActive!: boolean;
     
-    @Column({ type: 'enum', enum: GovernmentContributionType, nullable: true })
-    governmentContributionType?: GovernmentContributionType;
+    @Column({ type: 'enum', enum: GovernmentMandatedType, nullable: true })
+    governmentMandatedType?: GovernmentMandatedType;
     
     @Column({ default: true })
     isRequired!: boolean;
@@ -58,6 +55,9 @@ export class PayrollItemType extends BaseEntity<PayrollItemType> {
         nullable: true
     })
     percentage?: number;
+
+    @Column({ nullable: true })
+    processEvery?: number;
     
     @Column('decimal', 
     { 
@@ -66,12 +66,23 @@ export class PayrollItemType extends BaseEntity<PayrollItemType> {
         nullable: true
     })
     employerPercentage?: number;
-    
+
     @Column({ default: true })
+    includeInPayrollItemsProcessing!: boolean;
+    
+    @Column({ default: false })
     isTaxable!: boolean;
     
     @Column({ default: false })
     isTaxDeductible!: boolean;
+
+    @Column('decimal', 
+    { 
+        precision: 10, 
+        scale: 2,
+        nullable: true
+    })
+    taxExemptionAmount?: number;
 
     // Calculation Params
     @Column('decimal', 

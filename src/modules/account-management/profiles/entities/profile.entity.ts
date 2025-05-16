@@ -1,5 +1,7 @@
 import { BaseEntity } from '@/database/entities/base.entity';
 import {
+  BeforeInsert,
+  BeforeUpdate,
   Column,
   Entity,
   JoinColumn,
@@ -60,4 +62,14 @@ export class Profile extends BaseEntity<Profile> {
     cascade: true
   })
   address?: Address;
+
+  @BeforeInsert()
+  @BeforeUpdate()
+  generateFullName() {
+    this.fullName = [
+      this.firstName,
+      this.middleName || '',
+      this.lastName
+    ].filter(Boolean).join(' ');
+  }
 }

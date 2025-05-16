@@ -15,6 +15,7 @@ import { SchedulesService } from '@/modules/shift-management/schedules/schedules
 import { Injectable, Logger } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { differenceInMinutes, format, isAfter, isBefore, parseISO } from 'date-fns';
+import { Attendance } from '../entities/attendance.entity';
 import { DayType } from '../final-work-hours/entities/final-work-hour.entity';
 import { WorkHourCalculationService } from '../final-work-hours/services/work-hour-calculation.service';
 import { WorkTimeRequestsService } from '../work-time-requests/work-time-requests.service';
@@ -165,7 +166,7 @@ export class AttendanceListener {
         let existingAttendance = await this.attendancesService.findOneBy({
           employee: new Employee({ id: employee.id }),
           schedule: new Schedule({ id: todaySchedule.id }),
-        });
+        }, { relations: { cutoff: true } });
         
         // If no existing attendance create an attendance
         if (!existingAttendance) {
@@ -173,6 +174,7 @@ export class AttendanceListener {
           existingAttendance = await this.attendancesService.create({
             employee: { id: employee.id },
             schedule: { id: todaySchedule.id },
+            cutoff: { id: todaySchedule.cutoff.id },
             dayType,
             createdBy: employee.user.id,
           });
@@ -194,7 +196,7 @@ export class AttendanceListener {
                 this.logger.log(`Employee ${employee.user.email} is late by ${minutesLate} minutes`);
                 
                 // Create work time request for late arrival
-                await this.createWorkTimeRequest(dayType, employee.id, AttendanceStatus.LATE, existingAttendance.id, minutesLate);
+                await this.createWorkTimeRequest(dayType, employee.id, AttendanceStatus.LATE, existingAttendance, minutesLate);
                 
                 // Notify employee
                 await this.notificationsService.create({
@@ -227,7 +229,7 @@ export class AttendanceListener {
           {
             attendanceStatuses.push(AttendanceStatus.NO_CHECKED_IN);
             // Create work time request for no check in
-            await this.createWorkTimeRequest(dayType, employee.id, AttendanceStatus.NO_CHECKED_IN, existingAttendance.id);
+            await this.createWorkTimeRequest(dayType, employee.id, AttendanceStatus.NO_CHECKED_IN, existingAttendance);
             // Notify employee
             await this.notificationsService.create({
               title: 'No Check-in',
@@ -342,9 +344,9 @@ export class AttendanceListener {
   async handleRecalculateFinalWorkHoursEvent(event: RecalculateFinalWorkHoursEvent) {
     this.logger.log(`Handling recalculation of final work hours for cutoff ID ${event.cutoffId}`);
 
-    // Fetch all attendances for the given cutoff
+    // Fetch all attendances for the given cutoff that is already processed
     const attendances = await this.attendancesService.getRepository().find({
-      where: { schedule: { cutoff: { id: event.cutoffId } } },
+      where: { isProcessed: true, cutoff: { id: event.cutoffId } },
     });
 
     const attendanceIds = attendances.map(attendance => attendance.id);
@@ -358,10 +360,11 @@ export class AttendanceListener {
 
   // Helper methods for notifications and work time requests
   
-  private async createWorkTimeRequest(dayType: DayType, employeeId: string, type: AttendanceStatus, attendanceId: string, duration?: number): Promise<void> {
+  private async createWorkTimeRequest(dayType: DayType, employeeId: string, type: AttendanceStatus, attendance: Attendance, duration?: number): Promise<void> {
     try {
       await this.workTimeRequestsService.create({
-        attendance: { id: attendanceId },
+        attendance,
+        cutoff: attendance.cutoff,
         type,
         duration,
         dayType,

@@ -1,4 +1,3 @@
-import { IRole } from '@/modules/employee-management/roles/interface/role.interface';
 import {
   CanActivate,
   ExecutionContext,
@@ -9,6 +8,7 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { RoleScopeType } from '../enums/role-scope-type.enum';
+import { UtilityHelper } from '../helpers/utility.helper';
 import { ResourceScope } from '../interceptors/scope.interceptor';
 import { IJwtPayload } from '../interfaces/jwt-payload.interface';
 
@@ -29,22 +29,23 @@ export class ScopeGuard implements CanActivate {
       {
         try {
         
-              this.logger.log(`Processing ${method} request to ${path}`);
+              // this.logger.log(`Processing ${method} request to ${path}`);
               request.resourceScope = {
                 type: RoleScopeType.OWNED,
                 userId: user?.sub  // This will be undefined if no user
               };
 
-              this.logger.log(`Setting resource scope for user: ${user.sub}`);
+              // this.logger.log(`Setting resource scope for user: ${user.sub}`);
               
               try {
                 // Determine effective scope
-                const roleScope = this.determineEffectiveScope(user.roles || []);
-                this.logger.debug(`Determined effective scope: ${roleScope.scopeType}`);
+                const roleScope = UtilityHelper.determineEffectiveScope(user.roles || []);
+                this.logger.debug(`Determined effective scope: ${roleScope.scope}`);
                 
                 // Store scope information with correct property names
                 const resourceScope: ResourceScope = {
-                  type: roleScope.scopeType,
+                  roleName: roleScope.name,
+                  type: roleScope?.scope || RoleScopeType.OWNED,
                   userId: user.sub,
                   departments: user.roles?.flatMap(role => role.departmentId).filter((id): id is string => id !== undefined && id !== null) || [],
                   branches: user.roles?.flatMap(role => role.branchId).filter((id): id is string => id !== undefined && id !== null) || [],
@@ -205,52 +206,4 @@ export class ScopeGuard implements CanActivate {
         return `You don't have permission to manage this resource`;
     }
   }
-
-  private determineEffectiveScope(roles: Partial<IRole>[]): { scopeType: RoleScopeType; scopeConfig?: any } {
-      try {
-        if (!roles.length) {
-          this.logger.debug('No roles provided, using OWNED scope by default');
-          return { scopeType: RoleScopeType.OWNED };
-        }
-  
-        let effectiveScopeType = RoleScopeType.OWNED;
-        
-        for (const role of roles) {
-          const roleScope = role.scope || RoleScopeType.OWNED;
-          
-          if (roleScope === RoleScopeType.GLOBAL) {
-            this.logger.debug('Found GLOBAL role - assigning highest scope privilege');
-            return { scopeType: RoleScopeType.GLOBAL };
-          }
-          
-          if (this.isBroaderScope(roleScope, effectiveScopeType)) {
-            this.logger.debug(`Upgrading scope from ${effectiveScopeType} to broader scope ${roleScope}`);
-            effectiveScopeType = roleScope;
-          }
-        }
-        
-        this.logger.debug(`Final determined scope: ${effectiveScopeType}`);
-        return { scopeType: effectiveScopeType };
-      } catch (error: any) {
-        this.logger.error(`Error determining effective scope: ${error.message}`, error.stack);
-        throw new InternalServerErrorException('Failed to determine user access scope');
-      }
-    }
-    
-    private isBroaderScope(scopeA: RoleScopeType, scopeB: RoleScopeType): boolean {
-      try {
-        const scopePriority = {
-          [RoleScopeType.GLOBAL]: 4,
-          [RoleScopeType.ORGANIZATION]: 3,
-          [RoleScopeType.BRANCH]: 2,
-          [RoleScopeType.DEPARTMENT]: 1,
-          [RoleScopeType.OWNED]: 0
-        };
-        
-        return scopePriority[scopeA] > scopePriority[scopeB];
-      } catch (error: any) {
-        this.logger.error(`Error comparing scopes: ${error.message}`, error.stack);
-        return false;
-      }
-    }
 }

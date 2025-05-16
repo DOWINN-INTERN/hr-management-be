@@ -41,12 +41,8 @@ export class EmployeePayrollItemTypesService extends BaseService<EmployeePayroll
                 payrollItemType: { category: PayrollItemCategory.COMPENSATION },
                 isActive: true
             },
-            relations: { payrollItemType: true }
+            relations: { payrollItemType: true, employee: true },
         });
-        
-        for (const item of existingItems) {
-            await this.update(item.id, { isActive: false }, userId);
-        }
         
         // Get the appropriate payroll item type
         let itemTypeName: string;
@@ -76,6 +72,10 @@ export class EmployeePayrollItemTypesService extends BaseService<EmployeePayroll
             amount,
             isActive: true,
         });
+
+        for (const item of existingItems) {
+            await this.update(item.id, { isActive: false }, userId);
+        }
         
         return this.create(newItem, userId);
     }
@@ -93,12 +93,12 @@ export class EmployeePayrollItemTypesService extends BaseService<EmployeePayroll
                 payrollItemType: { category: PayrollItemCategory.COMPENSATION },
                 isActive: true
             },
-            relations: { payrollItemType: true },
+            relations: { payrollItemType: true, employee: true },
             order: { createdAt: 'DESC' }
         });
         
         if (!compensationItems.length) {
-            throw new BadRequestException(`No active compensation defined for employee ${employeeId}`);
+            throw new BadRequestException(`No active base compensation defined for employee ${employeeId}`);
         }
 
         let compensation = new EmployeeCompensationDto();

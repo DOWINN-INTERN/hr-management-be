@@ -1,4 +1,6 @@
+import { Role } from "@/modules/employee-management/roles/entities/role.entity";
 import { FindOptionsRelations, FindOptionsSelect } from "typeorm";
+import { RoleScopeType } from "../enums/role-scope-type.enum";
 
 export class UtilityHelper {
     static isEmpty(value: any): boolean {
@@ -33,6 +35,40 @@ export class UtilityHelper {
         return Object.entries(criteria)
             .map(([key, value]) => `${key}: ${value}`)
             .join(', ');
+    }
+
+    static determineEffectiveScope(roles: Partial<Role>[]): Partial<Role> {
+        if (!roles.length) {
+            return { scope: RoleScopeType.OWNED, name: 'Staff' };
+        }
+
+        let effectiveScopeType = RoleScopeType.OWNED;
+        
+        for (const role of roles) {
+            const roleScope = role.scope || RoleScopeType.OWNED;
+            
+            if (roleScope === RoleScopeType.GLOBAL) {
+            return role;
+            }
+            
+            if (this.isBroaderScope(roleScope, effectiveScopeType)) {
+            effectiveScopeType = roleScope;
+            }
+        }
+        
+        return roles[0];
+    }
+    
+    static isBroaderScope(scopeA: RoleScopeType, scopeB: RoleScopeType): boolean {
+        const scopePriority = {
+            [RoleScopeType.GLOBAL]: 4,
+            [RoleScopeType.ORGANIZATION]: 3,
+            [RoleScopeType.BRANCH]: 2,
+            [RoleScopeType.DEPARTMENT]: 1,
+            [RoleScopeType.OWNED]: 0
+        };
+        
+        return scopePriority[scopeA] > scopePriority[scopeB];
     }
 
     /**

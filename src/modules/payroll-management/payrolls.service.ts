@@ -1,10 +1,11 @@
+import { AttendanceStatus } from '@/common/enums/attendance-status.enum';
 import { CutoffStatus } from '@/common/enums/cutoff-status.enum';
 import { CutoffType } from '@/common/enums/cutoff-type.enum';
-import { GovernmentContributionType } from '@/common/enums/government-contribution-type.enum';
+import { GovernmentMandatedType } from '@/common/enums/government-contribution-type.enum';
 import { Occurrence } from '@/common/enums/occurrence.enum';
 import { PayrollItemCategory } from '@/common/enums/payroll-item-category.enum';
 import { PayrollStatus } from '@/common/enums/payroll-status.enum';
-import { RoleScopeType } from '@/common/enums/role-scope-type.enum';
+import { RequestStatus } from '@/common/enums/request-status.enum';
 import { UtilityHelper } from '@/common/helpers/utility.helper';
 import { BaseService } from '@/common/services/base.service';
 import { UsersService } from '@/modules/account-management/users/users.service';
@@ -13,193 +14,17 @@ import { FinalWorkHoursService } from '@/modules/attendance-management/final-wor
 import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { type } from 'os';
-import { DataSource, Repository } from 'typeorm';
+import { DataSource, LessThan, MoreThan, Repository } from 'typeorm';
+import { WorkTimeRequestsService } from '../attendance-management/work-time-requests/work-time-requests.service';
 import { EmployeePayrollItemTypesService } from '../employee-management/employee-payroll-item-types/employee-payroll-item-types.service';
 import { EmployeesService } from '../employee-management/employees.service';
-import { Employee } from '../employee-management/entities/employee.entity';
-import { Role } from '../employee-management/roles/entities/role.entity';
 import { CutoffsService } from './cutoffs/cutoffs.service';
 import { Cutoff } from './cutoffs/entities/cutoff.entity';
 import { Payroll } from './entities/payroll.entity';
+import { PayrollItemType } from './payroll-item-types/entities/payroll-item-type.entity';
 import { PayrollItemTypesService } from './payroll-item-types/payroll-item-types.service';
 import { PayrollItem } from './payroll-items/entities/payroll-item.entity';
-
-// Add these types to your system using PayrollItemType entity
-const salaryCompensationTypes = [
-  {
-    name: 'Monthly Salary',
-    category: PayrollItemCategory.COMPENSATION,
-    unit: 'PHP',
-    computationFormula: 'return Amount;', // Simply return the configured amount
-    isSystemGenerated: true,
-    isRequired: true
-  },
-  {
-    name: 'Daily Rate',
-    category: PayrollItemCategory.COMPENSATION,
-    unit: 'PHP',
-    computationFormula: 'return Amount * WorkingDaysInPeriod;',
-    isSystemGenerated: true,
-    isRequired: true
-  },
-  {
-    name: 'Hourly Rate',
-    category: PayrollItemCategory.COMPENSATION,
-    unit: 'PHP',
-    computationFormula: 'return Amount * WorkHoursInPeriod;',
-    isSystemGenerated: true,
-    isRequired: true
-  }
-];
-
-const sssEmployeeContribution = {
-  name: 'SSS Employee Contribution',
-  description: 'Social Security System employee contribution',
-  category: PayrollItemCategory.GOVERNMENT,
-  defaultOccurrence: 'MONTHLY',
-  unit: 'PHP',
-  computationFormula: `
-    // 2023 SSS Contribution Table
-    const msw = Employee.MonthlyRate;
-    let contribution = 0;
-    
-    if (msw <= 3249.99) contribution = 135;
-    else if (msw <= 3749.99) contribution = 157.50;
-    else if (msw <= 4249.99) contribution = 180;
-    else if (msw <= 4749.99) contribution = 202.50;
-    // ... more brackets
-    else if (msw >= 24750) contribution = 1125;
-    
-    return contribution;
-  `,
-  isSystemGenerated: true,
-  isGovernmentMandated: true,
-  governmentContributionType: 'SSS',
-  hasEmployerShare: true,
-  employerFormulaPercentage: `
-    // 2023 SSS Employer Contribution Table
-    const msw = Employee.MonthlyRate;
-    let contribution = 0;
-    
-    if (msw <= 3249.99) contribution = 315;
-    else if (msw <= 3749.99) contribution = 367.50;
-    else if (msw <= 4249.99) contribution = 420;
-    // ... more brackets
-    else if (msw >= 24750) contribution = 2625;
-    
-    return contribution;
-  `,
-  isPartOfTaxCalculation: true,
-  isTaxable: false,
-  isTaxDeductible: true,
-  isDisplayedInPayslip: true,
-  isRequired: true,
-  calculationParameters: {
-    sssTable: '2023',
-    includingEC: true,
-    includingMPF: false
-  }
-};
-
-const philhealthContribution = {
-  name: 'PhilHealth Contribution',
-  description: 'Philippine Health Insurance Corporation contribution',
-  category: PayrollItemCategory.GOVERNMENT,
-  defaultOccurrence: 'MONTHLY',
-  unit: 'PHP',
-  computationFormula: `
-    // 2023 PhilHealth Contribution - shared equally by employer and employee
-    const msw = Employee.MonthlyRate;
-    let totalContribution = 0;
-    
-    if (msw <= 10000) totalContribution = 400;
-    else if (msw <= 59999.99) totalContribution = msw * 0.04;
-    else totalContribution = 2400;
-    
-    return totalContribution / 2; // Employee share only
-  `,
-  isSystemGenerated: true,
-  isGovernmentMandated: true,
-  governmentContributionType: 'PHILHEALTH',
-  hasEmployerShare: true,
-  employerFormulaPercentage: `return Amount;`, // Equal share: employee and employer
-  isPartOfTaxCalculation: true,
-  isTaxable: false,
-  isTaxDeductible: true,
-  isDisplayedInPayslip: true,
-  isRequired: true,
-  calculationParameters: {
-    philhealthTable: '2023',
-    premiumRate: 4 // percent
-  }
-};
-
-const pagibigContribution = {
-  name: 'Pag-IBIG Contribution',
-  description: 'Home Development Mutual Fund contribution',
-  category: PayrollItemCategory.GOVERNMENT,
-  defaultOccurrence: 'MONTHLY',
-  unit: 'PHP',
-  computationFormula: `
-    // Pag-IBIG Contribution - 2% of monthly salary
-    const msw = Math.min(Employee.MonthlyRate, 5000);
-    return msw * 0.02;
-  `,
-  isSystemGenerated: true,
-  isGovernmentMandated: true,
-  governmentContributionType: 'PAGIBIG',
-  hasEmployerShare: true,
-  employerFormulaPercentage: `
-    // Employer share is also 2% of monthly salary
-    const msw = Math.min(Employee.MonthlyRate, 5000);
-    return msw * 0.02;
-  `,
-  isPartOfTaxCalculation: true,
-  isTaxable: false,
-  isTaxDeductible: true,
-  isDisplayedInPayslip: true,
-  isRequired: true,
-  calculationParameters: {
-    pagibigTable: '2023',
-    rate: 2 // percent
-  }
-};
-
-const withholdingTax = {
-  name: 'Withholding Tax',
-  description: 'BIR withholding tax for compensation income',
-  category: PayrollItemCategory.TAX,
-  defaultOccurrence: 'MONTHLY',
-  unit: 'PHP',
-  computationFormula: `
-    // 2023 Withholding Tax Table
-    // Get taxable income (after deducting government contributions)
-    const taxableIncome = TaxableIncome;
-    let tax = 0;
-    
-    if (taxableIncome <= 20833) tax = 0;
-    else if (taxableIncome <= 33332) tax = (taxableIncome - 20833) * 0.15;
-    else if (taxableIncome <= 66666) tax = 1875 + (taxableIncome - 33333) * 0.20;
-    else if (taxableIncome <= 166666) tax = 8541.80 + (taxableIncome - 66667) * 0.25;
-    else if (taxableIncome <= 666666) tax = 33541.80 + (taxableIncome - 166667) * 0.30;
-    else tax = 183541.80 + (taxableIncome - 666667) * 0.35;
-    
-    return tax;
-  `,
-  isSystemGenerated: true,
-  isGovernmentMandated: true,
-  governmentContributionType: 'TAX',
-  hasEmployerShare: false,
-  isPartOfTaxCalculation: false, // Not part of taxable income computation
-  isTaxable: false,
-  isTaxDeductible: false,
-  isDisplayedInPayslip: true,
-  isRequired: true,
-  calculationParameters: {
-    taxTable: '2023',
-    applicableTaxExemptions: ['de_minimis', 'thirteenth_month']
-  }
-};
+import { CalculationDetails, PagIbigCalculationDetails, PhilHealthCalculationDetails, SSSCalculationDetails, WithholdingTaxCalculationDetails } from './types/calculation-details.type';
 
 @Injectable()
 export class PayrollsService extends BaseService<Payroll> {
@@ -211,7 +36,8 @@ export class PayrollsService extends BaseService<Payroll> {
   private readonly HolidayOvertimePayMultiplier = 2.3;
   private readonly SpecialHolidayOvertimePayMultiplier = 1.3;
   private readonly RestDayOvertimePayMultiplier = 1.69;
-  private readonly NightDifferentialPayMultiplier = 0.1;
+  private readonly NightDifferentialPayMultiplier = 1.1;
+  private readonly BaseAmount: 'grossPay' | 'monthlyRate' = 'monthlyRate';
 
   constructor(
     @InjectRepository(Payroll)
@@ -222,7 +48,8 @@ export class PayrollsService extends BaseService<Payroll> {
     private readonly finalWorkHoursService: FinalWorkHoursService,
     private readonly employeePayrollItemTypesService: EmployeePayrollItemTypesService,
     private readonly payrollItemTypesService: PayrollItemTypesService,
-    protected readonly usersService: UsersService
+    protected readonly usersService: UsersService,
+    private readonly workTimeRequestsService: WorkTimeRequestsService,
   ) {
     super(payrollsRepository, usersService);
   }
@@ -299,84 +126,160 @@ export class PayrollsService extends BaseService<Payroll> {
     };
   }
 
-  
   /**
    * Calculate SSS contribution based on 2025 rules
    */
-  private calculateSSSContribution(salary: number, params?: Record<string, any>): number {
-    const employeeRate = (params?.employeeRate || 5) / 100;
-    const mscCeiling = params?.mscCeiling || 35000;
+  private calculateSSSContribution(itemType: PayrollItemType, baseAmount: number) {
+    // SSS calculation based on 2025 rates
+    const sssEmployeeRate = (itemType.percentage || 5) / 100;
+    const sssEmployerRate = (itemType.employerPercentage || 10) / 100;
+    const mscCeiling = itemType.maxAmount || 35000;
+    const mscFloor = itemType.minAmount || 5000;
     
-    // Apply MSC ceiling
-    const msc = Math.min(salary, mscCeiling);
+    // Apply MSC ceiling based on gross pay
+    let msc = Math.max(baseAmount, mscFloor);
+    msc = Math.min(msc, mscCeiling);
     
-    // Calculate employee's share
-    return msc * employeeRate;
-  }
+    // Calculate employee and employer shares
+    const calculatedAmount = parseFloat((msc * sssEmployeeRate).toFixed(2));
+    let employerAmount = parseFloat((msc * sssEmployerRate).toFixed(2));
+    
+    // Add EC contribution (employer only)
+    const ecContribution = msc <= (itemType.minContribution || 14500) ? 10 : 30;
+    employerAmount += ecContribution;
+    
+    const calculationDetail: SSSCalculationDetails = {
+      calculationType: 'SSS',
+      baseAmount: baseAmount,
+      msc: msc,
+      employeeRate: `${sssEmployeeRate * 100}%`,
+      employerRate: `${sssEmployerRate * 100}%`,
+      employeeContribution: calculatedAmount,
+      employerContribution: employerAmount,
+      ecContribution: ecContribution,
+      totalContribution: calculatedAmount + employerAmount
+    };
   
-  /**
-   * Calculate PhilHealth contribution based on 2025 rules
-   */
-  private calculatePhilHealthContribution(salary: number, params?: Record<string, any>): number {
-    const premiumRate = (params?.premiumRate || 5) / 100;
-    const floorSalary = params?.floorSalary || 10000;
-    const ceilingSalary = params?.ceilingSalary || 100000;
-    
-    // Apply floor and ceiling
-    let computationBase = salary;
-    if (computationBase < floorSalary) {
-      computationBase = floorSalary;
-    } else if (computationBase > ceilingSalary) {
-      computationBase = ceilingSalary;
-    }
-    
-    // Calculate total contribution then divide by 2 for employee's share
-    return (computationBase * premiumRate) / 2;
-  }
-  
-  /**
-   * Calculate Pag-IBIG contribution based on 2025 rules
-   */
-  private calculatePagIBIGContribution(salary: number, params?: Record<string, any>): number {
-    const employeeRate1 = (params?.employeeRate1 || 1) / 100;
-    const employeeRate2 = (params?.employeeRate2 || 2) / 100;
-    const maxSalary = params?.maxSalary || 10000;
-    
-    // Apply ceiling
-    const computationBase = Math.min(salary, maxSalary);
-    
-    // Apply rate based on salary
-    const rate = salary <= 1500 ? employeeRate1 : employeeRate2;
-    
-    return computationBase * rate;
+    return { calculatedAmount, employerAmount, calculationDetail };
   }
   
   /**
    * Calculate withholding tax based on TRAIN Law
    */
-  private calculateWithholdingTax(monthlyTaxableIncome: number): number {
-    // Annualize taxable income
+  // Function to calculate withholding tax based on 2025 tax brackets
+  private calculateWithholdingTax(monthlyTaxableIncome: number): {
+    calculatedAmount: number;
+    calculationDetail: WithholdingTaxCalculationDetails;
+  } {
+    // Compute annual taxable income from monthly
     const annualTaxableIncome = monthlyTaxableIncome * 12;
     
-    // Apply tax table
+    // Apply 2025 tax table
     let annualTax = 0;
     
     if (annualTaxableIncome <= 250000) {
-      annualTax = 0;
+      annualTax = 0; // Exempt
     } else if (annualTaxableIncome <= 400000) {
-      annualTax = (annualTaxableIncome - 250000) * 0.2;
+      annualTax = (annualTaxableIncome - 250000) * 0.15; // 15% of excess over 250,000
     } else if (annualTaxableIncome <= 800000) {
-      annualTax = 30000 + (annualTaxableIncome - 400000) * 0.25;
+      annualTax = 22500 + (annualTaxableIncome - 400000) * 0.2; // 22,500 + 20% of excess over 400,000
     } else if (annualTaxableIncome <= 2000000) {
-      annualTax = 130000 + (annualTaxableIncome - 800000) * 0.3;
+      annualTax = 102500 + (annualTaxableIncome - 800000) * 0.25; // 102,500 + 25% of excess over 800,000
     } else if (annualTaxableIncome <= 8000000) {
-      annualTax = 490000 + (annualTaxableIncome - 2000000) * 0.32;
+      annualTax = 402500 + (annualTaxableIncome - 2000000) * 0.3; // 402,500 + 30% of excess over 2,000,000
     } else {
-      annualTax = 2410000 + (annualTaxableIncome - 8000000) * 0.35;
+      annualTax = 2202500 + (annualTaxableIncome - 8000000) * 0.35; // 2,202,500 + 35% of excess over 8,000,000
     }
     
     // Get monthly tax
-    return annualTax / 12;
+    const calculatedAmount = parseFloat((annualTax / 12).toFixed(2));
+    
+    const calculationDetail: WithholdingTaxCalculationDetails = {
+      calculationType: 'WITHHOLDING_TAX',
+      monthlyTaxableIncome: monthlyTaxableIncome,
+      annualTaxableIncome: annualTaxableIncome,
+      annualTax: annualTax,
+      monthlyTax: calculatedAmount
+    };
+
+    return { calculatedAmount, calculationDetail };
+  }
+
+  /**
+   * Calculates PhilHealth contributions based on 2025 rates
+   * @param baseAmount Employee's base salary amount
+   * @param itemType Configuration object with rates and thresholds
+   * @returns Object containing calculated amounts and detailed breakdown
+   */
+  private calculatePhilHealthContribution(
+    baseAmount: number,
+    itemType: PayrollItemType
+   ) {
+    // PhilHealth calculation based on 2025 rates
+    const philHealthRate = (itemType.percentage || 2.5) / 100; 
+    const philHealthEmployerRate = (itemType.employerPercentage || 2.5) / 100;
+    const floorSalary = itemType.minAmount || 10000;
+    const ceilingSalary = itemType.maxAmount || 100000;
+    
+    // Apply floor and ceiling
+    let philHealthBase = baseAmount;
+    philHealthBase = Math.max(philHealthBase, floorSalary);
+    philHealthBase = Math.min(philHealthBase, ceilingSalary);
+    
+    // Calculate contributions
+    const calculatedAmount = parseFloat((philHealthBase * philHealthRate).toFixed(2));
+    const employerAmount = parseFloat((philHealthBase * philHealthEmployerRate).toFixed(2));
+    
+    const calculationDetail: PhilHealthCalculationDetails = {
+      calculationType: 'PHILHEALTH',
+      baseAmount: baseAmount,
+      computationBase: philHealthBase,
+      employeeRate: `${philHealthRate * 100}%`,
+      employerRate: `${philHealthEmployerRate * 100}%`,
+      employeeContribution: calculatedAmount,
+      employerContribution: employerAmount,
+      totalContribution: calculatedAmount + employerAmount
+    };
+
+    return { calculatedAmount, employerAmount, calculationDetail };
+  }
+
+  /**
+   * Calculates PAGIBIG contributions for both employee and employer
+   * @param baseAmount The employee's base salary
+   * @param itemType Configuration object containing rates and limits
+   * @returns Object containing calculated amounts and detailed breakdown
+   */
+  private calculatePagibigContribution(baseAmount: number, itemType: PayrollItemType) {
+    // Pag-IBIG calculation based on 2025 rates
+    const pagibigBaseSalary = Math.min(baseAmount, itemType.maxAmount || 10000);
+    
+    // Employee rate depends on salary (1% if ≤ 1500, 2% otherwise)
+    const employeePagibigRate = baseAmount <= (itemType.minAmount || 1500) ? 
+      (itemType.minContribution || 1) / 100 : 
+      (itemType.maxContribution || 2) / 100;
+      
+    const employerPagibigRate = (itemType.employerPercentage || 2) / 100;
+    
+    const calculatedAmount = parseFloat((pagibigBaseSalary * employeePagibigRate).toFixed(2));
+    const employerAmount = parseFloat((pagibigBaseSalary * employerPagibigRate).toFixed(2));
+    
+    const calculationDetail: PagIbigCalculationDetails = {
+      calculationType: 'PAGIBIG',
+      baseAmount: baseAmount,
+      computationBase: pagibigBaseSalary,
+      employeeRate: `${employeePagibigRate * 100}%`,
+      employerRate: `${employerPagibigRate * 100}%`,
+      employeeContribution: calculatedAmount,
+      employerContribution: employerAmount,
+      totalContribution: calculatedAmount + employerAmount
+    };
+
+    return {
+      calculatedAmount,
+      employerAmount,
+      calculationDetail
+    };
   }
 
   /**
@@ -426,6 +329,12 @@ export class PayrollsService extends BaseService<Payroll> {
     payroll.undertime = 0;
     payroll.noTimeIn = 0;
     payroll.noTimeOut = 0;
+
+    payroll.totalBasicDeductions = 0;
+
+    payroll.totalDeductions = 0;
+    payroll.totalAllowances = 0;
+
     
     // Process each work hour record
     for (const workHour of finalWorkHours) {
@@ -487,6 +396,8 @@ export class PayrollsService extends BaseService<Payroll> {
     payroll.undertime = payroll.totalUndertimeHours * payroll.hourlyRate;
     payroll.noTimeIn = payroll.totalNoTimeInHours * payroll.hourlyRate;
     payroll.noTimeOut = payroll.totalNoTimeOutHours * payroll.hourlyRate;
+    payroll.totalBasicDeductions = payroll.absences + payroll.tardiness + payroll.undertime
+      + payroll.noTimeIn + payroll.noTimeOut;
     
     // 10. Initial gross pay from basic components
     payroll.grossPay = payroll.basicPay + payroll.restDayPay + payroll.holidayPay
@@ -502,532 +413,309 @@ export class PayrollsService extends BaseService<Payroll> {
     
     // 12. Initial taxable income (will be adjusted for non-taxable items)
     payroll.taxableIncome = payroll.grossPay;
+
+    // 13. Initial net pay
+    payroll.netPay = payroll.grossPay;
   }
   
-/**
- * Process all payroll items for an employee
- */
-async processPayrollItems(payroll: Payroll, userId: string): Promise<PayrollItem[]> {
-  // Get all payroll item types
-  const allPayrollItemTypes = await this.payrollItemTypesService.getRepository().find({
-    where: { isActive: true, isDeleted: false },
-    order: { category: 'ASC', name: 'ASC' }
-  });
-  
-  // Get employee specific payroll item configurations
-  const employeePayrollItems = await this.employeePayrollItemTypesService.getRepository().find({
-    where: { 
-      employee: { id: payroll.employee.id },
-      isActive: true,
-      isDeleted: false
-    },
-    relations: {
-      payrollItemType: true
+  /**
+   * Process all payroll items for an employee
+   */
+  async processPayrollItems(payroll: Payroll, userId: string): Promise<PayrollItem[]> {
+    // check if cutoff is available
+    const { cutoff } = payroll;
+
+    if (!cutoff) {
+      throw new NotFoundException(`Cutoff not found for payroll ID: ${payroll.id}`);
     }
-  });
-  
-  // Map employee payroll items by payroll item type ID for quick lookup
-  const employeePayrollItemMap = new Map(
-    employeePayrollItems.map(item => [item.payrollItemType.id, item])
-  );
-  
-  // Order for processing categories
-  const processingOrder = [
-    PayrollItemCategory.GOVERNMENT,
-    PayrollItemCategory.ALLOWANCE,
-    PayrollItemCategory.BONUS,
-    PayrollItemCategory.COMMISSION,
-    PayrollItemCategory.TIP,
-    PayrollItemCategory.BENEFIT,
-    PayrollItemCategory.DEDUCTION,
-    PayrollItemCategory.REIMBURSEMENT,
-    PayrollItemCategory.TAX,
-    PayrollItemCategory.OTHER,
-  ];
-  
-  const newPayrollItems: PayrollItem[] = [];
-  const calculationLog: any[] = [];
-  
-  // First, track original values for reference
-  const originalValues = {
-    grossPay: payroll.grossPay,
-    taxableIncome: payroll.taxableIncome
-  };
-  
-  // Process each category in order
-  for (const category of processingOrder) {
-    // Get item types for this category
-    const categoryItemTypes = allPayrollItemTypes.filter(
-      type => type.category === category
+
+    // Get all payroll item types
+    const allPayrollItemTypes = await this.payrollItemTypesService.getRepository().find({
+      where: { isActive: true, isDeleted: false, includeInPayrollItemsProcessing: true },
+      order: { category: 'ASC', name: 'ASC' }
+    });
+    
+    // Get employee specific payroll item configurations
+    const employeePayrollItems = await this.employeePayrollItemTypesService.getRepository().find({
+      where: { 
+        employee: { id: payroll.employee.id },
+        isActive: true,
+        isDeleted: false
+      },
+      relations: {
+        payrollItemType: true,
+        employee: true
+      }
+    });
+
+    // For government mandated contributions on second cutoff, get combined income
+    let combinedGrossPay = payroll.grossPay;
+    let combinedTaxableIncome = payroll.taxableIncome;
+
+    if (cutoff.cutoffPlace === 2) {
+      // Find the first cutoff payroll in the same month
+      const firstCutoffDate = new Date(cutoff.startDate);
+      firstCutoffDate.setDate(1); // Set to first day of month
+      
+      const previousPayroll = await this.payrollsRepository.findOne({
+        where: {
+          employee: { id: payroll.employee.id },
+          cutoff: {
+            cutoffNumber: cutoff.cutoffNumber - 1,
+          },
+          status: PayrollStatus.RELEASED
+        },
+        relations: {
+          employee: true,
+          cutoff: true
+        }
+      });
+      
+      if (previousPayroll) {
+        // Add the gross pay from the first cutoff
+        combinedGrossPay += previousPayroll.grossPay;
+        combinedTaxableIncome += previousPayroll.taxableIncome;
+      }
+    }
+
+    // Check if employee has the required payroll item types
+    const requiredPayrollItemTypes = allPayrollItemTypes.filter(item => item.isRequired);
+    let missingRequiredItems = requiredPayrollItemTypes.filter(item =>
+      !employeePayrollItems.some(empItem => empItem.payrollItemType.id === item.id)
+    );
+
+    if (missingRequiredItems.length > 0) {
+      throw new BadRequestException(`Employee ${payroll.employee.id} is missing required payroll item types: ${missingRequiredItems.map(item => item.name).join(', ')}`);
+    }
+    
+    // Map employee payroll items by payroll item type ID for quick lookup
+    const employeePayrollItemMap = new Map(
+      employeePayrollItems.map(item => [item.payrollItemType.id, item])
     );
     
-    for (const itemType of categoryItemTypes) {
-      // Check if this employee has a specific configuration for this item type
-      const employeeItemConfig = employeePayrollItemMap.get(itemType.id);
+    // Order for processing categories
+    const processingOrder = [
+      PayrollItemCategory.COMPENSATION,
+      PayrollItemCategory.ADJUSTMENT,
+      PayrollItemCategory.DEDUCTION,
+      PayrollItemCategory.ALLOWANCE,
+    ];
+    
+    const newPayrollItems: PayrollItem[] = [];
+    const calculationLog: any[] = [];
+    
+    // First, track original values for reference
+    const originalValues = {
+      grossPay: payroll.grossPay,
+      taxableIncome: payroll.taxableIncome
+    };
+    
+    // Process each category in order
+    for (const category of processingOrder) {
+      // Get item types for this category
+      const categoryItemTypes = allPayrollItemTypes.filter(
+        type => type.category === category
+      );
       
-      // Skip if not applicable for this employee
-      // Only process required items or items that have employee-specific configuration
-      if (!employeeItemConfig) {
-        continue;
-      }
-      
-      // Create new payroll item
-      const payrollItem = new PayrollItem({});
-      payrollItem.payrollItemType = itemType;
-      payrollItem.payroll = payroll;
-      
-      // Calculate item amount
-      let calculatedAmount = 0;
-      let employerAmount = 0;
-      let calculationDetail: any = {};
-      
-      // If employee has specific amount configured, use it
-      if (employeeItemConfig?.amount !== undefined && employeeItemConfig?.amount !== null) {
-        calculatedAmount = employeeItemConfig.amount;
-      } 
-      // Otherwise, calculate based on item type
-      else {
-        if (itemType.governmentContributionType) {
+      for (const itemType of categoryItemTypes) {
+        // Check if this employee has a specific configuration for this item type
+        const employeeItemConfig = employeePayrollItemMap.get(itemType.id);
+
+        // Skip if not applicable for this employee
+        // Only process required items or items that have employee-specific configuration
+        if (!employeeItemConfig || employeeItemConfig.exempted || (itemType.processEvery && cutoff.cutoffPlace !== itemType.processEvery)) {
+          continue;
+        }
+        
+        // Create new payroll item
+        const payrollItem = new PayrollItem({});
+        payrollItem.payrollItemType = itemType;
+        payrollItem.employeePayrollItemType = employeeItemConfig;
+        
+        // Calculate item amount
+        let calculatedAmount = employeeItemConfig.amount || itemType.defaultAmount || 0;
+        let employerAmount: number | undefined;
+        let calculationDetail: CalculationDetails | undefined;
+        // the base amount for calculation gross or monthly rate
+        const baseAmount = this.BaseAmount === 'grossPay' ? combinedGrossPay : payroll.monthlyRate;
+
+        // Otherwise, calculate based on item type
+        if (itemType.governmentMandatedType) {
+          // log type
+          this.logger.log(`Processing government mandated type: ${itemType.governmentMandatedType} for ${payroll.employee.id} for cutoff ${cutoff.cutoffNumber}`);
           // Calculate government contributions based on 2025 rates from the item type properties
-          switch (itemType.governmentContributionType) {
-            case GovernmentContributionType.SSS:
-              // SSS calculation based on 2025 rates
-              const sssEmployeeRate = (itemType.percentage || 5) / 100;
-              const sssEmployerRate = (itemType.employerPercentage || 10) / 100;
-              const mssCeiling = itemType.maxAmount || 35000;
-              
-              // Apply MSC ceiling
-              const msc = Math.min(payroll.monthlyRate, mssCeiling);
-              
-              // Calculate employee and employer shares
-              calculatedAmount = parseFloat((msc * sssEmployeeRate).toFixed(2));
-              employerAmount = parseFloat((msc * sssEmployerRate).toFixed(2));
-              
-              // Add EC contribution (employer only)
-              const ecContribution = msc <= 14500 ? 10 : 30;
-              employerAmount += ecContribution;
-              
-              calculationDetail = {
-                calculationType: 'SSS_2025',
-                monthlyRate: payroll.monthlyRate,
-                msc: msc,
-                employeeRate: `${sssEmployeeRate * 100}%`,
-                employerRate: `${sssEmployerRate * 100}%`,
-                employeeContribution: calculatedAmount,
-                employerContribution: employerAmount,
-                ecContribution: ecContribution,
-                totalContribution: calculatedAmount + employerAmount
-              };
+          switch (itemType.governmentMandatedType) {
+            case GovernmentMandatedType.SSS:
+              const sssResult = this.calculateSSSContribution(itemType, baseAmount);
+              calculatedAmount = sssResult.calculatedAmount;
+              employerAmount = sssResult.employerAmount;
+              calculationDetail = sssResult.calculationDetail;
               break;
               
-            case GovernmentContributionType.PHILHEALTH:
-              // PhilHealth calculation based on 2025 rates
-              const philHealthRate = (itemType.percentage || 2.5) / 100; 
-              const philHealthEmployerRate = (itemType.employerPercentage || 2.5) / 100;
-              const floorSalary = itemType.minAmount || 10000;
-              const ceilingSalary = itemType.maxAmount || 100000;
+            case GovernmentMandatedType.PHILHEALTH:
+              const philHealthResult = this.calculatePhilHealthContribution(baseAmount, itemType);
+              calculatedAmount = philHealthResult.calculatedAmount;
+              employerAmount = philHealthResult.employerAmount;
+              calculationDetail = philHealthResult.calculationDetail;
+              break;
               
-              // Apply floor and ceiling
-              let philHealthBase = payroll.monthlyRate;
-              if (philHealthBase < floorSalary) {
-                philHealthBase = floorSalary;
-              } else if (philHealthBase > ceilingSalary) {
-                philHealthBase = ceilingSalary;
+            case GovernmentMandatedType.PAGIBIG:
+              const pagibigResult = this.calculatePagibigContribution(baseAmount, itemType);
+              calculatedAmount = pagibigResult.calculatedAmount;
+              employerAmount = pagibigResult.employerAmount;
+              calculationDetail = pagibigResult.calculationDetail;
+              break;
+            case GovernmentMandatedType.THIRTEENTH_MONTH_PAY:
+              // 13th month pay calculation
+              // Check if it is december and first cutoff
+              const isDecember = UtilityHelper.ensureDate(cutoff.startDate).getMonth() === 12;
+              const isFirstCutoff = cutoff.cutoffPlace === 1;
+              if (!isDecember || !isFirstCutoff) {
+                // log that 13th month pay is not applicable
+                this.logger.log(`13th month pay is not applicable for ${payroll.employee.id} for cutoff ${cutoff.cutoffNumber} as it is not the first cutoff of December.`);
+                continue;
               }
-              
-              // Calculate contributions
-              calculatedAmount = parseFloat((philHealthBase * philHealthRate).toFixed(2));
-              employerAmount = parseFloat((philHealthBase * philHealthEmployerRate).toFixed(2));
-              
+
+              // Get all payroll net pay of the employee for the year
+              const yearStartDate = new Date(cutoff.startDate.getFullYear(), 0, 1);
+              const yearEndDate = new Date(cutoff.startDate.getFullYear(), 11, 31);
+              const yearPayrolls = await this.payrollsRepository.find({
+                where: {
+                  employee: { id: payroll.employee.id },
+                  cutoff: {
+                    startDate: MoreThan(yearStartDate),
+                    endDate: LessThan(yearEndDate)
+                  },
+                  status: PayrollStatus.RELEASED
+                },
+                relations: {
+                  employee: true,
+                  cutoff: true
+                }
+              });
+
+              // Calculate total net pay for the year
+              const totalNetPay = yearPayrolls.reduce((total, p) => total + p.netPay, 0);
+
+              // Calculate 13th month pay
+              calculatedAmount = parseFloat((totalNetPay / 12).toFixed(2));
               calculationDetail = {
-                calculationType: 'PHILHEALTH_2025',
-                monthlyRate: payroll.monthlyRate,
-                computationBase: philHealthBase,
-                employeeRate: `${philHealthRate * 100}%`,
-                employerRate: `${philHealthEmployerRate * 100}%`,
-                employeeContribution: calculatedAmount,
-                employerContribution: employerAmount,
-                totalContribution: calculatedAmount + employerAmount
+                calculationType: 'THIRTEENTH_MONTH',
+                totalNetPay: totalNetPay,
+                thirteenthMonthPay: calculatedAmount
               };
+
               break;
-              
-            case GovernmentContributionType.PAGIBIG:
-              // Pag-IBIG calculation based on 2025 rates
-              const pagibigBaseSalary = Math.min(payroll.monthlyRate, itemType.maxAmount || 10000);
-              
-              // Employee rate depends on salary (1% if ≤ 1500, 2% otherwise)
-              const employeePagibigRate = payroll.monthlyRate <= 1500 ? 
-                (itemType.minContribution || 1) / 100 : 
-                (itemType.maxContribution || 2) / 100;
-                
-              const employerPagibigRate = (itemType.employerPercentage || 2) / 100;
-              
-              calculatedAmount = parseFloat((pagibigBaseSalary * employeePagibigRate).toFixed(2));
-              employerAmount = parseFloat((pagibigBaseSalary * employerPagibigRate).toFixed(2));
-              
-              calculationDetail = {
-                calculationType: 'PAGIBIG_2025',
-                monthlyRate: payroll.monthlyRate,
-                computationBase: pagibigBaseSalary,
-                employeeRate: `${employeePagibigRate * 100}%`,
-                employerRate: `${employerPagibigRate * 100}%`,
-                employeeContribution: calculatedAmount,
-                employerContribution: employerAmount,
-                totalContribution: calculatedAmount + employerAmount
-              };
-              break;
-              
-            case GovernmentContributionType.TAX:
-              // Withholding tax calculation based on TRAIN Law
-              // Compute annual taxable income from monthly
-              const annualTaxableIncome = payroll.taxableIncome * 12;
-              
-              // Apply tax table
-              let annualTax = 0;
-              
-              if (annualTaxableIncome <= 250000) {
-                annualTax = 0;
-              } else if (annualTaxableIncome <= 400000) {
-                annualTax = (annualTaxableIncome - 250000) * 0.2;
-              } else if (annualTaxableIncome <= 800000) {
-                annualTax = 30000 + (annualTaxableIncome - 400000) * 0.25;
-              } else if (annualTaxableIncome <= 2000000) {
-                annualTax = 130000 + (annualTaxableIncome - 800000) * 0.3;
-              } else if (annualTaxableIncome <= 8000000) {
-                annualTax = 490000 + (annualTaxableIncome - 2000000) * 0.32;
-              } else {
-                annualTax = 2410000 + (annualTaxableIncome - 8000000) * 0.35;
-              }
-              
-              // Get monthly tax
-              calculatedAmount = parseFloat((annualTax / 12).toFixed(2));
-              
-              calculationDetail = {
-                calculationType: 'WITHHOLDING_TAX_2025',
-                monthlyTaxableIncome: payroll.taxableIncome,
-                annualTaxableIncome: annualTaxableIncome,
-                annualTax: annualTax,
-                monthlyTax: calculatedAmount
-              };
+            case GovernmentMandatedType.TAX:
+              // Withholding tax calculation based on 2025 Tax Brackets
+              const { calculatedAmount: taxAmount, calculationDetail: taxDetail } = this.calculateWithholdingTax(combinedTaxableIncome);
+              calculatedAmount = taxAmount;
+              calculationDetail = taxDetail;
               break;
           }
         } else if (itemType.type === 'fixed') {
           // For fixed type items
-          calculatedAmount = itemType.defaultAmount || 0;
+          calculatedAmount = employeeItemConfig.amount || itemType.defaultAmount || 0;
           calculationDetail = {
-            source: 'default_amount',
+            calculationType: 'DEFAULT',
             amount: calculatedAmount
           };
         } else if (itemType.type === 'formula') {
-          // For formula types without actual formula in entity, 
-          // use percentage-based calculation on monthly rate
-          if (itemType.percentage) {
-            calculatedAmount = parseFloat(((payroll.monthlyRate * itemType.percentage) / 100).toFixed(2));
+          // // For formula types without actual formula in entity, 
+          // // use percentage-based calculation on monthly rate
+          // if (itemType.percentage) {
+          //   calculatedAmount = parseFloat(((payroll.monthlyRate * itemType.percentage) / 100).toFixed(2));
             
-            calculationDetail = {
-              source: 'percentage_calculation',
-              baseAmount: payroll.monthlyRate,
-              percentage: `${itemType.percentage}%`,
-              result: calculatedAmount
-            };
+          //   calculationDetail = {
+          //     source: 'percentage_calculation',
+          //     baseAmount: payroll.monthlyRate,
+          //     percentage: `${itemType.percentage}%`,
+          //     result: calculatedAmount
+          //   };
             
-            // Calculate employer share if applicable
-            if (itemType.employerPercentage) {
-              employerAmount = parseFloat(((payroll.monthlyRate * itemType.employerPercentage) / 100).toFixed(2));
+          //   // Calculate employer share if applicable
+          //   if (itemType.employerPercentage) {
+          //     employerAmount = parseFloat(((payroll.monthlyRate * itemType.employerPercentage) / 100).toFixed(2));
               
-              calculationDetail.employerCalculation = {
-                percentage: `${itemType.employerPercentage}%`,
-                baseAmount: payroll.monthlyRate,
-                result: employerAmount
-              };
-            }
-          } else {
-            // Fallback to default amount if no percentage
-            calculatedAmount = itemType.defaultAmount || 0;
-            calculationDetail = {
-              source: 'default_amount',
-              amount: calculatedAmount
-            };
-          }
+          //     calculationDetail.employerCalculation = {
+          //       percentage: `${itemType.employerPercentage}%`,
+          //       baseAmount: payroll.monthlyRate,
+          //       result: employerAmount
+          //     };
+          //   }
+          // } else {
+          //   // Fallback to default amount if no percentage
+          //   calculatedAmount = itemType.defaultAmount || 0;
+          //   calculationDetail = {
+          //     source: 'default_amount',
+          //     amount: calculatedAmount
+          //   };
+          // }
         }
-      }
-      
-      // Set calculated amounts
-      payrollItem.amount = calculatedAmount;
-      payrollItem.employerAmount = employerAmount;
-      
-      // Save to log
-      calculationLog.push({
-        id: itemType.id,
-        name: itemType.name,
-        category: itemType.category,
-        amount: calculatedAmount,
-        employerAmount,
-        details: calculationDetail
-      });
-      
-      // Add to return array
-      newPayrollItems.push(payrollItem);
-    }
-  }
-  
-  // Save calculated totals and details
-  payroll.calculationDetails = {
-    items: calculationLog,
-    original: originalValues,
-    final: {
-      grossPay: payroll.grossPay,
-      taxableIncome: payroll.taxableIncome,
-      totalAllowances: payroll.totalAllowances,
-      totalBonuses: payroll.totalBonuses,
-      totalBenefits: payroll.totalBenefits,
-      totalDeductions: payroll.totalDeductions,
-      totalGovernmentContributions: payroll.totalGovernmentContributions,
-      totalTaxes: payroll.totalTaxes,
-      netPay: payroll.netPay
-    }
-  };
-  
-  return newPayrollItems;
-}
 
-  /**
- * Generate a detailed view of a payroll for an employee
- */
-async getPayrollDetails(payrollId: string): Promise<any> {
-  const payroll = await this.findOneByOrFail({ id: payrollId }, {
-    relations: {
-      employee: {
-        user: {
-          profile: true
-        },
-        roles: {
-          department: true,
-          branch: true,
-          organization: true,
+        // log calculated ammount
+        this.logger.log(`Calculated amount for ${itemType.name}: ${calculatedAmount}`);
+
+        if (itemType.category === PayrollItemCategory.DEDUCTION) {
+          // Deduct from net pay
+          payroll.netPay -= Number(calculatedAmount);
+          payroll.totalDeductions = (Number(payroll.totalDeductions) || 0) + Number(calculatedAmount);
         }
-      },
-      cutoff: true,
-      payrollItems: {
-        payrollItemType: true
+        else if (itemType.category === PayrollItemCategory.ALLOWANCE) {
+          // Add to net pay
+          payroll.netPay += Number(calculatedAmount);
+          payroll.totalAllowances = (Number(payroll.totalAllowances) || 0) + Number(calculatedAmount);
+        }
+        else if (itemType.category === PayrollItemCategory.COMPENSATION) {
+          // Add to gross pay
+          payroll.grossPay += Number(calculatedAmount);
+        }
+        if (itemType.isTaxable) {
+          // Add to taxable income
+          const taxExempt = Number(itemType.taxExemptionAmount) || 0;
+          payrollItem.taxableAmount = taxExempt <= calculatedAmount ? 
+            Number(calculatedAmount) - taxExempt : 0;
+          payroll.taxableIncome += Number(payrollItem.taxableAmount);
+        }
+        if (itemType.isTaxDeductible) {
+          // Deduct from gross pay
+          payroll.taxableIncome -= Number(calculatedAmount);
+        }
+
+        // Set calculated amounts
+        payrollItem.amount = calculatedAmount;
+        payrollItem.employerAmount = employerAmount;
+        payrollItem.calculationDetails = calculationDetail;
+        
+        // Save to log
+        calculationLog.push({
+          id: itemType.id,
+          name: itemType.name,
+          category: itemType.category,
+          amount: calculatedAmount,
+          employerAmount,
+          details: calculationDetail
+        });
+        
+        // Add to return array
+        newPayrollItems.push(payrollItem);
       }
     }
-  });
-
-  // Get the employee's highest scope role
-  const highestRole = this.getHighestScopeRole(payroll.employee.roles || []);
-  
-  // Determine organizational position based on roles and entity relationships
-  const position = this.determineEmployeePosition(payroll.employee);
-  
-  // Get government contributions using the entity's getter methods
-  const sssContribution = payroll.sssContribution;
-  const philHealthContribution = payroll.philHealthContribution;
-  const pagIbigContribution = payroll.pagIbigContribution;
-  const withHoldingTax = payroll.withHoldingTax;
-  
-  // Group items by category for display
-  const itemsByCategory = this.groupPayrollItemsByCategory(payroll.payrollItems || []);
-  
-  // Format dates
-  const startDate = payroll.cutoff.startDate.toLocaleDateString();
-  const endDate = payroll.cutoff.endDate.toLocaleDateString();
-  
-  return {
-    payrollId: payroll.id,
-    employee: {
-      id: payroll.employee.id,
-      name: `${payroll.employee.user.profile?.firstName} ${payroll.employee.user.profile?.lastName}`,
-      employeeNumber: payroll.employee.employeeNumber,
-      position: position,
-      department: highestRole?.department?.name || 'N/A',
-      branch: highestRole?.branch?.name || 'N/A',
-      organization: highestRole?.organization?.name || 'N/A',
-    },
-    cutoff: {
-      id: payroll.cutoff.id,
-      period: `${startDate} - ${endDate}`,
-      type: payroll.cutoff.cutoffType
-    },
-    rates: {
-      monthly: payroll.monthlyRate,
-      daily: payroll.dailyRate,
-      hourly: payroll.hourlyRate
-    },
-    workHours: {
-      regular: payroll.totalRegularHours,
-      overtime: payroll.totalOvertimeHours,
-      holiday: payroll.totalHolidayHours,
-      specialHoliday: payroll.totalSpecialHolidayHours,
-      restDay: payroll.totalRestDayHours,
-      nightDifferential: payroll.totalNightDifferentialHours,
-      holidayOvertime: payroll.totalHolidayOvertimeHours,
-      specialHolidayOvertime: payroll.totalSpecialHolidayOvertimeHours,
-      restDayOvertime: payroll.totalRestDayOvertimeHours,
-      total: (
-        payroll.totalRegularHours + 
-        payroll.totalOvertimeHours + 
-        payroll.totalHolidayHours +
-        payroll.totalSpecialHolidayHours +
-        payroll.totalRestDayHours +
-        payroll.totalHolidayOvertimeHours +
-        payroll.totalSpecialHolidayOvertimeHours +
-        payroll.totalRestDayOvertimeHours
-      )
-    },
-    earnings: {
-      basicPay: payroll.basicPay,
-      overtimePay: payroll.overtimePay,
-      holidayPay: payroll.holidayPay,
-      holidayOvertimePay: payroll.holidayOvertimePay,
-      specialHolidayPay: payroll.specialHolidayPay,
-      specialHolidayOvertimePay: payroll.specialHolidayOvertimePay,
-      restDayPay: payroll.restDayPay,
-      restDayOvertimePay: payroll.restDayOvertimePay,
-      nightDifferentialPay: payroll.nightDifferentialPay,
-      allowances: itemsByCategory[PayrollItemCategory.ALLOWANCE] || [],
-      bonuses: itemsByCategory[PayrollItemCategory.BONUS] || [],
-      commissions: itemsByCategory[PayrollItemCategory.COMMISSION] || [],
-      tips: itemsByCategory[PayrollItemCategory.TIP] || [],
-    },
-    deductions: {
-      governmentContributions: {
-        sss: {
-          employee: sssContribution.employee,
-          employer: sssContribution.employer,
-          total: sssContribution.total
-        },
-        philhealth: {
-          employee: philHealthContribution.employee,
-          employer: philHealthContribution.employer,
-          total: philHealthContribution.total
-        },
-        pagibig: {
-          employee: pagIbigContribution.employee,
-          employer: pagIbigContribution.employer,
-          total: pagIbigContribution.total
-        },
-        tax: withHoldingTax
-      },
-      otherDeductions: itemsByCategory[PayrollItemCategory.DEDUCTION] || []
-    },
-    totals: {
-      grossPay: payroll.grossPay,
-      taxableIncome: payroll.taxableIncome,
-      totalDeductions: (
-        payroll.totalDeductions + 
-        payroll.totalGovernmentContributions + 
-        payroll.totalTaxes
-      ),
-      netPay: payroll.netPay
-    },
-    benefits: itemsByCategory[PayrollItemCategory.BENEFIT] || [],
-    reimbursements: itemsByCategory[PayrollItemCategory.REIMBURSEMENT] || [],
-    status: payroll.status,
-    paymentDetails: {
-      method: payroll.paymentMethod,
-      bankAccount: payroll.bankAccount,
-      checkNumber: payroll.checkNumber,
-      referenceNumber: payroll.bankReferenceNumber,
-      paymentDate: payroll.paymentDate?.toLocaleDateString(),
-    },
-    processing: {
-      processedAt: payroll.processedAt?.toLocaleDateString(),
-      processedBy: payroll.processedBy,
-      approvedAt: payroll.approvedAt?.toLocaleDateString(),
-      approvedBy: payroll.approvedBy,
-      releasedAt: payroll.releasedAt?.toLocaleDateString(),
-      releasedBy: payroll.releasedBy,
-    },
-    notes: payroll.notes,
-  };
-}
-
-/**
- * Get the highest scope role from the employee's roles
- */
-private getHighestScopeRole(roles: Role[]): Role | undefined {
-  if (!roles.length) return undefined;
-  
-  // Define scope priority (higher number = higher priority)
-  const scopePriority: Record<RoleScopeType, number> = {
-    [RoleScopeType.GLOBAL]: 5,
-    [RoleScopeType.ORGANIZATION]: 4,
-    [RoleScopeType.BRANCH]: 3,
-    [RoleScopeType.DEPARTMENT]: 2,
-    [RoleScopeType.OWNED]: 1
-  };
-  
-  // Sort roles by scope priority (highest first)
-  const sortedRoles = [...roles].sort((a, b) => 
-    scopePriority[b.scope] - scopePriority[a.scope]
-  );
-  
-  return sortedRoles[0];
-}
-
-/**
- * Determine the employee's position based on roles and organizational relationships
- */
-private determineEmployeePosition(employee: Employee): string {
-  if (!employee.roles || employee.roles.length === 0) {
-    return 'Staff';
-  }
-  
-  const highestRole = this.getHighestScopeRole(employee.roles);
-  
-  if (!highestRole) return 'Staff';
-  
-  // Construct position based on role scope and name
-  let positionPrefix = '';
-  
-  switch (highestRole.scope) {
-    case RoleScopeType.GLOBAL:
-      positionPrefix = 'Executive';
-      break;
-    case RoleScopeType.ORGANIZATION:
-      positionPrefix = highestRole.organization?.name || 'Organizational';
-      break;
-    case RoleScopeType.BRANCH:
-      positionPrefix = highestRole.branch?.name || 'Branch';
-      break;
-    case RoleScopeType.DEPARTMENT:
-      positionPrefix = highestRole.department?.name || 'Department';
-      break;
-    case RoleScopeType.OWNED:
-      positionPrefix = 'Team';
-      break;
-  }
-  
-  return `${positionPrefix} ${highestRole.name}`;
-}
-  /**
-   * Helper method to group payroll items by category
-   */
-  private groupPayrollItemsByCategory(
-    payrollItems: PayrollItem[]
-  ): Record<PayrollItemCategory, any[]> {
-    const result: Record<string, any[]> = {};
     
-    payrollItems.forEach(item => {
-      const category = item.payrollItemType.category;
-      
-      if (!result[category]) {
-        result[category] = [];
+    // Save calculated totals and details
+    payroll.calculationDetails = {
+      items: calculationLog,
+      original: originalValues,
+      final: {
+        grossPay: payroll.grossPay,
+        taxableIncome: payroll.taxableIncome,
+        totalAllowances: payroll.totalAllowances,
+        totalDeductions: payroll.totalDeductions,
+        netPay: payroll.netPay
       }
-      
-      result[category].push({
-        id: item.id,
-        name: item.payrollItemType.name,
-        amount: item.amount,
-        employerAmount: item.employerAmount || 0,
-        total: item.amount + (item.employerAmount || 0),
-        govType: item.payrollItemType.governmentContributionType,
-        description: item.payrollItemType.description
-      });
-    });
+    };
     
-    return result;
+    return newPayrollItems;
   }
   
   /**
@@ -1046,8 +734,6 @@ private determineEmployeePosition(employee: Employee): string {
           cutoff: { id: cutoffId }
         },
         relations: {
-          employee: true,
-          cutoff: true,
           payrollItems: {
             payrollItemType: true
           }
@@ -1057,18 +743,33 @@ private determineEmployeePosition(employee: Employee): string {
       // Get employee and cutoff data
       const employee = await this.employeesService.findOneByOrFail({ id: employeeId });
       const cutoff = await this.cutoffsService.findOneByOrFail({ id: cutoffId });
+
+      // If exists and already processed, prevent re-processing
+      if (existingPayroll && existingPayroll.status === PayrollStatus.RELEASED) {
+        throw new BadRequestException(
+          `Payroll for employee ${employee.id} for cutoff ${cutoff.id} has already been released and cannot be reprocessed`
+        );
+      }
       
       // Get base compensation
       const baseCompensation = await this.employeePayrollItemTypesService.getEmployeeBaseCompensation(employeeId);
       if (!baseCompensation) {
         throw new BadRequestException(`No base compensation defined for employee ${employeeId}. Please define employee's base compensation first.`);
       }
-      
-      // If exists and already processed, prevent re-processing
-      if (existingPayroll && existingPayroll.status === PayrollStatus.RELEASED) {
-        throw new BadRequestException(
-          `Payroll for employee ${employee.id} for cutoff ${cutoff.id} has already been released and cannot be reprocessed`
-        );
+
+      // Check if there is pending overtime work time requests for this employee
+      const pendingWorkTimeRequests = await this.workTimeRequestsService.getRepository().find({
+        where: {
+          employee: { id: employeeId },
+          status: RequestStatus.PENDING,
+          type: AttendanceStatus.OVERTIME,
+          cutoff: { id: cutoffId }
+        }
+      });
+
+      if (pendingWorkTimeRequests.length > 0) {
+        // could prevent process or just change payroll status to error
+        throw new BadRequestException(`There are pending overtime work time requests for employee ${employeeId}. Please approve or reject them first.`);
       }
       
       // if (cutoff.status !== CutoffStatus.PROCESSING) {
@@ -1087,7 +788,7 @@ private determineEmployeePosition(employee: Employee): string {
       }
       
       // Use existing payroll or create new one
-      const payroll = existingPayroll || new Payroll({});
+      const payroll = new Payroll({});
       
       // Set core properties
       payroll.employee = employee;
@@ -1102,19 +803,16 @@ private determineEmployeePosition(employee: Employee): string {
       // Save payroll to get an ID if new
       const savedPayroll = await transactionManager.save(payroll);
       
-      // Process all payroll items
-      // const payrollItems = await this.processPayrollItems(savedPayroll, userId);
-      // savedPayroll.payrollItems = payrollItems;
-
-      
-      // // Mark work hours as processed
-      // for (const workHour of finalWorkHours) {
-      //   await this.finalWorkHoursService.update(
-      //     workHour.id, 
-      //     { isProcessed: true },
-      //     userId
-      //   );
-      // }
+      // In processPayrollForEmployee
+      const payrollItems = await this.processPayrollItems(savedPayroll, userId);
+      // Set the relationship properly
+      payrollItems.forEach(item => {
+        item.payroll = savedPayroll;
+      });
+      // Save items first
+      await transactionManager.save(payrollItems);
+      // Then set on payroll
+      savedPayroll.payrollItems = payrollItems;
       
       // Finalize payroll
       savedPayroll.processedAt = new Date();
@@ -1177,20 +875,24 @@ private determineEmployeePosition(employee: Employee): string {
    * Generate payslip data for a specific payroll
    */
   async generatePayslipData(payrollId: string): Promise<any> {
-    const payroll = await this.findOneBy({ id: payrollId }, {
+    const payroll = await this.findOneByOrFail({ id: payrollId }, {
       relations: {
-        employee: true,
+        employee: {
+          user: {
+            profile: true
+          },
+          roles: true
+        },
         cutoff: true,
         payrollItems: {
           payrollItemType: true
         }
       }
     });
-    
-    if (!payroll) {
-      throw new NotFoundException(`Payroll with ID ${payrollId} not found`);
-    }
-    
+
+    // Get the employee's highest scope role
+    const highestRole = UtilityHelper.determineEffectiveScope(payroll.employee.roles || []);
+
     // Group payroll items by category for organized display
     const itemsByCategory: Record<string, any[]> = {};
     
@@ -1208,16 +910,20 @@ private determineEmployeePosition(employee: Employee): string {
     }
     
     // Format dates
-    const startDate = payroll.cutoff.startDate.toLocaleDateString();
-    const endDate = payroll.cutoff.endDate.toLocaleDateString();
+    const startDate = UtilityHelper.ensureDate(payroll.cutoff.startDate).toLocaleDateString();
+    const endDate = UtilityHelper.ensureDate(payroll.cutoff.endDate).toLocaleDateString();
+
+    const name = payroll.employee.user.profile?.fullName || payroll.employee.user.userName || payroll.employee.user.email;
     
     // Build payslip data
     return {
       employee: {
-        name: `${payroll.employee.user.profile?.firstName} ${payroll.employee.user.profile?.lastName}`,
+        name,
         employeeNumber: payroll.employee.employeeNumber,
-        // position: payroll.employee.roles?.name || '',
-        // department: payroll.employee.departmentId?.name || ''
+        position: highestRole.name,
+        department: highestRole?.department?.name || 'N/A',
+        branch: highestRole?.branch?.name || 'N/A',
+        organization: highestRole?.organization?.name || 'N/A',
       },
       payPeriod: `${startDate} - ${endDate}`,
       rates: {
@@ -1229,44 +935,53 @@ private determineEmployeePosition(employee: Employee): string {
         regular: payroll.totalRegularHours,
         overtime: payroll.totalOvertimeHours,
         holiday: payroll.totalHolidayHours,
+        holidayOvertime: payroll.totalHolidayOvertimeHours,
+        specialHoliday: payroll.totalSpecialHolidayHours,
+        specialHolidayOvertime: payroll.totalSpecialHolidayOvertimeHours,
         restDay: payroll.totalRestDayHours,
-        nightDifferential: payroll.totalNightDifferentialHours
+        restDayOvertime: payroll.totalRestDayOvertimeHours,
+        nightDifferential: payroll.totalNightDifferentialHours,
       },
       earnings: {
         basicPay: payroll.basicPay,
         overtimePay: payroll.overtimePay,
         holidayPay: payroll.holidayPay,
+        holidayOvertimePay: payroll.holidayOvertimePay,
+        specialHolidayPay: payroll.specialHolidayPay,
+        specialHolidayOvertimePay: payroll.specialHolidayOvertimePay,
         restDayPay: payroll.restDayPay,
+        restDayOvertimePay: payroll.restDayOvertimePay,
         nightDifferentialPay: payroll.nightDifferentialPay,
         allowances: itemsByCategory[PayrollItemCategory.ALLOWANCE] || [],
-        bonuses: itemsByCategory[PayrollItemCategory.BONUS] || [],
-        commissions: itemsByCategory[PayrollItemCategory.COMMISSION] || [],
         tips: itemsByCategory[PayrollItemCategory.TIP] || [],
         others: itemsByCategory[PayrollItemCategory.OTHER] || []
       },
       deductions: {
-        taxes: itemsByCategory[PayrollItemCategory.TAX] || [],
-        governmentContributions: payroll.payrollItems?.filter(
-          item => item.payrollItemType.governmentContributionType
-        ).map(item => ({
-          name: item.payrollItemType.name,
-          amount: item.amount,
-          employerAmount: item.employerAmount || 0,
-          total: item.amount + (item.employerAmount || 0)
-        })) || [],
-        otherDeductions: itemsByCategory[PayrollItemCategory.DEDUCTION] || []
+        basic: {
+          absences: payroll.absences,
+          tardiness: payroll.tardiness,
+          undertime: payroll.undertime,
+          noTimeIn: payroll.noTimeIn,
+          noTimeOut: payroll.noTimeOut,
+          total: payroll.totalBasicDeductions
+        },
+        governmentMandated: {
+          sss: payroll.sssContribution.employee,
+          philhealth: payroll.philHealthContribution.employee,
+          pagibig: payroll.pagIbigContribution.employee,
+          tax: payroll.withHoldingTax
+        },
+        otherDeductions: itemsByCategory[PayrollItemCategory.DEDUCTION].filter((item: PayrollItemType) => item.governmentMandatedType) || []
       },
       totals: {
         grossPay: payroll.grossPay,
-        totalDeductions: payroll.totalDeductions + 
-                        payroll.totalGovernmentContributions + 
-                        payroll.totalTaxes,
+        totalDeductions: payroll.totalDeductions,
+        totalAllowances: payroll.totalAllowances,
+        taxableIncome: payroll.taxableIncome,
         netPay: payroll.netPay
       },
-      benefits: itemsByCategory[PayrollItemCategory.BENEFIT] || [],
-      reimbursements: itemsByCategory[PayrollItemCategory.REIMBURSEMENT] || [],
       year: new Date().getFullYear(),
-      payrollDate: payroll.processedAt?.toLocaleDateString() || new Date().toLocaleDateString()
+      payrollDate: UtilityHelper.ensureDate(payroll.processedAt || new Date).toLocaleDateString()
     };
   }
 }

@@ -29,6 +29,12 @@ export class Attendance extends BaseEntity<Attendance> {
     @Column({ default: false })
     isProcessed!: boolean;
 
+    @Column({ nullable: true })
+    processedBy?: string;
+
+    @Column({ type: 'timestamp', nullable: true })
+    processedAt?: Date;
+
     @Column({ type: 'enum', enum: DayType })
     dayType!: DayType;
 

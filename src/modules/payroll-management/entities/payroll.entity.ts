@@ -1,7 +1,9 @@
+import { GovernmentMandatedType } from '@/common/enums/government-contribution-type.enum';
 import { PayrollProcessingState } from '@/common/enums/payroll-processing-state.enum';
 import { PayrollStatus } from '@/common/enums/payroll-status.enum';
 import { BaseEntity } from '@/database/entities/base.entity';
 import { Employee } from '@/modules/employee-management/entities/employee.entity';
+import { Type } from 'class-transformer';
 import { Column, Entity, JoinColumn, ManyToOne, OneToMany } from 'typeorm';
 import { Cutoff } from '../cutoffs/entities/cutoff.entity';
 import { PayrollItem } from '../payroll-items/entities/payroll-item.entity';
@@ -18,8 +20,9 @@ export class Payroll extends BaseEntity<Payroll> {
     
     @OneToMany(() => PayrollItem, (payrollItem: PayrollItem) => payrollItem.payroll, { 
         cascade: true,
-        eager: true
+        nullable: true
     })
+    @Type(() => PayrollItem)
     payrollItems?: PayrollItem[];
     
     // Fundamental rates
@@ -122,25 +125,35 @@ export class Payroll extends BaseEntity<Payroll> {
 
     @Column('decimal', { precision: 15, scale: 2, default: 0 })
     noTimeOut!: number;
+
+    @Column('decimal', { precision: 15, scale: 2, default: 0 })
+    totalBasicDeductions!: number;
+
+    @Column('json', { nullable: true })
+    comparisonWithPreviousPayroll?: {
+        previousPayrollId: string;
+        netPayDifference: number;
+        grossPayDifference: number;
+        significantChanges: Array<{
+            field: string;
+            previousValue: number;
+            currentValue: number;
+            percentageChange: number;
+        }>;
+    };
+
+    @Column({ nullable: true })
+    currency?: string;
+
+    @Column('decimal', { precision: 10, scale: 6, nullable: true })
+    exchangeRate?: number;
     
     // Summarized pay components by category
     @Column('decimal', { precision: 15, scale: 2, default: 0 })
     totalAllowances!: number;
     
     @Column('decimal', { precision: 15, scale: 2, default: 0 })
-    totalBonuses!: number;
-    
-    @Column('decimal', { precision: 15, scale: 2, default: 0 })
-    totalBenefits!: number;
-    
-    @Column('decimal', { precision: 15, scale: 2, default: 0 })
     totalDeductions!: number;
-    
-    @Column('decimal', { precision: 15, scale: 2, default: 0 })
-    totalGovernmentContributions!: number;
-    
-    @Column('decimal', { precision: 15, scale: 2, default: 0 })
-    totalTaxes!: number;
     
     // Payment totals
     @Column('decimal', { precision: 15, scale: 2, default: 0 })
@@ -220,41 +233,48 @@ export class Payroll extends BaseEntity<Payroll> {
     // Virtual properties for better contribution access
     get sssContribution(): { employee: number; employer: number; total: number } {
         const sssItem = this.payrollItems?.find(item => 
-            item.payrollItemType?.governmentContributionType === 'SSS'
+            item.payrollItemType?.governmentMandatedType === GovernmentMandatedType.SSS
         );
+
+        const employee = Number(Number(sssItem?.amount || 0).toFixed(2));
+        const employer = Number(Number(sssItem?.employerAmount || 0).toFixed(2));
         return {
-            employee: sssItem?.amount || 0,
-            employer: sssItem?.employerAmount || 0,
-            total: (sssItem?.amount || 0) + (sssItem?.employerAmount || 0)
+            employee,
+            employer,
+            total: Number((employee + employer).toFixed(2))
         };
     }
     
     get philHealthContribution(): { employee: number; employer: number; total: number } {
         const philhealthItem = this.payrollItems?.find(item => 
-            item.payrollItemType?.governmentContributionType === 'PHILHEALTH'
+            item.payrollItemType?.governmentMandatedType === GovernmentMandatedType.PHILHEALTH
         );
+        const employee = Number(Number(philhealthItem?.amount || 0).toFixed(2));
+        const employer = Number(Number(philhealthItem?.employerAmount || 0).toFixed(2));
         return {
-            employee: philhealthItem?.amount || 0,
-            employer: philhealthItem?.employerAmount || 0,
-            total: (philhealthItem?.amount || 0) + (philhealthItem?.employerAmount || 0)
+            employee,
+            employer,
+            total: Number((employee + employer).toFixed(2))
         };
     }
     
     get pagIbigContribution(): { employee: number; employer: number; total: number } {
         const pagibigItem = this.payrollItems?.find(item => 
-            item.payrollItemType?.governmentContributionType === 'PAGIBIG'
+            item.payrollItemType?.governmentMandatedType === GovernmentMandatedType.PAGIBIG
         );
+        const employee = Number(Number(pagibigItem?.amount || 0).toFixed(2));
+        const employer = Number(Number(pagibigItem?.employerAmount || 0).toFixed(2));
         return {
-            employee: pagibigItem?.amount || 0,
-            employer: pagibigItem?.employerAmount || 0,
-            total: (pagibigItem?.amount || 0) + (pagibigItem?.employerAmount || 0)
+            employee,
+            employer,
+            total: Number((employee + employer).toFixed(2))
         };
     }
     
     get withHoldingTax(): number {
         const taxItem = this.payrollItems?.find(item => 
-            item.payrollItemType?.governmentContributionType === 'TAX'
+            item.payrollItemType?.governmentMandatedType === GovernmentMandatedType.TAX
         );
-        return taxItem?.amount || 0;
+        return Number(Number(taxItem?.amount || 0).toFixed(2));
     }
 }

@@ -1,4 +1,4 @@
-import { GovernmentContributionType } from '@/common/enums/government-contribution-type.enum';
+import { GovernmentMandatedType } from '@/common/enums/government-contribution-type.enum';
 import { Occurrence } from '@/common/enums/occurrence.enum';
 import { PayrollItemCategory } from '@/common/enums/payroll-item-category.enum';
 import { BaseService } from '@/common/services/base.service';
@@ -34,17 +34,17 @@ export class PayrollItemTypesService extends BaseService<PayrollItemType> {
       const sssContribution = new PayrollItemType({
         name: 'SSS Contribution',
         description: 'Social Security System contribution (2025)',
-        category: PayrollItemCategory.GOVERNMENT,
+        category: PayrollItemCategory.DEDUCTION,
         defaultOccurrence: Occurrence.MONTHLY,
-        unit: 'PHP',
         type: 'formula',
-        governmentContributionType: GovernmentContributionType.SSS,
+        governmentMandatedType: GovernmentMandatedType.SSS,
         percentage: 5,
         employerPercentage: 10,
+        processEvery: 2,
         isTaxable: false,
         isTaxDeductible: true,
         isRequired: true,
-        minAmount: 0,
+        minAmount: 5000,
         maxAmount: 35000,
         minAdditionalAmount: 10,
         maxAdditionalAmount: 30,
@@ -58,14 +58,15 @@ export class PayrollItemTypesService extends BaseService<PayrollItemType> {
       const philhealthContribution = new PayrollItemType({
         name: 'PhilHealth Contribution',
         description: 'Philippine Health Insurance Corporation contribution (2025)',
-        category: PayrollItemCategory.GOVERNMENT,
+        category: PayrollItemCategory.DEDUCTION,
         defaultOccurrence: Occurrence.MONTHLY,
-        unit: 'PHP',
-        governmentContributionType: GovernmentContributionType.PHILHEALTH,
+        governmentMandatedType: GovernmentMandatedType.PHILHEALTH,
         percentage: 2.5,
         employerPercentage: 2.5,
+        processEvery: 2,
         isTaxable: false,
         isTaxDeductible: true,
+        type: 'formula',
         isRequired: true,
         minAmount: 10000,
         maxAmount: 100000
@@ -78,17 +79,18 @@ export class PayrollItemTypesService extends BaseService<PayrollItemType> {
       const pagibigContribution = new PayrollItemType({
         name: 'Pag-IBIG Contribution',
         description: 'Home Development Mutual Fund contribution (2025)',
-        category: PayrollItemCategory.GOVERNMENT,
+        category: PayrollItemCategory.DEDUCTION,
         defaultOccurrence: Occurrence.MONTHLY,
-        unit: 'PHP',
-        governmentContributionType: GovernmentContributionType.PAGIBIG,
+        governmentMandatedType: GovernmentMandatedType.PAGIBIG,
         percentage: 1,
         employerPercentage: 2,
+        processEvery: 2,
         isTaxable: false,
         isTaxDeductible: true,
         isRequired: true,
+        type: 'formula',
         minAmount: 1500,
-        maxAmount: 1500,
+        maxAmount: 10000,
         minContribution: 1,
         maxContribution: 2 
       });
@@ -104,6 +106,7 @@ export class PayrollItemTypesService extends BaseService<PayrollItemType> {
           defaultOccurrence: Occurrence.MONTHLY,
           type: 'fixed' as const,
           isRequired: true,
+          includeInPayrollItemsProcessing: false,
           isTaxable: true,
         },
         {
@@ -112,6 +115,7 @@ export class PayrollItemTypesService extends BaseService<PayrollItemType> {
           unit: 'PHP',
           defaultOccurrence: Occurrence.DAILY,
           type: 'fixed' as const,
+          includeInPayrollItemsProcessing: false,
           isTaxable: true,
         },
         {
@@ -119,6 +123,7 @@ export class PayrollItemTypesService extends BaseService<PayrollItemType> {
           category: PayrollItemCategory.COMPENSATION,
           unit: 'PHP',
           defaultOccurrence: Occurrence.HOURLY,
+          includeInPayrollItemsProcessing: false,
           type: 'fixed' as const,
           isTaxable: true,
         }
@@ -133,6 +138,38 @@ export class PayrollItemTypesService extends BaseService<PayrollItemType> {
         newTypes.push(savedSalary);
       }
       
+      // 5. 13th Month Pay
+      const thirteenthMonthPay = new PayrollItemType({
+        name: '13th Month Pay',
+        description: '13th month pay',
+        category: PayrollItemCategory.COMPENSATION,
+        governmentMandatedType: GovernmentMandatedType.THIRTEENTH_MONTH_PAY,
+        defaultOccurrence: Occurrence.ANNUALLY,
+        isTaxable: true,
+        isTaxDeductible: false,
+        taxExemptionAmount: 90000,
+        type: 'fixed' as const,
+        isRequired: true,
+      });
+
+      const savedThirteenthMonthPay = await this.create(thirteenthMonthPay, userId);
+      newTypes.push(savedThirteenthMonthPay);
+
+      // 6. Withholding Tax
+      const withholdingTax = new PayrollItemType({
+        name: 'Withholding Tax',
+        description: 'Withholding tax deduction',
+        category: PayrollItemCategory.DEDUCTION,
+        governmentMandatedType: GovernmentMandatedType.TAX,
+        processEvery: 1,
+        defaultOccurrence: Occurrence.MONTHLY,
+        type: 'formula' as const,
+        isRequired: true,
+      });
+      
+      const savedWithholdingTax = await this.create(withholdingTax, userId);
+      newTypes.push(savedWithholdingTax);
+
     }
   }
 }

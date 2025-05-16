@@ -6,10 +6,10 @@ import { createController } from "@/common/factories/create-controller.factory";
 import { HttpStatus, NotFoundException, Post } from "@nestjs/common";
 import { ApiOperation, ApiResponse } from "@nestjs/swagger";
 import { AttendancesService } from "./attendances.service";
-import { GetAttendanceDto, UpdateAttendanceDto } from "./dtos/attendance.dto";
+import { GetAttendanceDto } from "./dtos/attendance.dto";
 import { Attendance } from "./entities/attendance.entity";
 
-export class AttendancesController extends createController(Attendance, AttendancesService, GetAttendanceDto, undefined, UpdateAttendanceDto)
+export class AttendancesController extends createController(Attendance, AttendancesService, GetAttendanceDto, undefined, undefined)
 {
     override async create(entityDto: null, createdById: string): Promise<GetAttendanceDto> {
         return await super.create(entityDto, createdById);
@@ -19,15 +19,23 @@ export class AttendancesController extends createController(Attendance, Attendan
         return await super.delete(id);
     }
 
+    override async update(id: string, entityDto: null, updatedById: string): Promise<GetAttendanceDto> {
+        return await super.update(id, entityDto, updatedById);
+    }
+
     override async deleteMany(ids: string[], hardDelete?: boolean): Promise<void> {
         await super.deleteMany(ids, hardDelete);
+    }
+
+    override async softDelete(id: string, deletedBy: string): Promise<GeneralResponseDto> {
+        return await super.softDelete(id, deletedBy);
     }
 
     @Post('process')
     @Authorize({ endpointType: Action.MANAGE })
     @ApiOperation({
         summary: 'Manually process attendance records',
-        description: 'Triggers processing of attendance records for undertime, overtime, missing checkouts, rest days, and absences'
+        description: 'Triggers processing of attendance records for undertime, overtime, missing checkins/checkouts, and absences. This also calculates final work hours per day.'
     })
     @ApiResponse({
         status: HttpStatus.OK,
@@ -36,11 +44,13 @@ export class AttendancesController extends createController(Attendance, Attendan
     })
     @ApiResponse({
         status: HttpStatus.UNAUTHORIZED,
-        description: 'User is not authorized to process attendance records'
+        description: 'User is not authorized to process attendance records',
+        type: GeneralResponseDto
     })
     @ApiResponse({
         status: HttpStatus.INTERNAL_SERVER_ERROR,
-        description: 'An error occurred while processing attendance records'
+        description: 'An error occurred while processing attendance records',
+        type: GeneralResponseDto
     })
     async processAttendanceRecords(
         @CurrentUser('sub') userId: string,
@@ -56,7 +66,7 @@ export class AttendancesController extends createController(Attendance, Attendan
         } catch (error: any) {
             return {
                 message: 'An error occurred while processing attendance records: ' + error.message,
-                statusCode: HttpStatus.INTERNAL_SERVER_ERROR
+                statusCode: error.status || HttpStatus.INTERNAL_SERVER_ERROR
             };
         }
     }

@@ -42,7 +42,7 @@ export class SchedulesService extends BaseService<Schedule> {
           employee: { id: employeeId },
           date: parseISO(format(new Date(), 'yyyy-MM-dd'))
         },
-        relations: { shift: { days: true }, holiday: true, employee: true }
+        relations: { shift: { days: true }, cutoff: true, holiday: true, employee: true }
       });
     }
 

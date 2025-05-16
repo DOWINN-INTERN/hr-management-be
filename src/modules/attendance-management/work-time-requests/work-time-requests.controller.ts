@@ -9,4 +9,8 @@ export class WorkTimeRequestsController extends createController(WorkTimeRequest
     override async delete(id: string): Promise<GeneralResponseDto> {
         return await super.delete(id);
     }
+
+    override async softDelete(id: string, deletedBy: string): Promise<GeneralResponseDto> {
+        return await super.softDelete(id, deletedBy);
+    }
 }

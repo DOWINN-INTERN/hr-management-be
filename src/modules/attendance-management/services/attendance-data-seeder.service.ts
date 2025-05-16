@@ -11,10 +11,10 @@ import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { addMinutes, format, parseISO, subDays } from 'date-fns';
 import { Repository } from 'typeorm';
-import { AttendancePunchesService } from '../../attendance-punches/attendance-punches.service';
-import { AttendancePunch } from '../../attendance-punches/entities/attendance-punch.entity';
-import { Attendance } from '../../entities/attendance.entity';
-import { DayType } from '../entities/final-work-hour.entity';
+import { AttendancePunchesService } from '../attendance-punches/attendance-punches.service';
+import { AttendancePunch } from '../attendance-punches/entities/attendance-punch.entity';
+import { Attendance } from '../entities/attendance.entity';
+import { DayType } from '../final-work-hours/entities/final-work-hour.entity';
 
 interface TestScenario {
   name: string;
@@ -197,6 +197,7 @@ export class AttendanceDataSeederService implements OnModuleInit {
     attendance.statuses = statuses;
     attendance.isProcessed = false;
     attendance.dayType = dayType;
+    attendance.cutoff = schedule.cutoff;
     
     // Save the attendance record to get an ID
     const savedAttendance = await this.attendanceRepository.save(attendance);
