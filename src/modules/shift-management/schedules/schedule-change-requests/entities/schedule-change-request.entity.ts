@@ -2,7 +2,7 @@ import { RequestStatus } from '@/common/enums/request-status.enum';
 import { ScheduleChangeRequestType } from '@/common/enums/schedule-change-request-type.enum';
 import { BaseEntity } from '@/database/entities/base.entity';
 import { Document } from '@/modules/documents/entities/document.entity';
-import { Column, Entity, JoinColumn, ManyToOne, OneToMany, OneToOne } from 'typeorm';
+import { Column, Entity, ManyToMany, OneToMany, OneToOne } from 'typeorm';
 import { Schedule } from '../../entities/schedule.entity';
 import { ScheduleChangeResponse } from '../schedule-change-responses/entities/schedule-change-response.entity';
 
@@ -17,13 +17,12 @@ export class ScheduleChangeRequest extends BaseEntity<ScheduleChangeRequest> {
     @Column({ type: 'enum', enum: ScheduleChangeRequestType })
     type!: ScheduleChangeRequestType;
 
-    @ManyToOne(() => Schedule, (schedule: Schedule) => schedule.scheduleChangeRequests)
-    schedule!: Schedule[];
+    @ManyToMany(() => Schedule, (schedule: Schedule) => schedule.scheduleChangeRequests)
+    schedules!: Schedule[];
 
-    @OneToMany(() => Document, (document: Document) => document.scheduleChangeRequest)
-    documents!: Document[];
+    @OneToMany(() => Document, (document: Document) => document.scheduleChangeRequest, { nullable: true, cascade: true })
+    documents?: Document[];
 
-    @OneToOne(() => ScheduleChangeResponse, (scheduleChangeResponse: ScheduleChangeResponse) => scheduleChangeResponse.scheduleChangeRequest, { eager: true, nullable: true, cascade: true })
-    @JoinColumn({ name: 'scheduleChangeResponseId' })
+    @OneToOne(() => ScheduleChangeResponse, (scheduleChangeResponse: ScheduleChangeResponse) => scheduleChangeResponse.scheduleChangeRequest, { nullable: true})
     scheduleChangeResponse?: ScheduleChangeResponse;
 }

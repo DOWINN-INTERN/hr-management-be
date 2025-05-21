@@ -1,9 +1,11 @@
 import { BaseDto } from "@/common/dtos/base.dto";
+import { ReferenceDto } from "@/common/dtos/reference.dto";
 import { RequestStatus } from '@/common/enums/request-status.enum';
 import { ScheduleChangeRequestType } from '@/common/enums/schedule-change-request-type.enum';
 import { createGetDto } from "@/common/factories/create-get-dto.factory";
-import { ApiProperty, PartialType } from "@nestjs/swagger";
-import { IsEnum, IsNotEmpty, IsOptional, IsString, IsUUID } from "class-validator";
+import { ApiProperty, ApiPropertyOptional, PartialType } from "@nestjs/swagger";
+import { Type } from "class-transformer";
+import { IsEnum, IsNotEmpty, IsOptional, IsString, IsUUID, ValidateNested } from "class-validator";
 
 export class ScheduleChangeRequestDto extends PartialType(BaseDto) {
     @ApiProperty({ 
@@ -13,16 +15,6 @@ export class ScheduleChangeRequestDto extends PartialType(BaseDto) {
     @IsNotEmpty()
     @IsString()
     description!: string;
-    
-    @ApiProperty({ 
-        description: 'Status of the request',
-        enum: RequestStatus,
-        default: RequestStatus.PENDING,
-        example: RequestStatus.PENDING
-    })
-    @IsEnum(RequestStatus)
-    @IsOptional()
-    status?: RequestStatus;
 
     @ApiProperty({ 
         description: 'Type of schedule change request',
@@ -41,16 +33,30 @@ export class ScheduleChangeRequestDto extends PartialType(BaseDto) {
     @IsNotEmpty()
     scheduleId!: string;
 
-    @ApiProperty({ 
-        description: 'ID of the schedule change response if exists',
-        example: '123e4567-e89b-12d3-a456-426614174000',
-        required: false
+    @ApiPropertyOptional({
+        description: 'Documents associated with the schedule change request',
+        type: [ReferenceDto],
+        example: [
+            { id: '123e4567-e89b-12d3-a456-426614174000' },
+            { id: '123e4567-e89b-12d3-a456-426614174001' }
+        ]
     })
-    @IsUUID()
     @IsOptional()
-    scheduleChangeResponseId?: string;
+    @ValidateNested({ each: true })
+    @Type(() => ReferenceDto)
+    documents?: ReferenceDto[];
 }
 
 export class UpdateScheduleChangeRequestDto extends PartialType(ScheduleChangeRequestDto) {}
 
-export class GetScheduleChangeRequestDto extends createGetDto(UpdateScheduleChangeRequestDto, 'schedule change request') {}
+export class GetScheduleChangeRequestDto extends createGetDto(UpdateScheduleChangeRequestDto, 'schedule change request') {
+    @ApiPropertyOptional({ 
+        description: 'Status of the request',
+        enum: RequestStatus,
+        default: RequestStatus.PENDING,
+        example: RequestStatus.PENDING
+    })
+    @IsEnum(RequestStatus)
+    @IsOptional()
+    status?: RequestStatus;
+}

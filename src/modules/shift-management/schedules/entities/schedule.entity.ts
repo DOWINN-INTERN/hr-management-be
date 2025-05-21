@@ -3,7 +3,7 @@ import { BaseEntity } from '@/database/entities/base.entity';
 import { Attendance } from '@/modules/attendance-management/entities/attendance.entity';
 import { Employee } from '@/modules/employee-management/entities/employee.entity';
 import { Cutoff } from '@/modules/payroll-management/cutoffs/entities/cutoff.entity';
-import { Column, Entity, JoinColumn, ManyToOne, OneToMany, OneToOne } from 'typeorm';
+import { Column, Entity, JoinColumn, JoinTable, ManyToMany, ManyToOne, OneToOne } from 'typeorm';
 import { Shift } from '../../entities/shift.entity';
 import { Holiday } from '../../holidays/entities/holiday.entity';
 import { ScheduleChangeRequest } from '../schedule-change-requests/entities/schedule-change-request.entity';
@@ -49,7 +49,18 @@ export class Schedule extends BaseEntity<Schedule> {
     @JoinColumn({ name: 'employeeId' })
     employee!: Employee;
 
-    @OneToMany(() => ScheduleChangeRequest, (scheduleChangeRequest: ScheduleChangeRequest) => scheduleChangeRequest.schedule)
+    @ManyToMany(() => ScheduleChangeRequest, (scheduleChangeRequest: ScheduleChangeRequest) => scheduleChangeRequest.schedules, { nullable: true })
+    @JoinTable({
+        name: 'schedule_change_requests',
+        joinColumn: {
+            name: 'scheduleId',
+            referencedColumnName: 'id',
+        },
+        inverseJoinColumn: {
+            name: 'scheduleChangeRequestId',
+            referencedColumnName: 'id',
+        },
+    })
     scheduleChangeRequests?: ScheduleChangeRequest[];
 
     @ManyToOne(() => Cutoff, (cutoff: Cutoff) => cutoff.schedules, { eager: true })

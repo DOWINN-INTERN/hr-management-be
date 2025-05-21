@@ -1,5 +1,5 @@
-import { CutoffStatus } from '@/common/enums/cutoff-status.enum';
 import { Day } from '@/common/enums/day.enum';
+import { CutoffStatus } from '@/common/enums/payroll/cutoff-status.enum';
 import { CutoffsService } from '@/modules/payroll-management/cutoffs/cutoffs.service';
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ShiftDay } from '../entities/shift-day.entity';
