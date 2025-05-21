@@ -18,15 +18,6 @@ export class WorkTimeRequestDto extends PartialType(BaseDto) {
     @IsNotEmpty()
     employee!: ReferenceDto;
     
-    @ApiPropertyOptional({ 
-        description: 'Status of the work time request',
-        enum: RequestStatus,
-        example: RequestStatus.PENDING,
-    })
-    @IsOptional()
-    @IsEnum(RequestStatus)
-    status?: RequestStatus;
-    
     @ApiProperty({ 
         description: 'Type of attendance',
         enum: AttendanceStatus,
@@ -87,4 +78,13 @@ export class WorkTimeRequestDto extends PartialType(BaseDto) {
 
 export class UpdateWorkTimeRequestDto extends PartialType(WorkTimeRequestDto) {}
 
-export class GetWorkTimeRequestDto extends createGetDto(UpdateWorkTimeRequestDto, 'work time request') {}
+export class GetWorkTimeRequestDto extends createGetDto(UpdateWorkTimeRequestDto, 'work time request') {
+    @ApiPropertyOptional({ 
+        description: 'Status of the work time request',
+        enum: RequestStatus,
+        example: RequestStatus.PENDING,
+    })
+    @IsOptional()
+    @IsEnum(RequestStatus)
+    status?: RequestStatus;
+}

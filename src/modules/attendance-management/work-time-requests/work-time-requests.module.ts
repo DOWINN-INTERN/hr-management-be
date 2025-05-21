@@ -1,3 +1,5 @@
+import { DocumentsModule } from '@/modules/documents/documents.module';
+import { EmployeeManagementModule } from '@/modules/employee-management/employee-management.module';
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { FinalWorkHoursModule } from '../final-work-hours/final-work-hours.module';
@@ -9,7 +11,9 @@ import { WorkTimeRequestsService } from './work-time-requests.service';
 @Module({
     imports: [
         TypeOrmModule.forFeature([WorkTimeRequest]),
-        FinalWorkHoursModule
+        FinalWorkHoursModule,
+        DocumentsModule,
+        EmployeeManagementModule,
     ],
     providers: [WorkTimeRequestsService, WorkTimeListener],
     exports: [

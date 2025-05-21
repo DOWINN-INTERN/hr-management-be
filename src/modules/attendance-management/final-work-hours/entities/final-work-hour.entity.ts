@@ -82,6 +82,9 @@ export class FinalWorkHour extends BaseEntity<FinalWorkHour> {
     // Night differential
     @Column('decimal', { precision: 10, scale: 2, default: 0 })
     nightDifferentialHours!: number;
+
+    @Column('decimal', { precision: 10, scale: 2, default: 0 })
+    overtimeNightDifferentialHours!: number;
     
     @Column({ 
         type: 'enum', 
@@ -111,6 +114,9 @@ export class FinalWorkHour extends BaseEntity<FinalWorkHour> {
 
     @Column()
     batchId!: string;
+
+    @Column({ nullable: true })
+    payrollBatchId?: string;
 
     @Column({ default: true })
     isProcessed!: boolean;

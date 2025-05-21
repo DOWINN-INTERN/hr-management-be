@@ -43,89 +43,95 @@ export class FinalWorkHourDto extends PartialType(BaseDto) {
     @Type(() => Date)
     overTimeOut?: Date;
 
-    @ApiProperty({ description: 'No time in hours', example: 0.00 })
+    @ApiPropertyOptional({ description: 'No time in hours', example: 0.00 })
     @IsDecimal({ decimal_digits: '2' })
     @IsNumber()
-    @IsNotEmpty()
-    noTimeInHours!: number;
+    @IsOptional()
+    noTimeInHours?: number;
 
-    @ApiProperty({ description: 'No time out hours', example: 0.00 })
+    @ApiPropertyOptional({ description: 'No time out hours', example: 0.00 })
     @IsDecimal({ decimal_digits: '2' })
-    @IsNotEmpty()
     @IsNumber()
-    noTimeOutHours!: number;
+    @IsOptional()
+    noTimeOutHours?: number;
 
-    @ApiProperty({ description: 'Absent hours', example: 0.00 })
+    @ApiPropertyOptional({ description: 'Absent hours', example: 0.00 })
     @IsDecimal({ decimal_digits: '2' })
-    @IsNotEmpty()
     @IsNumber()
-    absentHours!: number;
+    @IsOptional()
+    absentHours?: number;
 
-    @ApiProperty({ description: 'Tardiness hours', example: 0.00 })
+    @ApiPropertyOptional({ description: 'Tardiness hours', example: 0.00 })
     @IsDecimal({ decimal_digits: '2' })
-    @IsNotEmpty()
     @IsNumber()
-    tardinessHours!: number;
+    @IsOptional()
+    tardinessHours?: number;
 
-    @ApiProperty({ description: 'Undertime hours', example: 0.00 })
+    @ApiPropertyOptional({ description: 'Undertime hours', example: 0.00 })
     @IsDecimal({ decimal_digits: '2' })
-    @IsNotEmpty()
     @IsNumber()
-    undertimeHours!: number;
+    @IsOptional()
+    undertimeHours?: number;
 
-    @ApiProperty({ description: 'Regular day hours', example: 8.00 })
+    @ApiPropertyOptional({ description: 'Regular day hours', example: 8.00 })
     @IsDecimal({ decimal_digits: '2' })
-    @IsNotEmpty()
     @IsNumber()
-    regularDayHours!: number;
+    @IsOptional()
+    regularDayHours?: number;
 
-    @ApiProperty({ description: 'Rest day hours', example: 0.00 })
+    @ApiPropertyOptional({ description: 'Rest day hours', example: 0.00 })
     @IsDecimal({ decimal_digits: '2' })
-    @IsNotEmpty()
+    @IsOptional()
     @IsNumber()
-    restDayHours!: number;
+    restDayHours?: number;
 
-    @ApiProperty({ description: 'Special holiday hours', example: 0.00 })
+    @ApiPropertyOptional({ description: 'Special holiday hours', example: 0.00 })
     @IsDecimal({ decimal_digits: '2' })
-    @IsNotEmpty()
     @IsNumber()
-    specialHolidayHours!: number;
+    @IsOptional()
+    specialHolidayHours?: number;
 
-    @ApiProperty({ description: 'Regular holiday hours', example: 0.00 })
+    @ApiPropertyOptional({ description: 'Regular holiday hours', example: 0.00 })
     @IsDecimal({ decimal_digits: '2' })
-    @IsNotEmpty()
     @IsNumber()
-    regularHolidayHours!: number;
+    @IsOptional()
+    regularHolidayHours?: number;
 
-    @ApiProperty({ description: 'Overtime regular day hours', example: 0.00 })
+    @ApiPropertyOptional({ description: 'Overtime regular day hours', example: 0.00 })
     @IsDecimal({ decimal_digits: '2' })
-    @IsNotEmpty()
     @IsNumber()
-    overtimeRegularDayHours!: number;
+    @IsOptional()
+    overtimeRegularDayHours?: number;
 
-    @ApiProperty({ description: 'Overtime rest day hours', example: 0.00 })
+    @ApiPropertyOptional({ description: 'Overtime rest day hours', example: 0.00 })
     @IsDecimal({ decimal_digits: '2' })
-    @IsNotEmpty()
     @IsNumber()
-    overtimeRestDayHours!: number;
+    @IsOptional()
+    overtimeRestDayHours?: number;
 
-    @ApiProperty({ description: 'Overtime special holiday hours', example: 0.00 })
+    @ApiPropertyOptional({ description: 'Overtime special holiday hours', example: 0.00 })
     @IsDecimal({ decimal_digits: '2' })
-    @IsNotEmpty()
     @IsNumber()
-    overtimeSpecialHolidayHours!: number;
+    @IsOptional()
+    overtimeSpecialHolidayHours?: number;
 
-    @ApiProperty({ description: 'Overtime regular holiday hours', example: 0.00 })
+    @ApiPropertyOptional({ description: 'Overtime regular holiday hours', example: 0.00 })
     @IsDecimal({ decimal_digits: '2' })
-    @IsNotEmpty()
     @IsNumber()
-    overtimeRegularHolidayHours!: number;
+    @IsOptional()
+    overtimeRegularHolidayHours?: number;
 
-    @ApiProperty({ description: 'Night differential hours', example: 0.00 })
+    @ApiPropertyOptional({ description: 'Night differential hours', example: 0.00 })
     @IsDecimal({ decimal_digits: '2' })
-    @IsNotEmpty()
     @IsNumber()
-    nightDifferentialHours!: number;
+    @IsOptional()
+    nightDifferentialHours?: number;
+
+    @ApiPropertyOptional({ description: 'Overtime night differential hours', example: 0.00 })
+    @IsDecimal({ decimal_digits: '2' })
+    @IsNumber()
+    @IsOptional()
+    nightDifferentialOvertimeHours?: number;
 
     @ApiProperty({ 
         description: 'Day type', 
@@ -136,6 +142,43 @@ export class FinalWorkHourDto extends PartialType(BaseDto) {
     @IsEnum(DayType)
     dayType!: DayType;
 
+    @ApiProperty({ description: 'Work date', type: Date })
+    @IsDate()
+    @IsNotEmpty()
+    @Type(() => Date)
+    workDate!: Date;
+
+    @ApiPropertyOptional({ description: 'Notes' })
+    @IsOptional()
+    @IsString()
+    notes?: string;
+}
+
+export class UpdateFinalWorkHourDto extends PartialType(FinalWorkHourDto) {
+    @ApiPropertyOptional({ description: 'Is approved', example: false })
+    @IsBoolean()
+    @IsOptional()
+    isApproved?: boolean;
+
+    @ApiPropertyOptional({ description: 'Is processed', example: true })
+    @IsBoolean()
+    @IsOptional()
+    isProcessed?: boolean;
+}
+
+export class GetFinalWorkHourDto extends createGetDto(UpdateFinalWorkHourDto, 'final work hour') {
+    @ApiPropertyOptional({ description: 'Batch ID'  })
+    @IsUUID('4')
+    @IsString()
+    @IsOptional()
+    payrollBatchId?: string;
+
+    @ApiProperty({ description: 'Batch ID' })
+    @IsNotEmpty()
+    @IsUUID('4')
+    @IsString()
+    batchId!: string;
+    
     @ApiProperty({ description: 'Total regular hours', example: 8.00 })
     @IsDecimal({ decimal_digits: '2' })
     @IsNotEmpty()
@@ -153,35 +196,4 @@ export class FinalWorkHourDto extends PartialType(BaseDto) {
     @IsNotEmpty()
     @IsNumber()
     totalHours!: number;
-
-    @ApiPropertyOptional({ description: 'Is approved', example: false })
-    @IsBoolean()
-    @IsOptional()
-    isApproved?: boolean;
-
-    @ApiProperty({ description: 'Batch ID' })
-    @IsNotEmpty()
-    @IsUUID('4')
-    @IsString()
-    batchId!: string;
-
-    @ApiPropertyOptional({ description: 'Is processed', example: true })
-    @IsBoolean()
-    @IsOptional()
-    isProcessed?: boolean;
-
-    @ApiProperty({ description: 'Work date', type: Date })
-    @IsDate()
-    @IsNotEmpty()
-    @Type(() => Date)
-    workDate!: Date;
-
-    @ApiPropertyOptional({ description: 'Notes' })
-    @IsOptional()
-    @IsString()
-    notes?: string;
 }
-
-export class UpdateFinalWorkHourDto extends PartialType(FinalWorkHourDto) {}
-
-export class GetFinalWorkHourDto extends createGetDto(UpdateFinalWorkHourDto, 'final work hour') {}

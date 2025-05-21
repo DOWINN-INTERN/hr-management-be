@@ -39,7 +39,7 @@ export class WorkTimeRequest extends BaseEntity<WorkTimeRequest> {
     @JoinColumn({ name: 'cutoffId' })
     cutoff!: Cutoff;
 
-    @OneToMany(() => Document, (document: Document) => document.workTimeRequest, { nullable: true })
+    @OneToMany(() => Document, (document: Document) => document.workTimeRequest, { nullable: true, cascade: true })
     documents?: Document[];
 
     @Column({ type: 'text', nullable: true })

@@ -59,7 +59,8 @@ export class Profile extends BaseEntity<Profile> {
   userId!: string;
 
   @OneToOne(() => Address, (address: Address) => address.profile, {
-    cascade: true
+    cascade: true,
+    eager: true
   })
   address?: Address;
 

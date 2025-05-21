@@ -31,6 +31,8 @@ interface WorkHoursBreakdown {
     // Night differential hours
     nightDifferentialHours: number;
 
+    overtimeNightDifferentialHours: number;
+
     // Day type for reference only
     dayType: DayType;
 
@@ -72,6 +74,7 @@ export class FinalWorkHoursService extends BaseService<FinalWorkHour> {
             overtimeRegularHolidayHours: 0,
             
             nightDifferentialHours: 0,
+            overtimeNightDifferentialHours: 0,
             
             dayType: DayType.REGULAR_DAY,
             
@@ -162,7 +165,8 @@ export class FinalWorkHoursService extends BaseService<FinalWorkHour> {
         }
         
         // Store night differential hours
-        result.nightDifferentialHours = nightDiffHours;
+        result.nightDifferentialHours = nightDiffHours.regular;
+        result.overtimeNightDifferentialHours = nightDiffHours.overtime;
         
         // Calculate totals
         result.totalRegularHours = result.regularDayHours + 
@@ -182,41 +186,64 @@ export class FinalWorkHoursService extends BaseService<FinalWorkHour> {
     
     /**
      * Calculate night differential hours worked
+     * @returns Object containing regular and overtime night differential hours
      */
     private calculateNightDifferentialHours(
         timeIn: Date,
         timeOut: Date,
         overTimeOut?: Date
-    ): number {
+    ): { regular: number, overtime: number } {
         const NIGHT_DIFF_START_HOUR = 22; // 10:00 PM
         const NIGHT_DIFF_END_HOUR = 6;    // 6:00 AM
         
-        let nightDiffHours = 0;
+        let regularNightDiffHours = 0;
+        let overtimeNightDiffHours = 0;
+        
         const timeInLocal = new Date(timeIn);
         const timeOutLocal = new Date(timeOut);
         const overTimeOutLocal = overTimeOut ? new Date(overTimeOut) : null;
-        const finalTimeOut = overTimeOutLocal || timeOutLocal;
         
-        // Check each hour between timeIn and finalTimeOut
+        // Calculate regular night differential hours (between timeIn and timeOut)
         let currentHour = new Date(timeInLocal);
-        
-        while (currentHour < finalTimeOut) {
+        while (currentHour < timeOutLocal) {
             const nextHour = new Date(currentHour);
             nextHour.setHours(nextHour.getHours() + 1);
             
-            const hourEnd = new Date(Math.min(nextHour.getTime(), finalTimeOut.getTime()));
+            const hourEnd = new Date(Math.min(nextHour.getTime(), timeOutLocal.getTime()));
             const hourDiff = this.calculateHours(currentHour, hourEnd, 6);
             
-            // Check if this hour falls within night differential period
             const hour = currentHour.getHours();
             if (hour >= NIGHT_DIFF_START_HOUR || hour < NIGHT_DIFF_END_HOUR) {
-                nightDiffHours += hourDiff;
+                regularNightDiffHours += hourDiff;
             }
             
             currentHour = nextHour;
         }
         
-        return Math.round(nightDiffHours * 100) / 100; // Round to 2 decimal places
+        // Calculate overtime night differential hours (between timeOut and overTimeOut)
+        if (overTimeOutLocal) {
+            currentHour = new Date(timeOutLocal);
+            while (currentHour < overTimeOutLocal) {
+                const nextHour = new Date(currentHour);
+                nextHour.setHours(nextHour.getHours() + 1);
+                
+                const hourEnd = new Date(Math.min(nextHour.getTime(), overTimeOutLocal.getTime()));
+                const hourDiff = this.calculateHours(currentHour, hourEnd, 6);
+                
+                const hour = currentHour.getHours();
+                if (hour >= NIGHT_DIFF_START_HOUR || hour < NIGHT_DIFF_END_HOUR) {
+                    overtimeNightDiffHours += hourDiff;
+                }
+                
+                currentHour = nextHour;
+            }
+        }
+        
+        // Round to 2 decimal places
+        return {
+            regular: Math.round(regularNightDiffHours * 100) / 100,
+            overtime: Math.round(overtimeNightDiffHours * 100) / 100
+        };
     }
     
     /**
