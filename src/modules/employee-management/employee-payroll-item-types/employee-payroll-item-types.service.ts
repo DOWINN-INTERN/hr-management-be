@@ -1,5 +1,5 @@
 import { Occurrence } from '@/common/enums/occurrence.enum';
-import { PayrollItemCategory } from '@/common/enums/payroll-item-category.enum';
+import { PayrollItemCategory } from '@/common/enums/payroll/payroll-item-category.enum';
 import { BaseService } from '@/common/services/base.service';
 import { UsersService } from '@/modules/account-management/users/users.service';
 import { EmployeeCompensationDto } from '@/modules/employee-management/employee-payroll-item-types/dtos/employee-compensation.dto';

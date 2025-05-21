@@ -27,7 +27,7 @@ export class EmployeePayrollItemTypesController extends createController(
         return super.delete(id);
     }
 
-    @Post('employee/:employeeId/base-compensation')
+    @Post('base-compensation/:employeeId')
     @Authorize({ endpointType: Action.CREATE })
     @ApiOperation({
         summary: 'Setup employee base compensation',

@@ -35,5 +35,6 @@ export class Document extends BaseEntity<Document> {
     scheduleChangeRequest?: ScheduleChangeRequest;
 
     @ManyToOne(() => WorkTimeRequest, (workTimeRequest: WorkTimeRequest) => workTimeRequest.documents, { nullable: true })
+    @JoinColumn({ name: 'workTimeRequestId' })
     workTimeRequest?: WorkTimeRequest;
 }

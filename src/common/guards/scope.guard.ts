@@ -54,8 +54,6 @@ export class ScopeGuard implements CanActivate {
                 
                 request.resourceScope = resourceScope;
                 // log resource scope
-                this.logger.log(`Resource scope set: ${JSON.stringify(resourceScope)}`);
-                
                 this.logger.debug(`Applied filters for scope type: ${resourceScope.type}`);
               } catch (error: any) {
                 this.logger.error(`Error setting up resource scope: ${error.message}`, error.stack);

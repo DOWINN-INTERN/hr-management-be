@@ -1,13 +1,8 @@
 export enum PayrollItemCategory {
-    COMPENSATION = 'Compensation',
+    COMPENSATION = 'Compensation', // Base Salary, Tips
     BENEFIT = 'Benefit',
     ADJUSTMENT = 'Adjustment',
     DEDUCTION = 'Deduction',
     ALLOWANCE = 'Allowance',
     REIMBURSEMENT = 'Reimbursement',
-    TAX = 'Tax',
-    OTHER = 'Other',
-    BONUS = 'Bonus',
-    COMMISSION = 'Commission',
-    TIP = 'Tip',
 }

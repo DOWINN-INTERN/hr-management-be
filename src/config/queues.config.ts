@@ -25,6 +25,15 @@ export const queues: QueueConfig[] = [
     },
   },
   {
+    name: 'payroll-processing',
+    options: {
+      limiter: {
+        max: 100,
+        duration: 60000, // 1 minute
+      },
+    }
+  },
+  {
     name: 'schedule-generation',
     options: {
       defaultJobOptions: {

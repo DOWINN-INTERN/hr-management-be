@@ -4,8 +4,8 @@ import { SchedulesService } from '@/modules/shift-management/schedules/schedules
 import { ScheduleGenerationService } from '@/modules/shift-management/schedules/services/schedule-generation.service';
 import { Injectable, Logger } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
-import { CutoffStatus } from '../enums/cutoff-status.enum';
 import { EmployeeAssignedEvent, GROUP_EVENTS } from '../events/employee-assigned.event';
+import { CutoffStatus } from '../enums/payroll/cutoff-status.enum';
 
 @Injectable()
 export class EmployeeGroupAssignmentListener {

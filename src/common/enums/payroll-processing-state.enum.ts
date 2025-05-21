@@ -1,9 +1,0 @@
-export enum PayrollProcessingState {
-  DRAFT = 'DRAFT',
-  CALCULATING = 'CALCULATING',
-  PENDING_APPROVAL = 'PENDING_APPROVAL',
-  APPROVED = 'APPROVED',
-  PAID = 'PAID',
-  ARCHIVED = 'ARCHIVED',
-  FAILED = 'FAILED'
-}

@@ -143,7 +143,7 @@ export class PermissionsService extends BaseService<Permission> {
             }
             
             return results;
-        }).catch(error => {
+        }).catch((error: any) => {
             this.logger.error(`Failed to create permissions: ${error.message}`);
             throw error;
         });
