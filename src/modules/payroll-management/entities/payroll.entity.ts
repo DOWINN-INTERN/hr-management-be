@@ -1,6 +1,5 @@
-import { GovernmentMandatedType } from '@/common/enums/government-contribution-type.enum';
-import { PayrollProcessingState } from '@/common/enums/payroll-processing-state.enum';
-import { PayrollStatus } from '@/common/enums/payroll-status.enum';
+import { GovernmentMandatedType } from '@/common/enums/payroll/government-contribution-type.enum';
+import { PayrollState } from '@/common/enums/payroll/payroll-state.enum';
 import { BaseEntity } from '@/database/entities/base.entity';
 import { Employee } from '@/modules/employee-management/entities/employee.entity';
 import { Type } from 'class-transformer';
@@ -10,11 +9,11 @@ import { PayrollItem } from '../payroll-items/entities/payroll-item.entity';
 
 @Entity('payrolls')
 export class Payroll extends BaseEntity<Payroll> {
-    @ManyToOne(() => Employee, (employee: Employee) => employee.payrolls)
+    @ManyToOne(() => Employee, (employee: Employee) => employee.payrolls, { eager: true })
     @JoinColumn({ name: 'employeeId' })
     employee!: Employee;
 
-    @ManyToOne(() => Cutoff, (cutoff: Cutoff) => cutoff.payrolls)
+    @ManyToOne(() => Cutoff, (cutoff: Cutoff) => cutoff.payrolls, { eager: true })
     @JoinColumn({ name: 'cutoffId' })
     cutoff!: Cutoff;
     
@@ -78,6 +77,9 @@ export class Payroll extends BaseEntity<Payroll> {
     
     @Column('decimal', { precision: 10, scale: 2, default: 0 })
     totalNightDifferentialHours!: number;
+
+    @Column('decimal', { precision: 10, scale: 2, default: 0 })
+    totalNightDifferentialOvertimeHours!: number;
     
     @Column('decimal', { precision: 10, scale: 2, default: 0 })
     totalHours!: number;
@@ -109,6 +111,9 @@ export class Payroll extends BaseEntity<Payroll> {
     
     @Column('decimal', { precision: 15, scale: 2, default: 0 })
     nightDifferentialPay!: number;
+
+    @Column('decimal', { precision: 15, scale: 2, default: 0 })
+    nightDifferentialOvertimePay!: number;
 
     // Deductions
     @Column('decimal', { precision: 15, scale: 2, default: 0 })
@@ -180,27 +185,22 @@ export class Payroll extends BaseEntity<Payroll> {
     
     @Column({ nullable: true })
     paymentDate?: Date;
-    
-    // Processing metadata
-    @Column({
-        type: 'enum',
-        enum: PayrollStatus,
-        default: PayrollStatus.DRAFT
-    })
-    status!: PayrollStatus;
+
+    @Column({ nullable: true })
+    batchId?: string;
     
     // State machine status
     @Column({
         type: 'enum',
-        enum: PayrollProcessingState,
-        default: PayrollProcessingState.DRAFT
+        enum: PayrollState,
+        default: PayrollState.DRAFT
     })
-    processingState!: PayrollProcessingState;
+    state!: PayrollState;
     
     @Column('json', { nullable: true })
     stateHistory?: Array<{
-        from: PayrollProcessingState;
-        to: PayrollProcessingState;
+        from: PayrollState;
+        to: PayrollState;
         timestamp: Date;
         note?: string;
         details?: any;
@@ -217,15 +217,33 @@ export class Payroll extends BaseEntity<Payroll> {
     
     @Column({ nullable: true })
     approvedBy?: string;
+
+    @Column({ nullable: true })
+    rejectedAt?: Date;
+
+    @Column({ nullable: true })
+    rejectedBy?: string;
+
+    @Column({ nullable: true })
+    rejectionReason?: string;
     
     @Column({ nullable: true })
     releasedAt?: Date;
     
     @Column({ nullable: true })
     releasedBy?: string;
+
+    @Column({ nullable: true })
+    voidedAt?: Date;
+
+    @Column({ nullable: true })
+    voidedBy?: string;
     
     @Column('json', { nullable: true })
     calculationDetails?: any;
+
+    @Column({ default: 0})
+    reprocessedCount!: number;
     
     @Column({ nullable: true })
     notes?: string;
@@ -271,7 +289,7 @@ export class Payroll extends BaseEntity<Payroll> {
         };
     }
     
-    get withHoldingTax(): number {
+    get withholdingTax(): number {
         const taxItem = this.payrollItems?.find(item => 
             item.payrollItemType?.governmentMandatedType === GovernmentMandatedType.TAX
         );

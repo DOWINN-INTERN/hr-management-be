@@ -1,6 +1,6 @@
-import { GovernmentMandatedType } from '@/common/enums/government-contribution-type.enum';
 import { Occurrence } from '@/common/enums/occurrence.enum';
-import { PayrollItemCategory } from '@/common/enums/payroll-item-category.enum';
+import { GovernmentMandatedType } from '@/common/enums/payroll/government-contribution-type.enum';
+import { PayrollItemCategory } from '@/common/enums/payroll/payroll-item-category.enum';
 import { BaseService } from '@/common/services/base.service';
 import { UsersService } from '@/modules/account-management/users/users.service';
 import { Injectable } from '@nestjs/common';
@@ -103,6 +103,7 @@ export class PayrollItemTypesService extends BaseService<PayrollItemType> {
           name: 'Monthly Salary',
           category: PayrollItemCategory.COMPENSATION,
           unit: 'PHP',
+          group: 'Salary',
           defaultOccurrence: Occurrence.MONTHLY,
           type: 'fixed' as const,
           isRequired: true,
@@ -113,6 +114,7 @@ export class PayrollItemTypesService extends BaseService<PayrollItemType> {
           name: 'Daily Rate',
           category: PayrollItemCategory.COMPENSATION,
           unit: 'PHP',
+          group: 'Salary',
           defaultOccurrence: Occurrence.DAILY,
           type: 'fixed' as const,
           includeInPayrollItemsProcessing: false,
@@ -122,6 +124,7 @@ export class PayrollItemTypesService extends BaseService<PayrollItemType> {
           name: 'Hourly Rate',
           category: PayrollItemCategory.COMPENSATION,
           unit: 'PHP',
+          group: 'Salary',
           defaultOccurrence: Occurrence.HOURLY,
           includeInPayrollItemsProcessing: false,
           type: 'fixed' as const,

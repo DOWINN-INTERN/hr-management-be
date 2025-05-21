@@ -1,6 +1,6 @@
 import { BaseDto } from "@/common/dtos/base.dto";
-import { CutoffStatus } from "@/common/enums/cutoff-status.enum";
-import { CutoffType } from "@/common/enums/cutoff-type.enum";
+import { CutoffStatus } from "@/common/enums/payroll/cutoff-status.enum";
+import { CutoffType } from "@/common/enums/payroll/cutoff-type.enum";
 import { createGetDto } from "@/common/factories/create-get-dto.factory";
 import { ApiProperty, PartialType } from "@nestjs/swagger";
 import { Type } from "class-transformer";

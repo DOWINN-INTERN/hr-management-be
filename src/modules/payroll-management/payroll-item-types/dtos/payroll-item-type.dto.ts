@@ -1,197 +1,248 @@
 import { BaseDto } from "@/common/dtos/base.dto";
-import { PayrollItemCategory } from '@/common/enums/payroll-item-category.enum';
+import { Occurrence } from "@/common/enums/occurrence.enum";
+import { GovernmentMandatedType } from "@/common/enums/payroll/government-contribution-type.enum";
+import { PayrollItemCategory } from "@/common/enums/payroll/payroll-item-category.enum";
 import { createGetDto } from "@/common/factories/create-get-dto.factory";
-import { ApiProperty, PartialType } from "@nestjs/swagger";
-import { Type } from "class-transformer";
-import { IsArray, IsBoolean, IsDateString, IsEnum, IsNotEmpty, IsNumber, IsObject, IsOptional, IsString, Max, Min, ValidateNested } from "class-validator";
-
-class ValidationRulesDto {
-  @ApiProperty({ description: 'Minimum amount allowed', required: false, example: 100 })
-  @IsOptional()
-  @IsNumber()
-  @Min(0)
-  minAmount?: number;
-
-  @ApiProperty({ description: 'Maximum amount allowed', required: false, example: 10000 })
-  @IsOptional()
-  @IsNumber()
-  @Max(1000000)
-  maxAmount?: number;
-
-  @ApiProperty({ description: 'Minimum salary required', required: false, example: 10000 })
-  @IsOptional()
-  @IsNumber()
-  @Min(0)
-  minSalary?: number;
-
-  @ApiProperty({ description: 'Maximum salary allowed', required: false, example: 100000 })
-  @IsOptional()
-  @IsNumber()
-  @Max(10000000)
-  maxSalary?: number;
-}
+import { ApiProperty, ApiPropertyOptional, PartialType } from "@nestjs/swagger";
+import { IsBoolean, IsDate, IsEnum, IsNotEmpty, IsNumber, IsOptional, IsString } from "class-validator";
 
 export class PayrollItemTypeDto extends PartialType(BaseDto) {
-  @ApiProperty({ description: 'Name of the payroll item type' })
+  @ApiProperty({
+    description: 'Name of the payroll item type',
+    example: 'Basic Salary'
+  })
+  @IsString()
   @IsNotEmpty()
-  @IsString()
   name!: string;
-  
-  @ApiProperty({ description: 'Description of the payroll item type', required: false })
-  @IsOptional()
+
+  @ApiPropertyOptional({
+    description: 'Description of the payroll item type',
+    example: 'Basic monthly salary for employees',
+    nullable: true
+  })
   @IsString()
+  @IsOptional()
   description?: string;
-  
-  @ApiProperty({ 
+
+  @ApiPropertyOptional({
+    description: 'Group of the payroll item type',
+    example: 'Salary',
+    nullable: true
+  })
+  @IsString()
+  @IsOptional()
+  group?: string;
+
+  @ApiPropertyOptional({
+    description: 'Image or icon representing the payroll item type (file key, url, or icon)',
+    example: 'https://example.com/icon.png',
+    nullable: true
+  })
+  @IsString()
+  @IsOptional()
+  imageOrIcon?: string;
+
+  @ApiProperty({
     description: 'Category of the payroll item type',
     enum: PayrollItemCategory,
-    example: Object.values(PayrollItemCategory)[0]
+    example: PayrollItemCategory.COMPENSATION
   })
   @IsEnum(PayrollItemCategory)
   @IsNotEmpty()
   category!: PayrollItemCategory;
-  
-  @ApiProperty({ description: 'Default occurrence of the payroll item', example: 'Monthly' })
-  @IsNotEmpty()
-  @IsString()
-  defaultOccurrence!: string;
-  
-  @ApiProperty({ description: 'Unit of measurement for the payroll item', example: 'Hours' })
-  @IsNotEmpty()
-  @IsString()
-  unit!: string;
-  
-  @ApiProperty({ description: 'Formula used for computation', example: 'baseRate * hours' })
-  @IsNotEmpty()
-  @IsString()
-  computationFormula!: string;
-  
-  @ApiProperty({ 
-    description: 'Default amount for the payroll item', 
-    type: 'number',
-    format: 'decimal',
-    required: false,
-    example: 1000.50
+
+  @ApiProperty({
+    description: 'Default occurrence of the payroll item',
+    enum: Occurrence,
+    default: Occurrence.MONTHLY,
+    example: Occurrence.MONTHLY
   })
+  @IsEnum(Occurrence)
+  @IsNotEmpty()
+  defaultOccurrence!: Occurrence;
+
+  @ApiProperty({
+    description: 'Type of payroll item calculation',
+    enum: ['fixed', 'formula'],
+    example: 'fixed'
+  })
+  @IsString()
+  @IsNotEmpty()
+  type!: 'fixed' | 'formula';
+
+  @ApiPropertyOptional({
+    description: 'Default amount for fixed payroll items',
+    example: 5000.00,
+    nullable: true
+  })
+  @IsNumber()
   @IsOptional()
-  @IsNumber({ maxDecimalPlaces: 2 })
   defaultAmount?: number;
-  
-  @ApiProperty({ description: 'Whether the payroll item is active', default: true })
-  @IsBoolean()
-  @IsOptional()
-  isActive?: boolean = true;
-  
-  @ApiProperty({ description: 'Whether the item is system generated', default: false })
-  @IsBoolean()
-  @IsOptional()
-  isSystemGenerated?: boolean = false;
-  
-  @ApiProperty({ description: 'Whether the item is government mandated', default: false })
-  @IsBoolean()
-  @IsOptional()
-  isGovernmentMandated?: boolean = false;
-  
-  @ApiProperty({ 
-    description: 'Type of government contribution (SSS, PHILHEALTH, PAGIBIG, etc.)',
-    required: false,
-    example: 'SSS'
+
+  @ApiProperty({
+    description: 'Whether the payroll item type is active',
+    default: true,
+    example: true
   })
-  @IsOptional()
-  @IsString()
-  governmentContributionType?: string;
-  
-  @ApiProperty({ description: 'Whether the item has employer share', default: false })
   @IsBoolean()
-  @IsOptional()
-  hasEmployerShare?: boolean = false;
-  
-  @ApiProperty({ 
-    description: 'Employer formula percentage', 
-    required: false,
-    example: '3.5%'
+  @IsNotEmpty()
+  isActive!: boolean;
+
+  @ApiPropertyOptional({
+    description: 'Type of government mandated contribution',
+    enum: GovernmentMandatedType,
+    nullable: true,
+    example: GovernmentMandatedType.SSS
   })
+  @IsEnum(GovernmentMandatedType)
   @IsOptional()
-  @IsString()
-  employerFormulaPercentage?: string;
-  
-  @ApiProperty({ description: 'Whether the item is part of tax calculation', default: false })
-  @IsBoolean()
-  @IsOptional()
-  isPartOfTaxCalculation?: boolean = false;
-  
-  @ApiProperty({ description: 'Whether the item is taxable', default: true })
-  @IsBoolean()
-  @IsOptional()
-  isTaxable?: boolean = true;
-  
-  @ApiProperty({ description: 'Whether the item is tax deductible', default: false })
-  @IsBoolean()
-  @IsOptional()
-  isTaxDeductible?: boolean = false;
-  
-  @ApiProperty({ description: 'Whether the item is displayed in payslip', default: true })
-  @IsBoolean()
-  @IsOptional()
-  isDisplayedInPayslip?: boolean = true;
-  
-  @ApiProperty({ 
-    description: 'Which employee types this item applies to',
-    required: false,
-    isArray: true,
-    example: ['Regular', 'Contractual']
+  governmentMandatedType?: GovernmentMandatedType;
+
+  @ApiProperty({
+    description: 'Whether the payroll item is required',
+    default: true,
+    example: true
   })
-  @IsOptional()
-  @IsArray()
-  @IsString({ each: true })
-  applicableTo?: string[];
-  
-  @ApiProperty({ description: 'Whether the item is required', default: true })
   @IsBoolean()
-  @IsOptional()
-  isRequired?: boolean = true;
-  
-  @ApiProperty({ 
-    description: 'Date when this item becomes effective',
-    required: false,
+  @IsNotEmpty()
+  isRequired!: boolean;
+
+  @ApiPropertyOptional({
+    description: 'Date from which the payroll item is effective',
     type: Date,
+    nullable: true,
     example: '2023-01-01T00:00:00Z'
   })
+  @IsDate()
   @IsOptional()
-  @IsDateString()
   effectiveFrom?: Date;
-  
-  @ApiProperty({ 
-    description: 'Date when this item expires',
-    required: false,
+
+  @ApiPropertyOptional({
+    description: 'Date until which the payroll item is effective',
     type: Date,
-    example: '2024-12-31T23:59:59Z'
+    nullable: true,
+    example: '2024-12-31T00:00:00Z'
   })
+  @IsDate()
   @IsOptional()
-  @IsDateString()
   effectiveTo?: Date;
-  
-  @ApiProperty({ 
-    description: 'Additional parameters for calculation',
-    required: false,
-    example: {
-      thresholds: [5000, 10000, 15000],
-      rates: [0.05, 0.1, 0.15]
-    }
+
+  @ApiPropertyOptional({
+    description: 'Percentage value for percentage-based calculations',
+    example: 10.5,
+    nullable: true
   })
+  @IsNumber()
   @IsOptional()
-  @IsObject()
-  calculationParameters?: Record<string, any>;
-  
-  @ApiProperty({ 
-    description: 'Validation rules for the payroll item',
-    required: false,
-    type: ValidationRulesDto
+  percentage?: number;
+
+  @ApiPropertyOptional({
+    description: 'Processing period for the payroll item in a month (e.g., 1 for the first cutoff period of the month)',
+    example: 1,
+    nullable: true
   })
+  @IsNumber()
   @IsOptional()
-  @ValidateNested()
-  @Type(() => ValidationRulesDto)
-  validationRules?: ValidationRulesDto;
+  processEvery?: 1 | 2;
+
+  @ApiPropertyOptional({
+    description: 'Employer contribution percentage',
+    example: 5.5,
+    nullable: true
+  })
+  @IsNumber()
+  @IsOptional()
+  employerPercentage?: number;
+
+  @ApiProperty({
+    description: 'Whether to include in payroll item processing',
+    default: true,
+    example: true
+  })
+  @IsBoolean()
+  @IsNotEmpty()
+  includeInPayrollItemsProcessing!: boolean;
+
+  @ApiProperty({
+    description: 'Whether the payroll item is taxable',
+    default: false,
+    example: false
+  })
+  @IsBoolean()
+  @IsNotEmpty()
+  isTaxable!: boolean;
+
+  @ApiProperty({
+    description: 'Whether the payroll item is tax deductible',
+    default: false,
+    example: false
+  })
+  @IsBoolean()
+  @IsNotEmpty()
+  isTaxDeductible!: boolean;
+
+  @ApiPropertyOptional({
+    description: 'Tax exemption amount',
+    example: 2000.00,
+    nullable: true
+  })
+  @IsNumber()
+  @IsOptional()
+  taxExemptionAmount?: number;
+
+  @ApiPropertyOptional({
+    description: 'Minimum amount for calculation',
+    example: 1000.00,
+    nullable: true
+  })
+  @IsNumber()
+  @IsOptional()
+  minAmount?: number;
+
+  @ApiPropertyOptional({
+    description: 'Maximum amount for calculation',
+    example: 10000.00,
+    nullable: true
+  })
+  @IsNumber()
+  @IsOptional()
+  maxAmount?: number;
+
+  @ApiPropertyOptional({
+    description: 'Minimum additional amount',
+    example: 500.00,
+    nullable: true
+  })
+  @IsNumber()
+  @IsOptional()
+  minAdditionalAmount?: number;
+
+  @ApiPropertyOptional({
+    description: 'Maximum additional amount',
+    example: 1500.00,
+    nullable: true
+  })
+  @IsNumber()
+  @IsOptional()
+  maxAdditionalAmount?: number;
+
+  @ApiPropertyOptional({
+    description: 'Minimum contribution amount',
+    example: 200.00,
+    nullable: true
+  })
+  @IsNumber()
+  @IsOptional()
+  minContribution?: number;
+
+  @ApiPropertyOptional({
+    description: 'Maximum contribution amount',
+    example: 2000.00,
+    nullable: true
+  })
+  @IsNumber()
+  @IsOptional()
+  maxContribution?: number;
 }
 
 export class UpdatePayrollItemTypeDto extends PartialType(PayrollItemTypeDto) {}

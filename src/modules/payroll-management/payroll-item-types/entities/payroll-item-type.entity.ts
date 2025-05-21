@@ -1,6 +1,6 @@
-import { GovernmentMandatedType } from '@/common/enums/government-contribution-type.enum';
 import { Occurrence } from '@/common/enums/occurrence.enum';
-import { PayrollItemCategory } from '@/common/enums/payroll-item-category.enum';
+import { GovernmentMandatedType } from '@/common/enums/payroll/government-contribution-type.enum';
+import { PayrollItemCategory } from '@/common/enums/payroll/payroll-item-category.enum';
 import { BaseEntity } from '@/database/entities/base.entity';
 import { EmployeePayrollItemType } from '@/modules/employee-management/employee-payroll-item-types/entities/employee-payroll-item-type.entity';
 import { Column, Entity, OneToMany } from 'typeorm';
@@ -13,6 +13,9 @@ export class PayrollItemType extends BaseEntity<PayrollItemType> {
 
     @Column({ nullable: true })
     description?: string;
+
+    @Column({ nullable: true })
+    imageOrIcon?: string;
 
     @Column({
         type: 'enum',
@@ -41,6 +44,10 @@ export class PayrollItemType extends BaseEntity<PayrollItemType> {
     
     @Column({ default: true })
     isRequired!: boolean;
+
+    @Column({ nullable: true })
+    group?: string;
+
     
     @Column({ nullable: true })
     effectiveFrom?: Date;
@@ -57,7 +64,7 @@ export class PayrollItemType extends BaseEntity<PayrollItemType> {
     percentage?: number;
 
     @Column({ nullable: true })
-    processEvery?: number;
+    processEvery?: 1 | 2;
     
     @Column('decimal', 
     { 

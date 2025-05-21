@@ -4,6 +4,18 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Job } from 'bull';
 import { PayrollsService } from '../payrolls.service';
 
+export interface EmployeePayrollJobData {
+  employeeId: string;
+  cutoffId: string;
+  userId: string;
+}
+
+export interface CutoffPayrollJobData {
+  cutoffId: string;
+  userId: string;
+  batchId: string;
+}
+
 @Processor('payroll-processing')
 export class PayrollProcessorService {
   private readonly logger = new Logger(PayrollProcessorService.name);
@@ -14,7 +26,7 @@ export class PayrollProcessorService {
   ) {}
 
   @Process('process-employee-payroll')
-  async processEmployeePayroll(job: Job<{ employeeId: string; cutoffId: string; userId: string }>) {
+  async processEmployeePayroll(job: Job<EmployeePayrollJobData>) {
     this.logger.log(`Processing payroll for employee ${job.data.employeeId} (${job.id})`);
     
     try {
@@ -32,21 +44,21 @@ export class PayrollProcessorService {
   }
 
   @Process('process-batch-payroll')
-  async processBatchPayroll(job: Job<{ cutoffId: string; userId: string; batchId: string }>) {
+  async processBatchPayroll(job: Job<CutoffPayrollJobData>) {
     this.logger.log(`Processing batch payroll for cutoff ${job.data.cutoffId} (Batch: ${job.data.batchId})`);
     
-    // try {
-    //   const payrolls = await this.payrollsService.processPayrollBatch(
-    //     job.data.cutoffId,
-    //     job.data.userId,
-    //     job.data.batchId
-    //   );
+    try {
+      const payrolls = await this.payrollsService.processPayrollBatch(
+        job.data.cutoffId,
+        job.data.userId,
+        job.data.batchId
+      );
       
-    //   return payrolls;
-    // } catch (error) {
-    //   this.logger.error(`Failed to process batch payroll for cutoff ${job.data.cutoffId}`, error);
-    //   throw error;
-    // }
+      return payrolls;
+    } catch (error) {
+      this.logger.error(`Failed to process batch payroll for cutoff ${job.data.cutoffId}`, error);
+      throw error;
+    }
   }
 
   @OnQueueFailed()

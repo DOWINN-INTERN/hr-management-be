@@ -1,5 +1,5 @@
-import { CutoffStatus } from '@/common/enums/cutoff-status.enum';
-import { CutoffType } from '@/common/enums/cutoff-type.enum';
+import { CutoffStatus } from '@/common/enums/payroll/cutoff-status.enum';
+import { CutoffType } from '@/common/enums/payroll/cutoff-type.enum';
 import { UtilityHelper } from '@/common/helpers/utility.helper';
 import { BaseService } from '@/common/services/base.service';
 import { UsersService } from '@/modules/account-management/users/users.service';
