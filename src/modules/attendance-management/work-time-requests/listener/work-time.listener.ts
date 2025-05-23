@@ -24,11 +24,19 @@ export class WorkTimeListener {
       return;
     }
 
-    await this.workTimeRequestsService.update(event.workTimeRequestId, {
+    let  workTimeRequest = await this.workTimeRequestsService.update(event.workTimeRequestId, {
       status: event.isApproved === true ? RequestStatus.APPROVED : (event.isApproved === false ? RequestStatus.REJECTED : RequestStatus.PENDING),
     }, event.respondedBy);
 
+    workTimeRequest = await this.workTimeRequestsService.findOneByOrFail({ id: event.workTimeRequestId });
+
+    if (!workTimeRequest.attendance) {
+      this.logger.warn('Work time request attendance is missing');
+      return;
+    }
+
     // recalculate final work hours for the attendance only
+    await this.finalWorkHoursService.recalculateByAttendanceId(workTimeRequest.attendance.id, event.respondedBy);
   }
 
 }

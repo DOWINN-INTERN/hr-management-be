@@ -12,6 +12,7 @@ import { UsersService } from '../users/users.service';
 import { LoginResponseDto } from './dto/login-response.dto';
 import { LoginUserDto } from './dto/login-user.dto';
 import { RegisterUserDto } from './dto/register-user.dto';
+import { ISocialUser } from './interfaces/social-user.interface';
 import { JwtService } from './services/jwt.service';
 
 @Injectable()
@@ -34,6 +35,73 @@ export class AuthService {
     // sameSite: 'lax',
     maxAge: this.configService.getOrThrow<number>('ACCESS_TOKEN_EXPIRATION_MINUTES') * 60 * 1000,
   };
+
+  async googleOAuth(socialUser: ISocialUser): Promise<LoginResponseDto> {
+    const { email, providerId, firstName, lastName, picture } = socialUser;
+    
+    this.logger.log(`Processing OAuth login for ${email}`);
+    
+    // Find user by email or create if not exists
+    let user = await this.usersService.findOneBy({ email });
+    
+    if (!user) {
+      // Create a new user with data from Google
+      const newUser = await this.usersService.create({
+        email,
+        profile: {
+          firstName: firstName || '',
+          lastName: lastName || '',
+          profilePicture: picture || '',
+        },
+        emailVerified: true, // Social logins are considered verified
+        password: await bcrypt.hash(uuidv4(), 10), // Generate random password
+      });
+      
+      user = await this.usersService.save(newUser);
+      
+      this.logger.log(`Created new user from Google OAuth: ${user.id}`);
+    } else {
+      // Update user information if needed
+      let needsUpdate = false;
+      
+      if (!user.profile?.firstName && firstName) {
+        user.profile!.firstName = firstName;
+        needsUpdate = true;
+      }
+      
+      if (!user.profile?.lastName && lastName) {
+        user.profile!.lastName = lastName;
+        needsUpdate = true;
+      }
+      
+      if (!user.profile?.profilePicture && picture) {
+        user.profile!.profilePicture = picture;
+        needsUpdate = true;
+      }
+      
+      if (needsUpdate) {
+        await this.usersService.save(user);
+      }
+    }
+    
+    // Create refresh token and access token
+    const refreshToken = await this.jwtService.createRefreshToken();
+    const payload = this.jwtService.createPayload(user, refreshToken);
+    const accessToken = await this.jwtService.createToken(payload);
+    
+    // Save session information
+    await this.sessionsService.create({
+      refreshToken,
+      user: { id: user.id },
+      expiresAt: new Date(Date.now() + this.configService.getOrThrow<number>('REFRESH_TOKEN_EXPIRATION_MINUTES') * 60 * 1000),
+      userAgent: 'Google OAuth',
+      ipAddress: 'OAuth Flow'
+    });
+    
+    return {
+      accessToken,
+    };
+  }
 
   // Add this method for sending verification emails
   async sendVerificationEmail(user: User): Promise<boolean> {

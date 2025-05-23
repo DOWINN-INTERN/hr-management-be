@@ -9,6 +9,7 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { InjectRepository } from '@nestjs/typeorm';
 import { format } from 'date-fns';
 import { Repository } from 'typeorm';
+import { AttendancesService } from '../attendances.service';
 import { DayType, FinalWorkHour } from './entities/final-work-hour.entity';
 
 interface WorkHoursBreakdown {
@@ -50,6 +51,7 @@ export class FinalWorkHoursService extends BaseService<FinalWorkHour> {
         protected readonly usersService: UsersService,
         private readonly eventEmitter: EventEmitter2,
         private readonly cutoffsService: CutoffsService,
+        private readonly attendancesService: AttendancesService,
     ) {
         super(finalWorkHoursRepository, usersService);
     }
@@ -105,8 +107,7 @@ export class FinalWorkHoursService extends BaseService<FinalWorkHour> {
             new Date(scheduleEndTime.getTime() - noTimeOutMilliseconds);
 
         const { statuses } = finalWorkHour.attendance;
-        const isLate = statuses?.includes(AttendanceStatus.LATE);
-        const isUndertime = statuses?.includes(AttendanceStatus.UNDER_TIME);
+        const isUnderTime = statuses?.includes(AttendanceStatus.UNDER_TIME);
         const isAbsent = statuses?.includes(AttendanceStatus.ABSENT);
 
 
@@ -122,8 +123,8 @@ export class FinalWorkHoursService extends BaseService<FinalWorkHour> {
         const overtimeHours = finalWorkHour.overTimeOut ? 
             this.calculateHours(timeOut, finalWorkHour.overTimeOut) : 0;
 
-        result.tardinessHours = isLate ? this.calculateHours(scheduleStartTime, timeIn) : 0;
-        result.undertimeHours = isUndertime ? this.calculateHours(timeOut, scheduleEndTime) : 0;
+        result.tardinessHours = this.calculateHours(scheduleStartTime, timeIn);
+        result.undertimeHours = isUnderTime ? this.calculateHours(timeOut, scheduleEndTime) : 0;
 
         // Calculate night differential hours
         const nightDiffHours = this.calculateNightDifferentialHours(
@@ -282,7 +283,20 @@ export class FinalWorkHoursService extends BaseService<FinalWorkHour> {
         }
 
         // emit event to recalculate final work hours
-        this.eventEmitter.emit(ATTENDANCE_EVENTS.RECALCULATE_FINAL_WORK_HOURS, new RecalculateFinalWorkHoursEvent(cutoffId, updatedBy));        
+        this.eventEmitter.emit(ATTENDANCE_EVENTS.RECALCULATE_FINAL_WORK_HOURS, new RecalculateFinalWorkHoursEvent(updatedBy, cutoffId));        
+    }
+
+    /*
+    * Recalculate final work hours for a specific attendance
+    * @param attendanceId ID of the attendance to recalculate
+    * @param updatedBy User who triggered the update
+    */
+    async recalculateByAttendanceId(attendanceId: string, updatedBy?: string) {
+        // Check if attendance exists'
+        await this.attendancesService.findOneByOrFail(
+            { id: attendanceId },
+        );
+        this.eventEmitter.emit(ATTENDANCE_EVENTS.RECALCULATE_FINAL_WORK_HOURS, new RecalculateFinalWorkHoursEvent(updatedBy, undefined, [attendanceId])); 
     }
     
     /**

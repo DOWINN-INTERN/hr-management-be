@@ -356,6 +356,8 @@ export class PaginationDto<T> {
       }
     });
 
+    // console.log('Filter Result:', result);
+
     return result;
   }
 

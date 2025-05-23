@@ -24,6 +24,9 @@ export class WorkTimeRequest extends BaseEntity<WorkTimeRequest> {
     @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
     duration?: number; // in minutes
 
+    @Column({ type: 'date' })
+    date!: Date;
+
     @Column({ 
         type: 'enum', 
         enum: DayType,
@@ -31,9 +34,9 @@ export class WorkTimeRequest extends BaseEntity<WorkTimeRequest> {
     })
     dayType!: DayType;
 
-    @ManyToOne(() => Attendance, (attendance: Attendance) => attendance.workTimeRequests)
+    @ManyToOne(() => Attendance, (attendance: Attendance) => attendance.workTimeRequests, { nullable: true })
     @JoinColumn({ name: 'attendanceId' })
-    attendance!: Attendance;
+    attendance?: Attendance;
 
     @ManyToOne(() => Cutoff, (cutoff: Cutoff) => cutoff.workTimeRequests)
     @JoinColumn({ name: 'cutoffId' })
@@ -44,6 +47,16 @@ export class WorkTimeRequest extends BaseEntity<WorkTimeRequest> {
 
     @Column({ type: 'text', nullable: true })
     reason?: string;
+
+    @Column({ default: false })
+    earlyTimeAsOvertime!: boolean;
+
+    @Column({ type: 'boolean', default: false })
+    managementRequested!: boolean;
+
+    @ManyToOne(() => Employee, { nullable: true })
+    @JoinColumn({ name: 'requestedByManagerId' })
+    requestedByManager?: Employee;
 
     @OneToOne(() => WorkTimeResponse, (workTimeResponse: WorkTimeResponse) => workTimeResponse.workTimeRequest, { eager: true, nullable: true})
     workTimeResponse?: WorkTimeResponse;

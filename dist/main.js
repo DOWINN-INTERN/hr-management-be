@@ -1338,6 +1338,7 @@ const notifications_module_1 = __webpack_require__(/*! ./modules/notifications/n
 const organization_management_module_1 = __webpack_require__(/*! ./modules/organization-management/organization-management.module */ "./src/modules/organization-management/organization-management.module.ts");
 const payroll_management_module_1 = __webpack_require__(/*! ./modules/payroll-management/payroll-management.module */ "./src/modules/payroll-management/payroll-management.module.ts");
 const shift_management_module_1 = __webpack_require__(/*! ./modules/shift-management/shift-management.module */ "./src/modules/shift-management/shift-management.module.ts");
+const memorandums_module_1 = __webpack_require__(/*! ./modules/memorandums/memorandums.module */ "./src/modules/memorandums/memorandums.module.ts");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -1361,6 +1362,7 @@ exports.AppModule = AppModule = __decorate([
             biometrics_module_1.BiometricsModule,
             payroll_management_module_1.PayrollManagementModule,
             emails_module_1.EmailsModule,
+            memorandums_module_1.MemorandumsModule,
         ],
         controllers: [],
     })
@@ -2533,6 +2535,7 @@ class PaginationDto {
                 result[key] = value;
             }
         });
+        // console.log('Filter Result:', result);
         return result;
     }
 }
@@ -2682,6 +2685,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.AttendanceStatus = void 0;
 var AttendanceStatus;
 (function (AttendanceStatus) {
+    AttendanceStatus["EARLY"] = "EARLY";
     AttendanceStatus["NO_CHECKED_IN"] = "NO_CHECKED_IN";
     AttendanceStatus["NO_CHECKED_OUT"] = "NO_CHECKED_OUT";
     AttendanceStatus["CHECKED_IN"] = "CHECKED_IN";
@@ -2718,54 +2722,6 @@ var BiometricDeviceType;
 
 /***/ }),
 
-/***/ "./src/common/enums/cutoff-status.enum.ts":
-/*!************************************************!*\
-  !*** ./src/common/enums/cutoff-status.enum.ts ***!
-  \************************************************/
-/***/ ((__unused_webpack_module, exports) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.CutoffStatus = void 0;
-var CutoffStatus;
-(function (CutoffStatus) {
-    CutoffStatus["ACTIVE"] = "ACTIVE";
-    CutoffStatus["INACTIVE"] = "INACTIVE";
-    CutoffStatus["COMPLETED"] = "COMPLETED";
-    CutoffStatus["PENDING"] = "PENDING";
-    CutoffStatus["PROCESSING"] = "PROCESSING";
-    CutoffStatus["CANCELLED"] = "CANCELLED";
-})(CutoffStatus || (exports.CutoffStatus = CutoffStatus = {}));
-
-
-/***/ }),
-
-/***/ "./src/common/enums/cutoff-type.enum.ts":
-/*!**********************************************!*\
-  !*** ./src/common/enums/cutoff-type.enum.ts ***!
-  \**********************************************/
-/***/ ((__unused_webpack_module, exports) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.CutoffType = void 0;
-var CutoffType;
-(function (CutoffType) {
-    CutoffType["BI_WEEKLY"] = "BI_WEEKLY";
-    CutoffType["MONTHLY"] = "MONTHLY";
-    CutoffType["WEEKLY"] = "WEEKLY";
-    CutoffType["DAILY"] = "DAILY";
-    CutoffType["ANNUAL"] = "ANNUAL";
-    CutoffType["QUARTERLY"] = "QUARTERLY";
-    CutoffType["SEMI_ANNUAL"] = "SEMI_ANNUAL";
-    CutoffType["BI_ANNUAL"] = "BI_ANNUAL";
-})(CutoffType || (exports.CutoffType = CutoffType = {}));
-
-
-/***/ }),
-
 /***/ "./src/common/enums/day.enum.ts":
 /*!**************************************!*\
   !*** ./src/common/enums/day.enum.ts ***!
@@ -2786,6 +2742,26 @@ var Day;
     Day["SATURDAY"] = "SATURDAY";
     Day["SUNDAY"] = "SUNDAY";
 })(Day || (exports.Day = Day = {}));
+
+
+/***/ }),
+
+/***/ "./src/common/enums/decision.enum.ts":
+/*!*******************************************!*\
+  !*** ./src/common/enums/decision.enum.ts ***!
+  \*******************************************/
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Decision = void 0;
+var Decision;
+(function (Decision) {
+    Decision["APPROVED"] = "APPROVED";
+    Decision["REJECTED"] = "REJECTED";
+    Decision["PENDING"] = "PENDING";
+})(Decision || (exports.Decision = Decision = {}));
 
 
 /***/ }),
@@ -2893,29 +2869,6 @@ var EmploymentType;
 
 /***/ }),
 
-/***/ "./src/common/enums/government-contribution-type.enum.ts":
-/*!***************************************************************!*\
-  !*** ./src/common/enums/government-contribution-type.enum.ts ***!
-  \***************************************************************/
-/***/ ((__unused_webpack_module, exports) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.GovernmentMandatedType = void 0;
-var GovernmentMandatedType;
-(function (GovernmentMandatedType) {
-    GovernmentMandatedType["SSS"] = "SSS";
-    GovernmentMandatedType["PHILHEALTH"] = "PHILHEALTH";
-    GovernmentMandatedType["PAGIBIG"] = "PAGIBIG";
-    GovernmentMandatedType["TAX"] = "TAX";
-    GovernmentMandatedType["THIRTEENTH_MONTH_PAY"] = "THIRTEENTH_MONTH_PAY";
-    GovernmentMandatedType["OTHER"] = "OTHER";
-})(GovernmentMandatedType || (exports.GovernmentMandatedType = GovernmentMandatedType = {}));
-
-
-/***/ }),
-
 /***/ "./src/common/enums/holiday-type.enum.ts":
 /*!***********************************************!*\
   !*** ./src/common/enums/holiday-type.enum.ts ***!
@@ -2955,6 +2908,58 @@ var LogLevel;
     LogLevel["DEBUG"] = "debug";
     LogLevel["VERBOSE"] = "verbose";
 })(LogLevel || (exports.LogLevel = LogLevel = {}));
+
+
+/***/ }),
+
+/***/ "./src/common/enums/memo-status.enum.ts":
+/*!**********************************************!*\
+  !*** ./src/common/enums/memo-status.enum.ts ***!
+  \**********************************************/
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.MemoStatus = void 0;
+var MemoStatus;
+(function (MemoStatus) {
+    MemoStatus["DRAFT"] = "draft";
+    MemoStatus["PENDING"] = "pending";
+    MemoStatus["ISSUED"] = "issued";
+    MemoStatus["REJECTED"] = "rejected";
+    MemoStatus["ARCHIVED"] = "archived";
+    MemoStatus["COMPLIED"] = "complied";
+})(MemoStatus || (exports.MemoStatus = MemoStatus = {}));
+
+
+/***/ }),
+
+/***/ "./src/common/enums/memo-type.enum.ts":
+/*!********************************************!*\
+  !*** ./src/common/enums/memo-type.enum.ts ***!
+  \********************************************/
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.MemoType = void 0;
+var MemoType;
+(function (MemoType) {
+    MemoType["MEMO"] = "memo";
+    MemoType["ANNOUNCEMENT"] = "announcement";
+    MemoType["CIRCULAR"] = "circular";
+    MemoType["NOTICE"] = "notice";
+    MemoType["WARNING"] = "warning";
+    MemoType["INSTRUCTION"] = "instruction";
+    MemoType["DIRECTIVE"] = "directive";
+    MemoType["POLICY"] = "policy";
+    MemoType["PROCEDURE"] = "procedure";
+    MemoType["GUIDELINE"] = "guideline";
+    MemoType["REPORT"] = "report";
+    MemoType["OTHER"] = "other";
+})(MemoType || (exports.MemoType = MemoType = {}));
 
 
 /***/ }),
@@ -3009,10 +3014,81 @@ var Occurrence;
 
 /***/ }),
 
-/***/ "./src/common/enums/payroll-item-category.enum.ts":
+/***/ "./src/common/enums/payroll/cutoff-status.enum.ts":
 /*!********************************************************!*\
-  !*** ./src/common/enums/payroll-item-category.enum.ts ***!
+  !*** ./src/common/enums/payroll/cutoff-status.enum.ts ***!
   \********************************************************/
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.CutoffStatus = void 0;
+var CutoffStatus;
+(function (CutoffStatus) {
+    CutoffStatus["ACTIVE"] = "ACTIVE";
+    CutoffStatus["INACTIVE"] = "INACTIVE";
+    CutoffStatus["COMPLETED"] = "COMPLETED";
+    CutoffStatus["PENDING"] = "PENDING";
+    CutoffStatus["PROCESSING"] = "PROCESSING";
+    CutoffStatus["CANCELLED"] = "CANCELLED";
+})(CutoffStatus || (exports.CutoffStatus = CutoffStatus = {}));
+
+
+/***/ }),
+
+/***/ "./src/common/enums/payroll/cutoff-type.enum.ts":
+/*!******************************************************!*\
+  !*** ./src/common/enums/payroll/cutoff-type.enum.ts ***!
+  \******************************************************/
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.CutoffType = void 0;
+var CutoffType;
+(function (CutoffType) {
+    CutoffType["BI_WEEKLY"] = "BI_WEEKLY";
+    CutoffType["MONTHLY"] = "MONTHLY";
+    CutoffType["WEEKLY"] = "WEEKLY";
+    CutoffType["DAILY"] = "DAILY";
+    CutoffType["ANNUAL"] = "ANNUAL";
+    CutoffType["QUARTERLY"] = "QUARTERLY";
+    CutoffType["SEMI_ANNUAL"] = "SEMI_ANNUAL";
+    CutoffType["BI_ANNUAL"] = "BI_ANNUAL";
+})(CutoffType || (exports.CutoffType = CutoffType = {}));
+
+
+/***/ }),
+
+/***/ "./src/common/enums/payroll/government-contribution-type.enum.ts":
+/*!***********************************************************************!*\
+  !*** ./src/common/enums/payroll/government-contribution-type.enum.ts ***!
+  \***********************************************************************/
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.GovernmentMandatedType = void 0;
+var GovernmentMandatedType;
+(function (GovernmentMandatedType) {
+    GovernmentMandatedType["SSS"] = "SSS";
+    GovernmentMandatedType["PHILHEALTH"] = "PHILHEALTH";
+    GovernmentMandatedType["PAGIBIG"] = "PAGIBIG";
+    GovernmentMandatedType["TAX"] = "TAX";
+    GovernmentMandatedType["THIRTEENTH_MONTH_PAY"] = "THIRTEENTH_MONTH_PAY";
+    GovernmentMandatedType["OTHER"] = "OTHER";
+})(GovernmentMandatedType || (exports.GovernmentMandatedType = GovernmentMandatedType = {}));
+
+
+/***/ }),
+
+/***/ "./src/common/enums/payroll/payroll-item-category.enum.ts":
+/*!****************************************************************!*\
+  !*** ./src/common/enums/payroll/payroll-item-category.enum.ts ***!
+  \****************************************************************/
 /***/ ((__unused_webpack_module, exports) => {
 
 "use strict";
@@ -3027,59 +3103,34 @@ var PayrollItemCategory;
     PayrollItemCategory["DEDUCTION"] = "Deduction";
     PayrollItemCategory["ALLOWANCE"] = "Allowance";
     PayrollItemCategory["REIMBURSEMENT"] = "Reimbursement";
-    PayrollItemCategory["TAX"] = "Tax";
-    PayrollItemCategory["OTHER"] = "Other";
-    PayrollItemCategory["BONUS"] = "Bonus";
-    PayrollItemCategory["COMMISSION"] = "Commission";
-    PayrollItemCategory["TIP"] = "Tip";
 })(PayrollItemCategory || (exports.PayrollItemCategory = PayrollItemCategory = {}));
 
 
 /***/ }),
 
-/***/ "./src/common/enums/payroll-processing-state.enum.ts":
-/*!***********************************************************!*\
-  !*** ./src/common/enums/payroll-processing-state.enum.ts ***!
-  \***********************************************************/
+/***/ "./src/common/enums/payroll/payroll-state.enum.ts":
+/*!********************************************************!*\
+  !*** ./src/common/enums/payroll/payroll-state.enum.ts ***!
+  \********************************************************/
 /***/ ((__unused_webpack_module, exports) => {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.PayrollProcessingState = void 0;
-var PayrollProcessingState;
-(function (PayrollProcessingState) {
-    PayrollProcessingState["DRAFT"] = "DRAFT";
-    PayrollProcessingState["CALCULATING"] = "CALCULATING";
-    PayrollProcessingState["PENDING_APPROVAL"] = "PENDING_APPROVAL";
-    PayrollProcessingState["APPROVED"] = "APPROVED";
-    PayrollProcessingState["PAID"] = "PAID";
-    PayrollProcessingState["ARCHIVED"] = "ARCHIVED";
-    PayrollProcessingState["FAILED"] = "FAILED";
-})(PayrollProcessingState || (exports.PayrollProcessingState = PayrollProcessingState = {}));
-
-
-/***/ }),
-
-/***/ "./src/common/enums/payroll-status.enum.ts":
-/*!*************************************************!*\
-  !*** ./src/common/enums/payroll-status.enum.ts ***!
-  \*************************************************/
-/***/ ((__unused_webpack_module, exports) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.PayrollStatus = void 0;
-var PayrollStatus;
-(function (PayrollStatus) {
-    PayrollStatus["DRAFT"] = "DRAFT";
-    PayrollStatus["PROCESSING"] = "PROCESSING";
-    PayrollStatus["APPROVED"] = "APPROVED";
-    PayrollStatus["RELEASED"] = "RELEASED";
-    PayrollStatus["VOID"] = "VOID";
-    PayrollStatus["ERROR"] = "ERROR";
-})(PayrollStatus || (exports.PayrollStatus = PayrollStatus = {}));
+exports.PayrollState = void 0;
+var PayrollState;
+(function (PayrollState) {
+    PayrollState["DRAFT"] = "DRAFT";
+    PayrollState["CALCULATING"] = "CALCULATING";
+    PayrollState["PENDING_APPROVAL"] = "PENDING_APPROVAL";
+    PayrollState["APPROVED"] = "APPROVED";
+    PayrollState["PAID"] = "PAID";
+    PayrollState["ARCHIVED"] = "ARCHIVED";
+    PayrollState["FAILED"] = "FAILED";
+    PayrollState["REJECTED"] = "REJECTED";
+    PayrollState["CANCELLED"] = "CANCELLED";
+    PayrollState["VOID"] = "VOID";
+})(PayrollState || (exports.PayrollState = PayrollState = {}));
 
 
 /***/ }),
@@ -3263,6 +3314,7 @@ var ScheduleStatus;
     ScheduleStatus["MODIFIED"] = "MODIFIED";
     ScheduleStatus["SWAPPED"] = "SWAPPED";
     ScheduleStatus["LEAVE"] = "LEAVE";
+    ScheduleStatus["CANCELLED"] = "CANCELLED";
 })(ScheduleStatus || (exports.ScheduleStatus = ScheduleStatus = {}));
 
 
@@ -3307,9 +3359,10 @@ class FinalWorkHoursCalculationEvent {
 }
 exports.FinalWorkHoursCalculationEvent = FinalWorkHoursCalculationEvent;
 class RecalculateFinalWorkHoursEvent {
-    constructor(cutoffId, recalculatedBy) {
-        this.cutoffId = cutoffId;
+    constructor(recalculatedBy, cutoffId, specificAttendanceIds) {
         this.recalculatedBy = recalculatedBy;
+        this.cutoffId = cutoffId;
+        this.specificAttendanceIds = specificAttendanceIds;
     }
 }
 exports.RecalculateFinalWorkHoursEvent = RecalculateFinalWorkHoursEvent;
@@ -3344,6 +3397,32 @@ class EmployeeAssignedEvent {
     }
 }
 exports.EmployeeAssignedEvent = EmployeeAssignedEvent;
+
+
+/***/ }),
+
+/***/ "./src/common/events/schedule-change.event.ts":
+/*!****************************************************!*\
+  !*** ./src/common/events/schedule-change.event.ts ***!
+  \****************************************************/
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.ScheduleChangeRespondedEvent = exports.SCHEDULE_CHANGE_EVENTS = void 0;
+exports.SCHEDULE_CHANGE_EVENTS = {
+    SCHEDULE_CHANGE_RESPONDED: 'schedule_change.responded',
+    SCHEDULE_CHANGE_REQUESTED: 'schedule_change.requested',
+};
+class ScheduleChangeRespondedEvent {
+    constructor(scheduleChangeRequestId, isApproved, respondedBy) {
+        this.scheduleChangeRequestId = scheduleChangeRequestId;
+        this.isApproved = isApproved;
+        this.respondedBy = respondedBy;
+    }
+}
+exports.ScheduleChangeRespondedEvent = ScheduleChangeRespondedEvent;
 
 
 /***/ }),
@@ -5062,7 +5141,6 @@ let ScopeGuard = ScopeGuard_1 = class ScopeGuard {
                         };
                         request.resourceScope = resourceScope;
                         // log resource scope
-                        this.logger.log(`Resource scope set: ${JSON.stringify(resourceScope)}`);
                         this.logger.debug(`Applied filters for scope type: ${resourceScope.type}`);
                     }
                     catch (error) {
@@ -5488,7 +5566,6 @@ const schedules_service_1 = __webpack_require__(/*! @/modules/shift-management/s
 const schedule_generation_service_1 = __webpack_require__(/*! @/modules/shift-management/schedules/services/schedule-generation.service */ "./src/modules/shift-management/schedules/services/schedule-generation.service.ts");
 const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
 const event_emitter_1 = __webpack_require__(/*! @nestjs/event-emitter */ "@nestjs/event-emitter");
-const cutoff_status_enum_1 = __webpack_require__(/*! ../enums/cutoff-status.enum */ "./src/common/enums/cutoff-status.enum.ts");
 const employee_assigned_event_1 = __webpack_require__(/*! ../events/employee-assigned.event */ "./src/common/events/employee-assigned.event.ts");
 let EmployeeGroupAssignmentListener = EmployeeGroupAssignmentListener_1 = class EmployeeGroupAssignmentListener {
     constructor(cutoffsService, scheduleGenerationService, scheduleService) {
@@ -5500,8 +5577,8 @@ let EmployeeGroupAssignmentListener = EmployeeGroupAssignmentListener_1 = class 
     async handleEmployeeAssignedToGroup(event) {
         this.logger.log(`Handling employee assignment event for ${event.employees.length} employees to group ${event.group.id}`);
         // Find all future active cutoffs instead of just one
-        const cutoff = await this.cutoffsService.findOneBy({ status: cutoff_status_enum_1.CutoffStatus.PENDING }) || await this.cutoffsService.getActiveCutoff();
-        if (!cutoff) {
+        const cutoffs = await this.cutoffsService.getActiveCutoffs();
+        if (!cutoffs || cutoffs.length === 0) {
             this.logger.warn('No pending/active cutoff found, skipping schedule generation');
             return;
         }
@@ -5511,31 +5588,55 @@ let EmployeeGroupAssignmentListener = EmployeeGroupAssignmentListener_1 = class 
         }
         // Get employee IDs
         const employeeIds = event.employees.map((employee) => employee.id);
-        this.logger.log(`Schedule generation job queued for cutoff ${cutoff.id} (${new Date(cutoff.startDate).toLocaleDateString()})`);
-        // Queue schedule generation jobs for each cutoff
-        await this.scheduleGenerationService.addGenerationJob({
-            employeeIds,
-            groupId: event.group.id,
-            cutoffId: cutoff.id,
-            requestedBy: event.assignedBy,
-        });
+        for (const cutoff of cutoffs) {
+            // Check if the cutoff is in the future
+            if (cutoff.startDate && cutoff.endDate) {
+                const cutoffStartDate = new Date(cutoff.startDate);
+                const cutoffEndDate = new Date(cutoff.endDate);
+                const today = new Date();
+                if (cutoffStartDate < today && cutoffEndDate > today) {
+                    this.logger.warn(`Cutoff ${cutoff.id} is not in the future, skipping schedule generation`);
+                    continue;
+                }
+            }
+            this.logger.log(`Schedule generation job queued for cutoff ${cutoff.id} (${new Date(cutoff.startDate).toLocaleDateString()})`);
+            // Queue schedule generation jobs for each cutoff
+            await this.scheduleGenerationService.addGenerationJob({
+                employeeIds,
+                groupId: event.group.id,
+                cutoffId: cutoff.id,
+                requestedBy: event.assignedBy,
+            });
+        }
     }
     async handleEmployeeRemovedFromGroup(event) {
         // Find all future active cutoffs instead of just one
-        const cutoff = await this.cutoffsService.findOneBy({ status: cutoff_status_enum_1.CutoffStatus.PENDING }) || await this.cutoffsService.getActiveCutoff();
-        if (!cutoff) {
+        const cutoffs = await this.cutoffsService.getActiveCutoffs();
+        if (!cutoffs || cutoffs.length === 0) {
             this.logger.warn('No pending/active cutoff found, skipping schedule generation');
             return;
         }
         // Get employee IDs
         const employeeIds = event.employees.map((employee) => employee.id);
-        // Delete schedules for each cutoff and removed employee
-        await this.scheduleService.deleteSchedules({
-            employeeIds,
-            groupId: event.group.id,
-            cutoffId: cutoff.id,
-        });
-        this.logger.log(`Schedules deleted for cutoff ${cutoff.id} (${new Date(cutoff.startDate).toLocaleDateString()}) for ${employeeIds.length} employees`);
+        for (const cutoff of cutoffs) {
+            // Check if the cutoff is in the future
+            if (cutoff.startDate && cutoff.endDate) {
+                const cutoffStartDate = new Date(cutoff.startDate);
+                const cutoffEndDate = new Date(cutoff.endDate);
+                const today = new Date();
+                if (cutoffStartDate < today && cutoffEndDate > today) {
+                    this.logger.warn(`Cutoff ${cutoff.id} is not in the future, skipping schedule deletion`);
+                    continue;
+                }
+            }
+            // Delete schedules for each cutoff and removed employee
+            await this.scheduleService.deleteSchedules({
+                employeeIds,
+                groupId: event.group.id,
+                cutoffId: cutoff.id,
+            });
+            this.logger.log(`Schedules deleted for cutoff ${cutoff.id} (${new Date(cutoff.startDate).toLocaleDateString()}) for ${employeeIds.length} employees`);
+        }
     }
 };
 exports.EmployeeGroupAssignmentListener = EmployeeGroupAssignmentListener;
@@ -5582,9 +5683,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 var _a, _b;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.BaseService = void 0;
+const data_source_1 = __importDefault(__webpack_require__(/*! @/database/data-source */ "./src/database/data-source.ts"));
 const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
 const typeorm_1 = __webpack_require__(/*! typeorm */ "typeorm");
-const data_source_1 = __importDefault(__webpack_require__(/*! ../../database/data-source */ "./src/database/data-source.ts"));
 const generalresponse_dto_1 = __webpack_require__(/*! ../dtos/generalresponse.dto */ "./src/common/dtos/generalresponse.dto.ts");
 const pagination_dto_1 = __webpack_require__(/*! ../dtos/pagination.dto */ "./src/common/dtos/pagination.dto.ts");
 const utility_helper_1 = __webpack_require__(/*! ../helpers/utility.helper */ "./src/common/helpers/utility.helper.ts");
@@ -6098,10 +6199,22 @@ let BaseService = class BaseService {
                     console.log(`Applied TypeORM equals: ${alias}.${field} = '${valueObj._value}'`);
                     break;
                 case 'not':
-                    queryBuilder.andWhere(`${alias}.${field} != :${paramName}`, {
-                        [paramName]: valueObj._value
-                    });
-                    console.log(`Applied TypeORM not equals: ${alias}.${field} != '${valueObj._value}'`);
+                    if (valueObj._value === null) {
+                        queryBuilder.andWhere(`${alias}.${field} IS NOT NULL`);
+                        console.log(`Applied TypeORM not equals for NULL: ${alias}.${field} IS NOT NULL`);
+                    }
+                    else if (valueObj._value._type === 'in') {
+                        queryBuilder.andWhere(`${alias}.${field} NOT IN (:...${paramName})`, {
+                            [paramName]: valueObj._value._value
+                        });
+                        console.log(`Applied TypeORM not equals IN: ${alias}.${field} NOT IN (${valueObj._value._value.join(', ')})`);
+                    }
+                    else {
+                        queryBuilder.andWhere(`${alias}.${field} != :${paramName} OR ${alias}.${field} IS NULL`, {
+                            [paramName]: valueObj._value
+                        });
+                        console.log(`Applied TypeORM not equals with NULL check: ${alias}.${field} != '${valueObj._value}' OR ${alias}.${field} IS NULL`);
+                    }
                     break;
                 case 'gt':
                     queryBuilder.andWhere(`${alias}.${field} > :${paramName}`, {
@@ -6133,6 +6246,14 @@ let BaseService = class BaseService {
                             [paramName]: valueObj._value
                         });
                         console.log(`Applied TypeORM IN: ${alias}.${field} IN (${valueObj._value.join(', ')})`);
+                    }
+                    break;
+                case 'nin':
+                    if (Array.isArray(valueObj._value)) {
+                        queryBuilder.andWhere(`${alias}.${field} NOT IN (:...${paramName})`, {
+                            [paramName]: valueObj._value
+                        });
+                        console.log(`Applied TypeORM NOT IN: ${alias}.${field} NOT IN (${valueObj._value.join(', ')})`);
                     }
                     break;
                 case 'any':
@@ -6215,6 +6336,11 @@ let BaseService = class BaseService {
                 const paramName = `${paramBaseName}_in`;
                 queryBuilder.andWhere(`${alias}.${field} IN (:...${paramName})`, { [paramName]: valueObj.in });
                 console.log(`Applied custom IN: ${alias}.${field} IN (${valueObj.in.join(', ')})`);
+            }
+            else if ('nin' in valueObj && Array.isArray(valueObj.notIn)) {
+                const paramName = `${paramBaseName}_notIn`;
+                queryBuilder.andWhere(`${alias}.${field} NOT IN (:...${paramName})`, { [paramName]: valueObj.notIn });
+                console.log(`Applied custom NOT IN: ${alias}.${field} NOT IN (${valueObj.notIn.join(', ')})`);
             }
             else if ('between' in valueObj && Array.isArray(valueObj.between) && valueObj.between.length === 2) {
                 const paramMinName = `${paramBaseName}_between_min`;
@@ -7398,6 +7524,15 @@ exports.queues = [
         },
     },
     {
+        name: 'payroll-processing',
+        options: {
+            limiter: {
+                max: 100,
+                duration: 60000, // 1 minute
+            },
+        }
+    },
+    {
         name: 'schedule-generation',
         options: {
             defaultJobOptions: {
@@ -7473,8 +7608,55 @@ exports.swaggerConfig = new swagger_1.DocumentBuilder()
     description: 'Enter JWT token',
     in: 'header',
 }, 'access-token')
+    .addOAuth2({
+    type: 'oauth2',
+    flows: {
+        password: {
+            tokenUrl: '/auth/login',
+            scopes: {},
+        },
+        authorizationCode: {
+            authorizationUrl: '/auth/authorize',
+            tokenUrl: '/auth/token',
+            scopes: {},
+        },
+    },
+})
+    .addOAuth2({
+    type: 'oauth2',
+    name: 'google-oauth2',
+    description: 'Google OAuth2 Authentication',
+    flows: {
+        authorizationCode: {
+            authorizationUrl: 'https://accounts.google.com/o/oauth2/auth',
+            tokenUrl: '/auth/google/callback', // Your backend endpoint that handles Google token exchange
+            scopes: {
+                'email': 'Access to email',
+                'profile': 'Access to profile information',
+                'openid': 'OpenID Connect'
+            },
+        },
+    },
+})
+    // .addTag('Cutoffs', 'User management operations')
+    // .addTag('auth', 'Authentication related endpoints')
+    .addExtension('x-company-name', 'Dowinn HR')
+    .addExtension('x-environment', process.env.NODE_ENV)
     .addServer(configService.getOrThrow('APP_URL'), "Local Development Server")
     .addServer(`http://${localIp}:${port}`, "LAN Development Server") // Use ConfigService to get server URL
+    // .addGlobalParameters({
+    //   name: 'version',
+    //   in: 'header',
+    //   required: false,
+    //   description: 'API version to use',
+    //   schema: {
+    //     type: 'string',
+    //     enum: ['v1', 'v2', 'v3'],
+    //     default: 'v1'
+    //   }
+    // })
+    .addSecurityRequirements('access-token')
+    .addSecurityRequirements('google-oauth2')
     .build();
 exports.swaggerCustomOptions = {
     explorer: true,
@@ -7522,6 +7704,7 @@ exports.dataSourceOptions = void 0;
 const profile_entity_1 = __webpack_require__(/*! @/modules/account-management/profiles/entities/profile.entity */ "./src/modules/account-management/profiles/entities/profile.entity.ts");
 const address_entity_1 = __webpack_require__(/*! @/modules/addresses/entities/address.entity */ "./src/modules/addresses/entities/address.entity.ts");
 const document_type_entity_1 = __webpack_require__(/*! @/modules/documents/document-types/entities/document-type.entity */ "./src/modules/documents/document-types/entities/document-type.entity.ts");
+const alternative_schedule_entity_1 = __webpack_require__(/*! @/modules/shift-management/schedules/schedule-change-requests/entities/alternative-schedule.entity */ "./src/modules/shift-management/schedules/schedule-change-requests/entities/alternative-schedule.entity.ts");
 const config_1 = __webpack_require__(/*! @nestjs/config */ "@nestjs/config");
 const dotenv_1 = __webpack_require__(/*! dotenv */ "dotenv");
 const typeorm_1 = __webpack_require__(/*! typeorm */ "typeorm");
@@ -7535,7 +7718,7 @@ exports.dataSourceOptions = {
     username: configService.get('DB_USERNAME'),
     password: configService.get('DB_PASSWORD'),
     database: configService.get('DB_DATABASE'),
-    entities: ['dist/**/*.entity{.ts,.js}', address_entity_1.Address, profile_entity_1.Profile, document_type_entity_1.DocumentType],
+    entities: ['dist/**/*.entity{.ts,.js}', address_entity_1.Address, profile_entity_1.Profile, document_type_entity_1.DocumentType, alternative_schedule_entity_1.AlternativeSchedule],
     migrations: ['dist/database/migrations/*{.ts,.js}'],
     synchronize: !isProduction,
     logging: false,
@@ -7909,13 +8092,16 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q;
+var AuthController_1;
+var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r, _s, _t;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.AuthController = void 0;
 const authorize_decorator_1 = __webpack_require__(/*! @/common/decorators/authorize.decorator */ "./src/common/decorators/authorize.decorator.ts");
 const current_user_decorator_1 = __webpack_require__(/*! @/common/decorators/current-user.decorator */ "./src/common/decorators/current-user.decorator.ts");
+const generalresponse_dto_1 = __webpack_require__(/*! @/common/dtos/generalresponse.dto */ "./src/common/dtos/generalresponse.dto.ts");
 const jwt_payload_interface_1 = __webpack_require__(/*! @/common/interfaces/jwt-payload.interface */ "./src/common/interfaces/jwt-payload.interface.ts");
 const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
+const config_1 = __webpack_require__(/*! @nestjs/config */ "@nestjs/config");
 const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
 const class_transformer_1 = __webpack_require__(/*! class-transformer */ "class-transformer");
 const express_1 = __webpack_require__(/*! express */ "express");
@@ -7923,13 +8109,16 @@ const google_auth_guard_1 = __webpack_require__(/*! ../../../common/guards/googl
 const user_dto_1 = __webpack_require__(/*! ../users/dtos/user.dto */ "./src/modules/account-management/users/dtos/user.dto.ts");
 const users_service_1 = __webpack_require__(/*! ../users/users.service */ "./src/modules/account-management/users/users.service.ts");
 const auth_service_1 = __webpack_require__(/*! ./auth.service */ "./src/modules/account-management/auth/auth.service.ts");
+const login_response_dto_1 = __webpack_require__(/*! ./dto/login-response.dto */ "./src/modules/account-management/auth/dto/login-response.dto.ts");
 const login_user_dto_1 = __webpack_require__(/*! ./dto/login-user.dto */ "./src/modules/account-management/auth/dto/login-user.dto.ts");
 const register_user_dto_1 = __webpack_require__(/*! ./dto/register-user.dto */ "./src/modules/account-management/auth/dto/register-user.dto.ts");
 const token_dto_1 = __webpack_require__(/*! ./dto/token.dto */ "./src/modules/account-management/auth/dto/token.dto.ts");
-let AuthController = class AuthController {
-    constructor(authService, usersService) {
+let AuthController = AuthController_1 = class AuthController {
+    constructor(authService, configService, usersService) {
         this.authService = authService;
+        this.configService = configService;
         this.usersService = usersService;
+        this.logger = new common_1.Logger(AuthController_1.name);
     }
     async googleOAuth() { }
     async login(loginDto, request, response) {
@@ -7960,24 +8149,28 @@ let AuthController = class AuthController {
                 : 'Failed to send verification email',
         };
     }
-    // @Public()
-    // @Get('google/redirect')
-    // @UseGuards(GoogleOAuthGuard)
-    // async googleCallback(@Req() request: Request, @Res() response: Response) {
-    //   const redirectUrl = new URL(`${this.commonService.getAppUrl}/login`);
-    //   const user = request.user as IUser;
-    //   try
-    //   {
-    //     const tokens: Tokens = await this.authService.googleOAuth(user);
-    //     const responseWithCookies = this.authService.setAuthCookies(response, tokens);
-    //     redirectUrl.searchParams.set('auth', 'success');
-    //     return responseWithCookies.redirect(redirectUrl.toString());
-    //   }
-    //   catch (error) {
-    //     redirectUrl.searchParams.set('auth', 'failed');
-    //     return response.redirect(redirectUrl.toString());
-    //   }
-    // }
+    async googleCallback(request, response) {
+        try {
+            const socialUser = request.user;
+            if (!socialUser) {
+                throw new common_1.UnauthorizedException('Authentication failed');
+            }
+            const tokens = await this.authService.googleOAuth(socialUser);
+            await this.authService.setAuthCookies(response, tokens);
+            // Redirect to frontend with success
+            const redirectUrl = new URL(`${this.configService.get('APP_URL')}/login`);
+            redirectUrl.searchParams.set('auth', 'success');
+            return response.redirect(redirectUrl.toString());
+        }
+        catch (error) {
+            this.logger.error(`Google OAuth callback failed: ${error.message}`);
+            // Redirect to frontend with error
+            const redirectUrl = new URL(`${this.configService.get('APP_URL')}/login`);
+            redirectUrl.searchParams.set('auth', 'failed');
+            redirectUrl.searchParams.set('error', 'Authentication failed');
+            return response.redirect(redirectUrl.toString());
+        }
+    }
     async refreshToken(bodyRefreshToken, request, response) {
         var _a;
         // Get refresh token from cookies or request body
@@ -8024,6 +8217,8 @@ exports.AuthController = AuthController;
 __decorate([
     (0, common_1.Get)('google'),
     (0, common_1.UseGuards)(google_auth_guard_1.GoogleAuthGuard),
+    (0, swagger_1.ApiOperation)({ summary: 'Login with Google' }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'Redirect to Google login.' }),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", Promise)
@@ -8031,12 +8226,22 @@ __decorate([
 __decorate([
     (0, common_1.Post)('login'),
     (0, swagger_1.ApiOperation)({ summary: 'Login with email and password' }),
-    (0, swagger_1.ApiResponse)({ status: 200, description: 'User logged in successfully.' }),
+    (0, swagger_1.ApiBody)({
+        description: 'User login credentials',
+        type: login_user_dto_1.LoginUserDto,
+        required: true,
+    }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized - Invalid credentials', type: generalresponse_dto_1.GeneralResponseDto }),
+    (0, swagger_1.ApiResponse)({ status: 403, description: 'Forbidden - User is not active', type: generalresponse_dto_1.GeneralResponseDto }),
+    (0, swagger_1.ApiResponse)({ status: 400, description: 'Bad Request - Invalid input', type: generalresponse_dto_1.GeneralResponseDto }),
+    (0, swagger_1.ApiResponse)({ status: 404, description: 'Not Found - User not found', type: generalresponse_dto_1.GeneralResponseDto }),
+    (0, swagger_1.ApiResponse)({ status: 500, description: 'Internal Server Error', type: generalresponse_dto_1.GeneralResponseDto }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'User logged in successfully.', type: login_response_dto_1.LoginResponseDto }),
     __param(0, (0, common_1.Body)()),
     __param(1, (0, common_1.Req)()),
     __param(2, (0, common_1.Res)({ passthrough: true })),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [typeof (_c = typeof login_user_dto_1.LoginUserDto !== "undefined" && login_user_dto_1.LoginUserDto) === "function" ? _c : Object, typeof (_d = typeof express_1.Request !== "undefined" && express_1.Request) === "function" ? _d : Object, typeof (_e = typeof express_1.Response !== "undefined" && express_1.Response) === "function" ? _e : Object]),
+    __metadata("design:paramtypes", [typeof (_d = typeof login_user_dto_1.LoginUserDto !== "undefined" && login_user_dto_1.LoginUserDto) === "function" ? _d : Object, typeof (_e = typeof express_1.Request !== "undefined" && express_1.Request) === "function" ? _e : Object, typeof (_f = typeof express_1.Response !== "undefined" && express_1.Response) === "function" ? _f : Object]),
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "login", null);
 __decorate([
@@ -8058,27 +8263,78 @@ __decorate([
     }),
     (0, swagger_1.ApiResponse)({
         status: 200,
-        description: 'Email verified successfully'
+        description: 'Email verified successfully',
+        type: generalresponse_dto_1.GeneralResponseDto
     }),
     (0, swagger_1.ApiResponse)({
         status: 400,
-        description: 'Invalid or expired verification token'
+        description: 'Invalid or expired verification token',
+        type: generalresponse_dto_1.GeneralResponseDto
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: 404,
+        description: 'User not found',
+        type: generalresponse_dto_1.GeneralResponseDto
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: 500,
+        description: 'Internal Server Error',
+        type: generalresponse_dto_1.GeneralResponseDto
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: 403,
+        description: 'Forbidden - User is not active',
+        type: generalresponse_dto_1.GeneralResponseDto
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: 401,
+        description: 'Unauthorized - Invalid credentials',
+        type: generalresponse_dto_1.GeneralResponseDto
     }),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [typeof (_f = typeof token_dto_1.TokenDto !== "undefined" && token_dto_1.TokenDto) === "function" ? _f : Object]),
-    __metadata("design:returntype", typeof (_g = typeof Promise !== "undefined" && Promise) === "function" ? _g : Object)
+    __metadata("design:paramtypes", [typeof (_g = typeof token_dto_1.TokenDto !== "undefined" && token_dto_1.TokenDto) === "function" ? _g : Object]),
+    __metadata("design:returntype", typeof (_h = typeof Promise !== "undefined" && Promise) === "function" ? _h : Object)
 ], AuthController.prototype, "verifyEmail", null);
 __decorate([
     (0, common_1.Post)('resend-verification'),
     (0, swagger_1.ApiOperation)({ summary: 'Resend email verification link' }),
     (0, swagger_1.ApiResponse)({ status: 200, description: 'Verification email sent successfully.' }),
     (0, swagger_1.ApiResponse)({ status: 400, description: 'Email is already verified' }),
+    (0, swagger_1.ApiResponse)({ status: 404, description: 'User not found' }),
+    (0, swagger_1.ApiResponse)({ status: 500, description: 'Internal Server Error' }),
+    (0, swagger_1.ApiBody)({
+        description: 'Email address to resend verification link',
+        type: token_dto_1.TokenDto,
+        required: true,
+        examples: {
+            example1: {
+                value: { email: 'jyrrahcc@gmail.com' },
+                description: 'Example of an email address',
+            },
+        },
+    }),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
-    __metadata("design:returntype", typeof (_h = typeof Promise !== "undefined" && Promise) === "function" ? _h : Object)
+    __metadata("design:returntype", typeof (_j = typeof Promise !== "undefined" && Promise) === "function" ? _j : Object)
 ], AuthController.prototype, "resendVerification", null);
+__decorate([
+    (0, common_1.Get)('google/redirect'),
+    (0, common_1.UseGuards)(google_auth_guard_1.GoogleAuthGuard),
+    (0, swagger_1.ApiOperation)({ summary: 'Google OAuth callback' }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'User logged in with Google successfully.' }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized - Authentication failed' }),
+    (0, swagger_1.ApiResponse)({ status: 500, description: 'Internal Server Error' }),
+    (0, swagger_1.ApiResponse)({ status: 403, description: 'Forbidden - User is not active' }),
+    (0, swagger_1.ApiResponse)({ status: 404, description: 'User not found' }),
+    (0, swagger_1.ApiResponse)({ status: 400, description: 'Bad Request - Invalid input' }),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Res)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [typeof (_k = typeof express_1.Request !== "undefined" && express_1.Request) === "function" ? _k : Object, typeof (_l = typeof express_1.Response !== "undefined" && express_1.Response) === "function" ? _l : Object]),
+    __metadata("design:returntype", Promise)
+], AuthController.prototype, "googleCallback", null);
 __decorate([
     (0, common_1.Post)('refresh'),
     (0, swagger_1.ApiOperation)({ summary: 'Refresh access token using refresh token' }),
@@ -8094,12 +8350,15 @@ __decorate([
         },
     }),
     (0, swagger_1.ApiResponse)({ status: 200, description: 'Access token refreshed successfully.' }),
+    (0, swagger_1.ApiResponse)({ status: 403, description: 'Forbidden - User is not active' }),
+    (0, swagger_1.ApiResponse)({ status: 404, description: 'User not found' }),
+    (0, swagger_1.ApiResponse)({ status: 500, description: 'Internal Server Error' }),
     (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized - Refresh token not found or invalid' }),
-    __param(0, (0, common_1.Body)('refreshToken')),
+    __param(0, (0, common_1.Body)('refreshToken', common_1.ParseUUIDPipe)),
     __param(1, (0, common_1.Req)()),
     __param(2, (0, common_1.Res)({ passthrough: true })),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, typeof (_j = typeof express_1.Request !== "undefined" && express_1.Request) === "function" ? _j : Object, typeof (_k = typeof express_1.Response !== "undefined" && express_1.Response) === "function" ? _k : Object]),
+    __metadata("design:paramtypes", [String, typeof (_m = typeof express_1.Request !== "undefined" && express_1.Request) === "function" ? _m : Object, typeof (_o = typeof express_1.Response !== "undefined" && express_1.Response) === "function" ? _o : Object]),
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "refreshToken", null);
 __decorate([
@@ -8123,17 +8382,25 @@ __decorate([
     __param(1, (0, common_1.Req)()),
     __param(2, (0, common_1.Res)({ passthrough: true })),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, typeof (_l = typeof express_1.Request !== "undefined" && express_1.Request) === "function" ? _l : Object, typeof (_m = typeof express_1.Response !== "undefined" && express_1.Response) === "function" ? _m : Object]),
+    __metadata("design:paramtypes", [String, typeof (_p = typeof express_1.Request !== "undefined" && express_1.Request) === "function" ? _p : Object, typeof (_q = typeof express_1.Response !== "undefined" && express_1.Response) === "function" ? _q : Object]),
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "logout", null);
 __decorate([
     (0, common_1.Post)('register'),
     (0, swagger_1.ApiOperation)({ summary: 'Register a new user' }),
+    (0, swagger_1.ApiBody)({
+        description: 'User registration details',
+        type: register_user_dto_1.RegisterUserDto,
+        required: true,
+    }),
+    (0, swagger_1.ApiResponse)({ status: 400, description: 'Bad Request - Invalid input', type: generalresponse_dto_1.GeneralResponseDto }),
+    (0, swagger_1.ApiResponse)({ status: 409, description: 'Conflict - User already exists', type: generalresponse_dto_1.GeneralResponseDto }),
+    (0, swagger_1.ApiResponse)({ status: 500, description: 'Internal Server Error', type: generalresponse_dto_1.GeneralResponseDto }),
     (0, swagger_1.ApiResponse)({ status: 201, description: 'User registered successfully.' }),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [typeof (_o = typeof register_user_dto_1.RegisterUserDto !== "undefined" && register_user_dto_1.RegisterUserDto) === "function" ? _o : Object]),
-    __metadata("design:returntype", typeof (_p = typeof Promise !== "undefined" && Promise) === "function" ? _p : Object)
+    __metadata("design:paramtypes", [typeof (_r = typeof register_user_dto_1.RegisterUserDto !== "undefined" && register_user_dto_1.RegisterUserDto) === "function" ? _r : Object]),
+    __metadata("design:returntype", typeof (_s = typeof Promise !== "undefined" && Promise) === "function" ? _s : Object)
 ], AuthController.prototype, "register", null);
 __decorate([
     (0, common_1.Get)('me'),
@@ -8141,17 +8408,28 @@ __decorate([
     (0, swagger_1.ApiOperation)({ summary: 'Get current authenticated user' }),
     (0, swagger_1.ApiResponse)({
         status: 200,
-        description: 'Return authenticated user details'
+        description: 'Return authenticated user details',
+        type: generalresponse_dto_1.GeneralResponseDto
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: 401,
+        description: 'Unauthorized - Invalid token',
+        type: generalresponse_dto_1.GeneralResponseDto
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: 403,
+        description: 'Forbidden',
+        type: generalresponse_dto_1.GeneralResponseDto
     }),
     __param(0, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [typeof (_q = typeof jwt_payload_interface_1.IJwtPayload !== "undefined" && jwt_payload_interface_1.IJwtPayload) === "function" ? _q : Object]),
+    __metadata("design:paramtypes", [typeof (_t = typeof jwt_payload_interface_1.IJwtPayload !== "undefined" && jwt_payload_interface_1.IJwtPayload) === "function" ? _t : Object]),
     __metadata("design:returntype", void 0)
 ], AuthController.prototype, "getCurrentUser", null);
-exports.AuthController = AuthController = __decorate([
+exports.AuthController = AuthController = AuthController_1 = __decorate([
     (0, swagger_1.ApiTags)('Auth'),
     (0, common_1.Controller)(),
-    __metadata("design:paramtypes", [typeof (_a = typeof auth_service_1.AuthService !== "undefined" && auth_service_1.AuthService) === "function" ? _a : Object, typeof (_b = typeof users_service_1.UsersService !== "undefined" && users_service_1.UsersService) === "function" ? _b : Object])
+    __metadata("design:paramtypes", [typeof (_a = typeof auth_service_1.AuthService !== "undefined" && auth_service_1.AuthService) === "function" ? _a : Object, typeof (_b = typeof config_1.ConfigService !== "undefined" && config_1.ConfigService) === "function" ? _b : Object, typeof (_c = typeof users_service_1.UsersService !== "undefined" && users_service_1.UsersService) === "function" ? _c : Object])
 ], AuthController);
 
 
@@ -8173,6 +8451,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.AuthModule = void 0;
+const google_auth_guard_1 = __webpack_require__(/*! @/common/guards/google-auth.guard */ "./src/common/guards/google-auth.guard.ts");
 const emails_module_1 = __webpack_require__(/*! @/modules/emails/emails.module */ "./src/modules/emails/emails.module.ts");
 const permissions_module_1 = __webpack_require__(/*! @/modules/employee-management/roles/permissions/permissions.module */ "./src/modules/employee-management/roles/permissions/permissions.module.ts");
 const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
@@ -8187,6 +8466,7 @@ const auth_controller_1 = __webpack_require__(/*! ./auth.controller */ "./src/mo
 const auth_service_1 = __webpack_require__(/*! ./auth.service */ "./src/modules/account-management/auth/auth.service.ts");
 const jwt_service_1 = __webpack_require__(/*! ./services/jwt.service */ "./src/modules/account-management/auth/services/jwt.service.ts");
 const access_token_strategy_1 = __webpack_require__(/*! ./strategies/access-token.strategy */ "./src/modules/account-management/auth/strategies/access-token.strategy.ts");
+const google_strategy_1 = __webpack_require__(/*! ./strategies/google.strategy */ "./src/modules/account-management/auth/strategies/google.strategy.ts");
 let AuthModule = class AuthModule {
 };
 exports.AuthModule = AuthModule;
@@ -8207,7 +8487,7 @@ exports.AuthModule = AuthModule = __decorate([
             }),
             emails_module_1.EmailsModule,
         ],
-        providers: [auth_service_1.AuthService, jwt_service_1.JwtService, access_token_strategy_1.AccessTokenStrategy, jwt_auth_guard_1.JwtAuthGuard, permissions_guard_1.PermissionsGuard, roles_guard_1.RolesGuard],
+        providers: [auth_service_1.AuthService, jwt_service_1.JwtService, access_token_strategy_1.AccessTokenStrategy, google_strategy_1.GoogleStrategy, jwt_auth_guard_1.JwtAuthGuard, google_auth_guard_1.GoogleAuthGuard, permissions_guard_1.PermissionsGuard, roles_guard_1.RolesGuard],
         controllers: [auth_controller_1.AuthController],
         exports: [auth_service_1.AuthService, jwt_service_1.JwtService],
     })
@@ -8295,6 +8575,62 @@ let AuthService = AuthService_1 = class AuthService {
             secure: this.commonService.isProduction(),
             // sameSite: 'lax',
             maxAge: this.configService.getOrThrow('ACCESS_TOKEN_EXPIRATION_MINUTES') * 60 * 1000,
+        };
+    }
+    async googleOAuth(socialUser) {
+        var _a, _b, _c;
+        const { email, providerId, firstName, lastName, picture } = socialUser;
+        this.logger.log(`Processing OAuth login for ${email}`);
+        // Find user by email or create if not exists
+        let user = await this.usersService.findOneBy({ email });
+        if (!user) {
+            // Create a new user with data from Google
+            const newUser = await this.usersService.create({
+                email,
+                profile: {
+                    firstName: firstName || '',
+                    lastName: lastName || '',
+                    profilePicture: picture || '',
+                },
+                emailVerified: true, // Social logins are considered verified
+                password: await bcrypt.hash((0, uuid_1.v4)(), 10), // Generate random password
+            });
+            user = await this.usersService.save(newUser);
+            this.logger.log(`Created new user from Google OAuth: ${user.id}`);
+        }
+        else {
+            // Update user information if needed
+            let needsUpdate = false;
+            if (!((_a = user.profile) === null || _a === void 0 ? void 0 : _a.firstName) && firstName) {
+                user.profile.firstName = firstName;
+                needsUpdate = true;
+            }
+            if (!((_b = user.profile) === null || _b === void 0 ? void 0 : _b.lastName) && lastName) {
+                user.profile.lastName = lastName;
+                needsUpdate = true;
+            }
+            if (!((_c = user.profile) === null || _c === void 0 ? void 0 : _c.profilePicture) && picture) {
+                user.profile.profilePicture = picture;
+                needsUpdate = true;
+            }
+            if (needsUpdate) {
+                await this.usersService.save(user);
+            }
+        }
+        // Create refresh token and access token
+        const refreshToken = await this.jwtService.createRefreshToken();
+        const payload = this.jwtService.createPayload(user, refreshToken);
+        const accessToken = await this.jwtService.createToken(payload);
+        // Save session information
+        await this.sessionsService.create({
+            refreshToken,
+            user: { id: user.id },
+            expiresAt: new Date(Date.now() + this.configService.getOrThrow('REFRESH_TOKEN_EXPIRATION_MINUTES') * 60 * 1000),
+            userAgent: 'Google OAuth',
+            ipAddress: 'OAuth Flow'
+        });
+        return {
+            accessToken,
         };
     }
     // Add this method for sending verification emails
@@ -8616,6 +8952,40 @@ exports.AuthService = AuthService = AuthService_1 = __decorate([
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [typeof (_a = typeof users_service_1.UsersService !== "undefined" && users_service_1.UsersService) === "function" ? _a : Object, typeof (_b = typeof jwt_service_1.JwtService !== "undefined" && jwt_service_1.JwtService) === "function" ? _b : Object, typeof (_c = typeof config_1.ConfigService !== "undefined" && config_1.ConfigService) === "function" ? _c : Object, typeof (_d = typeof common_service_1.CommonService !== "undefined" && common_service_1.CommonService) === "function" ? _d : Object, typeof (_e = typeof sessions_service_1.SessionsService !== "undefined" && sessions_service_1.SessionsService) === "function" ? _e : Object, typeof (_f = typeof emails_service_1.EmailsService !== "undefined" && emails_service_1.EmailsService) === "function" ? _f : Object])
 ], AuthService);
+
+
+/***/ }),
+
+/***/ "./src/modules/account-management/auth/dto/login-response.dto.ts":
+/*!***********************************************************************!*\
+  !*** ./src/modules/account-management/auth/dto/login-response.dto.ts ***!
+  \***********************************************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+"use strict";
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.LoginResponseDto = void 0;
+const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
+const class_validator_1 = __webpack_require__(/*! class-validator */ "class-validator");
+class LoginResponseDto {
+}
+exports.LoginResponseDto = LoginResponseDto;
+__decorate([
+    (0, swagger_1.ApiProperty)({ example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiaWF0IjoxNjA5MjQ2MjUyLCJleHAiOjE2MDkyNTk0NTJ9.1eHJ4zZ1zr1v3r7w1eHJ4zZ1zr1v3r7w1eHJ4zZ1zr1v3r7w', description: 'The JWT token' }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsNotEmpty)(),
+    __metadata("design:type", String)
+], LoginResponseDto.prototype, "accessToken", void 0);
 
 
 /***/ }),
@@ -9027,6 +9397,100 @@ exports.AccessTokenStrategy = AccessTokenStrategy = __decorate([
 
 /***/ }),
 
+/***/ "./src/modules/account-management/auth/strategies/google.strategy.ts":
+/*!***************************************************************************!*\
+  !*** ./src/modules/account-management/auth/strategies/google.strategy.ts ***!
+  \***************************************************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+"use strict";
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var GoogleStrategy_1;
+var _a, _b;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.GoogleStrategy = void 0;
+const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
+const config_1 = __webpack_require__(/*! @nestjs/config */ "@nestjs/config");
+const passport_1 = __webpack_require__(/*! @nestjs/passport */ "@nestjs/passport");
+const passport_google_oauth20_1 = __webpack_require__(/*! passport-google-oauth20 */ "passport-google-oauth20");
+const auth_service_1 = __webpack_require__(/*! ../auth.service */ "./src/modules/account-management/auth/auth.service.ts");
+let GoogleStrategy = GoogleStrategy_1 = class GoogleStrategy extends (0, passport_1.PassportStrategy)(passport_google_oauth20_1.Strategy, 'google-auth') {
+    constructor(configService, authService) {
+        super({
+            clientID: configService.getOrThrow('GOOGLE_CLIENT_ID'),
+            clientSecret: configService.getOrThrow('GOOGLE_CLIENT_SECRET'),
+            callbackURL: configService.getOrThrow('GOOGLE_CALLBACK_URL'),
+            scope: ['profile', 'email']
+        });
+        this.configService = configService;
+        this.authService = authService;
+        this.logger = new common_1.Logger(GoogleStrategy_1.name);
+    }
+    authorizationParams() {
+        return {
+            prompt: 'select_account',
+            access_type: 'offline', // To get refresh token
+        };
+    }
+    async validate(accessToken, refreshToken, profile, done) {
+        var _a, _b, _c, _d;
+        try {
+            this.logger.debug(`Validating Google user: ${profile.id}`);
+            // Validate required profile data
+            if (!profile || !profile.emails || profile.emails.length === 0) {
+                this.logger.error('Invalid profile data received from Google');
+                throw new common_1.UnauthorizedException('Invalid profile data from Google');
+            }
+            const email = profile.emails[0].value;
+            if (!email) {
+                this.logger.error('Email not provided by Google OAuth');
+                throw new common_1.UnauthorizedException('Email is required');
+            }
+            // Extract user data from Google profile
+            const user = {
+                provider: 'google',
+                providerId: profile.id,
+                email,
+                firstName: ((_a = profile.name) === null || _a === void 0 ? void 0 : _a.givenName) || '',
+                lastName: ((_b = profile.name) === null || _b === void 0 ? void 0 : _b.familyName) || '',
+                picture: ((_d = (_c = profile.photos) === null || _c === void 0 ? void 0 : _c[0]) === null || _d === void 0 ? void 0 : _d.value) || '',
+                accessToken,
+                refreshToken: refreshToken || '',
+            };
+            // Return the user data to passport
+            // This will be available in req.user in your controllers
+            this.logger.log(`Google user authenticated successfully: ${email}`);
+            done(null, user);
+        }
+        catch (error) {
+            if (error instanceof Error) {
+                this.logger.error(`Google authentication failed: ${error.message}`, error.stack);
+            }
+            else {
+                this.logger.error(`Google authentication failed: ${String(error)}`);
+            }
+            done(error, false);
+        }
+    }
+};
+exports.GoogleStrategy = GoogleStrategy;
+exports.GoogleStrategy = GoogleStrategy = GoogleStrategy_1 = __decorate([
+    (0, common_1.Injectable)(),
+    __metadata("design:paramtypes", [typeof (_a = typeof config_1.ConfigService !== "undefined" && config_1.ConfigService) === "function" ? _a : Object, typeof (_b = typeof auth_service_1.AuthService !== "undefined" && auth_service_1.AuthService) === "function" ? _b : Object])
+], GoogleStrategy);
+
+
+/***/ }),
+
 /***/ "./src/modules/account-management/profiles/dtos/profile.dto.ts":
 /*!*********************************************************************!*\
   !*** ./src/modules/account-management/profiles/dtos/profile.dto.ts ***!
@@ -9254,7 +9718,8 @@ __decorate([
 ], Profile.prototype, "userId", void 0);
 __decorate([
     (0, typeorm_1.OneToOne)(() => address_entity_1.Address, (address) => address.profile, {
-        cascade: true
+        cascade: true,
+        eager: true
     }),
     __metadata("design:type", typeof (_c = typeof address_entity_1.Address !== "undefined" && address_entity_1.Address) === "function" ? _c : Object)
 ], Profile.prototype, "address", void 0);
@@ -10032,7 +10497,7 @@ __decorate([
     __metadata("design:type", String)
 ], User.prototype, "userName", void 0);
 __decorate([
-    (0, typeorm_1.OneToOne)(() => profile_entity_1.Profile, (profile) => profile.user, { cascade: true, eager: true }),
+    (0, typeorm_1.OneToOne)(() => profile_entity_1.Profile, (profile) => profile.user, { cascade: true, eager: true, nullable: true }),
     __metadata("design:type", typeof (_a = typeof profile_entity_1.Profile !== "undefined" && profile_entity_1.Profile) === "function" ? _a : Object)
 ], User.prototype, "profile", void 0);
 __decorate([
@@ -10535,6 +11000,569 @@ exports.Address = Address = __decorate([
 
 /***/ }),
 
+/***/ "./src/modules/attendance-management/attendance-configurations/attendance-configurations.controller.ts":
+/*!*************************************************************************************************************!*\
+  !*** ./src/modules/attendance-management/attendance-configurations/attendance-configurations.controller.ts ***!
+  \*************************************************************************************************************/
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.AttendanceConfigurationsController = void 0;
+const create_controller_factory_1 = __webpack_require__(/*! @/common/factories/create-controller.factory */ "./src/common/factories/create-controller.factory.ts");
+const attendance_configuration_dto_1 = __webpack_require__(/*! ./dtos/attendance-configuration.dto */ "./src/modules/attendance-management/attendance-configurations/dtos/attendance-configuration.dto.ts");
+const attendance_configurations_service_1 = __webpack_require__(/*! ./attendance-configurations.service */ "./src/modules/attendance-management/attendance-configurations/attendance-configurations.service.ts");
+const attendance_configuration_entity_1 = __webpack_require__(/*! ./entities/attendance-configuration.entity */ "./src/modules/attendance-management/attendance-configurations/entities/attendance-configuration.entity.ts");
+class AttendanceConfigurationsController extends (0, create_controller_factory_1.createController)(attendance_configuration_entity_1.AttendanceConfiguration, // Entity name for Swagger documentation
+attendance_configurations_service_1.AttendanceConfigurationsService, // The service handling AttendanceConfiguration-related operations
+attendance_configuration_dto_1.GetAttendanceConfigurationDto, // DTO for retrieving AttendanceConfigurations
+attendance_configuration_dto_1.AttendanceConfigurationDto, // DTO for creating AttendanceConfigurations
+attendance_configuration_dto_1.UpdateAttendanceConfigurationDto) {
+}
+exports.AttendanceConfigurationsController = AttendanceConfigurationsController;
+
+
+/***/ }),
+
+/***/ "./src/modules/attendance-management/attendance-configurations/attendance-configurations.module.ts":
+/*!*********************************************************************************************************!*\
+  !*** ./src/modules/attendance-management/attendance-configurations/attendance-configurations.module.ts ***!
+  \*********************************************************************************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+"use strict";
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.AttendanceConfigurationsModule = void 0;
+const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
+const typeorm_1 = __webpack_require__(/*! @nestjs/typeorm */ "@nestjs/typeorm");
+const attendance_configurations_controller_1 = __webpack_require__(/*! ./attendance-configurations.controller */ "./src/modules/attendance-management/attendance-configurations/attendance-configurations.controller.ts");
+const attendance_configurations_service_1 = __webpack_require__(/*! ./attendance-configurations.service */ "./src/modules/attendance-management/attendance-configurations/attendance-configurations.service.ts");
+const attendance_configuration_entity_1 = __webpack_require__(/*! ./entities/attendance-configuration.entity */ "./src/modules/attendance-management/attendance-configurations/entities/attendance-configuration.entity.ts");
+const attendance_configuration_seeder_service_1 = __webpack_require__(/*! ./services/attendance-configuration-seeder.service */ "./src/modules/attendance-management/attendance-configurations/services/attendance-configuration-seeder.service.ts");
+let AttendanceConfigurationsModule = class AttendanceConfigurationsModule {
+};
+exports.AttendanceConfigurationsModule = AttendanceConfigurationsModule;
+exports.AttendanceConfigurationsModule = AttendanceConfigurationsModule = __decorate([
+    (0, common_1.Module)({
+        imports: [
+            typeorm_1.TypeOrmModule.forFeature([attendance_configuration_entity_1.AttendanceConfiguration]),
+        ],
+        providers: [attendance_configurations_service_1.AttendanceConfigurationsService, attendance_configuration_seeder_service_1.AttendanceConfigurationSeederService],
+        exports: [attendance_configurations_service_1.AttendanceConfigurationsService],
+        controllers: [attendance_configurations_controller_1.AttendanceConfigurationsController],
+    })
+], AttendanceConfigurationsModule);
+
+
+/***/ }),
+
+/***/ "./src/modules/attendance-management/attendance-configurations/attendance-configurations.service.ts":
+/*!**********************************************************************************************************!*\
+  !*** ./src/modules/attendance-management/attendance-configurations/attendance-configurations.service.ts ***!
+  \**********************************************************************************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+"use strict";
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
+var _a, _b;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.AttendanceConfigurationsService = void 0;
+const base_service_1 = __webpack_require__(/*! @/common/services/base.service */ "./src/common/services/base.service.ts");
+const users_service_1 = __webpack_require__(/*! @/modules/account-management/users/users.service */ "./src/modules/account-management/users/users.service.ts");
+const organization_entity_1 = __webpack_require__(/*! @/modules/organization-management/entities/organization.entity */ "./src/modules/organization-management/entities/organization.entity.ts");
+const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
+const typeorm_1 = __webpack_require__(/*! @nestjs/typeorm */ "@nestjs/typeorm");
+const typeorm_2 = __webpack_require__(/*! typeorm */ "typeorm");
+const attendance_configuration_entity_1 = __webpack_require__(/*! ./entities/attendance-configuration.entity */ "./src/modules/attendance-management/attendance-configurations/entities/attendance-configuration.entity.ts");
+let AttendanceConfigurationsService = class AttendanceConfigurationsService extends base_service_1.BaseService {
+    constructor(attendanceConfigurationsRepository, usersService) {
+        super(attendanceConfigurationsRepository, usersService);
+        this.attendanceConfigurationsRepository = attendanceConfigurationsRepository;
+        this.usersService = usersService;
+    }
+    async getGlobalAttendanceConfiguration() {
+        const globalConfig = await this.findOneBy({ organization: undefined }, { relations: { organization: true } });
+        if (!globalConfig) {
+            return this.create({});
+        }
+        return globalConfig;
+    }
+    async getOrganizationAttendanceConfiguration(organizationId) {
+        const organizationConfig = await this.findOneBy({ organization: new organization_entity_1.Organization({ id: organizationId }) }, { relations: { organization: true } });
+        if (!organizationConfig) {
+            return await this.getGlobalAttendanceConfiguration();
+        }
+        return organizationConfig;
+    }
+    async updateGlobalAttendanceConfiguration(data) {
+        const globalConfig = await this.getGlobalAttendanceConfiguration();
+        return this.update(globalConfig.id, data);
+    }
+};
+exports.AttendanceConfigurationsService = AttendanceConfigurationsService;
+exports.AttendanceConfigurationsService = AttendanceConfigurationsService = __decorate([
+    (0, common_1.Injectable)(),
+    __param(0, (0, typeorm_1.InjectRepository)(attendance_configuration_entity_1.AttendanceConfiguration)),
+    __metadata("design:paramtypes", [typeof (_a = typeof typeorm_2.Repository !== "undefined" && typeorm_2.Repository) === "function" ? _a : Object, typeof (_b = typeof users_service_1.UsersService !== "undefined" && users_service_1.UsersService) === "function" ? _b : Object])
+], AttendanceConfigurationsService);
+
+
+/***/ }),
+
+/***/ "./src/modules/attendance-management/attendance-configurations/dtos/attendance-configuration.dto.ts":
+/*!**********************************************************************************************************!*\
+  !*** ./src/modules/attendance-management/attendance-configurations/dtos/attendance-configuration.dto.ts ***!
+  \**********************************************************************************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+"use strict";
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.GetAttendanceConfigurationDto = exports.UpdateAttendanceConfigurationDto = exports.AttendanceConfigurationDto = void 0;
+const base_dto_1 = __webpack_require__(/*! @/common/dtos/base.dto */ "./src/common/dtos/base.dto.ts");
+const create_get_dto_factory_1 = __webpack_require__(/*! @/common/factories/create-get-dto.factory */ "./src/common/factories/create-get-dto.factory.ts");
+const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
+const class_transformer_1 = __webpack_require__(/*! class-transformer */ "class-transformer");
+const class_validator_1 = __webpack_require__(/*! class-validator */ "class-validator");
+class AttendanceConfigurationDto extends (0, swagger_1.PartialType)(base_dto_1.BaseDto) {
+}
+exports.AttendanceConfigurationDto = AttendanceConfigurationDto;
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'ID of the organization this configuration belongs to',
+        example: '123e4567-e89b-12d3-a456-426614174000',
+    }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsUUID)('4'),
+    __metadata("design:type", String)
+], AttendanceConfigurationDto.prototype, "organizationId", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'Allow early check-ins',
+        example: true,
+    }),
+    (0, class_validator_1.IsBoolean)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Boolean)
+], AttendanceConfigurationDto.prototype, "allowEarlyTime", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'Allow late check-ins',
+        example: false,
+    }),
+    (0, class_validator_1.IsBoolean)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Boolean)
+], AttendanceConfigurationDto.prototype, "allowLate", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'Allow early check-outs',
+        example: false,
+    }),
+    (0, class_validator_1.IsBoolean)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Boolean)
+], AttendanceConfigurationDto.prototype, "allowUnderTime", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'Allow overtime check-outs',
+        example: true,
+    }),
+    (0, class_validator_1.IsBoolean)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Boolean)
+], AttendanceConfigurationDto.prototype, "allowOvertime", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'Minutes before which check-in is considered early',
+        example: 15,
+    }),
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.Min)(0),
+    (0, class_transformer_1.Type)(() => Number),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Number)
+], AttendanceConfigurationDto.prototype, "earlyTimeThresholdMinutes", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'Minutes after which an attendance is considered late',
+        example: 5,
+    }),
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.Min)(0),
+    (0, class_transformer_1.Type)(() => Number),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Number)
+], AttendanceConfigurationDto.prototype, "gracePeriodMinutes", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'Minutes before which check-out is considered under time',
+        example: 0,
+    }),
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.Min)(0),
+    (0, class_transformer_1.Type)(() => Number),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Number)
+], AttendanceConfigurationDto.prototype, "underTimeThresholdMinutes", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'Minutes after which check-out is considered overtime',
+        example: 30,
+    }),
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.Min)(0),
+    (0, class_transformer_1.Type)(() => Number),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Number)
+], AttendanceConfigurationDto.prototype, "overtimeThresholdMinutes", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'Round down early time to nearest specified minutes',
+        example: false,
+    }),
+    (0, class_validator_1.IsBoolean)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Boolean)
+], AttendanceConfigurationDto.prototype, "roundDownEarlyTime", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'Minutes to round down early time to',
+        example: 30,
+    }),
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.Min)(0),
+    (0, class_transformer_1.Type)(() => Number),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Number)
+], AttendanceConfigurationDto.prototype, "roundDownEarlyTimeMinutes", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'Round up late time to nearest specified minutes',
+        example: false,
+    }),
+    (0, class_validator_1.IsBoolean)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Boolean)
+], AttendanceConfigurationDto.prototype, "roundUpLate", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'Minutes to round up late time to',
+        example: 30,
+    }),
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.Min)(0),
+    (0, class_transformer_1.Type)(() => Number),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Number)
+], AttendanceConfigurationDto.prototype, "roundUpLateMinutes", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'Round down under time to nearest specified minutes',
+        example: false,
+    }),
+    (0, class_validator_1.IsBoolean)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Boolean)
+], AttendanceConfigurationDto.prototype, "roundDownUnderTime", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'Minutes to round down under time to',
+        example: 30,
+    }),
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.Min)(0),
+    (0, class_transformer_1.Type)(() => Number),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Number)
+], AttendanceConfigurationDto.prototype, "roundDownUnderTimeMinutes", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'Round up overtime to nearest specified minutes',
+        example: false,
+    }),
+    (0, class_validator_1.IsBoolean)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Boolean)
+], AttendanceConfigurationDto.prototype, "roundUpOvertime", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'Minutes to round up overtime to',
+        example: 30,
+    }),
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.Min)(0),
+    (0, class_transformer_1.Type)(() => Number),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Number)
+], AttendanceConfigurationDto.prototype, "roundUpOvertimeMinutes", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'Consider early time as over time',
+        example: false,
+    }),
+    (0, class_validator_1.IsBoolean)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Boolean)
+], AttendanceConfigurationDto.prototype, "considerEarlyTimeAsOvertime", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'Apply deduction for missing time in',
+        example: true,
+    }),
+    (0, class_validator_1.IsBoolean)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Boolean)
+], AttendanceConfigurationDto.prototype, "noTimeInDeduction", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'Apply deduction for missing time out',
+        example: true,
+    }),
+    (0, class_validator_1.IsBoolean)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Boolean)
+], AttendanceConfigurationDto.prototype, "noTimeOutDeduction", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'Minutes to deduct for missing time in',
+        example: 60,
+    }),
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.Min)(0),
+    (0, class_transformer_1.Type)(() => Number),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Number)
+], AttendanceConfigurationDto.prototype, "noTimeInDeductionMinutes", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'Minutes to deduct for missing time out',
+        example: 60,
+    }),
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.Min)(0),
+    (0, class_transformer_1.Type)(() => Number),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Number)
+], AttendanceConfigurationDto.prototype, "noTimeOutDeductionMinutes", void 0);
+class UpdateAttendanceConfigurationDto extends (0, swagger_1.PartialType)(AttendanceConfigurationDto) {
+}
+exports.UpdateAttendanceConfigurationDto = UpdateAttendanceConfigurationDto;
+class GetAttendanceConfigurationDto extends (0, create_get_dto_factory_1.createGetDto)(UpdateAttendanceConfigurationDto, 'attendance configuration') {
+}
+exports.GetAttendanceConfigurationDto = GetAttendanceConfigurationDto;
+
+
+/***/ }),
+
+/***/ "./src/modules/attendance-management/attendance-configurations/entities/attendance-configuration.entity.ts":
+/*!*****************************************************************************************************************!*\
+  !*** ./src/modules/attendance-management/attendance-configurations/entities/attendance-configuration.entity.ts ***!
+  \*****************************************************************************************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+"use strict";
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var _a;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.AttendanceConfiguration = void 0;
+const base_entity_1 = __webpack_require__(/*! @/database/entities/base.entity */ "./src/database/entities/base.entity.ts");
+const organization_entity_1 = __webpack_require__(/*! @/modules/organization-management/entities/organization.entity */ "./src/modules/organization-management/entities/organization.entity.ts");
+const typeorm_1 = __webpack_require__(/*! typeorm */ "typeorm");
+let AttendanceConfiguration = class AttendanceConfiguration extends base_entity_1.BaseEntity {
+};
+exports.AttendanceConfiguration = AttendanceConfiguration;
+__decorate([
+    (0, typeorm_1.OneToOne)(() => organization_entity_1.Organization, (organization) => organization.attendanceConfiguration, { eager: true, nullable: true }),
+    (0, typeorm_1.JoinColumn)({ name: 'organizationId' }),
+    __metadata("design:type", typeof (_a = typeof organization_entity_1.Organization !== "undefined" && organization_entity_1.Organization) === "function" ? _a : Object)
+], AttendanceConfiguration.prototype, "organization", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ default: false, comment: 'Allow early check-ins' }),
+    __metadata("design:type", Boolean)
+], AttendanceConfiguration.prototype, "allowEarlyTime", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ default: false, comment: 'Allow late check-ins' }),
+    __metadata("design:type", Boolean)
+], AttendanceConfiguration.prototype, "allowLate", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ default: false, comment: 'Allow early check-outs' }),
+    __metadata("design:type", Boolean)
+], AttendanceConfiguration.prototype, "allowUnderTime", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ default: true, comment: 'Allow overtime check-outs' }),
+    __metadata("design:type", Boolean)
+], AttendanceConfiguration.prototype, "allowOvertime", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ default: 15, comment: 'Minutes before which check-in is considered early' }),
+    __metadata("design:type", Number)
+], AttendanceConfiguration.prototype, "earlyTimeThresholdMinutes", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ default: 5, comment: 'Minutes after which an attendance is considered late' }),
+    __metadata("design:type", Number)
+], AttendanceConfiguration.prototype, "gracePeriodMinutes", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ default: 0, comment: 'Minutes before which check-out is considered under time' }),
+    __metadata("design:type", Number)
+], AttendanceConfiguration.prototype, "underTimeThresholdMinutes", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ default: 30, comment: 'Minutes after which check-out is considered overtime' }),
+    __metadata("design:type", Number)
+], AttendanceConfiguration.prototype, "overtimeThresholdMinutes", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ default: false, comment: 'Round down early time to nearest specified minutes' }),
+    __metadata("design:type", Boolean)
+], AttendanceConfiguration.prototype, "roundDownEarlyTime", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ default: 30, comment: 'Minutes to round down early time to' }),
+    __metadata("design:type", Number)
+], AttendanceConfiguration.prototype, "roundDownEarlyTimeMinutes", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ default: false, comment: 'Round up late time to nearest specified minutes' }),
+    __metadata("design:type", Boolean)
+], AttendanceConfiguration.prototype, "roundUpLate", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ default: 30, comment: 'Minutes to round up late time to' }),
+    __metadata("design:type", Number)
+], AttendanceConfiguration.prototype, "roundUpLateMinutes", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ default: false, comment: 'Round down under time to nearest specified minutes' }),
+    __metadata("design:type", Boolean)
+], AttendanceConfiguration.prototype, "roundDownUnderTime", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ default: 30, comment: 'Minutes to round down under time to' }),
+    __metadata("design:type", Number)
+], AttendanceConfiguration.prototype, "roundDownUnderTimeMinutes", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ default: false, comment: 'Round up overtime to nearest specified minutes' }),
+    __metadata("design:type", Boolean)
+], AttendanceConfiguration.prototype, "roundUpOvertime", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ default: 30, comment: 'Minutes to round up overtime to' }),
+    __metadata("design:type", Number)
+], AttendanceConfiguration.prototype, "roundUpOvertimeMinutes", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ default: false, comment: 'Consider early time as over time' }),
+    __metadata("design:type", Boolean)
+], AttendanceConfiguration.prototype, "considerEarlyTimeAsOvertime", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ default: true, comment: 'Apply deduction for missing time in' }),
+    __metadata("design:type", Boolean)
+], AttendanceConfiguration.prototype, "noTimeInDeduction", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ default: true, comment: 'Apply deduction for missing time out' }),
+    __metadata("design:type", Boolean)
+], AttendanceConfiguration.prototype, "noTimeOutDeduction", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ default: 60, comment: 'Minutes to deduct for missing time in' }),
+    __metadata("design:type", Number)
+], AttendanceConfiguration.prototype, "noTimeInDeductionMinutes", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ default: 60, comment: 'Minutes to deduct for missing time out' }),
+    __metadata("design:type", Number)
+], AttendanceConfiguration.prototype, "noTimeOutDeductionMinutes", void 0);
+exports.AttendanceConfiguration = AttendanceConfiguration = __decorate([
+    (0, typeorm_1.Entity)('attendance-configurations')
+], AttendanceConfiguration);
+
+
+/***/ }),
+
+/***/ "./src/modules/attendance-management/attendance-configurations/services/attendance-configuration-seeder.service.ts":
+/*!*************************************************************************************************************************!*\
+  !*** ./src/modules/attendance-management/attendance-configurations/services/attendance-configuration-seeder.service.ts ***!
+  \*************************************************************************************************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+"use strict";
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var AttendanceConfigurationSeederService_1;
+var _a;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.AttendanceConfigurationSeederService = void 0;
+const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
+const attendance_configurations_service_1 = __webpack_require__(/*! ../attendance-configurations.service */ "./src/modules/attendance-management/attendance-configurations/attendance-configurations.service.ts");
+let AttendanceConfigurationSeederService = AttendanceConfigurationSeederService_1 = class AttendanceConfigurationSeederService {
+    constructor(attendanceConfigurationsService) {
+        this.attendanceConfigurationsService = attendanceConfigurationsService;
+        this.logger = new common_1.Logger(AttendanceConfigurationSeederService_1.name);
+    }
+    async onModuleInit() {
+        await this.seedGlobalAttendanceConfiguration();
+    }
+    async seedGlobalAttendanceConfiguration() {
+        try {
+            // Check if the global attendance configuration already exists
+            const existingConfig = await this.attendanceConfigurationsService.findOneBy({
+                organization: undefined
+            }, { relations: { organization: true } });
+            if (!existingConfig) {
+                // Create a new global attendance configuration
+                await this.attendanceConfigurationsService.create({});
+                this.logger.log(`Global attendance configuration seeded`);
+            }
+        }
+        catch (error) {
+            this.logger.error(`Failed to seed attendance data: ${error instanceof Error ? error.message : String(error)}`);
+        }
+    }
+};
+exports.AttendanceConfigurationSeederService = AttendanceConfigurationSeederService;
+exports.AttendanceConfigurationSeederService = AttendanceConfigurationSeederService = AttendanceConfigurationSeederService_1 = __decorate([
+    (0, common_1.Injectable)(),
+    __metadata("design:paramtypes", [typeof (_a = typeof attendance_configurations_service_1.AttendanceConfigurationsService !== "undefined" && attendance_configurations_service_1.AttendanceConfigurationsService) === "function" ? _a : Object])
+], AttendanceConfigurationSeederService);
+
+
+/***/ }),
+
 /***/ "./src/modules/attendance-management/attendance-management.module.ts":
 /*!***************************************************************************!*\
   !*** ./src/modules/attendance-management/attendance-management.module.ts ***!
@@ -10556,13 +11584,14 @@ const core_1 = __webpack_require__(/*! @nestjs/core */ "@nestjs/core");
 const typeorm_1 = __webpack_require__(/*! @nestjs/typeorm */ "@nestjs/typeorm");
 const biometrics_module_1 = __webpack_require__(/*! ../biometrics/biometrics.module */ "./src/modules/biometrics/biometrics.module.ts");
 const employee_management_module_1 = __webpack_require__(/*! ../employee-management/employee-management.module */ "./src/modules/employee-management/employee-management.module.ts");
-const shift_management_module_1 = __webpack_require__(/*! ../shift-management/shift-management.module */ "./src/modules/shift-management/shift-management.module.ts");
+const schedules_module_1 = __webpack_require__(/*! ../shift-management/schedules/schedules.module */ "./src/modules/shift-management/schedules/schedules.module.ts");
+const attendance_configurations_module_1 = __webpack_require__(/*! ./attendance-configurations/attendance-configurations.module */ "./src/modules/attendance-management/attendance-configurations/attendance-configurations.module.ts");
 const attendance_punches_module_1 = __webpack_require__(/*! ./attendance-punches/attendance-punches.module */ "./src/modules/attendance-management/attendance-punches/attendance-punches.module.ts");
 const attendances_controller_1 = __webpack_require__(/*! ./attendances.controller */ "./src/modules/attendance-management/attendances.controller.ts");
 const attendances_service_1 = __webpack_require__(/*! ./attendances.service */ "./src/modules/attendance-management/attendances.service.ts");
 const attendance_entity_1 = __webpack_require__(/*! ./entities/attendance.entity */ "./src/modules/attendance-management/entities/attendance.entity.ts");
 const final_work_hours_module_1 = __webpack_require__(/*! ./final-work-hours/final-work-hours.module */ "./src/modules/attendance-management/final-work-hours/final-work-hours.module.ts");
-const work_hour_calculation_service_1 = __webpack_require__(/*! ./final-work-hours/services/work-hour-calculation.service */ "./src/modules/attendance-management/final-work-hours/services/work-hour-calculation.service.ts");
+const attendances_gateway_1 = __webpack_require__(/*! ./gateways/attendances.gateway */ "./src/modules/attendance-management/gateways/attendances.gateway.ts");
 const attendance_listener_1 = __webpack_require__(/*! ./listeners/attendance.listener */ "./src/modules/attendance-management/listeners/attendance.listener.ts");
 const attendance_data_seeder_service_1 = __webpack_require__(/*! ./services/attendance-data-seeder.service */ "./src/modules/attendance-management/services/attendance-data-seeder.service.ts");
 const work_time_requests_module_1 = __webpack_require__(/*! ./work-time-requests/work-time-requests.module */ "./src/modules/attendance-management/work-time-requests/work-time-requests.module.ts");
@@ -10596,25 +11625,29 @@ exports.AttendanceManagementModule = AttendanceManagementModule = __decorate([
                         {
                             path: 'final-work-hours',
                             module: final_work_hours_module_1.FinalWorkHoursModule,
+                        },
+                        {
+                            path: 'configurations',
+                            module: attendance_configurations_module_1.AttendanceConfigurationsModule
                         }
                     ],
                 }
             ]),
             attendance_punches_module_1.AttendancePunchesModule,
             work_time_requests_module_1.WorkTimeRequestsModule,
-            work_time_responses_module_1.WorkTimeResponsesModule,
             final_work_hours_module_1.FinalWorkHoursModule,
-            biometrics_module_1.BiometricsModule,
+            attendance_configurations_module_1.AttendanceConfigurationsModule,
             employee_management_module_1.EmployeeManagementModule,
-            shift_management_module_1.ShiftManagementModule,
+            schedules_module_1.SchedulesModule,
+            biometrics_module_1.BiometricsModule
         ],
-        providers: [attendances_service_1.AttendancesService, attendance_listener_1.AttendanceListener, attendance_data_seeder_service_1.AttendanceDataSeederService, work_hour_calculation_service_1.WorkHourCalculationProcessor],
+        providers: [attendances_service_1.AttendancesService, attendance_listener_1.AttendanceListener, attendance_data_seeder_service_1.AttendanceDataSeederService, attendances_gateway_1.AttendancesGateway],
         exports: [
             attendances_service_1.AttendancesService,
             attendance_punches_module_1.AttendancePunchesModule,
             work_time_requests_module_1.WorkTimeRequestsModule,
-            work_time_responses_module_1.WorkTimeResponsesModule,
             final_work_hours_module_1.FinalWorkHoursModule,
+            attendance_configurations_module_1.AttendanceConfigurationsModule
         ],
         controllers: [attendances_controller_1.AttendancesController],
     })
@@ -11026,7 +12059,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-var _a, _b, _c, _d, _e, _f, _g, _h;
+var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.AttendancesService = void 0;
 const attendance_status_enum_1 = __webpack_require__(/*! @/common/enums/attendance-status.enum */ "./src/common/enums/attendance-status.enum.ts");
@@ -11045,12 +12078,14 @@ const typeorm_2 = __webpack_require__(/*! typeorm */ "typeorm");
 const employees_service_1 = __webpack_require__(/*! ../employee-management/employees.service */ "./src/modules/employee-management/employees.service.ts");
 const notifications_service_1 = __webpack_require__(/*! ../notifications/notifications.service */ "./src/modules/notifications/notifications.service.ts");
 const schedules_service_1 = __webpack_require__(/*! ../shift-management/schedules/schedules.service */ "./src/modules/shift-management/schedules/schedules.service.ts");
+const attendance_configurations_service_1 = __webpack_require__(/*! ./attendance-configurations/attendance-configurations.service */ "./src/modules/attendance-management/attendance-configurations/attendance-configurations.service.ts");
 const attendance_entity_1 = __webpack_require__(/*! ./entities/attendance.entity */ "./src/modules/attendance-management/entities/attendance.entity.ts");
 const final_work_hour_entity_1 = __webpack_require__(/*! ./final-work-hours/entities/final-work-hour.entity */ "./src/modules/attendance-management/final-work-hours/entities/final-work-hour.entity.ts");
+const attendances_gateway_1 = __webpack_require__(/*! ./gateways/attendances.gateway */ "./src/modules/attendance-management/gateways/attendances.gateway.ts");
 const work_time_request_entity_1 = __webpack_require__(/*! ./work-time-requests/entities/work-time-request.entity */ "./src/modules/attendance-management/work-time-requests/entities/work-time-request.entity.ts");
 const work_time_requests_service_1 = __webpack_require__(/*! ./work-time-requests/work-time-requests.service */ "./src/modules/attendance-management/work-time-requests/work-time-requests.service.ts");
 let AttendancesService = class AttendancesService extends base_service_1.BaseService {
-    constructor(attendancesRepository, usersService, workTimeRequestsService, notificationsService, employeesService, schedulesService, eventEmitter) {
+    constructor(attendancesRepository, usersService, workTimeRequestsService, notificationsService, employeesService, schedulesService, eventEmitter, attendancesGateway, attendanceConfigurationsService) {
         super(attendancesRepository, usersService);
         this.attendancesRepository = attendancesRepository;
         this.usersService = usersService;
@@ -11059,6 +12094,20 @@ let AttendancesService = class AttendancesService extends base_service_1.BaseSer
         this.employeesService = employeesService;
         this.schedulesService = schedulesService;
         this.eventEmitter = eventEmitter;
+        this.attendancesGateway = attendancesGateway;
+        this.attendanceConfigurationsService = attendanceConfigurationsService;
+    }
+    async create(createDto, createdBy) {
+        await this.attendancesGateway.pingAll();
+        return await super.create(createDto, createdBy);
+    }
+    async update(id, updateDto, updatedBy) {
+        await this.attendancesGateway.pingAll();
+        return await super.update(id, updateDto, updatedBy);
+    }
+    async save(entity) {
+        await this.attendancesGateway.pingAll();
+        return await super.save(entity);
     }
     getEmployeeAttendanceToday(employeeId, punchTime) {
         return this.attendancesRepository.findOne({
@@ -11126,12 +12175,18 @@ let AttendancesService = class AttendancesService extends base_service_1.BaseSer
         for (const attendance of underTimeAttendances) {
             try {
                 this.logger.log(`Processing under time for employee ${attendance.employee.user.email}`);
+                // get organization config
+                const config = await this.attendanceConfigurationsService.getOrganizationAttendanceConfiguration(attendance.employee.organizationId);
                 const formattedAttendanceDate = (0, date_fns_1.format)(attendance.schedule.date, 'yyyy-MM-dd');
                 // Calculate total undertime minutes
                 const scheduleEndTime = new Date(`${formattedAttendanceDate}T${attendance.schedule.endTime}`);
                 const timeOut = attendance.timeOut ? new Date(attendance.timeOut) : new Date(attendance.schedule.endTime);
-                // Calculate undertime (when employee leaves before scheduled end time)
-                let undertimeMinutes = Math.floor((scheduleEndTime.getTime() - timeOut.getTime()) / (1000 * 60));
+                // Calculate under time (when employee leaves before scheduled end time)
+                let underTimeMinutes = (scheduleEndTime.getTime() - timeOut.getTime()) / (1000 * 60);
+                // Check if organization rounds down under time
+                if (config.roundDownUnderTime) {
+                    underTimeMinutes = Math.floor(underTimeMinutes / config.roundDownUnderTimeMinutes) * config.roundDownUnderTimeMinutes;
+                }
                 // Check if there is already worktime request for undertime
                 const existingRequest = await this.workTimeRequestsService.findOneBy({
                     attendance: new attendance_entity_1.Attendance({ id: attendance.id }),
@@ -11143,7 +12198,7 @@ let AttendancesService = class AttendancesService extends base_service_1.BaseSer
                     const workTimeRequest = new work_time_request_entity_1.WorkTimeRequest({
                         attendance: attendance,
                         type: attendance_status_enum_1.AttendanceStatus.UNDER_TIME,
-                        duration: undertimeMinutes,
+                        duration: underTimeMinutes,
                         status: request_status_enum_1.RequestStatus.PENDING,
                         cutoff: attendance.cutoff,
                         dayType: attendance.dayType,
@@ -11153,7 +12208,7 @@ let AttendancesService = class AttendancesService extends base_service_1.BaseSer
                     await this.workTimeRequestsService.save(workTimeRequest);
                     await this.notificationsService.create({
                         title: 'Early Check-out',
-                        message: `You left ${undertimeMinutes} minutes early on ${formattedAttendanceDate}.`,
+                        message: `You left ${underTimeMinutes} minutes early on ${formattedAttendanceDate}.`,
                         type: notification_type_enum_1.NotificationType.WARNING,
                         category: 'ATTENDANCE',
                         user: { id: attendance.employee.user.id },
@@ -11464,12 +12519,12 @@ __decorate([
     (0, schedule_1.Cron)(schedule_1.CronExpression.EVERY_DAY_AT_MIDNIGHT),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
-    __metadata("design:returntype", typeof (_h = typeof Promise !== "undefined" && Promise) === "function" ? _h : Object)
+    __metadata("design:returntype", typeof (_k = typeof Promise !== "undefined" && Promise) === "function" ? _k : Object)
 ], AttendancesService.prototype, "processAttendanceRecords", null);
 exports.AttendancesService = AttendancesService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, typeorm_1.InjectRepository)(attendance_entity_1.Attendance)),
-    __metadata("design:paramtypes", [typeof (_a = typeof typeorm_2.Repository !== "undefined" && typeorm_2.Repository) === "function" ? _a : Object, typeof (_b = typeof users_service_1.UsersService !== "undefined" && users_service_1.UsersService) === "function" ? _b : Object, typeof (_c = typeof work_time_requests_service_1.WorkTimeRequestsService !== "undefined" && work_time_requests_service_1.WorkTimeRequestsService) === "function" ? _c : Object, typeof (_d = typeof notifications_service_1.NotificationsService !== "undefined" && notifications_service_1.NotificationsService) === "function" ? _d : Object, typeof (_e = typeof employees_service_1.EmployeesService !== "undefined" && employees_service_1.EmployeesService) === "function" ? _e : Object, typeof (_f = typeof schedules_service_1.SchedulesService !== "undefined" && schedules_service_1.SchedulesService) === "function" ? _f : Object, typeof (_g = typeof event_emitter_1.EventEmitter2 !== "undefined" && event_emitter_1.EventEmitter2) === "function" ? _g : Object])
+    __metadata("design:paramtypes", [typeof (_a = typeof typeorm_2.Repository !== "undefined" && typeorm_2.Repository) === "function" ? _a : Object, typeof (_b = typeof users_service_1.UsersService !== "undefined" && users_service_1.UsersService) === "function" ? _b : Object, typeof (_c = typeof work_time_requests_service_1.WorkTimeRequestsService !== "undefined" && work_time_requests_service_1.WorkTimeRequestsService) === "function" ? _c : Object, typeof (_d = typeof notifications_service_1.NotificationsService !== "undefined" && notifications_service_1.NotificationsService) === "function" ? _d : Object, typeof (_e = typeof employees_service_1.EmployeesService !== "undefined" && employees_service_1.EmployeesService) === "function" ? _e : Object, typeof (_f = typeof schedules_service_1.SchedulesService !== "undefined" && schedules_service_1.SchedulesService) === "function" ? _f : Object, typeof (_g = typeof event_emitter_1.EventEmitter2 !== "undefined" && event_emitter_1.EventEmitter2) === "function" ? _g : Object, typeof (_h = typeof attendances_gateway_1.AttendancesGateway !== "undefined" && attendances_gateway_1.AttendancesGateway) === "function" ? _h : Object, typeof (_j = typeof attendance_configurations_service_1.AttendanceConfigurationsService !== "undefined" && attendance_configurations_service_1.AttendanceConfigurationsService) === "function" ? _j : Object])
 ], AttendancesService);
 
 
@@ -11492,7 +12547,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
-var _a, _b;
+var _a, _b, _c;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.GetAttendanceDto = exports.UpdateAttendanceDto = exports.CreateAttendanceDto = exports.AttendanceDto = void 0;
 const base_dto_1 = __webpack_require__(/*! @/common/dtos/base.dto */ "./src/common/dtos/base.dto.ts");
@@ -11527,6 +12582,17 @@ __decorate([
 ], AttendanceDto.prototype, "statuses", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({
+        description: 'Date of the attendance',
+        example: '2023-01-01',
+        type: String,
+        format: 'date'
+    }),
+    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsDateString)(),
+    __metadata("design:type", typeof (_a = typeof Date !== "undefined" && Date) === "function" ? _a : Object)
+], AttendanceDto.prototype, "date", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
         description: 'Time when employee clocked in',
         example: '2023-01-01T09:00:00Z',
         type: Date
@@ -11534,7 +12600,7 @@ __decorate([
     (0, class_validator_1.IsDate)(),
     (0, class_transformer_1.Type)(() => Date),
     (0, class_validator_1.IsNotEmpty)(),
-    __metadata("design:type", typeof (_a = typeof Date !== "undefined" && Date) === "function" ? _a : Object)
+    __metadata("design:type", typeof (_b = typeof Date !== "undefined" && Date) === "function" ? _b : Object)
 ], AttendanceDto.prototype, "timeIn", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({
@@ -11547,7 +12613,7 @@ __decorate([
     (0, class_validator_1.IsDate)(),
     (0, class_transformer_1.Type)(() => Date),
     (0, class_validator_1.IsOptional)(),
-    __metadata("design:type", typeof (_b = typeof Date !== "undefined" && Date) === "function" ? _b : Object)
+    __metadata("design:type", typeof (_c = typeof Date !== "undefined" && Date) === "function" ? _c : Object)
 ], AttendanceDto.prototype, "timeOut", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({
@@ -11588,7 +12654,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
-var _a, _b, _c, _d, _e, _f, _g, _h;
+var _a, _b, _c, _d, _e, _f, _g, _h, _j;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Attendance = void 0;
 const base_entity_1 = __webpack_require__(/*! @/database/entities/base.entity */ "./src/database/entities/base.entity.ts");
@@ -11631,22 +12697,26 @@ __decorate([
     __metadata("design:type", String)
 ], Attendance.prototype, "processedBy", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ type: 'timestamp', nullable: true }),
+    (0, typeorm_1.Column)({ type: 'date', nullable: true }),
     __metadata("design:type", typeof (_d = typeof Date !== "undefined" && Date) === "function" ? _d : Object)
+], Attendance.prototype, "date", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'timestamp', nullable: true }),
+    __metadata("design:type", typeof (_e = typeof Date !== "undefined" && Date) === "function" ? _e : Object)
 ], Attendance.prototype, "processedAt", void 0);
 __decorate([
     (0, typeorm_1.Column)({ type: 'enum', enum: final_work_hour_entity_1.DayType }),
-    __metadata("design:type", typeof (_e = typeof final_work_hour_entity_1.DayType !== "undefined" && final_work_hour_entity_1.DayType) === "function" ? _e : Object)
+    __metadata("design:type", typeof (_f = typeof final_work_hour_entity_1.DayType !== "undefined" && final_work_hour_entity_1.DayType) === "function" ? _f : Object)
 ], Attendance.prototype, "dayType", void 0);
 __decorate([
     (0, typeorm_1.OneToOne)(() => schedule_entity_1.Schedule, (schedule) => schedule.attendance, { eager: true }),
     (0, typeorm_1.JoinColumn)({ name: 'scheduleId' }),
-    __metadata("design:type", typeof (_f = typeof schedule_entity_1.Schedule !== "undefined" && schedule_entity_1.Schedule) === "function" ? _f : Object)
+    __metadata("design:type", typeof (_g = typeof schedule_entity_1.Schedule !== "undefined" && schedule_entity_1.Schedule) === "function" ? _g : Object)
 ], Attendance.prototype, "schedule", void 0);
 __decorate([
     (0, typeorm_1.ManyToOne)(() => cutoff_entity_1.Cutoff, (cutoff) => cutoff.attendances),
     (0, typeorm_1.JoinColumn)({ name: 'cutoffId' }),
-    __metadata("design:type", typeof (_g = typeof cutoff_entity_1.Cutoff !== "undefined" && cutoff_entity_1.Cutoff) === "function" ? _g : Object)
+    __metadata("design:type", typeof (_h = typeof cutoff_entity_1.Cutoff !== "undefined" && cutoff_entity_1.Cutoff) === "function" ? _h : Object)
 ], Attendance.prototype, "cutoff", void 0);
 __decorate([
     (0, typeorm_1.OneToMany)(() => attendance_punch_entity_1.AttendancePunch, (attendancePunches) => attendancePunches.attendance, { cascade: true }),
@@ -11658,7 +12728,7 @@ __decorate([
 ], Attendance.prototype, "workTimeRequests", void 0);
 __decorate([
     (0, typeorm_1.OneToOne)(() => final_work_hour_entity_1.FinalWorkHour, (finalWorkHour) => finalWorkHour.attendance, { nullable: true }),
-    __metadata("design:type", typeof (_h = typeof final_work_hour_entity_1.FinalWorkHour !== "undefined" && final_work_hour_entity_1.FinalWorkHour) === "function" ? _h : Object)
+    __metadata("design:type", typeof (_j = typeof final_work_hour_entity_1.FinalWorkHour !== "undefined" && final_work_hour_entity_1.FinalWorkHour) === "function" ? _j : Object)
 ], Attendance.prototype, "finalWorkHour", void 0);
 exports.Attendance = Attendance = __decorate([
     (0, typeorm_1.Entity)('attendances')
@@ -11740,103 +12810,110 @@ __decorate([
     __metadata("design:type", typeof (_f = typeof Date !== "undefined" && Date) === "function" ? _f : Object)
 ], FinalWorkHourDto.prototype, "overTimeOut", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'No time in hours', example: 0.00 }),
+    (0, swagger_1.ApiPropertyOptional)({ description: 'No time in hours', example: 0.00 }),
     (0, class_validator_1.IsDecimal)({ decimal_digits: '2' }),
     (0, class_validator_1.IsNumber)(),
-    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsOptional)(),
     __metadata("design:type", Number)
 ], FinalWorkHourDto.prototype, "noTimeInHours", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'No time out hours', example: 0.00 }),
+    (0, swagger_1.ApiPropertyOptional)({ description: 'No time out hours', example: 0.00 }),
     (0, class_validator_1.IsDecimal)({ decimal_digits: '2' }),
-    (0, class_validator_1.IsNotEmpty)(),
     (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.IsOptional)(),
     __metadata("design:type", Number)
 ], FinalWorkHourDto.prototype, "noTimeOutHours", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Absent hours', example: 0.00 }),
+    (0, swagger_1.ApiPropertyOptional)({ description: 'Absent hours', example: 0.00 }),
     (0, class_validator_1.IsDecimal)({ decimal_digits: '2' }),
-    (0, class_validator_1.IsNotEmpty)(),
     (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.IsOptional)(),
     __metadata("design:type", Number)
 ], FinalWorkHourDto.prototype, "absentHours", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Tardiness hours', example: 0.00 }),
+    (0, swagger_1.ApiPropertyOptional)({ description: 'Tardiness hours', example: 0.00 }),
     (0, class_validator_1.IsDecimal)({ decimal_digits: '2' }),
-    (0, class_validator_1.IsNotEmpty)(),
     (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.IsOptional)(),
     __metadata("design:type", Number)
 ], FinalWorkHourDto.prototype, "tardinessHours", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Undertime hours', example: 0.00 }),
+    (0, swagger_1.ApiPropertyOptional)({ description: 'Undertime hours', example: 0.00 }),
     (0, class_validator_1.IsDecimal)({ decimal_digits: '2' }),
-    (0, class_validator_1.IsNotEmpty)(),
     (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.IsOptional)(),
     __metadata("design:type", Number)
 ], FinalWorkHourDto.prototype, "undertimeHours", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Regular day hours', example: 8.00 }),
+    (0, swagger_1.ApiPropertyOptional)({ description: 'Regular day hours', example: 8.00 }),
     (0, class_validator_1.IsDecimal)({ decimal_digits: '2' }),
-    (0, class_validator_1.IsNotEmpty)(),
     (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.IsOptional)(),
     __metadata("design:type", Number)
 ], FinalWorkHourDto.prototype, "regularDayHours", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Rest day hours', example: 0.00 }),
+    (0, swagger_1.ApiPropertyOptional)({ description: 'Rest day hours', example: 0.00 }),
     (0, class_validator_1.IsDecimal)({ decimal_digits: '2' }),
-    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsNumber)(),
     __metadata("design:type", Number)
 ], FinalWorkHourDto.prototype, "restDayHours", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Special holiday hours', example: 0.00 }),
+    (0, swagger_1.ApiPropertyOptional)({ description: 'Special holiday hours', example: 0.00 }),
     (0, class_validator_1.IsDecimal)({ decimal_digits: '2' }),
-    (0, class_validator_1.IsNotEmpty)(),
     (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.IsOptional)(),
     __metadata("design:type", Number)
 ], FinalWorkHourDto.prototype, "specialHolidayHours", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Regular holiday hours', example: 0.00 }),
+    (0, swagger_1.ApiPropertyOptional)({ description: 'Regular holiday hours', example: 0.00 }),
     (0, class_validator_1.IsDecimal)({ decimal_digits: '2' }),
-    (0, class_validator_1.IsNotEmpty)(),
     (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.IsOptional)(),
     __metadata("design:type", Number)
 ], FinalWorkHourDto.prototype, "regularHolidayHours", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Overtime regular day hours', example: 0.00 }),
+    (0, swagger_1.ApiPropertyOptional)({ description: 'Overtime regular day hours', example: 0.00 }),
     (0, class_validator_1.IsDecimal)({ decimal_digits: '2' }),
-    (0, class_validator_1.IsNotEmpty)(),
     (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.IsOptional)(),
     __metadata("design:type", Number)
 ], FinalWorkHourDto.prototype, "overtimeRegularDayHours", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Overtime rest day hours', example: 0.00 }),
+    (0, swagger_1.ApiPropertyOptional)({ description: 'Overtime rest day hours', example: 0.00 }),
     (0, class_validator_1.IsDecimal)({ decimal_digits: '2' }),
-    (0, class_validator_1.IsNotEmpty)(),
     (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.IsOptional)(),
     __metadata("design:type", Number)
 ], FinalWorkHourDto.prototype, "overtimeRestDayHours", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Overtime special holiday hours', example: 0.00 }),
+    (0, swagger_1.ApiPropertyOptional)({ description: 'Overtime special holiday hours', example: 0.00 }),
     (0, class_validator_1.IsDecimal)({ decimal_digits: '2' }),
-    (0, class_validator_1.IsNotEmpty)(),
     (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.IsOptional)(),
     __metadata("design:type", Number)
 ], FinalWorkHourDto.prototype, "overtimeSpecialHolidayHours", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Overtime regular holiday hours', example: 0.00 }),
+    (0, swagger_1.ApiPropertyOptional)({ description: 'Overtime regular holiday hours', example: 0.00 }),
     (0, class_validator_1.IsDecimal)({ decimal_digits: '2' }),
-    (0, class_validator_1.IsNotEmpty)(),
     (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.IsOptional)(),
     __metadata("design:type", Number)
 ], FinalWorkHourDto.prototype, "overtimeRegularHolidayHours", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Night differential hours', example: 0.00 }),
+    (0, swagger_1.ApiPropertyOptional)({ description: 'Night differential hours', example: 0.00 }),
     (0, class_validator_1.IsDecimal)({ decimal_digits: '2' }),
-    (0, class_validator_1.IsNotEmpty)(),
     (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.IsOptional)(),
     __metadata("design:type", Number)
 ], FinalWorkHourDto.prototype, "nightDifferentialHours", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ description: 'Overtime night differential hours', example: 0.00 }),
+    (0, class_validator_1.IsDecimal)({ decimal_digits: '2' }),
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Number)
+], FinalWorkHourDto.prototype, "nightDifferentialOvertimeHours", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({
         description: 'Day type',
@@ -11847,46 +12924,6 @@ __decorate([
     (0, class_validator_1.IsEnum)(final_work_hour_entity_1.DayType),
     __metadata("design:type", typeof (_g = typeof final_work_hour_entity_1.DayType !== "undefined" && final_work_hour_entity_1.DayType) === "function" ? _g : Object)
 ], FinalWorkHourDto.prototype, "dayType", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Total regular hours', example: 8.00 }),
-    (0, class_validator_1.IsDecimal)({ decimal_digits: '2' }),
-    (0, class_validator_1.IsNotEmpty)(),
-    (0, class_validator_1.IsNumber)(),
-    __metadata("design:type", Number)
-], FinalWorkHourDto.prototype, "totalRegularHours", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Total overtime hours', example: 1.00 }),
-    (0, class_validator_1.IsDecimal)({ decimal_digits: '2' }),
-    (0, class_validator_1.IsNotEmpty)(),
-    (0, class_validator_1.IsNumber)(),
-    __metadata("design:type", Number)
-], FinalWorkHourDto.prototype, "totalOvertimeHours", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Total hours', example: 9.00 }),
-    (0, class_validator_1.IsDecimal)({ decimal_digits: '2' }),
-    (0, class_validator_1.IsNotEmpty)(),
-    (0, class_validator_1.IsNumber)(),
-    __metadata("design:type", Number)
-], FinalWorkHourDto.prototype, "totalHours", void 0);
-__decorate([
-    (0, swagger_1.ApiPropertyOptional)({ description: 'Is approved', example: false }),
-    (0, class_validator_1.IsBoolean)(),
-    (0, class_validator_1.IsOptional)(),
-    __metadata("design:type", Boolean)
-], FinalWorkHourDto.prototype, "isApproved", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Batch ID' }),
-    (0, class_validator_1.IsNotEmpty)(),
-    (0, class_validator_1.IsUUID)('4'),
-    (0, class_validator_1.IsString)(),
-    __metadata("design:type", String)
-], FinalWorkHourDto.prototype, "batchId", void 0);
-__decorate([
-    (0, swagger_1.ApiPropertyOptional)({ description: 'Is processed', example: true }),
-    (0, class_validator_1.IsBoolean)(),
-    (0, class_validator_1.IsOptional)(),
-    __metadata("design:type", Boolean)
-], FinalWorkHourDto.prototype, "isProcessed", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({ description: 'Work date', type: Date }),
     (0, class_validator_1.IsDate)(),
@@ -11903,9 +12940,56 @@ __decorate([
 class UpdateFinalWorkHourDto extends (0, swagger_1.PartialType)(FinalWorkHourDto) {
 }
 exports.UpdateFinalWorkHourDto = UpdateFinalWorkHourDto;
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ description: 'Is approved', example: false }),
+    (0, class_validator_1.IsBoolean)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Boolean)
+], UpdateFinalWorkHourDto.prototype, "isApproved", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ description: 'Is processed', example: true }),
+    (0, class_validator_1.IsBoolean)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Boolean)
+], UpdateFinalWorkHourDto.prototype, "isProcessed", void 0);
 class GetFinalWorkHourDto extends (0, create_get_dto_factory_1.createGetDto)(UpdateFinalWorkHourDto, 'final work hour') {
 }
 exports.GetFinalWorkHourDto = GetFinalWorkHourDto;
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ description: 'Batch ID' }),
+    (0, class_validator_1.IsUUID)('4'),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], GetFinalWorkHourDto.prototype, "payrollBatchId", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Batch ID' }),
+    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsUUID)('4'),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], GetFinalWorkHourDto.prototype, "batchId", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Total regular hours', example: 8.00 }),
+    (0, class_validator_1.IsDecimal)({ decimal_digits: '2' }),
+    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsNumber)(),
+    __metadata("design:type", Number)
+], GetFinalWorkHourDto.prototype, "totalRegularHours", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Total overtime hours', example: 1.00 }),
+    (0, class_validator_1.IsDecimal)({ decimal_digits: '2' }),
+    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsNumber)(),
+    __metadata("design:type", Number)
+], GetFinalWorkHourDto.prototype, "totalOvertimeHours", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Total hours', example: 9.00 }),
+    (0, class_validator_1.IsDecimal)({ decimal_digits: '2' }),
+    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsNumber)(),
+    __metadata("design:type", Number)
+], GetFinalWorkHourDto.prototype, "totalHours", void 0);
 
 
 /***/ }),
@@ -12047,6 +13131,10 @@ __decorate([
     __metadata("design:type", Number)
 ], FinalWorkHour.prototype, "nightDifferentialHours", void 0);
 __decorate([
+    (0, typeorm_1.Column)('decimal', { precision: 10, scale: 2, default: 0 }),
+    __metadata("design:type", Number)
+], FinalWorkHour.prototype, "overtimeNightDifferentialHours", void 0);
+__decorate([
     (0, typeorm_1.Column)({
         type: 'enum',
         enum: DayType,
@@ -12082,6 +13170,10 @@ __decorate([
     (0, typeorm_1.Column)(),
     __metadata("design:type", String)
 ], FinalWorkHour.prototype, "batchId", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ nullable: true }),
+    __metadata("design:type", String)
+], FinalWorkHour.prototype, "payrollBatchId", void 0);
 __decorate([
     (0, typeorm_1.Column)({ default: true }),
     __metadata("design:type", Boolean)
@@ -12216,9 +13308,12 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.FinalWorkHoursModule = void 0;
 const cutoffs_module_1 = __webpack_require__(/*! @/modules/payroll-management/cutoffs/cutoffs.module */ "./src/modules/payroll-management/cutoffs/cutoffs.module.ts");
+const payroll_management_module_1 = __webpack_require__(/*! @/modules/payroll-management/payroll-management.module */ "./src/modules/payroll-management/payroll-management.module.ts");
 const bull_1 = __webpack_require__(/*! @nestjs/bull */ "@nestjs/bull");
 const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
 const typeorm_1 = __webpack_require__(/*! @nestjs/typeorm */ "@nestjs/typeorm");
+const attendance_configurations_module_1 = __webpack_require__(/*! ../attendance-configurations/attendance-configurations.module */ "./src/modules/attendance-management/attendance-configurations/attendance-configurations.module.ts");
+const attendance_management_module_1 = __webpack_require__(/*! ../attendance-management.module */ "./src/modules/attendance-management/attendance-management.module.ts");
 const final_work_hour_entity_1 = __webpack_require__(/*! ./entities/final-work-hour.entity */ "./src/modules/attendance-management/final-work-hours/entities/final-work-hour.entity.ts");
 const final_work_hours_controller_1 = __webpack_require__(/*! ./final-work-hours.controller */ "./src/modules/attendance-management/final-work-hours/final-work-hours.controller.ts");
 const final_work_hours_service_1 = __webpack_require__(/*! ./final-work-hours.service */ "./src/modules/attendance-management/final-work-hours/final-work-hours.service.ts");
@@ -12234,9 +13329,12 @@ exports.FinalWorkHoursModule = FinalWorkHoursModule = __decorate([
                 name: 'work-hour-calculation'
             }),
             cutoffs_module_1.CutoffsModule,
+            (0, common_1.forwardRef)(() => attendance_management_module_1.AttendanceManagementModule),
+            payroll_management_module_1.PayrollManagementModule,
+            attendance_configurations_module_1.AttendanceConfigurationsModule,
         ],
-        providers: [final_work_hours_service_1.FinalWorkHoursService, work_hour_calculation_service_1.WorkHourCalculationService],
-        exports: [final_work_hours_service_1.FinalWorkHoursService, work_hour_calculation_service_1.WorkHourCalculationService],
+        providers: [final_work_hours_service_1.FinalWorkHoursService, work_hour_calculation_service_1.WorkHourCalculationService, work_hour_calculation_service_1.WorkHourCalculationProcessor],
+        exports: [final_work_hours_service_1.FinalWorkHoursService, work_hour_calculation_service_1.WorkHourCalculationService, work_hour_calculation_service_1.WorkHourCalculationProcessor],
         controllers: [final_work_hours_controller_1.FinalWorkHoursController],
     })
 ], FinalWorkHoursModule);
@@ -12264,7 +13362,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-var _a, _b, _c, _d;
+var _a, _b, _c, _d, _e;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.FinalWorkHoursService = void 0;
 const attendance_status_enum_1 = __webpack_require__(/*! @/common/enums/attendance-status.enum */ "./src/common/enums/attendance-status.enum.ts");
@@ -12278,14 +13376,16 @@ const event_emitter_1 = __webpack_require__(/*! @nestjs/event-emitter */ "@nestj
 const typeorm_1 = __webpack_require__(/*! @nestjs/typeorm */ "@nestjs/typeorm");
 const date_fns_1 = __webpack_require__(/*! date-fns */ "date-fns");
 const typeorm_2 = __webpack_require__(/*! typeorm */ "typeorm");
+const attendances_service_1 = __webpack_require__(/*! ../attendances.service */ "./src/modules/attendance-management/attendances.service.ts");
 const final_work_hour_entity_1 = __webpack_require__(/*! ./entities/final-work-hour.entity */ "./src/modules/attendance-management/final-work-hours/entities/final-work-hour.entity.ts");
 let FinalWorkHoursService = class FinalWorkHoursService extends base_service_1.BaseService {
-    constructor(finalWorkHoursRepository, usersService, eventEmitter, cutoffsService) {
+    constructor(finalWorkHoursRepository, usersService, eventEmitter, cutoffsService, attendancesService) {
         super(finalWorkHoursRepository, usersService);
         this.finalWorkHoursRepository = finalWorkHoursRepository;
         this.usersService = usersService;
         this.eventEmitter = eventEmitter;
         this.cutoffsService = cutoffsService;
+        this.attendancesService = attendancesService;
     }
     /**
      * Calculates and categorizes work hours based on day type
@@ -12306,6 +13406,7 @@ let FinalWorkHoursService = class FinalWorkHoursService extends base_service_1.B
             overtimeSpecialHolidayHours: 0,
             overtimeRegularHolidayHours: 0,
             nightDifferentialHours: 0,
+            overtimeNightDifferentialHours: 0,
             dayType: final_work_hour_entity_1.DayType.REGULAR_DAY,
             totalRegularHours: 0,
             totalOvertimeHours: 0,
@@ -12328,8 +13429,7 @@ let FinalWorkHoursService = class FinalWorkHoursService extends base_service_1.B
         const timeOut = finalWorkHour.timeOut ||
             new Date(scheduleEndTime.getTime() - noTimeOutMilliseconds);
         const { statuses } = finalWorkHour.attendance;
-        const isLate = statuses === null || statuses === void 0 ? void 0 : statuses.includes(attendance_status_enum_1.AttendanceStatus.LATE);
-        const isUndertime = statuses === null || statuses === void 0 ? void 0 : statuses.includes(attendance_status_enum_1.AttendanceStatus.UNDER_TIME);
+        const isUnderTime = statuses === null || statuses === void 0 ? void 0 : statuses.includes(attendance_status_enum_1.AttendanceStatus.UNDER_TIME);
         const isAbsent = statuses === null || statuses === void 0 ? void 0 : statuses.includes(attendance_status_enum_1.AttendanceStatus.ABSENT);
         if (isAbsent) {
             // If absent, set all hours to 0
@@ -12340,8 +13440,8 @@ let FinalWorkHoursService = class FinalWorkHoursService extends base_service_1.B
         const regularHours = this.calculateHours(timeIn, timeOut, schedule.breakTime);
         const overtimeHours = finalWorkHour.overTimeOut ?
             this.calculateHours(timeOut, finalWorkHour.overTimeOut) : 0;
-        result.tardinessHours = isLate ? this.calculateHours(scheduleStartTime, timeIn) : 0;
-        result.undertimeHours = isUndertime ? this.calculateHours(timeOut, scheduleEndTime) : 0;
+        result.tardinessHours = this.calculateHours(scheduleStartTime, timeIn);
+        result.undertimeHours = isUnderTime ? this.calculateHours(timeOut, scheduleEndTime) : 0;
         // Calculate night differential hours
         const nightDiffHours = this.calculateNightDifferentialHours(timeIn, timeOut, finalWorkHour.overTimeOut);
         // Categorize hours based on day type
@@ -12376,7 +13476,8 @@ let FinalWorkHoursService = class FinalWorkHoursService extends base_service_1.B
             result.overtimeRegularDayHours = overtimeHours;
         }
         // Store night differential hours
-        result.nightDifferentialHours = nightDiffHours;
+        result.nightDifferentialHours = nightDiffHours.regular;
+        result.overtimeNightDifferentialHours = nightDiffHours.overtime;
         // Calculate totals
         result.totalRegularHours = result.regularDayHours +
             result.restDayHours +
@@ -12391,30 +13492,49 @@ let FinalWorkHoursService = class FinalWorkHoursService extends base_service_1.B
     }
     /**
      * Calculate night differential hours worked
+     * @returns Object containing regular and overtime night differential hours
      */
     calculateNightDifferentialHours(timeIn, timeOut, overTimeOut) {
         const NIGHT_DIFF_START_HOUR = 22; // 10:00 PM
         const NIGHT_DIFF_END_HOUR = 6; // 6:00 AM
-        let nightDiffHours = 0;
+        let regularNightDiffHours = 0;
+        let overtimeNightDiffHours = 0;
         const timeInLocal = new Date(timeIn);
         const timeOutLocal = new Date(timeOut);
         const overTimeOutLocal = overTimeOut ? new Date(overTimeOut) : null;
-        const finalTimeOut = overTimeOutLocal || timeOutLocal;
-        // Check each hour between timeIn and finalTimeOut
+        // Calculate regular night differential hours (between timeIn and timeOut)
         let currentHour = new Date(timeInLocal);
-        while (currentHour < finalTimeOut) {
+        while (currentHour < timeOutLocal) {
             const nextHour = new Date(currentHour);
             nextHour.setHours(nextHour.getHours() + 1);
-            const hourEnd = new Date(Math.min(nextHour.getTime(), finalTimeOut.getTime()));
+            const hourEnd = new Date(Math.min(nextHour.getTime(), timeOutLocal.getTime()));
             const hourDiff = this.calculateHours(currentHour, hourEnd, 6);
-            // Check if this hour falls within night differential period
             const hour = currentHour.getHours();
             if (hour >= NIGHT_DIFF_START_HOUR || hour < NIGHT_DIFF_END_HOUR) {
-                nightDiffHours += hourDiff;
+                regularNightDiffHours += hourDiff;
             }
             currentHour = nextHour;
         }
-        return Math.round(nightDiffHours * 100) / 100; // Round to 2 decimal places
+        // Calculate overtime night differential hours (between timeOut and overTimeOut)
+        if (overTimeOutLocal) {
+            currentHour = new Date(timeOutLocal);
+            while (currentHour < overTimeOutLocal) {
+                const nextHour = new Date(currentHour);
+                nextHour.setHours(nextHour.getHours() + 1);
+                const hourEnd = new Date(Math.min(nextHour.getTime(), overTimeOutLocal.getTime()));
+                const hourDiff = this.calculateHours(currentHour, hourEnd, 6);
+                const hour = currentHour.getHours();
+                if (hour >= NIGHT_DIFF_START_HOUR || hour < NIGHT_DIFF_END_HOUR) {
+                    overtimeNightDiffHours += hourDiff;
+                }
+                currentHour = nextHour;
+            }
+        }
+        // Round to 2 decimal places
+        return {
+            regular: Math.round(regularNightDiffHours * 100) / 100,
+            overtime: Math.round(overtimeNightDiffHours * 100) / 100
+        };
     }
     /**
      * Calculate hours between two time points, subtracting break time
@@ -12446,7 +13566,17 @@ let FinalWorkHoursService = class FinalWorkHoursService extends base_service_1.B
             throw new common_1.NotFoundException(`No processed attendances found for cutoff ID: ${cutoffId}`);
         }
         // emit event to recalculate final work hours
-        this.eventEmitter.emit(attendance_event_1.ATTENDANCE_EVENTS.RECALCULATE_FINAL_WORK_HOURS, new attendance_event_1.RecalculateFinalWorkHoursEvent(cutoffId, updatedBy));
+        this.eventEmitter.emit(attendance_event_1.ATTENDANCE_EVENTS.RECALCULATE_FINAL_WORK_HOURS, new attendance_event_1.RecalculateFinalWorkHoursEvent(updatedBy, cutoffId));
+    }
+    /*
+    * Recalculate final work hours for a specific attendance
+    * @param attendanceId ID of the attendance to recalculate
+    * @param updatedBy User who triggered the update
+    */
+    async recalculateByAttendanceId(attendanceId, updatedBy) {
+        // Check if attendance exists'
+        await this.attendancesService.findOneByOrFail({ id: attendanceId });
+        this.eventEmitter.emit(attendance_event_1.ATTENDANCE_EVENTS.RECALCULATE_FINAL_WORK_HOURS, new attendance_event_1.RecalculateFinalWorkHoursEvent(updatedBy, undefined, [attendanceId]));
     }
     /**
      * Updates a FinalWorkHour entity with calculated hours breakdown
@@ -12481,7 +13611,7 @@ exports.FinalWorkHoursService = FinalWorkHoursService;
 exports.FinalWorkHoursService = FinalWorkHoursService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, typeorm_1.InjectRepository)(final_work_hour_entity_1.FinalWorkHour)),
-    __metadata("design:paramtypes", [typeof (_a = typeof typeorm_2.Repository !== "undefined" && typeorm_2.Repository) === "function" ? _a : Object, typeof (_b = typeof users_service_1.UsersService !== "undefined" && users_service_1.UsersService) === "function" ? _b : Object, typeof (_c = typeof event_emitter_1.EventEmitter2 !== "undefined" && event_emitter_1.EventEmitter2) === "function" ? _c : Object, typeof (_d = typeof cutoffs_service_1.CutoffsService !== "undefined" && cutoffs_service_1.CutoffsService) === "function" ? _d : Object])
+    __metadata("design:paramtypes", [typeof (_a = typeof typeorm_2.Repository !== "undefined" && typeorm_2.Repository) === "function" ? _a : Object, typeof (_b = typeof users_service_1.UsersService !== "undefined" && users_service_1.UsersService) === "function" ? _b : Object, typeof (_c = typeof event_emitter_1.EventEmitter2 !== "undefined" && event_emitter_1.EventEmitter2) === "function" ? _c : Object, typeof (_d = typeof cutoffs_service_1.CutoffsService !== "undefined" && cutoffs_service_1.CutoffsService) === "function" ? _d : Object, typeof (_e = typeof attendances_service_1.AttendancesService !== "undefined" && attendances_service_1.AttendancesService) === "function" ? _e : Object])
 ], FinalWorkHoursService);
 
 
@@ -12508,14 +13638,18 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
 var WorkHourCalculationService_1, WorkHourCalculationProcessor_1;
-var _a, _b, _c, _d, _e, _f;
+var _a, _b, _c, _d, _e, _f, _g, _h;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.WorkHourCalculationProcessor = exports.WorkHourCalculationService = void 0;
 const attendance_status_enum_1 = __webpack_require__(/*! @/common/enums/attendance-status.enum */ "./src/common/enums/attendance-status.enum.ts");
+const payroll_state_enum_1 = __webpack_require__(/*! @/common/enums/payroll/payroll-state.enum */ "./src/common/enums/payroll/payroll-state.enum.ts");
+const payrolls_service_1 = __webpack_require__(/*! @/modules/payroll-management/payrolls.service */ "./src/modules/payroll-management/payrolls.service.ts");
 const bull_1 = __webpack_require__(/*! @nestjs/bull */ "@nestjs/bull");
 const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
 const bull_2 = __webpack_require__(/*! bull */ "bull");
+const typeorm_1 = __webpack_require__(/*! typeorm */ "typeorm");
 const uuid_1 = __webpack_require__(/*! uuid */ "uuid");
+const attendance_configurations_service_1 = __webpack_require__(/*! ../../attendance-configurations/attendance-configurations.service */ "./src/modules/attendance-management/attendance-configurations/attendance-configurations.service.ts");
 const attendances_service_1 = __webpack_require__(/*! ../../attendances.service */ "./src/modules/attendance-management/attendances.service.ts");
 const attendance_entity_1 = __webpack_require__(/*! ../../entities/attendance.entity */ "./src/modules/attendance-management/entities/attendance.entity.ts");
 const work_time_requests_service_1 = __webpack_require__(/*! ../../work-time-requests/work-time-requests.service */ "./src/modules/attendance-management/work-time-requests/work-time-requests.service.ts");
@@ -12565,13 +13699,14 @@ exports.WorkHourCalculationService = WorkHourCalculationService = WorkHourCalcul
     __metadata("design:paramtypes", [typeof (_a = typeof bull_2.Queue !== "undefined" && bull_2.Queue) === "function" ? _a : Object])
 ], WorkHourCalculationService);
 let WorkHourCalculationProcessor = WorkHourCalculationProcessor_1 = class WorkHourCalculationProcessor {
-    constructor(attendanceService, finalWorkHourService, workTimeRequestsService) {
+    constructor(attendanceService, finalWorkHourService, workTimeRequestsService, payrollsService, attendanceConfigurationsService) {
         this.attendanceService = attendanceService;
         this.finalWorkHourService = finalWorkHourService;
         this.workTimeRequestsService = workTimeRequestsService;
+        this.payrollsService = payrollsService;
+        this.attendanceConfigurationsService = attendanceConfigurationsService;
         this.logger = new common_1.Logger(WorkHourCalculationProcessor_1.name);
         this.GRACE_PERIOD_MINUTES = 5; // Consider late after 5 minutes
-        this.OVER_TIME_THRESHOLD_MINUTES = 30; // Consider overtime if more than 30 minutes
     }
     async calculateFinalWorkHours(job) {
         const { attendanceIds, batchId, processedBy } = job.data;
@@ -12622,6 +13757,7 @@ let WorkHourCalculationProcessor = WorkHourCalculationProcessor_1 = class WorkHo
             this.logger.log(`Creating new final work hour for attendance ${attendanceId}`);
             finalWorkHour = new final_work_hour_entity_1.FinalWorkHour({});
         }
+        const config = await this.attendanceConfigurationsService.getOrganizationAttendanceConfiguration(attendance.organizationId);
         // Convert schedule times to Date objects when needed
         let timeIn = attendance.timeIn;
         let timeOut = attendance.timeOut;
@@ -12643,23 +13779,25 @@ let WorkHourCalculationProcessor = WorkHourCalculationProcessor_1 = class WorkHo
         }
         // Clone the dates to avoid mutation issues
         const scheduleStartTimePlus = new Date(scheduleStartTime);
-        scheduleStartTimePlus.setMinutes(scheduleStartTimePlus.getMinutes() + this.GRACE_PERIOD_MINUTES);
+        scheduleStartTimePlus.setMinutes(scheduleStartTimePlus.getMinutes() + config.gracePeriodMinutes);
         // Handle timeIn logic
         if (!timeIn) {
             // Check if attendance status contains absent
             if (((_a = attendance.statuses) === null || _a === void 0 ? void 0 : _a.includes(attendance_status_enum_1.AttendanceStatus.ABSENT)) === false) {
-                noTimeInHours = 1;
+                noTimeInHours = config.noTimeInDeductionMinutes / 60;
             }
         }
-        else if (timeIn <= scheduleStartTimePlus) {
-            timeIn = new Date(scheduleStartTime);
-            this.logger.log(`TimeIn is within grace period for attendance ${attendanceId}, using schedule start time`);
+        else if (timeIn < scheduleStartTime) {
+            // check if config allow early check in
+            if (!config.allowEarlyTime) {
+                timeIn = new Date(scheduleStartTime);
+            }
         }
         // Handle timeOut logic
         if (!timeOut) {
             // Check if attendance status contains absent
             if (((_b = attendance.statuses) === null || _b === void 0 ? void 0 : _b.includes(attendance_status_enum_1.AttendanceStatus.ABSENT)) === false) {
-                noTimeOutHours = 1;
+                noTimeOutHours = config.noTimeOutDeductionMinutes / 60;
             }
         }
         else if (timeOut > scheduleEndTime) {
@@ -12703,6 +13841,16 @@ let WorkHourCalculationProcessor = WorkHourCalculationProcessor_1 = class WorkHo
             });
             // Update work hours breakdown
             await this.finalWorkHourService.updateWorkHoursBreakdown(finalWorkHour.id, processedBy);
+            const payroll = await this.payrollsService.getRepository().findOneOrFail({
+                where: {
+                    cutoff: { id: attendance.schedule.cutoff.id },
+                    employee: { id: attendance.employee.id },
+                    state: (0, typeorm_1.Not)(payroll_state_enum_1.PayrollState.VOID)
+                },
+                relations: { cutoff: true, employee: true }
+            });
+            // Update payrolls if needed
+            await this.payrollsService.recalculatePayroll(payroll === null || payroll === void 0 ? void 0 : payroll.id, { preserveState: true }, processedBy);
         }
         catch (saveError) {
             throw new Error(`Database error while saving final work hour: ${saveError.message}`);
@@ -12713,13 +13861,31 @@ exports.WorkHourCalculationProcessor = WorkHourCalculationProcessor;
 __decorate([
     (0, bull_1.Process)('calculate-final-work-hours'),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [typeof (_e = typeof bull_2.Job !== "undefined" && bull_2.Job) === "function" ? _e : Object]),
-    __metadata("design:returntype", typeof (_f = typeof Promise !== "undefined" && Promise) === "function" ? _f : Object)
+    __metadata("design:paramtypes", [typeof (_g = typeof bull_2.Job !== "undefined" && bull_2.Job) === "function" ? _g : Object]),
+    __metadata("design:returntype", typeof (_h = typeof Promise !== "undefined" && Promise) === "function" ? _h : Object)
 ], WorkHourCalculationProcessor.prototype, "calculateFinalWorkHours", null);
 exports.WorkHourCalculationProcessor = WorkHourCalculationProcessor = WorkHourCalculationProcessor_1 = __decorate([
     (0, bull_1.Processor)('work-hour-calculation'),
-    __metadata("design:paramtypes", [typeof (_b = typeof attendances_service_1.AttendancesService !== "undefined" && attendances_service_1.AttendancesService) === "function" ? _b : Object, typeof (_c = typeof final_work_hours_service_1.FinalWorkHoursService !== "undefined" && final_work_hours_service_1.FinalWorkHoursService) === "function" ? _c : Object, typeof (_d = typeof work_time_requests_service_1.WorkTimeRequestsService !== "undefined" && work_time_requests_service_1.WorkTimeRequestsService) === "function" ? _d : Object])
+    __metadata("design:paramtypes", [typeof (_b = typeof attendances_service_1.AttendancesService !== "undefined" && attendances_service_1.AttendancesService) === "function" ? _b : Object, typeof (_c = typeof final_work_hours_service_1.FinalWorkHoursService !== "undefined" && final_work_hours_service_1.FinalWorkHoursService) === "function" ? _c : Object, typeof (_d = typeof work_time_requests_service_1.WorkTimeRequestsService !== "undefined" && work_time_requests_service_1.WorkTimeRequestsService) === "function" ? _d : Object, typeof (_e = typeof payrolls_service_1.PayrollsService !== "undefined" && payrolls_service_1.PayrollsService) === "function" ? _e : Object, typeof (_f = typeof attendance_configurations_service_1.AttendanceConfigurationsService !== "undefined" && attendance_configurations_service_1.AttendanceConfigurationsService) === "function" ? _f : Object])
 ], WorkHourCalculationProcessor);
+
+
+/***/ }),
+
+/***/ "./src/modules/attendance-management/gateways/attendances.gateway.ts":
+/*!***************************************************************************!*\
+  !*** ./src/modules/attendance-management/gateways/attendances.gateway.ts ***!
+  \***************************************************************************/
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.AttendancesGateway = void 0;
+const create_gateway_factory_1 = __webpack_require__(/*! @/common/factories/create-gateway.factory */ "./src/common/factories/create-gateway.factory.ts");
+class AttendancesGateway extends (0, create_gateway_factory_1.createGateway)('attendances') {
+}
+exports.AttendancesGateway = AttendancesGateway;
 
 
 /***/ }),
@@ -12742,7 +13908,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 var AttendanceListener_1;
-var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m;
+var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.AttendanceListener = void 0;
 const attendance_status_enum_1 = __webpack_require__(/*! @/common/enums/attendance-status.enum */ "./src/common/enums/attendance-status.enum.ts");
@@ -12762,11 +13928,12 @@ const schedules_service_1 = __webpack_require__(/*! @/modules/shift-management/s
 const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
 const event_emitter_1 = __webpack_require__(/*! @nestjs/event-emitter */ "@nestjs/event-emitter");
 const date_fns_1 = __webpack_require__(/*! date-fns */ "date-fns");
+const attendance_configurations_service_1 = __webpack_require__(/*! ../attendance-configurations/attendance-configurations.service */ "./src/modules/attendance-management/attendance-configurations/attendance-configurations.service.ts");
 const final_work_hour_entity_1 = __webpack_require__(/*! ../final-work-hours/entities/final-work-hour.entity */ "./src/modules/attendance-management/final-work-hours/entities/final-work-hour.entity.ts");
 const work_hour_calculation_service_1 = __webpack_require__(/*! ../final-work-hours/services/work-hour-calculation.service */ "./src/modules/attendance-management/final-work-hours/services/work-hour-calculation.service.ts");
 const work_time_requests_service_1 = __webpack_require__(/*! ../work-time-requests/work-time-requests.service */ "./src/modules/attendance-management/work-time-requests/work-time-requests.service.ts");
 let AttendanceListener = AttendanceListener_1 = class AttendanceListener {
-    constructor(attendancesService, attendancePunchesService, employeesService, schedulesService, biometricDevicesService, notificationsService, workTimeRequestsService, workHourCalculationService) {
+    constructor(attendancesService, attendancePunchesService, employeesService, schedulesService, biometricDevicesService, notificationsService, workTimeRequestsService, workHourCalculationService, attendanceConfigurationsService) {
         this.attendancesService = attendancesService;
         this.attendancePunchesService = attendancePunchesService;
         this.employeesService = employeesService;
@@ -12775,13 +13942,11 @@ let AttendanceListener = AttendanceListener_1 = class AttendanceListener {
         this.notificationsService = notificationsService;
         this.workTimeRequestsService = workTimeRequestsService;
         this.workHourCalculationService = workHourCalculationService;
+        this.attendanceConfigurationsService = attendanceConfigurationsService;
         this.logger = new common_1.Logger(AttendanceListener_1.name);
-        this.GRACE_PERIOD_MINUTES = 5; // Consider late after 5 minutes
-        this.OVER_TIME_THRESHOLD_MINUTES = 30; // Consider overtime if more than 30 minutes
-        this.UNDER_TIME_THRESHOLD_MINUTES = 0; // Consider under time if less than 30 minutes
     }
     async handleAttendanceRecorded(event) {
-        var _a, _b, _c, _d, _e;
+        var _a, _b, _c, _d, _e, _f;
         // Get the biometric device entity
         const biometricDevice = await this.biometricDevicesService.findOneBy({ deviceId: event.deviceId });
         if (!biometricDevice) {
@@ -12809,6 +13974,7 @@ let AttendanceListener = AttendanceListener_1 = class AttendanceListener {
                     this.logger.warn(`No employee found with biometric ID ${record.userId}`);
                     continue;
                 }
+                const config = await this.attendanceConfigurationsService.getOrganizationAttendanceConfiguration(employee.organizationId);
                 const punchTime = new Date(record.timestamp);
                 const punchDate = (0, date_fns_1.format)(punchTime, 'yyyy-MM-dd');
                 const punchTimeStr = (0, date_fns_1.format)(punchTime, 'HH:mm:ss');
@@ -12900,9 +14066,13 @@ let AttendanceListener = AttendanceListener_1 = class AttendanceListener {
                         employee: { id: employee.id },
                         schedule: { id: todaySchedule.id },
                         cutoff: { id: todaySchedule.cutoff.id },
+                        date: todaySchedule.date,
                         dayType,
-                        createdBy: employee.user.id,
-                    });
+                        organizationId: employee.organizationId,
+                        departmentId: employee.departmentId,
+                        branchId: employee.branchId,
+                        userId: employee.user.id,
+                    }, employee.user.id);
                 }
                 // Determine check-in status based on middle time threshold
                 if ((0, date_fns_1.isBefore)(punchTime, middleTime)) {
@@ -12911,24 +14081,89 @@ let AttendanceListener = AttendanceListener_1 = class AttendanceListener {
                     if (!existingAttendance.timeIn) {
                         // log
                         this.logger.log(`Employee ${employee.user.email} is checking in`);
-                        attendanceStatuses.push(attendance_status_enum_1.AttendanceStatus.CHECKED_IN);
                         // Check if late
                         if ((0, date_fns_1.isAfter)(punchTime, shiftStartTime)) {
                             const minutesLate = (0, date_fns_1.differenceInMinutes)(punchTime, shiftStartTime);
-                            if (minutesLate > this.GRACE_PERIOD_MINUTES) {
-                                attendanceStatuses.push(attendance_status_enum_1.AttendanceStatus.LATE);
-                                this.logger.log(`Employee ${employee.user.email} is late by ${minutesLate} minutes`);
-                                // Create work time request for late arrival
-                                await this.createWorkTimeRequest(dayType, employee.id, attendance_status_enum_1.AttendanceStatus.LATE, existingAttendance, minutesLate);
-                                // Notify employee
-                                await this.notificationsService.create({
-                                    title: 'Late Check-in',
-                                    message: `You are late by ${minutesLate} minutes on ${punchDate} at ${punchTimeStr}.`,
-                                    type: notification_type_enum_1.NotificationType.WARNING,
-                                    category: 'ATTENDANCE',
-                                    user: { id: employee.user.id },
-                                });
+                            // log minutes late
+                            this.logger.log(`Employee ${employee.user.email} is late by ${minutesLate} minutes`);
+                            // Check if orgnaization does not allow late time
+                            if (!config.allowLate) {
+                                // Check if minutes late can be considered as late time
+                                if (minutesLate > config.gracePeriodMinutes) {
+                                    // Mark attendance as late time
+                                    attendanceStatuses.push(attendance_status_enum_1.AttendanceStatus.LATE);
+                                    this.logger.log(`Employee ${employee.user.email} is late by ${minutesLate} minutes`);
+                                    let roundedMinutes = minutesLate;
+                                    // Check if organization rounds up late time
+                                    if (config.roundUpLate) {
+                                        roundedMinutes = Math.ceil(minutesLate / config.roundUpLateMinutes) * config.roundUpLateMinutes;
+                                        this.logger.log(`Rounded late time to ${roundedMinutes} minutes`);
+                                    }
+                                    // Create work time request for late arrival
+                                    await this.createWorkTimeRequest(dayType, employee.id, attendance_status_enum_1.AttendanceStatus.LATE, existingAttendance, roundedMinutes);
+                                    // Notify employee
+                                    await this.notificationsService.create({
+                                        title: 'Late Check-in',
+                                        message: `You are late by ${minutesLate} minutes on ${punchDate} at ${punchTimeStr}.${config.roundUpLate ? ` This was rounded up to ${roundedMinutes} minutes.` : ''}`,
+                                        type: notification_type_enum_1.NotificationType.WARNING,
+                                        category: 'ATTENDANCE',
+                                        user: { id: employee.user.id },
+                                    });
+                                }
+                                else {
+                                    this.logger.log('Minutes late is not considered as late time');
+                                }
                             }
+                            else {
+                                this.logger.log('Organization allows late time');
+                            }
+                        }
+                        else {
+                            let minutesEarly = (0, date_fns_1.differenceInMinutes)(shiftStartTime, punchTime);
+                            // log minutes early
+                            this.logger.log(`Employee ${employee.user.email} is early by ${minutesEarly} minutes`);
+                            // Check organization allow early time
+                            if (config.allowEarlyTime) {
+                                this.logger.log('Organization allows early time');
+                                // Check if minutes early can be considered as early time
+                                if (minutesEarly > config.earlyTimeThresholdMinutes) {
+                                    // Mark attendance as early time
+                                    this.logger.log(`Employee ${employee.user.email} is early by ${minutesEarly} minutes`);
+                                    attendanceStatuses.push(attendance_status_enum_1.AttendanceStatus.EARLY);
+                                    attendanceStatuses.push(attendance_status_enum_1.AttendanceStatus.CHECKED_IN);
+                                    // Check if early time is management-requested
+                                    const isManagementRequested = await this.checkForManagementRequested(employee.id, punchDate, attendance_status_enum_1.AttendanceStatus.EARLY);
+                                    if (isManagementRequested) {
+                                        this.logger.log(`Early time is management-requested`);
+                                        let roundedMinutes = minutesEarly;
+                                        // Check if organization rounds down early time
+                                        if (config.roundDownEarlyTime) {
+                                            // Round down early time by the organization's round down minutes
+                                            roundedMinutes = Math.floor(minutesEarly / config.roundDownEarlyTimeMinutes) * config.roundDownEarlyTimeMinutes;
+                                            this.logger.log(`Rounded early time from ${minutesEarly} to ${roundedMinutes} minutes`);
+                                        }
+                                        // Update management-requested work time request
+                                        isManagementRequested.duration = roundedMinutes;
+                                        isManagementRequested.dayType = dayType;
+                                        isManagementRequested.attendance = existingAttendance;
+                                        await this.workTimeRequestsService.save(isManagementRequested);
+                                        // Notify employee
+                                        await this.notificationsService.create({
+                                            title: 'Early Time Check-in',
+                                            message: `You checked in early by ${minutesEarly} minutes on ${punchDate} at ${punchTimeStr}.${config.roundDownEarlyTime ? ` This was rounded down to ${roundedMinutes} minutes.` : ''}`,
+                                            type: notification_type_enum_1.NotificationType.INFO,
+                                            category: 'ATTENDANCE',
+                                            user: { id: employee.user.id },
+                                        });
+                                    }
+                                }
+                                else {
+                                    this.logger.log('Time in is not considered as early time');
+                                }
+                            }
+                        }
+                        if (!((_b = existingAttendance.statuses) === null || _b === void 0 ? void 0 : _b.includes(attendance_status_enum_1.AttendanceStatus.CHECKED_IN))) {
+                            attendanceStatuses.push(attendance_status_enum_1.AttendanceStatus.CHECKED_IN);
                         }
                         existingAttendance.timeIn = punchTime;
                         existingAttendance.statuses = attendanceStatuses;
@@ -12948,7 +14183,7 @@ let AttendanceListener = AttendanceListener_1 = class AttendanceListener {
                 else {
                     attendanceStatuses = existingAttendance.statuses || [];
                     // log
-                    if (!existingAttendance.timeIn && !((_b = existingAttendance.statuses) === null || _b === void 0 ? void 0 : _b.includes(attendance_status_enum_1.AttendanceStatus.NO_CHECKED_IN))) {
+                    if (!existingAttendance.timeIn && !((_c = existingAttendance.statuses) === null || _c === void 0 ? void 0 : _c.includes(attendance_status_enum_1.AttendanceStatus.NO_CHECKED_IN))) {
                         attendanceStatuses.push(attendance_status_enum_1.AttendanceStatus.NO_CHECKED_IN);
                         // Create work time request for no check in
                         await this.createWorkTimeRequest(dayType, employee.id, attendance_status_enum_1.AttendanceStatus.NO_CHECKED_IN, existingAttendance);
@@ -12966,8 +14201,8 @@ let AttendanceListener = AttendanceListener_1 = class AttendanceListener {
                         // log
                         this.logger.log(`Employee ${employee.user.email} is leaving early on ${punchDate} at ${punchTimeStr}`);
                         const minutesEarly = (0, date_fns_1.differenceInMinutes)(shiftEndTime, punchTime);
-                        if (minutesEarly > this.UNDER_TIME_THRESHOLD_MINUTES) {
-                            if (!((_c = existingAttendance.statuses) === null || _c === void 0 ? void 0 : _c.includes(attendance_status_enum_1.AttendanceStatus.UNDER_TIME))) {
+                        if (!config.allowUnderTime && minutesEarly > config.underTimeThresholdMinutes) {
+                            if (!((_d = existingAttendance.statuses) === null || _d === void 0 ? void 0 : _d.includes(attendance_status_enum_1.AttendanceStatus.UNDER_TIME))) {
                                 attendanceStatuses.push(attendance_status_enum_1.AttendanceStatus.UNDER_TIME);
                             }
                             this.logger.log(`Employee ${employee.id} is leaving ${minutesEarly} minutes early`);
@@ -12982,14 +14217,19 @@ let AttendanceListener = AttendanceListener_1 = class AttendanceListener {
                             //   category: 'ATTENDANCE',
                             //   user: { id: employee.user.id },
                             // });
+                            // if (config.roundDownUnderTime) {
+                            //   const roundedMinutes = Math.floor(minutesEarly / config.roundDownUnderTimeMinutes) * config.roundDownUnderTimeMinutes;
+                            //   punchTime.setMinutes(punchTime.getMinutes() - roundedMinutes);
+                            //   this.logger.log(`Rounded early time to ${roundedMinutes} minutes`);
+                            // }
                         }
                     }
                     else {
                         // Check if employee is overtime
                         attendanceStatuses = attendanceStatuses.filter(status => status !== attendance_status_enum_1.AttendanceStatus.UNDER_TIME);
                         const minutesOvertime = (0, date_fns_1.differenceInMinutes)(punchTime, shiftEndTime);
-                        if (minutesOvertime > this.OVER_TIME_THRESHOLD_MINUTES) {
-                            if (!((_d = existingAttendance.statuses) === null || _d === void 0 ? void 0 : _d.includes(attendance_status_enum_1.AttendanceStatus.OVERTIME))) {
+                        if (config.allowOvertime && minutesOvertime > config.overtimeThresholdMinutes) {
+                            if (!((_e = existingAttendance.statuses) === null || _e === void 0 ? void 0 : _e.includes(attendance_status_enum_1.AttendanceStatus.OVERTIME))) {
                                 attendanceStatuses.push(attendance_status_enum_1.AttendanceStatus.OVERTIME);
                             }
                             this.logger.log(`Employee ${employee.id} worked ${minutesOvertime} minutes overtime`);
@@ -13004,9 +14244,14 @@ let AttendanceListener = AttendanceListener_1 = class AttendanceListener {
                             //   category: 'ATTENDANCE',
                             //   user: { id: employee.user.id },
                             // });
+                            // if (config.roundUpOvertime) {
+                            //   const roundedMinutes = Math.ceil(minutesOvertime / config.roundUpOvertimeMinutes) * config.roundUpOvertimeMinutes;
+                            //   punchTime.setMinutes(punchTime.getMinutes() + roundedMinutes);
+                            //   this.logger.log(`Rounded overtime time to ${roundedMinutes} minutes`);
+                            // }
                         }
                     }
-                    if (!((_e = existingAttendance.statuses) === null || _e === void 0 ? void 0 : _e.includes(attendance_status_enum_1.AttendanceStatus.CHECKED_OUT)))
+                    if (!((_f = existingAttendance.statuses) === null || _f === void 0 ? void 0 : _f.includes(attendance_status_enum_1.AttendanceStatus.CHECKED_OUT)))
                         attendanceStatuses.push(attendance_status_enum_1.AttendanceStatus.CHECKED_OUT);
                     existingAttendance.statuses = [...attendanceStatuses];
                     existingAttendance.updatedBy = employee.user.id;
@@ -13020,9 +14265,12 @@ let AttendanceListener = AttendanceListener_1 = class AttendanceListener {
                     punchType: record.punchType,
                     punchMethod: record.punchMethod,
                     employeeNumber,
+                    userId: employee.user.id,
+                    organizationId: employee.organizationId,
+                    departmentId: employee.departmentId,
+                    branchId: employee.branchId,
                     biometricDevice: { id: biometricDevice.id },
-                    createdBy: employee.user.id,
-                });
+                }, employee.user.id);
                 this.logger.log(`Successfully processed ${record.punchMethod} punch for employee ${employee.user.email} at ${punchTimeStr} with status ${existingAttendance.statuses}`);
             }
             catch (error) {
@@ -13052,7 +14300,7 @@ let AttendanceListener = AttendanceListener_1 = class AttendanceListener {
         const attendances = await this.attendancesService.getRepository().find({
             where: { isProcessed: true, cutoff: { id: event.cutoffId } },
         });
-        const attendanceIds = attendances.map(attendance => attendance.id);
+        const attendanceIds = event.cutoffId ? attendances.map(attendance => attendance.id) : event.specificAttendanceIds || [];
         // Queue the attendances for final work hour calculation
         await this.workHourCalculationService.queueFinalWorkHoursCalculation(attendanceIds, event.recalculatedBy // Since this is triggered by a system process
         );
@@ -13066,6 +14314,7 @@ let AttendanceListener = AttendanceListener_1 = class AttendanceListener {
                 type,
                 duration,
                 dayType,
+                date: attendance.date,
                 status: request_status_enum_1.RequestStatus.PENDING,
                 createdBy: employeeId,
                 employee: { id: employeeId },
@@ -13076,29 +14325,56 @@ let AttendanceListener = AttendanceListener_1 = class AttendanceListener {
             this.logger.error(`Failed to create work time request: ${error.message}`);
         }
     }
+    /**
+     * Checks if there is an approved management request for a specific attendance type on a given date
+     * @param employeeId The employee ID
+     * @param date The date string in YYYY-MM-DD format
+     * @param type The attendance status type to check (EARLY or OVERTIME)
+     * @returns Boolean indicating if an approved management request exists
+     */
+    async checkForManagementRequested(employeeId, date, type) {
+        try {
+            // Check for an approved work time request that was management-requested for this date
+            const request = await this.workTimeRequestsService.findOneBy({
+                employee: new employee_entity_1.Employee({ id: employeeId }),
+                type,
+                managementRequested: true,
+                date: new Date(date),
+                status: request_status_enum_1.RequestStatus.APPROVED,
+            });
+            if (request) {
+                this.logger.log(`Found approved management-requested ${type} for employee ${employeeId} on ${date}`);
+            }
+            return request;
+        }
+        catch (error) {
+            this.logger.error(`Error checking for management-requested ${type}: ${error.message}`);
+            return null;
+        }
+    }
 };
 exports.AttendanceListener = AttendanceListener;
 __decorate([
     (0, event_emitter_1.OnEvent)(attendance_event_1.ATTENDANCE_EVENTS.ATTENDANCE_RECORDED),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [typeof (_j = typeof attendance_event_1.AttendanceRecordedEvent !== "undefined" && attendance_event_1.AttendanceRecordedEvent) === "function" ? _j : Object]),
-    __metadata("design:returntype", typeof (_k = typeof Promise !== "undefined" && Promise) === "function" ? _k : Object)
+    __metadata("design:paramtypes", [typeof (_k = typeof attendance_event_1.AttendanceRecordedEvent !== "undefined" && attendance_event_1.AttendanceRecordedEvent) === "function" ? _k : Object]),
+    __metadata("design:returntype", typeof (_l = typeof Promise !== "undefined" && Promise) === "function" ? _l : Object)
 ], AttendanceListener.prototype, "handleAttendanceRecorded", null);
 __decorate([
     (0, event_emitter_1.OnEvent)(attendance_event_1.ATTENDANCE_EVENTS.ATTENDANCE_PROCESSED),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [typeof (_l = typeof attendance_event_1.AttendanceProcessedEvent !== "undefined" && attendance_event_1.AttendanceProcessedEvent) === "function" ? _l : Object]),
+    __metadata("design:paramtypes", [typeof (_m = typeof attendance_event_1.AttendanceProcessedEvent !== "undefined" && attendance_event_1.AttendanceProcessedEvent) === "function" ? _m : Object]),
     __metadata("design:returntype", Promise)
 ], AttendanceListener.prototype, "handleAttendanceProcessedEvent", null);
 __decorate([
     (0, event_emitter_1.OnEvent)(attendance_event_1.ATTENDANCE_EVENTS.RECALCULATE_FINAL_WORK_HOURS),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [typeof (_m = typeof attendance_event_1.RecalculateFinalWorkHoursEvent !== "undefined" && attendance_event_1.RecalculateFinalWorkHoursEvent) === "function" ? _m : Object]),
+    __metadata("design:paramtypes", [typeof (_o = typeof attendance_event_1.RecalculateFinalWorkHoursEvent !== "undefined" && attendance_event_1.RecalculateFinalWorkHoursEvent) === "function" ? _o : Object]),
     __metadata("design:returntype", Promise)
 ], AttendanceListener.prototype, "handleRecalculateFinalWorkHoursEvent", null);
 exports.AttendanceListener = AttendanceListener = AttendanceListener_1 = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [typeof (_a = typeof attendances_service_1.AttendancesService !== "undefined" && attendances_service_1.AttendancesService) === "function" ? _a : Object, typeof (_b = typeof attendance_punches_service_1.AttendancePunchesService !== "undefined" && attendance_punches_service_1.AttendancePunchesService) === "function" ? _b : Object, typeof (_c = typeof employees_service_1.EmployeesService !== "undefined" && employees_service_1.EmployeesService) === "function" ? _c : Object, typeof (_d = typeof schedules_service_1.SchedulesService !== "undefined" && schedules_service_1.SchedulesService) === "function" ? _d : Object, typeof (_e = typeof biometric_devices_service_1.BiometricDevicesService !== "undefined" && biometric_devices_service_1.BiometricDevicesService) === "function" ? _e : Object, typeof (_f = typeof notifications_service_1.NotificationsService !== "undefined" && notifications_service_1.NotificationsService) === "function" ? _f : Object, typeof (_g = typeof work_time_requests_service_1.WorkTimeRequestsService !== "undefined" && work_time_requests_service_1.WorkTimeRequestsService) === "function" ? _g : Object, typeof (_h = typeof work_hour_calculation_service_1.WorkHourCalculationService !== "undefined" && work_hour_calculation_service_1.WorkHourCalculationService) === "function" ? _h : Object])
+    __metadata("design:paramtypes", [typeof (_a = typeof attendances_service_1.AttendancesService !== "undefined" && attendances_service_1.AttendancesService) === "function" ? _a : Object, typeof (_b = typeof attendance_punches_service_1.AttendancePunchesService !== "undefined" && attendance_punches_service_1.AttendancePunchesService) === "function" ? _b : Object, typeof (_c = typeof employees_service_1.EmployeesService !== "undefined" && employees_service_1.EmployeesService) === "function" ? _c : Object, typeof (_d = typeof schedules_service_1.SchedulesService !== "undefined" && schedules_service_1.SchedulesService) === "function" ? _d : Object, typeof (_e = typeof biometric_devices_service_1.BiometricDevicesService !== "undefined" && biometric_devices_service_1.BiometricDevicesService) === "function" ? _e : Object, typeof (_f = typeof notifications_service_1.NotificationsService !== "undefined" && notifications_service_1.NotificationsService) === "function" ? _f : Object, typeof (_g = typeof work_time_requests_service_1.WorkTimeRequestsService !== "undefined" && work_time_requests_service_1.WorkTimeRequestsService) === "function" ? _g : Object, typeof (_h = typeof work_hour_calculation_service_1.WorkHourCalculationService !== "undefined" && work_hour_calculation_service_1.WorkHourCalculationService) === "function" ? _h : Object, typeof (_j = typeof attendance_configurations_service_1.AttendanceConfigurationsService !== "undefined" && attendance_configurations_service_1.AttendanceConfigurationsService) === "function" ? _j : Object])
 ], AttendanceListener);
 
 
@@ -13445,6 +14721,107 @@ exports.AttendanceDataSeederService = AttendanceDataSeederService = AttendanceDa
 
 /***/ }),
 
+/***/ "./src/modules/attendance-management/work-time-requests/dtos/management-work-time-request.dto.ts":
+/*!*******************************************************************************************************!*\
+  !*** ./src/modules/attendance-management/work-time-requests/dtos/management-work-time-request.dto.ts ***!
+  \*******************************************************************************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+"use strict";
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var _a;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.ManagementWorkTimeRequestDto = void 0;
+const attendance_status_enum_1 = __webpack_require__(/*! @/common/enums/attendance-status.enum */ "./src/common/enums/attendance-status.enum.ts");
+const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
+const class_validator_1 = __webpack_require__(/*! class-validator */ "class-validator");
+class ManagementWorkTimeRequestDto {
+}
+exports.ManagementWorkTimeRequestDto = ManagementWorkTimeRequestDto;
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'ID of a single employee (use either this or groupId or employeeIds)',
+        example: '123e4567-e89b-12d3-a456-426614174000',
+    }),
+    (0, class_validator_1.IsUUID)('4', { message: 'Employee ID must be a valid UUID' }),
+    (0, class_validator_1.ValidateIf)(o => !o.groupId && !o.employeeIds),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], ManagementWorkTimeRequestDto.prototype, "employeeId", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'IDs of multiple employees (use either this or employeeId or groupId)',
+        example: ['123e4567-e89b-12d3-a456-426614174000', '223e4567-e89b-12d3-a456-426614174000'],
+        type: [String],
+    }),
+    (0, class_validator_1.IsUUID)('4', { each: true, message: 'Each employee ID must be a valid UUID' }),
+    (0, class_validator_1.ValidateIf)(o => !o.groupId && !o.employeeId),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Array)
+], ManagementWorkTimeRequestDto.prototype, "employeeIds", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'ID of a shift group (use either this or employeeId or employeeIds)',
+        example: '123e4567-e89b-12d3-a456-426614174000',
+    }),
+    (0, class_validator_1.IsUUID)('4', { message: 'Group ID must be a valid UUID' }),
+    (0, class_validator_1.ValidateIf)(o => !o.employeeId && !o.employeeIds),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], ManagementWorkTimeRequestDto.prototype, "groupId", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Date of the work request (YYYY-MM-DD)',
+        example: '2023-05-15',
+        type: String,
+    }),
+    (0, class_validator_1.IsDateString)({}, { message: 'Date must be in YYYY-MM-DD format' }),
+    __metadata("design:type", String)
+], ManagementWorkTimeRequestDto.prototype, "date", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Type of work time request',
+        enum: [attendance_status_enum_1.AttendanceStatus.EARLY, attendance_status_enum_1.AttendanceStatus.OVERTIME],
+        example: attendance_status_enum_1.AttendanceStatus.EARLY,
+    }),
+    (0, class_validator_1.IsEnum)(attendance_status_enum_1.AttendanceStatus, { message: 'Type must be either EARLY or OVERTIME' }),
+    (0, class_validator_1.IsIn)([attendance_status_enum_1.AttendanceStatus.EARLY, attendance_status_enum_1.AttendanceStatus.OVERTIME], {
+        message: 'Only EARLY or OVERTIME request types are allowed'
+    }),
+    __metadata("design:type", typeof (_a = typeof attendance_status_enum_1.AttendanceStatus !== "undefined" && attendance_status_enum_1.AttendanceStatus) === "function" ? _a : Object)
+], ManagementWorkTimeRequestDto.prototype, "type", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'Indicates if early time should be considered as overtime',
+        example: false,
+    }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsBoolean)(),
+    __metadata("design:type", Boolean)
+], ManagementWorkTimeRequestDto.prototype, "earlyTimeAsOvertime", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Reason for the work request',
+        example: 'Special project preparation',
+        minLength: 5,
+        maxLength: 500,
+    }),
+    (0, class_validator_1.IsString)({ message: 'Reason must be a string' }),
+    __metadata("design:type", String)
+], ManagementWorkTimeRequestDto.prototype, "reason", void 0);
+
+
+/***/ }),
+
 /***/ "./src/modules/attendance-management/work-time-requests/dtos/work-time-request.dto.ts":
 /*!********************************************************************************************!*\
   !*** ./src/modules/attendance-management/work-time-requests/dtos/work-time-request.dto.ts ***!
@@ -13462,7 +14839,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
-var _a, _b, _c, _d, _e;
+var _a, _b, _c, _d, _e, _f;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.GetWorkTimeRequestDto = exports.UpdateWorkTimeRequestDto = exports.WorkTimeRequestDto = void 0;
 const base_dto_1 = __webpack_require__(/*! @/common/dtos/base.dto */ "./src/common/dtos/base.dto.ts");
@@ -13488,16 +14865,6 @@ __decorate([
     __metadata("design:type", typeof (_a = typeof reference_dto_1.ReferenceDto !== "undefined" && reference_dto_1.ReferenceDto) === "function" ? _a : Object)
 ], WorkTimeRequestDto.prototype, "employee", void 0);
 __decorate([
-    (0, swagger_1.ApiPropertyOptional)({
-        description: 'Status of the work time request',
-        enum: request_status_enum_1.RequestStatus,
-        example: request_status_enum_1.RequestStatus.PENDING,
-    }),
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsEnum)(request_status_enum_1.RequestStatus),
-    __metadata("design:type", typeof (_b = typeof request_status_enum_1.RequestStatus !== "undefined" && request_status_enum_1.RequestStatus) === "function" ? _b : Object)
-], WorkTimeRequestDto.prototype, "status", void 0);
-__decorate([
     (0, swagger_1.ApiProperty)({
         description: 'Type of attendance',
         enum: attendance_status_enum_1.AttendanceStatus,
@@ -13505,7 +14872,7 @@ __decorate([
     }),
     (0, class_validator_1.IsNotEmpty)(),
     (0, class_validator_1.IsEnum)(attendance_status_enum_1.AttendanceStatus),
-    __metadata("design:type", typeof (_c = typeof attendance_status_enum_1.AttendanceStatus !== "undefined" && attendance_status_enum_1.AttendanceStatus) === "function" ? _c : Object)
+    __metadata("design:type", typeof (_b = typeof attendance_status_enum_1.AttendanceStatus !== "undefined" && attendance_status_enum_1.AttendanceStatus) === "function" ? _b : Object)
 ], WorkTimeRequestDto.prototype, "type", void 0);
 __decorate([
     (0, swagger_1.ApiPropertyOptional)({
@@ -13525,7 +14892,7 @@ __decorate([
     }),
     (0, class_validator_1.IsNotEmpty)(),
     (0, class_validator_1.IsEnum)(final_work_hour_entity_1.DayType),
-    __metadata("design:type", typeof (_d = typeof final_work_hour_entity_1.DayType !== "undefined" && final_work_hour_entity_1.DayType) === "function" ? _d : Object)
+    __metadata("design:type", typeof (_c = typeof final_work_hour_entity_1.DayType !== "undefined" && final_work_hour_entity_1.DayType) === "function" ? _c : Object)
 ], WorkTimeRequestDto.prototype, "dayType", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({
@@ -13535,7 +14902,7 @@ __decorate([
     (0, class_validator_1.ValidateNested)(),
     (0, class_transformer_1.Type)(() => reference_dto_1.ReferenceDto),
     (0, class_validator_1.IsNotEmpty)(),
-    __metadata("design:type", typeof (_e = typeof reference_dto_1.ReferenceDto !== "undefined" && reference_dto_1.ReferenceDto) === "function" ? _e : Object)
+    __metadata("design:type", typeof (_d = typeof reference_dto_1.ReferenceDto !== "undefined" && reference_dto_1.ReferenceDto) === "function" ? _d : Object)
 ], WorkTimeRequestDto.prototype, "attendance", void 0);
 __decorate([
     (0, swagger_1.ApiPropertyOptional)({
@@ -13560,12 +14927,50 @@ __decorate([
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], WorkTimeRequestDto.prototype, "reason", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'Indicates if early time should be considered as overtime',
+        example: false,
+    }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsBoolean)(),
+    __metadata("design:type", Boolean)
+], WorkTimeRequestDto.prototype, "earlyTimeAsOvertime", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'Indicates if this request was initiated by management',
+        example: false,
+    }),
+    (0, class_validator_1.IsBoolean)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Boolean)
+], WorkTimeRequestDto.prototype, "managementRequested", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'ID of the manager who requested this (if management requested)',
+        example: '123e4567-e89b-12d3-a456-426614174000',
+    }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.ValidateNested)(),
+    (0, class_transformer_1.Type)(() => reference_dto_1.ReferenceDto),
+    __metadata("design:type", typeof (_e = typeof reference_dto_1.ReferenceDto !== "undefined" && reference_dto_1.ReferenceDto) === "function" ? _e : Object)
+], WorkTimeRequestDto.prototype, "requestedByManager", void 0);
 class UpdateWorkTimeRequestDto extends (0, swagger_1.PartialType)(WorkTimeRequestDto) {
 }
 exports.UpdateWorkTimeRequestDto = UpdateWorkTimeRequestDto;
 class GetWorkTimeRequestDto extends (0, create_get_dto_factory_1.createGetDto)(UpdateWorkTimeRequestDto, 'work time request') {
 }
 exports.GetWorkTimeRequestDto = GetWorkTimeRequestDto;
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'Status of the work time request',
+        enum: request_status_enum_1.RequestStatus,
+        example: request_status_enum_1.RequestStatus.PENDING,
+    }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsEnum)(request_status_enum_1.RequestStatus),
+    __metadata("design:type", typeof (_f = typeof request_status_enum_1.RequestStatus !== "undefined" && request_status_enum_1.RequestStatus) === "function" ? _f : Object)
+], GetWorkTimeRequestDto.prototype, "status", void 0);
 
 
 /***/ }),
@@ -13587,7 +14992,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
-var _a, _b, _c, _d, _e, _f, _g;
+var _a, _b, _c, _d, _e, _f, _g, _h, _j;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.WorkTimeRequest = void 0;
 const attendance_status_enum_1 = __webpack_require__(/*! @/common/enums/attendance-status.enum */ "./src/common/enums/attendance-status.enum.ts");
@@ -13621,25 +15026,29 @@ __decorate([
     __metadata("design:type", Number)
 ], WorkTimeRequest.prototype, "duration", void 0);
 __decorate([
+    (0, typeorm_1.Column)({ type: 'date' }),
+    __metadata("design:type", typeof (_d = typeof Date !== "undefined" && Date) === "function" ? _d : Object)
+], WorkTimeRequest.prototype, "date", void 0);
+__decorate([
     (0, typeorm_1.Column)({
         type: 'enum',
         enum: final_work_hour_entity_1.DayType,
         default: final_work_hour_entity_1.DayType.REGULAR_DAY
     }),
-    __metadata("design:type", typeof (_d = typeof final_work_hour_entity_1.DayType !== "undefined" && final_work_hour_entity_1.DayType) === "function" ? _d : Object)
+    __metadata("design:type", typeof (_e = typeof final_work_hour_entity_1.DayType !== "undefined" && final_work_hour_entity_1.DayType) === "function" ? _e : Object)
 ], WorkTimeRequest.prototype, "dayType", void 0);
 __decorate([
-    (0, typeorm_1.ManyToOne)(() => attendance_entity_1.Attendance, (attendance) => attendance.workTimeRequests),
+    (0, typeorm_1.ManyToOne)(() => attendance_entity_1.Attendance, (attendance) => attendance.workTimeRequests, { nullable: true }),
     (0, typeorm_1.JoinColumn)({ name: 'attendanceId' }),
-    __metadata("design:type", typeof (_e = typeof attendance_entity_1.Attendance !== "undefined" && attendance_entity_1.Attendance) === "function" ? _e : Object)
+    __metadata("design:type", typeof (_f = typeof attendance_entity_1.Attendance !== "undefined" && attendance_entity_1.Attendance) === "function" ? _f : Object)
 ], WorkTimeRequest.prototype, "attendance", void 0);
 __decorate([
     (0, typeorm_1.ManyToOne)(() => cutoff_entity_1.Cutoff, (cutoff) => cutoff.workTimeRequests),
     (0, typeorm_1.JoinColumn)({ name: 'cutoffId' }),
-    __metadata("design:type", typeof (_f = typeof cutoff_entity_1.Cutoff !== "undefined" && cutoff_entity_1.Cutoff) === "function" ? _f : Object)
+    __metadata("design:type", typeof (_g = typeof cutoff_entity_1.Cutoff !== "undefined" && cutoff_entity_1.Cutoff) === "function" ? _g : Object)
 ], WorkTimeRequest.prototype, "cutoff", void 0);
 __decorate([
-    (0, typeorm_1.OneToMany)(() => document_entity_1.Document, (document) => document.workTimeRequest, { nullable: true }),
+    (0, typeorm_1.OneToMany)(() => document_entity_1.Document, (document) => document.workTimeRequest, { nullable: true, cascade: true }),
     __metadata("design:type", Array)
 ], WorkTimeRequest.prototype, "documents", void 0);
 __decorate([
@@ -13647,8 +15056,21 @@ __decorate([
     __metadata("design:type", String)
 ], WorkTimeRequest.prototype, "reason", void 0);
 __decorate([
+    (0, typeorm_1.Column)({ default: false }),
+    __metadata("design:type", Boolean)
+], WorkTimeRequest.prototype, "earlyTimeAsOvertime", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'boolean', default: false }),
+    __metadata("design:type", Boolean)
+], WorkTimeRequest.prototype, "managementRequested", void 0);
+__decorate([
+    (0, typeorm_1.ManyToOne)(() => employee_entity_1.Employee, { nullable: true }),
+    (0, typeorm_1.JoinColumn)({ name: 'requestedByManagerId' }),
+    __metadata("design:type", typeof (_h = typeof employee_entity_1.Employee !== "undefined" && employee_entity_1.Employee) === "function" ? _h : Object)
+], WorkTimeRequest.prototype, "requestedByManager", void 0);
+__decorate([
     (0, typeorm_1.OneToOne)(() => work_time_response_entity_1.WorkTimeResponse, (workTimeResponse) => workTimeResponse.workTimeRequest, { eager: true, nullable: true }),
-    __metadata("design:type", typeof (_g = typeof work_time_response_entity_1.WorkTimeResponse !== "undefined" && work_time_response_entity_1.WorkTimeResponse) === "function" ? _g : Object)
+    __metadata("design:type", typeof (_j = typeof work_time_response_entity_1.WorkTimeResponse !== "undefined" && work_time_response_entity_1.WorkTimeResponse) === "function" ? _j : Object)
 ], WorkTimeRequest.prototype, "workTimeResponse", void 0);
 exports.WorkTimeRequest = WorkTimeRequest = __decorate([
     (0, typeorm_1.Entity)('work-time-requests')
@@ -13697,10 +15119,16 @@ let WorkTimeListener = WorkTimeListener_1 = class WorkTimeListener {
             this.logger.warn('Work time request ID is missing');
             return;
         }
-        await this.workTimeRequestsService.update(event.workTimeRequestId, {
+        let workTimeRequest = await this.workTimeRequestsService.update(event.workTimeRequestId, {
             status: event.isApproved === true ? request_status_enum_1.RequestStatus.APPROVED : (event.isApproved === false ? request_status_enum_1.RequestStatus.REJECTED : request_status_enum_1.RequestStatus.PENDING),
         }, event.respondedBy);
+        workTimeRequest = await this.workTimeRequestsService.findOneByOrFail({ id: event.workTimeRequestId });
+        if (!workTimeRequest.attendance) {
+            this.logger.warn('Work time request attendance is missing');
+            return;
+        }
         // recalculate final work hours for the attendance only
+        await this.finalWorkHoursService.recalculateByAttendanceId(workTimeRequest.attendance.id, event.respondedBy);
     }
 };
 exports.WorkTimeListener = WorkTimeListener;
@@ -13722,13 +15150,33 @@ exports.WorkTimeListener = WorkTimeListener = WorkTimeListener_1 = __decorate([
 /*!***********************************************************************************************!*\
   !*** ./src/modules/attendance-management/work-time-requests/work-time-requests.controller.ts ***!
   \***********************************************************************************************/
-/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
 
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
+var _a, _b;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.WorkTimeRequestsController = void 0;
+const authorize_decorator_1 = __webpack_require__(/*! @/common/decorators/authorize.decorator */ "./src/common/decorators/authorize.decorator.ts");
+const current_user_decorator_1 = __webpack_require__(/*! @/common/decorators/current-user.decorator */ "./src/common/decorators/current-user.decorator.ts");
+const generalresponse_dto_1 = __webpack_require__(/*! @/common/dtos/generalresponse.dto */ "./src/common/dtos/generalresponse.dto.ts");
+const action_enum_1 = __webpack_require__(/*! @/common/enums/action.enum */ "./src/common/enums/action.enum.ts");
 const create_controller_factory_1 = __webpack_require__(/*! @/common/factories/create-controller.factory */ "./src/common/factories/create-controller.factory.ts");
+const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
+const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
+const management_work_time_request_dto_1 = __webpack_require__(/*! ./dtos/management-work-time-request.dto */ "./src/modules/attendance-management/work-time-requests/dtos/management-work-time-request.dto.ts");
 const work_time_request_dto_1 = __webpack_require__(/*! ./dtos/work-time-request.dto */ "./src/modules/attendance-management/work-time-requests/dtos/work-time-request.dto.ts");
 const work_time_request_entity_1 = __webpack_require__(/*! ./entities/work-time-request.entity */ "./src/modules/attendance-management/work-time-requests/entities/work-time-request.entity.ts");
 const work_time_requests_service_1 = __webpack_require__(/*! ./work-time-requests.service */ "./src/modules/attendance-management/work-time-requests/work-time-requests.service.ts");
@@ -13739,8 +15187,34 @@ class WorkTimeRequestsController extends (0, create_controller_factory_1.createC
     async softDelete(id, deletedBy) {
         return await super.softDelete(id, deletedBy);
     }
+    async createManagementWorkRequest(dto, managerId) {
+        const success = await this.baseService.createManagementWorkRequest(dto, managerId);
+        return {
+            message: 'Management work time request created successfully'
+        };
+    }
 }
 exports.WorkTimeRequestsController = WorkTimeRequestsController;
+__decorate([
+    (0, common_1.Post)('management'),
+    (0, authorize_decorator_1.Authorize)({ endpointType: action_enum_1.Action.CREATE }),
+    (0, swagger_1.ApiOperation)({
+        summary: 'Create management-requested work time requests',
+        description: 'Creates early arrival or overtime requests for one or more employees'
+    }),
+    (0, swagger_1.ApiBody)({ type: management_work_time_request_dto_1.ManagementWorkTimeRequestDto, description: 'Management work time request', required: true }),
+    (0, swagger_1.ApiResponse)({ status: common_1.HttpStatus.OK, description: 'Management work time request created successfully', type: generalresponse_dto_1.GeneralResponseDto }),
+    (0, swagger_1.ApiResponse)({ status: common_1.HttpStatus.BAD_REQUEST, description: 'Invalid request parameters' }),
+    (0, swagger_1.ApiResponse)({ status: common_1.HttpStatus.UNAUTHORIZED, description: 'Unauthorized' }),
+    (0, swagger_1.ApiResponse)({ status: common_1.HttpStatus.FORBIDDEN, description: 'Forbidden' }),
+    (0, swagger_1.ApiResponse)({ status: common_1.HttpStatus.INTERNAL_SERVER_ERROR, description: 'Internal server error' }),
+    (0, swagger_1.ApiResponse)({ status: common_1.HttpStatus.NOT_FOUND, description: 'Manager, employee(s), or schedule(s) not found' }),
+    __param(0, (0, common_1.Body)()),
+    __param(1, (0, current_user_decorator_1.CurrentUser)('sub')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [typeof (_a = typeof management_work_time_request_dto_1.ManagementWorkTimeRequestDto !== "undefined" && management_work_time_request_dto_1.ManagementWorkTimeRequestDto) === "function" ? _a : Object, String]),
+    __metadata("design:returntype", typeof (_b = typeof Promise !== "undefined" && Promise) === "function" ? _b : Object)
+], WorkTimeRequestsController.prototype, "createManagementWorkRequest", null);
 
 
 /***/ }),
@@ -13761,13 +15235,18 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.WorkTimeRequestsModule = void 0;
+const documents_module_1 = __webpack_require__(/*! @/modules/documents/documents.module */ "./src/modules/documents/documents.module.ts");
+const employee_management_module_1 = __webpack_require__(/*! @/modules/employee-management/employee-management.module */ "./src/modules/employee-management/employee-management.module.ts");
+const shift_management_module_1 = __webpack_require__(/*! @/modules/shift-management/shift-management.module */ "./src/modules/shift-management/shift-management.module.ts");
 const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
 const typeorm_1 = __webpack_require__(/*! @nestjs/typeorm */ "@nestjs/typeorm");
+const attendance_configurations_module_1 = __webpack_require__(/*! ../attendance-configurations/attendance-configurations.module */ "./src/modules/attendance-management/attendance-configurations/attendance-configurations.module.ts");
 const final_work_hours_module_1 = __webpack_require__(/*! ../final-work-hours/final-work-hours.module */ "./src/modules/attendance-management/final-work-hours/final-work-hours.module.ts");
 const work_time_request_entity_1 = __webpack_require__(/*! ./entities/work-time-request.entity */ "./src/modules/attendance-management/work-time-requests/entities/work-time-request.entity.ts");
 const work_time_listener_1 = __webpack_require__(/*! ./listener/work-time.listener */ "./src/modules/attendance-management/work-time-requests/listener/work-time.listener.ts");
 const work_time_requests_controller_1 = __webpack_require__(/*! ./work-time-requests.controller */ "./src/modules/attendance-management/work-time-requests/work-time-requests.controller.ts");
 const work_time_requests_service_1 = __webpack_require__(/*! ./work-time-requests.service */ "./src/modules/attendance-management/work-time-requests/work-time-requests.service.ts");
+const work_time_responses_module_1 = __webpack_require__(/*! ./work-time-responses/work-time-responses.module */ "./src/modules/attendance-management/work-time-requests/work-time-responses/work-time-responses.module.ts");
 let WorkTimeRequestsModule = class WorkTimeRequestsModule {
 };
 exports.WorkTimeRequestsModule = WorkTimeRequestsModule;
@@ -13775,11 +15254,17 @@ exports.WorkTimeRequestsModule = WorkTimeRequestsModule = __decorate([
     (0, common_1.Module)({
         imports: [
             typeorm_1.TypeOrmModule.forFeature([work_time_request_entity_1.WorkTimeRequest]),
-            final_work_hours_module_1.FinalWorkHoursModule
+            (0, common_1.forwardRef)(() => final_work_hours_module_1.FinalWorkHoursModule),
+            documents_module_1.DocumentsModule,
+            employee_management_module_1.EmployeeManagementModule,
+            shift_management_module_1.ShiftManagementModule,
+            attendance_configurations_module_1.AttendanceConfigurationsModule,
+            work_time_responses_module_1.WorkTimeResponsesModule,
         ],
         providers: [work_time_requests_service_1.WorkTimeRequestsService, work_time_listener_1.WorkTimeListener],
         exports: [
             work_time_requests_service_1.WorkTimeRequestsService,
+            work_time_responses_module_1.WorkTimeResponsesModule,
         ],
         controllers: [work_time_requests_controller_1.WorkTimeRequestsController],
     })
@@ -13808,33 +15293,203 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-var _a, _b;
+var _a, _b, _c, _d, _e, _f, _g, _h, _j;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.WorkTimeRequestsService = void 0;
+const attendance_status_enum_1 = __webpack_require__(/*! @/common/enums/attendance-status.enum */ "./src/common/enums/attendance-status.enum.ts");
+const notification_type_enum_1 = __webpack_require__(/*! @/common/enums/notification-type.enum */ "./src/common/enums/notification-type.enum.ts");
+const request_status_enum_1 = __webpack_require__(/*! @/common/enums/request-status.enum */ "./src/common/enums/request-status.enum.ts");
 const base_service_1 = __webpack_require__(/*! @/common/services/base.service */ "./src/common/services/base.service.ts");
 const users_service_1 = __webpack_require__(/*! @/modules/account-management/users/users.service */ "./src/modules/account-management/users/users.service.ts");
+const documents_service_1 = __webpack_require__(/*! @/modules/documents/documents.service */ "./src/modules/documents/documents.service.ts");
+const employees_service_1 = __webpack_require__(/*! @/modules/employee-management/employees.service */ "./src/modules/employee-management/employees.service.ts");
+const employee_entity_1 = __webpack_require__(/*! @/modules/employee-management/entities/employee.entity */ "./src/modules/employee-management/entities/employee.entity.ts");
+const notifications_service_1 = __webpack_require__(/*! @/modules/notifications/notifications.service */ "./src/modules/notifications/notifications.service.ts");
+const groups_service_1 = __webpack_require__(/*! @/modules/shift-management/groups/groups.service */ "./src/modules/shift-management/groups/groups.service.ts");
+const schedules_service_1 = __webpack_require__(/*! @/modules/shift-management/schedules/schedules.service */ "./src/modules/shift-management/schedules/schedules.service.ts");
 const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
 const typeorm_1 = __webpack_require__(/*! @nestjs/typeorm */ "@nestjs/typeorm");
 const typeorm_2 = __webpack_require__(/*! typeorm */ "typeorm");
+const attendance_configurations_service_1 = __webpack_require__(/*! ../attendance-configurations/attendance-configurations.service */ "./src/modules/attendance-management/attendance-configurations/attendance-configurations.service.ts");
 const work_time_request_entity_1 = __webpack_require__(/*! ./entities/work-time-request.entity */ "./src/modules/attendance-management/work-time-requests/entities/work-time-request.entity.ts");
+const work_time_responses_service_1 = __webpack_require__(/*! ./work-time-responses/work-time-responses.service */ "./src/modules/attendance-management/work-time-requests/work-time-responses/work-time-responses.service.ts");
 let WorkTimeRequestsService = class WorkTimeRequestsService extends base_service_1.BaseService {
-    constructor(workTimeRequestsRepository, usersService) {
+    constructor(workTimeRequestsRepository, usersService, documentsService, employeesService, schedulesService, groupsService, attendanceConfigurationsService, notificationsService, workTimeResponsesService) {
         super(workTimeRequestsRepository, usersService);
         this.workTimeRequestsRepository = workTimeRequestsRepository;
         this.usersService = usersService;
+        this.documentsService = documentsService;
+        this.employeesService = employeesService;
+        this.schedulesService = schedulesService;
+        this.groupsService = groupsService;
+        this.attendanceConfigurationsService = attendanceConfigurationsService;
+        this.notificationsService = notificationsService;
+        this.workTimeResponsesService = workTimeResponsesService;
     }
-    async update(id, updateDto, updatedBy) {
-        // Perform any additional logic before updating
-        // For example, you might want to check if the request is already approved or denied
-        // Call the base class update method
-        return super.update(id, updateDto, updatedBy);
+    async validateBefore(dto) {
+        // Validate that the worktime request exists and doesn't already have a response
+        dto = await this.validateReferences(dto, [
+            {
+                field: 'documents',
+                service: this.documentsService,
+                required: true
+            },
+            {
+                field: 'employee',
+                service: this.employeesService,
+                required: true
+            }
+        ]);
+    }
+    async createManagementWorkRequest(dto, managerId) {
+        var _a;
+        // Get the manager's information to validate permissions
+        const manager = await this.usersService.findOneByOrFail({ id: managerId }, { relations: { employee: true } });
+        if (!manager.employee) {
+            throw new common_1.BadRequestException('Only managers with employee records can create management requests');
+        }
+        const config = await this.attendanceConfigurationsService.getOrganizationAttendanceConfiguration(manager.employee.organizationId);
+        // check if config allow over time and early time
+        if (dto.type === attendance_status_enum_1.AttendanceStatus.EARLY && !config.allowEarlyTime) {
+            throw new common_1.BadRequestException('The organization does not allow early time. Please check the attendance configuration.');
+        }
+        if (dto.type === attendance_status_enum_1.AttendanceStatus.OVERTIME && !config.allowOvertime) {
+            throw new common_1.BadRequestException('The organization does not allow overtime. Please check the attendance configuration.');
+        }
+        // Validate that at least one employee selection method is provided
+        if (!dto.employeeId && !((_a = dto.employeeIds) === null || _a === void 0 ? void 0 : _a.length) && !dto.groupId) {
+            throw new common_1.BadRequestException('Must provide either employeeId, employeeIds, or groupId');
+        }
+        // Determine which employees to create requests for
+        let employeeIds = [];
+        if (dto.employeeId) {
+            // Single employee
+            employeeIds = [dto.employeeId];
+        }
+        else if (dto.employeeIds && dto.employeeIds.length > 0) {
+            // Multiple specific employees
+            employeeIds = dto.employeeIds;
+        }
+        else if (dto.groupId) {
+            // All employees in a shift group
+            const group = await this.groupsService.findOneByOrFail({ id: dto.groupId }, {
+                relations: { employees: true }
+            });
+            if (!group || !group.employees || group.employees.length === 0) {
+                throw new common_1.BadRequestException(`No employees found in group with ID ${dto.groupId}`);
+            }
+            employeeIds = group.employees.map(emp => emp.id);
+        }
+        if (employeeIds.length === 0) {
+            throw new common_1.BadRequestException('No valid employees found for the request');
+        }
+        this.logger.log(`Creating ${dto.type} requests for ${employeeIds.length} employees`);
+        // For large employee sets, process in batches to avoid memory issues
+        const BATCH_SIZE = 50;
+        const createdRequests = [];
+        const failedEmployees = [];
+        // Get all employees with their user info in a single query for notification efficiency
+        const employees = await this.employeesService.getRepository().find({
+            where: { id: (0, typeorm_2.In)(employeeIds) },
+            relations: { user: true }
+        });
+        const employeeMap = new Map(employees.map(emp => [emp.id, emp]));
+        // Process in batches
+        for (let i = 0; i < employeeIds.length; i += BATCH_SIZE) {
+            const batchIds = employeeIds.slice(i, i + BATCH_SIZE);
+            this.logger.debug(`Processing batch ${Math.floor(i / BATCH_SIZE) + 1} with ${batchIds.length} employees`);
+            // Use a transaction for consistency
+            const batchResults = await this.transactionService.executeInTransaction(async (queryRunner) => {
+                var _a;
+                const batchRequests = [];
+                const batchFailures = [];
+                const notifications = [];
+                // Process each employee in the batch
+                for (const employeeId of batchIds) {
+                    try {
+                        const employee = employeeMap.get(employeeId);
+                        if (!employee) {
+                            batchFailures.push({ id: employeeId, reason: 'Employee not found' });
+                            continue;
+                        }
+                        // Get the schedule for this employee on the specified date
+                        let schedule;
+                        try {
+                            schedule = await this.schedulesService.findOneByOrFail({
+                                employee: new employee_entity_1.Employee({ id: employeeId }),
+                                date: new Date(dto.date)
+                            }, { relations: { cutoff: true, holiday: true } });
+                        }
+                        catch (scheduleError) {
+                            batchFailures.push({ id: employeeId, reason: scheduleError.message });
+                            continue;
+                        }
+                        // Create the work time request with management request flags
+                        const workTimeRequest = await this.create({
+                            cutoff: { id: schedule.cutoff.id },
+                            type: dto.type,
+                            date: new Date(dto.date),
+                            reason: `Management requested ${dto.type === attendance_status_enum_1.AttendanceStatus.EARLY ? 'early arrival' : 'overtime'}: ${dto.reason}`,
+                            status: request_status_enum_1.RequestStatus.PENDING,
+                            employee: { id: employeeId },
+                            managementRequested: true,
+                            requestedByManager: new employee_entity_1.Employee({ id: (_a = manager.employee) === null || _a === void 0 ? void 0 : _a.id }),
+                        }, managerId);
+                        // Auto-approve the request since it's from management
+                        await this.workTimeResponsesService.create({
+                            workTimeRequest: new work_time_request_entity_1.WorkTimeRequest({ id: workTimeRequest.id }),
+                            approved: true,
+                            message: 'Auto-approved management request',
+                        }, managerId);
+                        // Prepare notification data
+                        notifications.push({
+                            title: `Management ${dto.type === attendance_status_enum_1.AttendanceStatus.EARLY ? 'Early Work' : 'Overtime'} Request`,
+                            message: `Your manager has requested that you ${dto.type === attendance_status_enum_1.AttendanceStatus.EARLY ? 'arrive' : 'work'} ${dto.type === attendance_status_enum_1.AttendanceStatus.EARLY ? 'early' : 'overtime'} on ${dto.date}. Reason: ${dto.reason}`,
+                            type: notification_type_enum_1.NotificationType.INFO,
+                            category: 'ATTENDANCE',
+                            user: { id: employee.user.id },
+                            createdBy: managerId,
+                        });
+                        batchRequests.push(workTimeRequest);
+                    }
+                    catch (error) {
+                        batchFailures.push({ id: employeeId, reason: error.message });
+                    }
+                }
+                // Bulk create notifications for efficiency
+                if (notifications.length > 0) {
+                    try {
+                        await Promise.all(notifications.map(notification => this.notificationsService.create(notification, managerId)));
+                    }
+                    catch (notificationError) {
+                        this.logger.error(`Failed to send notifications: ${notificationError.message}`);
+                        // Don't fail the whole transaction for notification errors
+                    }
+                }
+                return { batchRequests, batchFailures };
+            });
+            createdRequests.push(...batchResults.batchRequests);
+            failedEmployees.push(...batchResults.batchFailures);
+        }
+        // Log failures but don't fail the request if some succeeded
+        if (failedEmployees.length > 0) {
+            this.logger.warn(`Failed to create requests for ${failedEmployees.length} employees`);
+            for (const failure of failedEmployees) {
+                this.logger.warn(`  Employee ${failure.id}: ${failure.reason}`);
+            }
+        }
+        if (createdRequests.length === 0) {
+            throw new common_1.BadRequestException('Failed to create any work time requests');
+        }
+        this.logger.log(`Successfully created ${createdRequests.length} work time requests`);
+        return true;
     }
 };
 exports.WorkTimeRequestsService = WorkTimeRequestsService;
 exports.WorkTimeRequestsService = WorkTimeRequestsService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, typeorm_1.InjectRepository)(work_time_request_entity_1.WorkTimeRequest)),
-    __metadata("design:paramtypes", [typeof (_a = typeof typeorm_2.Repository !== "undefined" && typeorm_2.Repository) === "function" ? _a : Object, typeof (_b = typeof users_service_1.UsersService !== "undefined" && users_service_1.UsersService) === "function" ? _b : Object])
+    __metadata("design:paramtypes", [typeof (_a = typeof typeorm_2.Repository !== "undefined" && typeorm_2.Repository) === "function" ? _a : Object, typeof (_b = typeof users_service_1.UsersService !== "undefined" && users_service_1.UsersService) === "function" ? _b : Object, typeof (_c = typeof documents_service_1.DocumentsService !== "undefined" && documents_service_1.DocumentsService) === "function" ? _c : Object, typeof (_d = typeof employees_service_1.EmployeesService !== "undefined" && employees_service_1.EmployeesService) === "function" ? _d : Object, typeof (_e = typeof schedules_service_1.SchedulesService !== "undefined" && schedules_service_1.SchedulesService) === "function" ? _e : Object, typeof (_f = typeof groups_service_1.GroupsService !== "undefined" && groups_service_1.GroupsService) === "function" ? _f : Object, typeof (_g = typeof attendance_configurations_service_1.AttendanceConfigurationsService !== "undefined" && attendance_configurations_service_1.AttendanceConfigurationsService) === "function" ? _g : Object, typeof (_h = typeof notifications_service_1.NotificationsService !== "undefined" && notifications_service_1.NotificationsService) === "function" ? _h : Object, typeof (_j = typeof work_time_responses_service_1.WorkTimeResponsesService !== "undefined" && work_time_responses_service_1.WorkTimeResponsesService) === "function" ? _j : Object])
 ], WorkTimeRequestsService);
 
 
@@ -14015,7 +15670,7 @@ exports.WorkTimeResponsesModule = WorkTimeResponsesModule = __decorate([
     (0, common_1.Module)({
         imports: [
             typeorm_1.TypeOrmModule.forFeature([work_time_response_entity_1.WorkTimeResponse]),
-            work_time_requests_module_1.WorkTimeRequestsModule,
+            (0, common_1.forwardRef)(() => work_time_requests_module_1.WorkTimeRequestsModule)
         ],
         providers: [work_time_responses_service_1.WorkTimeResponsesService],
         exports: [work_time_responses_service_1.WorkTimeResponsesService],
@@ -14072,35 +15727,20 @@ let WorkTimeResponsesService = class WorkTimeResponsesService extends base_servi
             {
                 field: 'workTimeRequest',
                 service: this.workTimeRequestsService,
-                required: true,
-                unique: {
-                    field: 'id',
-                    message: 'This work time request already has a response'
-                }
+                required: true
             }
         ]);
     }
     async create(createDto, createdBy) {
-        // Check if the work time request exists
-        // if (createDto.workTimeRequest) {
-        //     await this.workTimeRequestsService.findOneByOrFail({
-        //         id: createDto.workTimeRequest?.id,
-        //     });
-        // }
         var _a;
         const workTimeResponse = await super.create(createDto, createdBy);
         this.eventEmitter.emit(work_time_event_1.WORK_TIME_EVENTS.WORK_TIME_RESPONDED, new work_time_event_1.WorkTimeRespondedEvent((_a = createDto.workTimeRequest) === null || _a === void 0 ? void 0 : _a.id, createDto.approved, createdBy));
         return workTimeResponse;
     }
     async update(id, updateDto, updatedBy) {
-        var _a, _b;
-        if (updateDto.workTimeRequest) {
-            await this.workTimeRequestsService.findOneByOrFail({
-                id: (_a = updateDto.workTimeRequest) === null || _a === void 0 ? void 0 : _a.id,
-            });
-        }
+        var _a;
         const workTimeResponse = await super.update(id, updateDto, updatedBy);
-        this.eventEmitter.emit(work_time_event_1.WORK_TIME_EVENTS.WORK_TIME_RESPONDED, new work_time_event_1.WorkTimeRespondedEvent((_b = updateDto.workTimeRequest) === null || _b === void 0 ? void 0 : _b.id, updateDto.approved, updatedBy));
+        this.eventEmitter.emit(work_time_event_1.WORK_TIME_EVENTS.WORK_TIME_RESPONDED, new work_time_event_1.WorkTimeRespondedEvent((_a = updateDto.workTimeRequest) === null || _a === void 0 ? void 0 : _a.id, updateDto.approved, updatedBy));
         return workTimeResponse;
     }
 };
@@ -14108,6 +15748,7 @@ exports.WorkTimeResponsesService = WorkTimeResponsesService;
 exports.WorkTimeResponsesService = WorkTimeResponsesService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, typeorm_1.InjectRepository)(work_time_response_entity_1.WorkTimeResponse)),
+    __param(2, (0, common_1.Inject)((0, common_1.forwardRef)(() => work_time_requests_service_1.WorkTimeRequestsService))),
     __metadata("design:paramtypes", [typeof (_a = typeof typeorm_2.Repository !== "undefined" && typeorm_2.Repository) === "function" ? _a : Object, typeof (_b = typeof users_service_1.UsersService !== "undefined" && users_service_1.UsersService) === "function" ? _b : Object, typeof (_c = typeof work_time_requests_service_1.WorkTimeRequestsService !== "undefined" && work_time_requests_service_1.WorkTimeRequestsService) === "function" ? _c : Object, typeof (_d = typeof event_emitter_1.EventEmitter2 !== "undefined" && event_emitter_1.EventEmitter2) === "function" ? _d : Object])
 ], WorkTimeResponsesService);
 
@@ -18832,6 +20473,7 @@ __decorate([
 ], Document.prototype, "scheduleChangeRequest", void 0);
 __decorate([
     (0, typeorm_1.ManyToOne)(() => work_time_request_entity_1.WorkTimeRequest, (workTimeRequest) => workTimeRequest.documents, { nullable: true }),
+    (0, typeorm_1.JoinColumn)({ name: 'workTimeRequestId' }),
     __metadata("design:type", typeof (_d = typeof work_time_request_entity_1.WorkTimeRequest !== "undefined" && work_time_request_entity_1.WorkTimeRequest) === "function" ? _d : Object)
 ], Document.prototype, "workTimeRequest", void 0);
 exports.Document = Document = __decorate([
@@ -20699,15 +22341,15 @@ __decorate([
     __metadata("design:type", Boolean)
 ], EmployeePayrollItemTypeDto.prototype, "isActive", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({
-        description: 'Whether this payroll item type is exempted',
-        example: false,
-        default: false
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'Whether this payroll item type is applicable',
+        example: true,
+        default: true
     }),
     (0, class_validator_1.IsBoolean)(),
     (0, class_validator_1.IsOptional)(),
     __metadata("design:type", Boolean)
-], EmployeePayrollItemTypeDto.prototype, "exempted", void 0);
+], EmployeePayrollItemTypeDto.prototype, "isApplicable", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({
         description: 'Amount value for this payroll item type',
@@ -20719,28 +22361,6 @@ __decorate([
     (0, class_validator_1.IsOptional)(),
     __metadata("design:type", Number)
 ], EmployeePayrollItemTypeDto.prototype, "amount", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({
-        description: 'Accrual amount for this payroll item type',
-        example: 500.25,
-        required: false,
-        type: Number
-    }),
-    (0, class_validator_1.IsNumber)(),
-    (0, class_validator_1.IsOptional)(),
-    __metadata("design:type", Number)
-], EmployeePayrollItemTypeDto.prototype, "accrualAmount", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({
-        description: 'Accrual count for this payroll item type',
-        example: 5,
-        required: false,
-        type: Number
-    }),
-    (0, class_validator_1.IsNumber)(),
-    (0, class_validator_1.IsOptional)(),
-    __metadata("design:type", Number)
-], EmployeePayrollItemTypeDto.prototype, "accrualCount", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({
         description: 'Percentage value for this payroll item type',
@@ -20756,27 +22376,6 @@ __decorate([
     (0, class_validator_1.Max)(100),
     __metadata("design:type", Number)
 ], EmployeePayrollItemTypeDto.prototype, "percentage", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({
-        description: 'Fee amount for this payroll item type',
-        example: 25.99,
-        required: false,
-        type: Number
-    }),
-    (0, class_validator_1.IsNumber)(),
-    (0, class_validator_1.IsOptional)(),
-    __metadata("design:type", Number)
-], EmployeePayrollItemTypeDto.prototype, "fee", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({
-        description: 'Term information for this payroll item type',
-        example: 'Monthly',
-        required: false
-    }),
-    (0, class_validator_1.IsString)(),
-    (0, class_validator_1.IsOptional)(),
-    __metadata("design:type", String)
-], EmployeePayrollItemTypeDto.prototype, "term", void 0);
 class UpdateEmployeePayrollItemTypeDto extends (0, swagger_1.PartialType)(EmployeePayrollItemTypeDto) {
 }
 exports.UpdateEmployeePayrollItemTypeDto = UpdateEmployeePayrollItemTypeDto;
@@ -20841,7 +22440,7 @@ employee_payroll_item_type_dto_1.UpdateEmployeePayrollItemTypeDto) {
 }
 exports.EmployeePayrollItemTypesController = EmployeePayrollItemTypesController;
 __decorate([
-    (0, common_1.Post)('employee/:employeeId/base-compensation'),
+    (0, common_1.Post)('base-compensation/:employeeId'),
     (0, authorize_decorator_1.Authorize)({ endpointType: action_enum_1.Action.CREATE }),
     (0, swagger_1.ApiOperation)({
         summary: 'Setup employee base compensation',
@@ -20944,7 +22543,7 @@ var _a, _b, _c;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.EmployeePayrollItemTypesService = void 0;
 const occurrence_enum_1 = __webpack_require__(/*! @/common/enums/occurrence.enum */ "./src/common/enums/occurrence.enum.ts");
-const payroll_item_category_enum_1 = __webpack_require__(/*! @/common/enums/payroll-item-category.enum */ "./src/common/enums/payroll-item-category.enum.ts");
+const payroll_item_category_enum_1 = __webpack_require__(/*! @/common/enums/payroll/payroll-item-category.enum */ "./src/common/enums/payroll/payroll-item-category.enum.ts");
 const base_service_1 = __webpack_require__(/*! @/common/services/base.service */ "./src/common/services/base.service.ts");
 const users_service_1 = __webpack_require__(/*! @/modules/account-management/users/users.service */ "./src/modules/account-management/users/users.service.ts");
 const employee_compensation_dto_1 = __webpack_require__(/*! @/modules/employee-management/employee-payroll-item-types/dtos/employee-compensation.dto */ "./src/modules/employee-management/employee-payroll-item-types/dtos/employee-compensation.dto.ts");
@@ -21113,9 +22712,9 @@ __decorate([
     __metadata("design:type", Boolean)
 ], EmployeePayrollItemType.prototype, "isActive", void 0);
 __decorate([
-    (0, typeorm_1.Column)({ default: false }),
+    (0, typeorm_1.Column)({ default: true }),
     __metadata("design:type", Boolean)
-], EmployeePayrollItemType.prototype, "exempted", void 0);
+], EmployeePayrollItemType.prototype, "isApplicable", void 0);
 __decorate([
     (0, typeorm_1.Column)('decimal', {
         precision: 15,
@@ -21131,31 +22730,7 @@ __decorate([
         nullable: true
     }),
     __metadata("design:type", Number)
-], EmployeePayrollItemType.prototype, "accrualAmount", void 0);
-__decorate([
-    (0, typeorm_1.Column)({ nullable: true }),
-    __metadata("design:type", Number)
-], EmployeePayrollItemType.prototype, "accrualCount", void 0);
-__decorate([
-    (0, typeorm_1.Column)('decimal', {
-        precision: 15,
-        scale: 2,
-        nullable: true
-    }),
-    __metadata("design:type", Number)
 ], EmployeePayrollItemType.prototype, "percentage", void 0);
-__decorate([
-    (0, typeorm_1.Column)('decimal', {
-        precision: 15,
-        scale: 2,
-        nullable: true
-    }),
-    __metadata("design:type", Number)
-], EmployeePayrollItemType.prototype, "fee", void 0);
-__decorate([
-    (0, typeorm_1.Column)({ nullable: true }),
-    __metadata("design:type", String)
-], EmployeePayrollItemType.prototype, "term", void 0);
 exports.EmployeePayrollItemType = EmployeePayrollItemType = __decorate([
     (0, typeorm_1.Entity)('employee-payroll-item-types')
 ], EmployeePayrollItemType);
@@ -21306,6 +22881,9 @@ const attendance_entity_1 = __webpack_require__(/*! @/modules/attendance-managem
 const final_work_hour_entity_1 = __webpack_require__(/*! @/modules/attendance-management/final-work-hours/entities/final-work-hour.entity */ "./src/modules/attendance-management/final-work-hours/entities/final-work-hour.entity.ts");
 const work_time_request_entity_1 = __webpack_require__(/*! @/modules/attendance-management/work-time-requests/entities/work-time-request.entity */ "./src/modules/attendance-management/work-time-requests/entities/work-time-request.entity.ts");
 const role_entity_1 = __webpack_require__(/*! @/modules/employee-management/roles/entities/role.entity */ "./src/modules/employee-management/roles/entities/role.entity.ts");
+const memorandum_entity_1 = __webpack_require__(/*! @/modules/memorandums/entities/memorandum.entity */ "./src/modules/memorandums/entities/memorandum.entity.ts");
+const memorandum_flow_entity_1 = __webpack_require__(/*! @/modules/memorandums/memorandum-flows/entities/memorandum-flow.entity */ "./src/modules/memorandums/memorandum-flows/entities/memorandum-flow.entity.ts");
+const memorandum_recipient_entity_1 = __webpack_require__(/*! @/modules/memorandums/memorandum-recipients/entities/memorandum-recipient.entity */ "./src/modules/memorandums/memorandum-recipients/entities/memorandum-recipient.entity.ts");
 const payroll_entity_1 = __webpack_require__(/*! @/modules/payroll-management/entities/payroll.entity */ "./src/modules/payroll-management/entities/payroll.entity.ts");
 const group_entity_1 = __webpack_require__(/*! @/modules/shift-management/groups/entities/group.entity */ "./src/modules/shift-management/groups/entities/group.entity.ts");
 const schedule_entity_1 = __webpack_require__(/*! @/modules/shift-management/schedules/entities/schedule.entity */ "./src/modules/shift-management/schedules/entities/schedule.entity.ts");
@@ -21409,6 +22987,18 @@ __decorate([
     (0, typeorm_1.OneToMany)(() => work_time_request_entity_1.WorkTimeRequest, (workTimeRequest) => workTimeRequest.employee, { nullable: true }),
     __metadata("design:type", Array)
 ], Employee.prototype, "workTimeRequests", void 0);
+__decorate([
+    (0, typeorm_1.OneToMany)(() => memorandum_entity_1.Memorandum, (memorandum) => memorandum.issuer, { nullable: true }),
+    __metadata("design:type", Array)
+], Employee.prototype, "issuedMemos", void 0);
+__decorate([
+    (0, typeorm_1.OneToMany)(() => memorandum_recipient_entity_1.MemorandumRecipient, (memorandumRecipient) => memorandumRecipient.employee, { nullable: true }),
+    __metadata("design:type", Array)
+], Employee.prototype, "receivedMemos", void 0);
+__decorate([
+    (0, typeorm_1.OneToMany)(() => memorandum_flow_entity_1.MemorandumFlow, (memorandumFlow) => memorandumFlow.approver, { nullable: true }),
+    __metadata("design:type", Array)
+], Employee.prototype, "approvalSteps", void 0);
 exports.Employee = Employee = __decorate([
     (0, typeorm_1.Entity)('employees')
 ], Employee);
@@ -21915,7 +23505,7 @@ let PermissionsService = class PermissionsService extends base_service_1.BaseSer
                 results.push(savedPermission);
             }
             return results;
-        }).catch(error => {
+        }).catch((error) => {
             this.logger.error(`Failed to create permissions: ${error.message}`);
             throw error;
         });
@@ -24376,6 +25966,24 @@ const activity_logs_service_1 = __webpack_require__(/*! ./activity-logs.service 
 const activity_log_dto_1 = __webpack_require__(/*! ./dtos/activity-log.dto */ "./src/modules/logs/activity-logs/dtos/activity-log.dto.ts");
 const activity_log_entity_1 = __webpack_require__(/*! ./entities/activity-log.entity */ "./src/modules/logs/activity-logs/entities/activity-log.entity.ts");
 class ActivityLogsController extends (0, create_controller_factory_1.createController)(activity_log_entity_1.ActivityLog, activity_logs_service_1.ActivityLogsService, activity_log_dto_1.GetActivityLogDto) {
+    async create(entityDto, createdById) {
+        return await super.create(entityDto, createdById);
+    }
+    async update(id, entityDto, updatedById) {
+        return await super.update(id, entityDto, updatedById);
+    }
+    async findById(id, relations, select) {
+        return await super.findById(id, relations, select);
+    }
+    async findOne(fieldsString, relations, select) {
+        return await super.findOne(fieldsString, relations, select);
+    }
+    async softDelete(id, deletedBy) {
+        return await super.softDelete(id, deletedBy);
+    }
+    async delete(id) {
+        return await super.delete(id);
+    }
 }
 exports.ActivityLogsController = ActivityLogsController;
 
@@ -24848,7 +26456,6 @@ let SystemLogger = class SystemLogger extends common_1.ConsoleLogger {
             { context: 'RouterExplorer' },
             { context: 'RoutesResolver' },
             { context: 'InstanceLoader' },
-            { context: 'BaseGateway' },
         ];
     }
     // Helper method to check if a log should be ignored
@@ -24960,6 +26567,24 @@ const system_log_dto_1 = __webpack_require__(/*! ./dtos/system-log.dto */ "./src
 const system_log_entity_1 = __webpack_require__(/*! ./entities/system-log.entity */ "./src/modules/logs/system-logs/entities/system-log.entity.ts");
 const system_logs_service_1 = __webpack_require__(/*! ./system-logs.service */ "./src/modules/logs/system-logs/system-logs.service.ts");
 class SystemLogsController extends (0, create_controller_factory_1.createController)(system_log_entity_1.SystemLog, system_logs_service_1.SystemLogsService, system_log_dto_1.GetSystemLogDto) {
+    async create(entityDto, createdById) {
+        return await super.create(entityDto, createdById);
+    }
+    async update(id, entityDto, updatedById) {
+        return await super.update(id, entityDto, updatedById);
+    }
+    async findById(id, relations, select) {
+        return await super.findById(id, relations, select);
+    }
+    async findOne(fieldsString, relations, select) {
+        return await super.findOne(fieldsString, relations, select);
+    }
+    async softDelete(id, deletedBy) {
+        return await super.softDelete(id, deletedBy);
+    }
+    async delete(id) {
+        return await super.delete(id);
+    }
 }
 exports.SystemLogsController = SystemLogsController;
 
@@ -25075,6 +26700,1008 @@ exports.SystemLogsService = SystemLogsService = __decorate([
     __param(0, (0, typeorm_1.InjectRepository)(system_log_entity_1.SystemLog)),
     __metadata("design:paramtypes", [typeof (_a = typeof typeorm_2.Repository !== "undefined" && typeorm_2.Repository) === "function" ? _a : Object, typeof (_b = typeof users_service_1.UsersService !== "undefined" && users_service_1.UsersService) === "function" ? _b : Object])
 ], SystemLogsService);
+
+
+/***/ }),
+
+/***/ "./src/modules/memorandums/dtos/memorandum.dto.ts":
+/*!********************************************************!*\
+  !*** ./src/modules/memorandums/dtos/memorandum.dto.ts ***!
+  \********************************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+"use strict";
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var _a, _b, _c, _d, _e;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.GetMemorandumDto = exports.UpdateMemorandumDto = exports.MemorandumDto = void 0;
+const base_dto_1 = __webpack_require__(/*! @/common/dtos/base.dto */ "./src/common/dtos/base.dto.ts");
+const memo_status_enum_1 = __webpack_require__(/*! @/common/enums/memo-status.enum */ "./src/common/enums/memo-status.enum.ts");
+const memo_type_enum_1 = __webpack_require__(/*! @/common/enums/memo-type.enum */ "./src/common/enums/memo-type.enum.ts");
+const create_get_dto_factory_1 = __webpack_require__(/*! @/common/factories/create-get-dto.factory */ "./src/common/factories/create-get-dto.factory.ts");
+const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
+const class_transformer_1 = __webpack_require__(/*! class-transformer */ "class-transformer");
+const class_validator_1 = __webpack_require__(/*! class-validator */ "class-validator");
+class MemorandumRecipientDto {
+}
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Recipient ID' }),
+    (0, class_validator_1.IsUUID)(),
+    __metadata("design:type", String)
+], MemorandumRecipientDto.prototype, "recipientId", void 0);
+class MemorandumFlowDto {
+}
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Approver ID' }),
+    (0, class_validator_1.IsUUID)(),
+    __metadata("design:type", String)
+], MemorandumFlowDto.prototype, "approverId", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Flow order' }),
+    (0, class_validator_1.IsNotEmpty)(),
+    __metadata("design:type", Number)
+], MemorandumFlowDto.prototype, "order", void 0);
+class MemorandumDto extends base_dto_1.BaseDto {
+}
+exports.MemorandumDto = MemorandumDto;
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Title of the memorandum', maxLength: 200 }),
+    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.MaxLength)(200),
+    __metadata("design:type", String)
+], MemorandumDto.prototype, "title", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Content of the memorandum' }),
+    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], MemorandumDto.prototype, "content", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Type of memorandum', enum: memo_type_enum_1.MemoType }),
+    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsEnum)(memo_type_enum_1.MemoType),
+    __metadata("design:type", typeof (_a = typeof memo_type_enum_1.MemoType !== "undefined" && memo_type_enum_1.MemoType) === "function" ? _a : Object)
+], MemorandumDto.prototype, "type", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ description: 'Effective date of memorandum' }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsDate)(),
+    (0, class_transformer_1.Type)(() => Date),
+    __metadata("design:type", typeof (_b = typeof Date !== "undefined" && Date) === "function" ? _b : Object)
+], MemorandumDto.prototype, "effectiveDate", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ description: 'Compliance date of memorandum' }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsDate)(),
+    (0, class_transformer_1.Type)(() => Date),
+    __metadata("design:type", typeof (_c = typeof Date !== "undefined" && Date) === "function" ? _c : Object)
+], MemorandumDto.prototype, "complianceDate", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Issuer ID' }),
+    (0, class_validator_1.IsUUID)(),
+    (0, class_validator_1.IsNotEmpty)(),
+    __metadata("design:type", String)
+], MemorandumDto.prototype, "issuerId", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ description: 'Template ID' }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsUUID)(),
+    __metadata("design:type", String)
+], MemorandumDto.prototype, "templateId", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ description: 'Recipients of memorandum', type: [MemorandumRecipientDto] }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsArray)(),
+    (0, class_validator_1.ValidateNested)({ each: true }),
+    (0, class_transformer_1.Type)(() => MemorandumRecipientDto),
+    __metadata("design:type", Array)
+], MemorandumDto.prototype, "recipients", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ description: 'Approval flows', type: [MemorandumFlowDto] }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsArray)(),
+    (0, class_validator_1.ValidateNested)({ each: true }),
+    (0, class_transformer_1.Type)(() => MemorandumFlowDto),
+    __metadata("design:type", Array)
+], MemorandumDto.prototype, "approvalFlows", void 0);
+class UpdateMemorandumDto extends (0, swagger_1.PartialType)(MemorandumDto) {
+}
+exports.UpdateMemorandumDto = UpdateMemorandumDto;
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ description: 'Status of memorandum', enum: memo_status_enum_1.MemoStatus, default: memo_status_enum_1.MemoStatus.DRAFT }),
+    (0, class_validator_1.IsEnum)(memo_status_enum_1.MemoStatus),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", typeof (_d = typeof memo_status_enum_1.MemoStatus !== "undefined" && memo_status_enum_1.MemoStatus) === "function" ? _d : Object)
+], UpdateMemorandumDto.prototype, "status", void 0);
+class GetMemorandumDto extends (0, create_get_dto_factory_1.createGetDto)(MemorandumDto, 'memorandum') {
+}
+exports.GetMemorandumDto = GetMemorandumDto;
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ description: 'Issue date of memorandum' }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsDate)(),
+    (0, class_transformer_1.Type)(() => Date),
+    __metadata("design:type", typeof (_e = typeof Date !== "undefined" && Date) === "function" ? _e : Object)
+], GetMemorandumDto.prototype, "issueDate", void 0);
+
+
+/***/ }),
+
+/***/ "./src/modules/memorandums/entities/memorandum.entity.ts":
+/*!***************************************************************!*\
+  !*** ./src/modules/memorandums/entities/memorandum.entity.ts ***!
+  \***************************************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+"use strict";
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var _a, _b, _c, _d, _e, _f, _g;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Memorandum = void 0;
+const memo_status_enum_1 = __webpack_require__(/*! @/common/enums/memo-status.enum */ "./src/common/enums/memo-status.enum.ts");
+const memo_type_enum_1 = __webpack_require__(/*! @/common/enums/memo-type.enum */ "./src/common/enums/memo-type.enum.ts");
+const base_entity_1 = __webpack_require__(/*! @/database/entities/base.entity */ "./src/database/entities/base.entity.ts");
+const employee_entity_1 = __webpack_require__(/*! @/modules/employee-management/entities/employee.entity */ "./src/modules/employee-management/entities/employee.entity.ts");
+const typeorm_1 = __webpack_require__(/*! typeorm */ "typeorm");
+const memorandum_flow_entity_1 = __webpack_require__(/*! ../memorandum-flows/entities/memorandum-flow.entity */ "./src/modules/memorandums/memorandum-flows/entities/memorandum-flow.entity.ts");
+const memorandum_recipient_entity_1 = __webpack_require__(/*! ../memorandum-recipients/entities/memorandum-recipient.entity */ "./src/modules/memorandums/memorandum-recipients/entities/memorandum-recipient.entity.ts");
+const memorandum_template_entity_1 = __webpack_require__(/*! ../memorandum-templates/entities/memorandum-template.entity */ "./src/modules/memorandums/memorandum-templates/entities/memorandum-template.entity.ts");
+let Memorandum = class Memorandum extends base_entity_1.BaseEntity {
+};
+exports.Memorandum = Memorandum;
+__decorate([
+    (0, typeorm_1.Index)(),
+    (0, typeorm_1.Column)({ type: 'varchar', length: 200 }),
+    __metadata("design:type", String)
+], Memorandum.prototype, "title", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'text' }),
+    __metadata("design:type", String)
+], Memorandum.prototype, "content", void 0);
+__decorate([
+    (0, typeorm_1.Index)(),
+    (0, typeorm_1.Column)({ type: 'enum', enum: memo_type_enum_1.MemoType }),
+    __metadata("design:type", typeof (_a = typeof memo_type_enum_1.MemoType !== "undefined" && memo_type_enum_1.MemoType) === "function" ? _a : Object)
+], Memorandum.prototype, "type", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'timestamp', nullable: true }),
+    __metadata("design:type", typeof (_b = typeof Date !== "undefined" && Date) === "function" ? _b : Object)
+], Memorandum.prototype, "issueDate", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'timestamp', nullable: true }),
+    __metadata("design:type", typeof (_c = typeof Date !== "undefined" && Date) === "function" ? _c : Object)
+], Memorandum.prototype, "effectiveDate", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'timestamp', nullable: true }),
+    __metadata("design:type", typeof (_d = typeof Date !== "undefined" && Date) === "function" ? _d : Object)
+], Memorandum.prototype, "complianceDate", void 0);
+__decorate([
+    (0, typeorm_1.Index)(),
+    (0, typeorm_1.Column)({ type: 'enum', enum: memo_status_enum_1.MemoStatus, default: memo_status_enum_1.MemoStatus.DRAFT }),
+    __metadata("design:type", typeof (_e = typeof memo_status_enum_1.MemoStatus !== "undefined" && memo_status_enum_1.MemoStatus) === "function" ? _e : Object)
+], Memorandum.prototype, "status", void 0);
+__decorate([
+    (0, typeorm_1.ManyToOne)(() => employee_entity_1.Employee, (employee) => employee.issuedMemos, { nullable: false, eager: true }),
+    (0, typeorm_1.JoinColumn)({ name: 'issuerId' }),
+    __metadata("design:type", typeof (_f = typeof employee_entity_1.Employee !== "undefined" && employee_entity_1.Employee) === "function" ? _f : Object)
+], Memorandum.prototype, "issuer", void 0);
+__decorate([
+    (0, typeorm_1.ManyToOne)(() => memorandum_template_entity_1.MemorandumTemplate, (template) => template.memorandums, { nullable: true }),
+    (0, typeorm_1.JoinColumn)({ name: 'templateId' }),
+    __metadata("design:type", typeof (_g = typeof memorandum_template_entity_1.MemorandumTemplate !== "undefined" && memorandum_template_entity_1.MemorandumTemplate) === "function" ? _g : Object)
+], Memorandum.prototype, "template", void 0);
+__decorate([
+    (0, typeorm_1.OneToMany)(() => memorandum_recipient_entity_1.MemorandumRecipient, (recipient) => recipient.memorandum, { cascade: ['insert', 'update'] }),
+    __metadata("design:type", Array)
+], Memorandum.prototype, "recipients", void 0);
+__decorate([
+    (0, typeorm_1.OneToMany)(() => memorandum_flow_entity_1.MemorandumFlow, (flow) => flow.memorandum, { cascade: ['insert', 'update'], eager: true }),
+    __metadata("design:type", Array)
+], Memorandum.prototype, "approvalFlows", void 0);
+exports.Memorandum = Memorandum = __decorate([
+    (0, typeorm_1.Entity)('memorandums')
+], Memorandum);
+
+
+/***/ }),
+
+/***/ "./src/modules/memorandums/memorandum-flows/dtos/memorandum-flow.dto.ts":
+/*!******************************************************************************!*\
+  !*** ./src/modules/memorandums/memorandum-flows/dtos/memorandum-flow.dto.ts ***!
+  \******************************************************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+"use strict";
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.GetMemorandumFlowDto = exports.UpdateMemorandumFlowDto = exports.MemorandumFlowDto = void 0;
+const base_dto_1 = __webpack_require__(/*! @/common/dtos/base.dto */ "./src/common/dtos/base.dto.ts");
+const create_get_dto_factory_1 = __webpack_require__(/*! @/common/factories/create-get-dto.factory */ "./src/common/factories/create-get-dto.factory.ts");
+const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
+const class_validator_1 = __webpack_require__(/*! class-validator */ "class-validator");
+const swagger_2 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
+class MemorandumFlowDto extends (0, swagger_2.PartialType)(base_dto_1.BaseDto) {
+}
+exports.MemorandumFlowDto = MemorandumFlowDto;
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Name of the memorandum-flow' }),
+    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], MemorandumFlowDto.prototype, "name", void 0);
+class UpdateMemorandumFlowDto extends (0, swagger_2.PartialType)(MemorandumFlowDto) {
+}
+exports.UpdateMemorandumFlowDto = UpdateMemorandumFlowDto;
+class GetMemorandumFlowDto extends (0, create_get_dto_factory_1.createGetDto)(MemorandumFlowDto) {
+}
+exports.GetMemorandumFlowDto = GetMemorandumFlowDto;
+
+
+/***/ }),
+
+/***/ "./src/modules/memorandums/memorandum-flows/entities/memorandum-flow.entity.ts":
+/*!*************************************************************************************!*\
+  !*** ./src/modules/memorandums/memorandum-flows/entities/memorandum-flow.entity.ts ***!
+  \*************************************************************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+"use strict";
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var _a, _b, _c, _d;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.MemorandumFlow = void 0;
+const decision_enum_1 = __webpack_require__(/*! @/common/enums/decision.enum */ "./src/common/enums/decision.enum.ts");
+const base_entity_1 = __webpack_require__(/*! @/database/entities/base.entity */ "./src/database/entities/base.entity.ts");
+const employee_entity_1 = __webpack_require__(/*! @/modules/employee-management/entities/employee.entity */ "./src/modules/employee-management/entities/employee.entity.ts");
+const typeorm_1 = __webpack_require__(/*! typeorm */ "typeorm");
+const memorandum_entity_1 = __webpack_require__(/*! ../../entities/memorandum.entity */ "./src/modules/memorandums/entities/memorandum.entity.ts");
+let MemorandumFlow = class MemorandumFlow extends base_entity_1.BaseEntity {
+};
+exports.MemorandumFlow = MemorandumFlow;
+__decorate([
+    (0, typeorm_1.ManyToOne)(() => memorandum_entity_1.Memorandum, (memorandum) => memorandum.approvalFlows, { onDelete: 'CASCADE' }),
+    (0, typeorm_1.JoinColumn)({ name: 'memorandumId' }),
+    __metadata("design:type", typeof (_a = typeof memorandum_entity_1.Memorandum !== "undefined" && memorandum_entity_1.Memorandum) === "function" ? _a : Object)
+], MemorandumFlow.prototype, "memorandum", void 0);
+__decorate([
+    (0, typeorm_1.ManyToOne)(() => employee_entity_1.Employee, (employee) => employee.approvalSteps, { eager: true }),
+    (0, typeorm_1.JoinColumn)({ name: 'approverId' }),
+    __metadata("design:type", typeof (_b = typeof employee_entity_1.Employee !== "undefined" && employee_entity_1.Employee) === "function" ? _b : Object)
+], MemorandumFlow.prototype, "approver", void 0);
+__decorate([
+    (0, typeorm_1.Index)(),
+    (0, typeorm_1.Column)({ type: 'int' }),
+    __metadata("design:type", Number)
+], MemorandumFlow.prototype, "sequence", void 0);
+__decorate([
+    (0, typeorm_1.Index)(),
+    (0, typeorm_1.Column)({ type: 'enum', enum: decision_enum_1.Decision, default: decision_enum_1.Decision.PENDING }),
+    __metadata("design:type", typeof (_c = typeof decision_enum_1.Decision !== "undefined" && decision_enum_1.Decision) === "function" ? _c : Object)
+], MemorandumFlow.prototype, "decision", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'text', nullable: true }),
+    __metadata("design:type", String)
+], MemorandumFlow.prototype, "comments", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'timestamp', nullable: true }),
+    __metadata("design:type", typeof (_d = typeof Date !== "undefined" && Date) === "function" ? _d : Object)
+], MemorandumFlow.prototype, "decisionAt", void 0);
+exports.MemorandumFlow = MemorandumFlow = __decorate([
+    (0, typeorm_1.Entity)('memorandum-flows'),
+    (0, typeorm_1.Index)(['memorandum', 'sequence'], { unique: true })
+], MemorandumFlow);
+
+
+/***/ }),
+
+/***/ "./src/modules/memorandums/memorandum-flows/memorandum-flows.controller.ts":
+/*!*********************************************************************************!*\
+  !*** ./src/modules/memorandums/memorandum-flows/memorandum-flows.controller.ts ***!
+  \*********************************************************************************/
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.MemorandumFlowsController = void 0;
+const create_controller_factory_1 = __webpack_require__(/*! @/common/factories/create-controller.factory */ "./src/common/factories/create-controller.factory.ts");
+const memorandum_flow_dto_1 = __webpack_require__(/*! ./dtos/memorandum-flow.dto */ "./src/modules/memorandums/memorandum-flows/dtos/memorandum-flow.dto.ts");
+const memorandum_flows_service_1 = __webpack_require__(/*! ./memorandum-flows.service */ "./src/modules/memorandums/memorandum-flows/memorandum-flows.service.ts");
+const memorandum_flow_entity_1 = __webpack_require__(/*! ./entities/memorandum-flow.entity */ "./src/modules/memorandums/memorandum-flows/entities/memorandum-flow.entity.ts");
+class MemorandumFlowsController extends (0, create_controller_factory_1.createController)(memorandum_flow_entity_1.MemorandumFlow, // Entity name for Swagger documentation
+memorandum_flows_service_1.MemorandumFlowsService, // The service handling MemorandumFlow-related operations
+memorandum_flow_dto_1.GetMemorandumFlowDto, // DTO for retrieving MemorandumFlows
+memorandum_flow_dto_1.MemorandumFlowDto, // DTO for creating MemorandumFlows
+memorandum_flow_dto_1.UpdateMemorandumFlowDto) {
+}
+exports.MemorandumFlowsController = MemorandumFlowsController;
+
+
+/***/ }),
+
+/***/ "./src/modules/memorandums/memorandum-flows/memorandum-flows.module.ts":
+/*!*****************************************************************************!*\
+  !*** ./src/modules/memorandums/memorandum-flows/memorandum-flows.module.ts ***!
+  \*****************************************************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+"use strict";
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.MemorandumFlowsModule = void 0;
+const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
+const typeorm_1 = __webpack_require__(/*! @nestjs/typeorm */ "@nestjs/typeorm");
+const memorandum_flows_controller_1 = __webpack_require__(/*! ./memorandum-flows.controller */ "./src/modules/memorandums/memorandum-flows/memorandum-flows.controller.ts");
+const memorandum_flows_service_1 = __webpack_require__(/*! ./memorandum-flows.service */ "./src/modules/memorandums/memorandum-flows/memorandum-flows.service.ts");
+const memorandum_flow_entity_1 = __webpack_require__(/*! ./entities/memorandum-flow.entity */ "./src/modules/memorandums/memorandum-flows/entities/memorandum-flow.entity.ts");
+let MemorandumFlowsModule = class MemorandumFlowsModule {
+};
+exports.MemorandumFlowsModule = MemorandumFlowsModule;
+exports.MemorandumFlowsModule = MemorandumFlowsModule = __decorate([
+    (0, common_1.Module)({
+        imports: [
+            typeorm_1.TypeOrmModule.forFeature([memorandum_flow_entity_1.MemorandumFlow]),
+        ],
+        providers: [memorandum_flows_service_1.MemorandumFlowsService],
+        exports: [memorandum_flows_service_1.MemorandumFlowsService],
+        controllers: [memorandum_flows_controller_1.MemorandumFlowsController],
+    })
+], MemorandumFlowsModule);
+
+
+/***/ }),
+
+/***/ "./src/modules/memorandums/memorandum-flows/memorandum-flows.service.ts":
+/*!******************************************************************************!*\
+  !*** ./src/modules/memorandums/memorandum-flows/memorandum-flows.service.ts ***!
+  \******************************************************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+"use strict";
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
+var _a, _b;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.MemorandumFlowsService = void 0;
+const base_service_1 = __webpack_require__(/*! @/common/services/base.service */ "./src/common/services/base.service.ts");
+const users_service_1 = __webpack_require__(/*! @/modules/account-management/users/users.service */ "./src/modules/account-management/users/users.service.ts");
+const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
+const typeorm_1 = __webpack_require__(/*! @nestjs/typeorm */ "@nestjs/typeorm");
+const typeorm_2 = __webpack_require__(/*! typeorm */ "typeorm");
+const memorandum_flow_entity_1 = __webpack_require__(/*! ./entities/memorandum-flow.entity */ "./src/modules/memorandums/memorandum-flows/entities/memorandum-flow.entity.ts");
+let MemorandumFlowsService = class MemorandumFlowsService extends base_service_1.BaseService {
+    constructor(memorandumFlowsRepository, usersService) {
+        super(memorandumFlowsRepository, usersService);
+        this.memorandumFlowsRepository = memorandumFlowsRepository;
+        this.usersService = usersService;
+    }
+};
+exports.MemorandumFlowsService = MemorandumFlowsService;
+exports.MemorandumFlowsService = MemorandumFlowsService = __decorate([
+    (0, common_1.Injectable)(),
+    __param(0, (0, typeorm_1.InjectRepository)(memorandum_flow_entity_1.MemorandumFlow)),
+    __metadata("design:paramtypes", [typeof (_a = typeof typeorm_2.Repository !== "undefined" && typeorm_2.Repository) === "function" ? _a : Object, typeof (_b = typeof users_service_1.UsersService !== "undefined" && users_service_1.UsersService) === "function" ? _b : Object])
+], MemorandumFlowsService);
+
+
+/***/ }),
+
+/***/ "./src/modules/memorandums/memorandum-recipients/dtos/memorandum-recipient.dto.ts":
+/*!****************************************************************************************!*\
+  !*** ./src/modules/memorandums/memorandum-recipients/dtos/memorandum-recipient.dto.ts ***!
+  \****************************************************************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+"use strict";
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.GetMemorandumRecipientDto = exports.UpdateMemorandumRecipientDto = exports.MemorandumRecipientDto = void 0;
+const base_dto_1 = __webpack_require__(/*! @/common/dtos/base.dto */ "./src/common/dtos/base.dto.ts");
+const create_get_dto_factory_1 = __webpack_require__(/*! @/common/factories/create-get-dto.factory */ "./src/common/factories/create-get-dto.factory.ts");
+const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
+const class_validator_1 = __webpack_require__(/*! class-validator */ "class-validator");
+const swagger_2 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
+class MemorandumRecipientDto extends (0, swagger_2.PartialType)(base_dto_1.BaseDto) {
+}
+exports.MemorandumRecipientDto = MemorandumRecipientDto;
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Name of the memorandum-recipient' }),
+    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], MemorandumRecipientDto.prototype, "name", void 0);
+class UpdateMemorandumRecipientDto extends (0, swagger_2.PartialType)(MemorandumRecipientDto) {
+}
+exports.UpdateMemorandumRecipientDto = UpdateMemorandumRecipientDto;
+class GetMemorandumRecipientDto extends (0, create_get_dto_factory_1.createGetDto)(UpdateMemorandumRecipientDto, 'memorandum recipient') {
+}
+exports.GetMemorandumRecipientDto = GetMemorandumRecipientDto;
+
+
+/***/ }),
+
+/***/ "./src/modules/memorandums/memorandum-recipients/entities/memorandum-recipient.entity.ts":
+/*!***********************************************************************************************!*\
+  !*** ./src/modules/memorandums/memorandum-recipients/entities/memorandum-recipient.entity.ts ***!
+  \***********************************************************************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+"use strict";
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var _a, _b, _c, _d;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.MemorandumRecipient = void 0;
+const base_entity_1 = __webpack_require__(/*! @/database/entities/base.entity */ "./src/database/entities/base.entity.ts");
+const employee_entity_1 = __webpack_require__(/*! @/modules/employee-management/entities/employee.entity */ "./src/modules/employee-management/entities/employee.entity.ts");
+const typeorm_1 = __webpack_require__(/*! typeorm */ "typeorm");
+const memorandum_entity_1 = __webpack_require__(/*! ../../entities/memorandum.entity */ "./src/modules/memorandums/entities/memorandum.entity.ts");
+let MemorandumRecipient = class MemorandumRecipient extends base_entity_1.BaseEntity {
+};
+exports.MemorandumRecipient = MemorandumRecipient;
+__decorate([
+    (0, typeorm_1.ManyToOne)(() => memorandum_entity_1.Memorandum, (memorandum) => memorandum.recipients, { onDelete: 'CASCADE' }),
+    (0, typeorm_1.JoinColumn)({ name: 'memorandumId' }),
+    __metadata("design:type", typeof (_a = typeof memorandum_entity_1.Memorandum !== "undefined" && memorandum_entity_1.Memorandum) === "function" ? _a : Object)
+], MemorandumRecipient.prototype, "memorandum", void 0);
+__decorate([
+    (0, typeorm_1.ManyToOne)(() => employee_entity_1.Employee, (employee) => employee.receivedMemos, { eager: true }),
+    (0, typeorm_1.JoinColumn)({ name: 'employeeId' }),
+    __metadata("design:type", typeof (_b = typeof employee_entity_1.Employee !== "undefined" && employee_entity_1.Employee) === "function" ? _b : Object)
+], MemorandumRecipient.prototype, "employee", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'boolean', default: false }),
+    __metadata("design:type", Boolean)
+], MemorandumRecipient.prototype, "read", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'timestamp', nullable: true }),
+    __metadata("design:type", typeof (_c = typeof Date !== "undefined" && Date) === "function" ? _c : Object)
+], MemorandumRecipient.prototype, "readAt", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'boolean', default: false }),
+    __metadata("design:type", Boolean)
+], MemorandumRecipient.prototype, "acknowledged", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'timestamp', nullable: true }),
+    __metadata("design:type", typeof (_d = typeof Date !== "undefined" && Date) === "function" ? _d : Object)
+], MemorandumRecipient.prototype, "acknowledgedAt", void 0);
+exports.MemorandumRecipient = MemorandumRecipient = __decorate([
+    (0, typeorm_1.Entity)('memorandum-recipients'),
+    (0, typeorm_1.Index)(['memorandum', 'employee'], { unique: true })
+], MemorandumRecipient);
+
+
+/***/ }),
+
+/***/ "./src/modules/memorandums/memorandum-recipients/memorandum-recipients.controller.ts":
+/*!*******************************************************************************************!*\
+  !*** ./src/modules/memorandums/memorandum-recipients/memorandum-recipients.controller.ts ***!
+  \*******************************************************************************************/
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.MemorandumRecipientsController = void 0;
+const create_controller_factory_1 = __webpack_require__(/*! @/common/factories/create-controller.factory */ "./src/common/factories/create-controller.factory.ts");
+const memorandum_recipient_dto_1 = __webpack_require__(/*! ./dtos/memorandum-recipient.dto */ "./src/modules/memorandums/memorandum-recipients/dtos/memorandum-recipient.dto.ts");
+const memorandum_recipients_service_1 = __webpack_require__(/*! ./memorandum-recipients.service */ "./src/modules/memorandums/memorandum-recipients/memorandum-recipients.service.ts");
+const memorandum_recipient_entity_1 = __webpack_require__(/*! ./entities/memorandum-recipient.entity */ "./src/modules/memorandums/memorandum-recipients/entities/memorandum-recipient.entity.ts");
+class MemorandumRecipientsController extends (0, create_controller_factory_1.createController)(memorandum_recipient_entity_1.MemorandumRecipient, // Entity name for Swagger documentation
+memorandum_recipients_service_1.MemorandumRecipientsService, // The service handling MemorandumRecipient-related operations
+memorandum_recipient_dto_1.GetMemorandumRecipientDto, // DTO for retrieving MemorandumRecipients
+memorandum_recipient_dto_1.MemorandumRecipientDto, // DTO for creating MemorandumRecipients
+memorandum_recipient_dto_1.UpdateMemorandumRecipientDto) {
+}
+exports.MemorandumRecipientsController = MemorandumRecipientsController;
+
+
+/***/ }),
+
+/***/ "./src/modules/memorandums/memorandum-recipients/memorandum-recipients.module.ts":
+/*!***************************************************************************************!*\
+  !*** ./src/modules/memorandums/memorandum-recipients/memorandum-recipients.module.ts ***!
+  \***************************************************************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+"use strict";
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.MemorandumRecipientsModule = void 0;
+const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
+const typeorm_1 = __webpack_require__(/*! @nestjs/typeorm */ "@nestjs/typeorm");
+const memorandum_recipients_controller_1 = __webpack_require__(/*! ./memorandum-recipients.controller */ "./src/modules/memorandums/memorandum-recipients/memorandum-recipients.controller.ts");
+const memorandum_recipients_service_1 = __webpack_require__(/*! ./memorandum-recipients.service */ "./src/modules/memorandums/memorandum-recipients/memorandum-recipients.service.ts");
+const memorandum_recipient_entity_1 = __webpack_require__(/*! ./entities/memorandum-recipient.entity */ "./src/modules/memorandums/memorandum-recipients/entities/memorandum-recipient.entity.ts");
+let MemorandumRecipientsModule = class MemorandumRecipientsModule {
+};
+exports.MemorandumRecipientsModule = MemorandumRecipientsModule;
+exports.MemorandumRecipientsModule = MemorandumRecipientsModule = __decorate([
+    (0, common_1.Module)({
+        imports: [
+            typeorm_1.TypeOrmModule.forFeature([memorandum_recipient_entity_1.MemorandumRecipient]),
+        ],
+        providers: [memorandum_recipients_service_1.MemorandumRecipientsService],
+        exports: [memorandum_recipients_service_1.MemorandumRecipientsService],
+        controllers: [memorandum_recipients_controller_1.MemorandumRecipientsController],
+    })
+], MemorandumRecipientsModule);
+
+
+/***/ }),
+
+/***/ "./src/modules/memorandums/memorandum-recipients/memorandum-recipients.service.ts":
+/*!****************************************************************************************!*\
+  !*** ./src/modules/memorandums/memorandum-recipients/memorandum-recipients.service.ts ***!
+  \****************************************************************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+"use strict";
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
+var _a, _b;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.MemorandumRecipientsService = void 0;
+const base_service_1 = __webpack_require__(/*! @/common/services/base.service */ "./src/common/services/base.service.ts");
+const users_service_1 = __webpack_require__(/*! @/modules/account-management/users/users.service */ "./src/modules/account-management/users/users.service.ts");
+const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
+const typeorm_1 = __webpack_require__(/*! @nestjs/typeorm */ "@nestjs/typeorm");
+const typeorm_2 = __webpack_require__(/*! typeorm */ "typeorm");
+const memorandum_recipient_entity_1 = __webpack_require__(/*! ./entities/memorandum-recipient.entity */ "./src/modules/memorandums/memorandum-recipients/entities/memorandum-recipient.entity.ts");
+let MemorandumRecipientsService = class MemorandumRecipientsService extends base_service_1.BaseService {
+    constructor(memorandumRecipientsRepository, usersService) {
+        super(memorandumRecipientsRepository, usersService);
+        this.memorandumRecipientsRepository = memorandumRecipientsRepository;
+        this.usersService = usersService;
+    }
+};
+exports.MemorandumRecipientsService = MemorandumRecipientsService;
+exports.MemorandumRecipientsService = MemorandumRecipientsService = __decorate([
+    (0, common_1.Injectable)(),
+    __param(0, (0, typeorm_1.InjectRepository)(memorandum_recipient_entity_1.MemorandumRecipient)),
+    __metadata("design:paramtypes", [typeof (_a = typeof typeorm_2.Repository !== "undefined" && typeorm_2.Repository) === "function" ? _a : Object, typeof (_b = typeof users_service_1.UsersService !== "undefined" && users_service_1.UsersService) === "function" ? _b : Object])
+], MemorandumRecipientsService);
+
+
+/***/ }),
+
+/***/ "./src/modules/memorandums/memorandum-templates/dtos/memorandum-template.dto.ts":
+/*!**************************************************************************************!*\
+  !*** ./src/modules/memorandums/memorandum-templates/dtos/memorandum-template.dto.ts ***!
+  \**************************************************************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+"use strict";
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.GetMemorandumTemplateDto = exports.UpdateMemorandumTemplateDto = exports.MemorandumTemplateDto = void 0;
+const base_dto_1 = __webpack_require__(/*! @/common/dtos/base.dto */ "./src/common/dtos/base.dto.ts");
+const create_get_dto_factory_1 = __webpack_require__(/*! @/common/factories/create-get-dto.factory */ "./src/common/factories/create-get-dto.factory.ts");
+const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
+const class_validator_1 = __webpack_require__(/*! class-validator */ "class-validator");
+const swagger_2 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
+class MemorandumTemplateDto extends (0, swagger_2.PartialType)(base_dto_1.BaseDto) {
+}
+exports.MemorandumTemplateDto = MemorandumTemplateDto;
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Name of the memorandum-template' }),
+    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], MemorandumTemplateDto.prototype, "name", void 0);
+class UpdateMemorandumTemplateDto extends (0, swagger_2.PartialType)(MemorandumTemplateDto) {
+}
+exports.UpdateMemorandumTemplateDto = UpdateMemorandumTemplateDto;
+class GetMemorandumTemplateDto extends (0, create_get_dto_factory_1.createGetDto)(MemorandumTemplateDto) {
+}
+exports.GetMemorandumTemplateDto = GetMemorandumTemplateDto;
+
+
+/***/ }),
+
+/***/ "./src/modules/memorandums/memorandum-templates/entities/memorandum-template.entity.ts":
+/*!*********************************************************************************************!*\
+  !*** ./src/modules/memorandums/memorandum-templates/entities/memorandum-template.entity.ts ***!
+  \*********************************************************************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+"use strict";
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var _a;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.MemorandumTemplate = void 0;
+const memo_type_enum_1 = __webpack_require__(/*! @/common/enums/memo-type.enum */ "./src/common/enums/memo-type.enum.ts");
+const base_entity_1 = __webpack_require__(/*! @/database/entities/base.entity */ "./src/database/entities/base.entity.ts");
+const typeorm_1 = __webpack_require__(/*! typeorm */ "typeorm");
+const memorandum_entity_1 = __webpack_require__(/*! ../../entities/memorandum.entity */ "./src/modules/memorandums/entities/memorandum.entity.ts");
+let MemorandumTemplate = class MemorandumTemplate extends base_entity_1.BaseEntity {
+};
+exports.MemorandumTemplate = MemorandumTemplate;
+__decorate([
+    (0, typeorm_1.OneToMany)(() => memorandum_entity_1.Memorandum, (memorandum) => memorandum.template, { nullable: true }),
+    __metadata("design:type", Array)
+], MemorandumTemplate.prototype, "memorandums", void 0);
+__decorate([
+    (0, typeorm_1.Index)({ unique: true }),
+    (0, typeorm_1.Column)({ type: 'varchar', length: 100 }),
+    __metadata("design:type", String)
+], MemorandumTemplate.prototype, "name", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'varchar', length: 255, nullable: true }),
+    __metadata("design:type", String)
+], MemorandumTemplate.prototype, "description", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'text' }),
+    __metadata("design:type", String)
+], MemorandumTemplate.prototype, "content", void 0);
+__decorate([
+    (0, typeorm_1.Index)(),
+    (0, typeorm_1.Column)({ type: 'enum', enum: memo_type_enum_1.MemoType }),
+    __metadata("design:type", typeof (_a = typeof memo_type_enum_1.MemoType !== "undefined" && memo_type_enum_1.MemoType) === "function" ? _a : Object)
+], MemorandumTemplate.prototype, "type", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'boolean', default: false }),
+    __metadata("design:type", Boolean)
+], MemorandumTemplate.prototype, "isDefault", void 0);
+exports.MemorandumTemplate = MemorandumTemplate = __decorate([
+    (0, typeorm_1.Entity)('memorandum-templates')
+], MemorandumTemplate);
+
+
+/***/ }),
+
+/***/ "./src/modules/memorandums/memorandum-templates/memorandum-templates.controller.ts":
+/*!*****************************************************************************************!*\
+  !*** ./src/modules/memorandums/memorandum-templates/memorandum-templates.controller.ts ***!
+  \*****************************************************************************************/
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.MemorandumTemplatesController = void 0;
+const create_controller_factory_1 = __webpack_require__(/*! @/common/factories/create-controller.factory */ "./src/common/factories/create-controller.factory.ts");
+const memorandum_template_dto_1 = __webpack_require__(/*! ./dtos/memorandum-template.dto */ "./src/modules/memorandums/memorandum-templates/dtos/memorandum-template.dto.ts");
+const memorandum_templates_service_1 = __webpack_require__(/*! ./memorandum-templates.service */ "./src/modules/memorandums/memorandum-templates/memorandum-templates.service.ts");
+const memorandum_template_entity_1 = __webpack_require__(/*! ./entities/memorandum-template.entity */ "./src/modules/memorandums/memorandum-templates/entities/memorandum-template.entity.ts");
+class MemorandumTemplatesController extends (0, create_controller_factory_1.createController)(memorandum_template_entity_1.MemorandumTemplate, // Entity name for Swagger documentation
+memorandum_templates_service_1.MemorandumTemplatesService, // The service handling MemorandumTemplate-related operations
+memorandum_template_dto_1.GetMemorandumTemplateDto, // DTO for retrieving MemorandumTemplates
+memorandum_template_dto_1.MemorandumTemplateDto, // DTO for creating MemorandumTemplates
+memorandum_template_dto_1.UpdateMemorandumTemplateDto) {
+}
+exports.MemorandumTemplatesController = MemorandumTemplatesController;
+
+
+/***/ }),
+
+/***/ "./src/modules/memorandums/memorandum-templates/memorandum-templates.module.ts":
+/*!*************************************************************************************!*\
+  !*** ./src/modules/memorandums/memorandum-templates/memorandum-templates.module.ts ***!
+  \*************************************************************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+"use strict";
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.MemorandumTemplatesModule = void 0;
+const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
+const typeorm_1 = __webpack_require__(/*! @nestjs/typeorm */ "@nestjs/typeorm");
+const memorandum_templates_controller_1 = __webpack_require__(/*! ./memorandum-templates.controller */ "./src/modules/memorandums/memorandum-templates/memorandum-templates.controller.ts");
+const memorandum_templates_service_1 = __webpack_require__(/*! ./memorandum-templates.service */ "./src/modules/memorandums/memorandum-templates/memorandum-templates.service.ts");
+const memorandum_template_entity_1 = __webpack_require__(/*! ./entities/memorandum-template.entity */ "./src/modules/memorandums/memorandum-templates/entities/memorandum-template.entity.ts");
+let MemorandumTemplatesModule = class MemorandumTemplatesModule {
+};
+exports.MemorandumTemplatesModule = MemorandumTemplatesModule;
+exports.MemorandumTemplatesModule = MemorandumTemplatesModule = __decorate([
+    (0, common_1.Module)({
+        imports: [
+            typeorm_1.TypeOrmModule.forFeature([memorandum_template_entity_1.MemorandumTemplate]),
+        ],
+        providers: [memorandum_templates_service_1.MemorandumTemplatesService],
+        exports: [memorandum_templates_service_1.MemorandumTemplatesService],
+        controllers: [memorandum_templates_controller_1.MemorandumTemplatesController],
+    })
+], MemorandumTemplatesModule);
+
+
+/***/ }),
+
+/***/ "./src/modules/memorandums/memorandum-templates/memorandum-templates.service.ts":
+/*!**************************************************************************************!*\
+  !*** ./src/modules/memorandums/memorandum-templates/memorandum-templates.service.ts ***!
+  \**************************************************************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+"use strict";
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
+var _a, _b;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.MemorandumTemplatesService = void 0;
+const base_service_1 = __webpack_require__(/*! @/common/services/base.service */ "./src/common/services/base.service.ts");
+const users_service_1 = __webpack_require__(/*! @/modules/account-management/users/users.service */ "./src/modules/account-management/users/users.service.ts");
+const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
+const typeorm_1 = __webpack_require__(/*! @nestjs/typeorm */ "@nestjs/typeorm");
+const typeorm_2 = __webpack_require__(/*! typeorm */ "typeorm");
+const memorandum_template_entity_1 = __webpack_require__(/*! ./entities/memorandum-template.entity */ "./src/modules/memorandums/memorandum-templates/entities/memorandum-template.entity.ts");
+let MemorandumTemplatesService = class MemorandumTemplatesService extends base_service_1.BaseService {
+    constructor(memorandumTemplatesRepository, usersService) {
+        super(memorandumTemplatesRepository, usersService);
+        this.memorandumTemplatesRepository = memorandumTemplatesRepository;
+        this.usersService = usersService;
+    }
+};
+exports.MemorandumTemplatesService = MemorandumTemplatesService;
+exports.MemorandumTemplatesService = MemorandumTemplatesService = __decorate([
+    (0, common_1.Injectable)(),
+    __param(0, (0, typeorm_1.InjectRepository)(memorandum_template_entity_1.MemorandumTemplate)),
+    __metadata("design:paramtypes", [typeof (_a = typeof typeorm_2.Repository !== "undefined" && typeorm_2.Repository) === "function" ? _a : Object, typeof (_b = typeof users_service_1.UsersService !== "undefined" && users_service_1.UsersService) === "function" ? _b : Object])
+], MemorandumTemplatesService);
+
+
+/***/ }),
+
+/***/ "./src/modules/memorandums/memorandums.controller.ts":
+/*!***********************************************************!*\
+  !*** ./src/modules/memorandums/memorandums.controller.ts ***!
+  \***********************************************************/
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.MemorandumsController = void 0;
+const create_controller_factory_1 = __webpack_require__(/*! @/common/factories/create-controller.factory */ "./src/common/factories/create-controller.factory.ts");
+const memorandum_dto_1 = __webpack_require__(/*! ./dtos/memorandum.dto */ "./src/modules/memorandums/dtos/memorandum.dto.ts");
+const memorandums_service_1 = __webpack_require__(/*! ./memorandums.service */ "./src/modules/memorandums/memorandums.service.ts");
+const memorandum_entity_1 = __webpack_require__(/*! ./entities/memorandum.entity */ "./src/modules/memorandums/entities/memorandum.entity.ts");
+class MemorandumsController extends (0, create_controller_factory_1.createController)(memorandum_entity_1.Memorandum, // Entity name for Swagger documentation
+memorandums_service_1.MemorandumsService, // The service handling Memorandum-related operations
+memorandum_dto_1.GetMemorandumDto, // DTO for retrieving Memorandums
+memorandum_dto_1.MemorandumDto, // DTO for creating Memorandums
+memorandum_dto_1.UpdateMemorandumDto) {
+}
+exports.MemorandumsController = MemorandumsController;
+
+
+/***/ }),
+
+/***/ "./src/modules/memorandums/memorandums.module.ts":
+/*!*******************************************************!*\
+  !*** ./src/modules/memorandums/memorandums.module.ts ***!
+  \*******************************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+"use strict";
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.MemorandumsModule = void 0;
+const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
+const core_1 = __webpack_require__(/*! @nestjs/core */ "@nestjs/core");
+const typeorm_1 = __webpack_require__(/*! @nestjs/typeorm */ "@nestjs/typeorm");
+const memorandum_entity_1 = __webpack_require__(/*! ./entities/memorandum.entity */ "./src/modules/memorandums/entities/memorandum.entity.ts");
+const memorandum_flows_module_1 = __webpack_require__(/*! ./memorandum-flows/memorandum-flows.module */ "./src/modules/memorandums/memorandum-flows/memorandum-flows.module.ts");
+const memorandum_recipients_module_1 = __webpack_require__(/*! ./memorandum-recipients/memorandum-recipients.module */ "./src/modules/memorandums/memorandum-recipients/memorandum-recipients.module.ts");
+const memorandum_templates_module_1 = __webpack_require__(/*! ./memorandum-templates/memorandum-templates.module */ "./src/modules/memorandums/memorandum-templates/memorandum-templates.module.ts");
+const memorandums_controller_1 = __webpack_require__(/*! ./memorandums.controller */ "./src/modules/memorandums/memorandums.controller.ts");
+const memorandums_service_1 = __webpack_require__(/*! ./memorandums.service */ "./src/modules/memorandums/memorandums.service.ts");
+let MemorandumsModule = class MemorandumsModule {
+};
+exports.MemorandumsModule = MemorandumsModule;
+exports.MemorandumsModule = MemorandumsModule = __decorate([
+    (0, common_1.Module)({
+        imports: [
+            typeorm_1.TypeOrmModule.forFeature([memorandum_entity_1.Memorandum]),
+            core_1.RouterModule.register([
+                {
+                    path: 'memorandums',
+                    module: MemorandumsModule,
+                    children: [
+                        {
+                            path: 'templates',
+                            module: memorandum_templates_module_1.MemorandumTemplatesModule
+                        },
+                        {
+                            path: 'flows',
+                            module: memorandum_flows_module_1.MemorandumFlowsModule
+                        },
+                        {
+                            path: 'recipients',
+                            module: memorandum_recipients_module_1.MemorandumRecipientsModule
+                        }
+                    ]
+                }
+            ]),
+            memorandum_templates_module_1.MemorandumTemplatesModule,
+            memorandum_flows_module_1.MemorandumFlowsModule,
+            memorandum_recipients_module_1.MemorandumRecipientsModule,
+        ],
+        providers: [memorandums_service_1.MemorandumsService],
+        exports: [
+            memorandums_service_1.MemorandumsService,
+            memorandum_templates_module_1.MemorandumTemplatesModule,
+            memorandum_flows_module_1.MemorandumFlowsModule,
+            memorandum_recipients_module_1.MemorandumRecipientsModule,
+        ],
+        controllers: [memorandums_controller_1.MemorandumsController],
+    })
+], MemorandumsModule);
+
+
+/***/ }),
+
+/***/ "./src/modules/memorandums/memorandums.service.ts":
+/*!********************************************************!*\
+  !*** ./src/modules/memorandums/memorandums.service.ts ***!
+  \********************************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+"use strict";
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
+var _a, _b;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.MemorandumsService = void 0;
+const base_service_1 = __webpack_require__(/*! @/common/services/base.service */ "./src/common/services/base.service.ts");
+const users_service_1 = __webpack_require__(/*! @/modules/account-management/users/users.service */ "./src/modules/account-management/users/users.service.ts");
+const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
+const typeorm_1 = __webpack_require__(/*! @nestjs/typeorm */ "@nestjs/typeorm");
+const typeorm_2 = __webpack_require__(/*! typeorm */ "typeorm");
+const memorandum_entity_1 = __webpack_require__(/*! ./entities/memorandum.entity */ "./src/modules/memorandums/entities/memorandum.entity.ts");
+let MemorandumsService = class MemorandumsService extends base_service_1.BaseService {
+    constructor(memorandumsRepository, usersService) {
+        super(memorandumsRepository, usersService);
+        this.memorandumsRepository = memorandumsRepository;
+        this.usersService = usersService;
+    }
+};
+exports.MemorandumsService = MemorandumsService;
+exports.MemorandumsService = MemorandumsService = __decorate([
+    (0, common_1.Injectable)(),
+    __param(0, (0, typeorm_1.InjectRepository)(memorandum_entity_1.Memorandum)),
+    __metadata("design:paramtypes", [typeof (_a = typeof typeorm_2.Repository !== "undefined" && typeorm_2.Repository) === "function" ? _a : Object, typeof (_b = typeof users_service_1.UsersService !== "undefined" && users_service_1.UsersService) === "function" ? _b : Object])
+], MemorandumsService);
 
 
 /***/ }),
@@ -27107,10 +29734,11 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
-var _a;
+var _a, _b;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Organization = void 0;
 const address_entity_1 = __webpack_require__(/*! @/modules/addresses/entities/address.entity */ "./src/modules/addresses/entities/address.entity.ts");
+const attendance_configuration_entity_1 = __webpack_require__(/*! @/modules/attendance-management/attendance-configurations/entities/attendance-configuration.entity */ "./src/modules/attendance-management/attendance-configurations/entities/attendance-configuration.entity.ts");
 const role_entity_1 = __webpack_require__(/*! @/modules/employee-management/roles/entities/role.entity */ "./src/modules/employee-management/roles/entities/role.entity.ts");
 const typeorm_1 = __webpack_require__(/*! typeorm */ "typeorm");
 const base_entity_1 = __webpack_require__(/*! ../../../database/entities/base.entity */ "./src/database/entities/base.entity.ts");
@@ -27156,6 +29784,10 @@ __decorate([
     (0, typeorm_1.OneToMany)(() => role_entity_1.Role, (role) => role.organization, { nullable: true, cascade: true }),
     __metadata("design:type", Array)
 ], Organization.prototype, "roles", void 0);
+__decorate([
+    (0, typeorm_1.OneToOne)(() => attendance_configuration_entity_1.AttendanceConfiguration, (attendanceConfiguration) => attendanceConfiguration.organization, { nullable: true, cascade: true }),
+    __metadata("design:type", typeof (_b = typeof attendance_configuration_entity_1.AttendanceConfiguration !== "undefined" && attendance_configuration_entity_1.AttendanceConfiguration) === "function" ? _b : Object)
+], Organization.prototype, "attendanceConfiguration", void 0);
 exports.Organization = Organization = __decorate([
     (0, typeorm_1.Entity)('organizations')
 ], Organization);
@@ -27377,8 +30009,8 @@ var CutoffsService_1;
 var _a, _b;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.CutoffsService = void 0;
-const cutoff_status_enum_1 = __webpack_require__(/*! @/common/enums/cutoff-status.enum */ "./src/common/enums/cutoff-status.enum.ts");
-const cutoff_type_enum_1 = __webpack_require__(/*! @/common/enums/cutoff-type.enum */ "./src/common/enums/cutoff-type.enum.ts");
+const cutoff_status_enum_1 = __webpack_require__(/*! @/common/enums/payroll/cutoff-status.enum */ "./src/common/enums/payroll/cutoff-status.enum.ts");
+const cutoff_type_enum_1 = __webpack_require__(/*! @/common/enums/payroll/cutoff-type.enum */ "./src/common/enums/payroll/cutoff-type.enum.ts");
 const utility_helper_1 = __webpack_require__(/*! @/common/helpers/utility.helper */ "./src/common/helpers/utility.helper.ts");
 const base_service_1 = __webpack_require__(/*! @/common/services/base.service */ "./src/common/services/base.service.ts");
 const users_service_1 = __webpack_require__(/*! @/modules/account-management/users/users.service */ "./src/modules/account-management/users/users.service.ts");
@@ -27487,7 +30119,7 @@ let CutoffsService = CutoffsService_1 = class CutoffsService extends base_servic
     async getActiveCutoffs() {
         return await this.repository.find({
             where: {
-                status: cutoff_status_enum_1.CutoffStatus.ACTIVE,
+                status: cutoff_status_enum_1.CutoffStatus.ACTIVE || cutoff_status_enum_1.CutoffStatus.PENDING,
                 startDate: (0, typeorm_2.MoreThan)(new Date()),
                 isDeleted: false
             },
@@ -27497,7 +30129,7 @@ let CutoffsService = CutoffsService_1 = class CutoffsService extends base_servic
     async getActiveCutoff() {
         return await this.repository.findOne({
             where: {
-                status: cutoff_status_enum_1.CutoffStatus.ACTIVE,
+                status: cutoff_status_enum_1.CutoffStatus.ACTIVE || cutoff_status_enum_1.CutoffStatus.PENDING,
                 startDate: (0, typeorm_2.MoreThan)(new Date()),
                 isDeleted: false
             },
@@ -27671,8 +30303,8 @@ var _a, _b, _c, _d;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.GetCutoffDto = exports.UpdateCutoffDto = exports.CutoffDto = void 0;
 const base_dto_1 = __webpack_require__(/*! @/common/dtos/base.dto */ "./src/common/dtos/base.dto.ts");
-const cutoff_status_enum_1 = __webpack_require__(/*! @/common/enums/cutoff-status.enum */ "./src/common/enums/cutoff-status.enum.ts");
-const cutoff_type_enum_1 = __webpack_require__(/*! @/common/enums/cutoff-type.enum */ "./src/common/enums/cutoff-type.enum.ts");
+const cutoff_status_enum_1 = __webpack_require__(/*! @/common/enums/payroll/cutoff-status.enum */ "./src/common/enums/payroll/cutoff-status.enum.ts");
+const cutoff_type_enum_1 = __webpack_require__(/*! @/common/enums/payroll/cutoff-type.enum */ "./src/common/enums/payroll/cutoff-type.enum.ts");
 const create_get_dto_factory_1 = __webpack_require__(/*! @/common/factories/create-get-dto.factory */ "./src/common/factories/create-get-dto.factory.ts");
 const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
 const class_transformer_1 = __webpack_require__(/*! class-transformer */ "class-transformer");
@@ -27766,8 +30398,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var _a, _b, _c, _d;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Cutoff = void 0;
-const cutoff_status_enum_1 = __webpack_require__(/*! @/common/enums/cutoff-status.enum */ "./src/common/enums/cutoff-status.enum.ts");
-const cutoff_type_enum_1 = __webpack_require__(/*! @/common/enums/cutoff-type.enum */ "./src/common/enums/cutoff-type.enum.ts");
+const cutoff_type_enum_1 = __webpack_require__(/*! @/common/enums/payroll/cutoff-type.enum */ "./src/common/enums/payroll/cutoff-type.enum.ts");
 const base_entity_1 = __webpack_require__(/*! @/database/entities/base.entity */ "./src/database/entities/base.entity.ts");
 const attendance_entity_1 = __webpack_require__(/*! @/modules/attendance-management/entities/attendance.entity */ "./src/modules/attendance-management/entities/attendance.entity.ts");
 const final_work_hour_entity_1 = __webpack_require__(/*! @/modules/attendance-management/final-work-hours/entities/final-work-hour.entity */ "./src/modules/attendance-management/final-work-hours/entities/final-work-hour.entity.ts");
@@ -27776,6 +30407,7 @@ const shift_entity_1 = __webpack_require__(/*! @/modules/shift-management/entiti
 const schedule_entity_1 = __webpack_require__(/*! @/modules/shift-management/schedules/entities/schedule.entity */ "./src/modules/shift-management/schedules/entities/schedule.entity.ts");
 const typeorm_1 = __webpack_require__(/*! typeorm */ "typeorm");
 const payroll_entity_1 = __webpack_require__(/*! ../../entities/payroll.entity */ "./src/modules/payroll-management/entities/payroll.entity.ts");
+const cutoff_status_enum_1 = __webpack_require__(/*! @/common/enums/payroll/cutoff-status.enum */ "./src/common/enums/payroll/cutoff-status.enum.ts");
 let Cutoff = class Cutoff extends base_entity_1.BaseEntity {
 };
 exports.Cutoff = Cutoff;
@@ -27838,6 +30470,123 @@ exports.Cutoff = Cutoff = __decorate([
 
 /***/ }),
 
+/***/ "./src/modules/payroll-management/dtos/payroll-batch-process.dto.ts":
+/*!**************************************************************************!*\
+  !*** ./src/modules/payroll-management/dtos/payroll-batch-process.dto.ts ***!
+  \**************************************************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+"use strict";
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.PayrollBatchProcessResponseDto = exports.PayrollBatchProcessRequestDto = void 0;
+const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
+const class_transformer_1 = __webpack_require__(/*! class-transformer */ "class-transformer");
+const class_validator_1 = __webpack_require__(/*! class-validator */ "class-validator");
+class BatchInfo {
+}
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Unique identifier for the batch',
+        example: '123e4567-ef00-1234-5678-1234567890ab',
+        format: 'uuid'
+    }),
+    (0, class_validator_1.IsUUID)(4, { message: 'batchId must be a valid UUID v4' }),
+    (0, class_validator_1.IsNotEmpty)(),
+    __metadata("design:type", String)
+], BatchInfo.prototype, "batchId", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Number of employees in this batch',
+        example: 100,
+        minimum: 1
+    }),
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.IsPositive)({ message: 'employeeCount must be a positive number' }),
+    __metadata("design:type", Number)
+], BatchInfo.prototype, "employeeCount", void 0);
+class PayrollBatchProcessRequestDto {
+}
+exports.PayrollBatchProcessRequestDto = PayrollBatchProcessRequestDto;
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'ID of the cutoff for which payroll is to be processed',
+        example: '123e4567-ef00-1234-5678-1234567890ab',
+        format: 'uuid'
+    }),
+    (0, class_validator_1.IsUUID)(4, { message: 'cutoffId must be a valid UUID v4' }),
+    (0, class_validator_1.IsNotEmpty)(),
+    __metadata("design:type", String)
+], PayrollBatchProcessRequestDto.prototype, "cutoffId", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'Batch size for processing payroll items',
+        example: 100,
+        default: 100,
+        minimum: 1
+    }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.IsPositive)({ message: 'batchSize must be a positive number' }),
+    __metadata("design:type", Number)
+], PayrollBatchProcessRequestDto.prototype, "batchSize", void 0);
+class PayrollBatchProcessResponseDto extends PayrollBatchProcessRequestDto {
+}
+exports.PayrollBatchProcessResponseDto = PayrollBatchProcessResponseDto;
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Response message',
+        example: 'Payroll batch processing initiated successfully'
+    }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsNotEmpty)(),
+    __metadata("design:type", String)
+], PayrollBatchProcessResponseDto.prototype, "message", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Total number of batches created for processing',
+        example: 5,
+        minimum: 1
+    }),
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.IsPositive)(),
+    (0, class_validator_1.IsNotEmpty)(),
+    __metadata("design:type", Number)
+], PayrollBatchProcessResponseDto.prototype, "batchCount", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'List of batches created for processing',
+        type: [BatchInfo]
+    }),
+    (0, class_validator_1.IsArray)(),
+    (0, class_validator_1.ValidateNested)({ each: true }),
+    (0, class_transformer_1.Type)(() => BatchInfo),
+    (0, class_validator_1.IsNotEmpty)(),
+    __metadata("design:type", Array)
+], PayrollBatchProcessResponseDto.prototype, "batches", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Estimated time for completion of the batch processing',
+        example: '2023-10-01T12:00:00Z',
+        format: 'date-time'
+    }),
+    (0, class_validator_1.IsISO8601)(),
+    (0, class_validator_1.IsNotEmpty)(),
+    __metadata("design:type", String)
+], PayrollBatchProcessResponseDto.prototype, "estimatedCompletionTime", void 0);
+
+
+/***/ }),
+
 /***/ "./src/modules/payroll-management/dtos/payroll.dto.ts":
 /*!************************************************************!*\
   !*** ./src/modules/payroll-management/dtos/payroll.dto.ts ***!
@@ -27855,28 +30604,661 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
+var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.GetPayrollDto = exports.UpdatePayrollDto = exports.PayrollDto = void 0;
+exports.GetPayrollDto = exports.UpdatePayrollDto = exports.PayrollDto = exports.StateHistoryItemDto = exports.ComparisonDto = exports.SignificantChangeDto = exports.ContributionDto = void 0;
 const base_dto_1 = __webpack_require__(/*! @/common/dtos/base.dto */ "./src/common/dtos/base.dto.ts");
+const payroll_state_enum_1 = __webpack_require__(/*! @/common/enums/payroll/payroll-state.enum */ "./src/common/enums/payroll/payroll-state.enum.ts");
 const create_get_dto_factory_1 = __webpack_require__(/*! @/common/factories/create-get-dto.factory */ "./src/common/factories/create-get-dto.factory.ts");
 const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
+const class_transformer_1 = __webpack_require__(/*! class-transformer */ "class-transformer");
 const class_validator_1 = __webpack_require__(/*! class-validator */ "class-validator");
-const swagger_2 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
-class PayrollDto extends (0, swagger_2.PartialType)(base_dto_1.BaseDto) {
+class ContributionDto {
+}
+exports.ContributionDto = ContributionDto;
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Employee contribution amount', example: 500.00 }),
+    (0, class_validator_1.IsNumber)({ maxDecimalPlaces: 2 }),
+    __metadata("design:type", Number)
+], ContributionDto.prototype, "employee", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ description: 'Employer contribution amount', example: 500.00 }),
+    (0, class_validator_1.IsNumber)({ maxDecimalPlaces: 2 }),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Number)
+], ContributionDto.prototype, "employer", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ description: 'Total contribution amount', example: 1000.00 }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsNumber)({ maxDecimalPlaces: 2 }),
+    __metadata("design:type", Number)
+], ContributionDto.prototype, "total", void 0);
+class SignificantChangeDto {
+}
+exports.SignificantChangeDto = SignificantChangeDto;
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Field that changed significantly', example: 'basicPay' }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsNotEmpty)(),
+    __metadata("design:type", String)
+], SignificantChangeDto.prototype, "field", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Previous value', example: 5000 }),
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.IsNotEmpty)(),
+    __metadata("design:type", Number)
+], SignificantChangeDto.prototype, "previousValue", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Current value', example: 5500 }),
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.IsNotEmpty)(),
+    __metadata("design:type", Number)
+], SignificantChangeDto.prototype, "currentValue", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Percentage change', example: 10 }),
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.IsNotEmpty)(),
+    __metadata("design:type", Number)
+], SignificantChangeDto.prototype, "percentageChange", void 0);
+class ComparisonDto {
+}
+exports.ComparisonDto = ComparisonDto;
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'ID of the previous payroll', example: '123e4567-e89b-12d3-a456-426614174000' }),
+    (0, class_validator_1.IsUUID)(),
+    (0, class_validator_1.IsNotEmpty)(),
+    __metadata("design:type", String)
+], ComparisonDto.prototype, "previousPayrollId", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Difference in net pay', example: 500 }),
+    (0, class_validator_1.IsNumber)({ maxDecimalPlaces: 2 }),
+    (0, class_validator_1.IsNotEmpty)(),
+    __metadata("design:type", Number)
+], ComparisonDto.prototype, "netPayDifference", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Difference in gross pay', example: 700 }),
+    (0, class_validator_1.IsNumber)({ maxDecimalPlaces: 2 }),
+    (0, class_validator_1.IsNotEmpty)(),
+    __metadata("design:type", Number)
+], ComparisonDto.prototype, "grossPayDifference", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ description: 'Significant changes in the payroll', type: [SignificantChangeDto] }),
+    (0, class_validator_1.ValidateNested)({ each: true }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_transformer_1.Type)(() => SignificantChangeDto),
+    __metadata("design:type", Array)
+], ComparisonDto.prototype, "significantChanges", void 0);
+class StateHistoryItemDto {
+}
+exports.StateHistoryItemDto = StateHistoryItemDto;
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Previous state', enum: payroll_state_enum_1.PayrollState }),
+    (0, class_validator_1.IsEnum)(payroll_state_enum_1.PayrollState),
+    (0, class_validator_1.IsNotEmpty)(),
+    __metadata("design:type", typeof (_a = typeof payroll_state_enum_1.PayrollState !== "undefined" && payroll_state_enum_1.PayrollState) === "function" ? _a : Object)
+], StateHistoryItemDto.prototype, "from", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'New state', enum: payroll_state_enum_1.PayrollState }),
+    (0, class_validator_1.IsEnum)(payroll_state_enum_1.PayrollState),
+    (0, class_validator_1.IsNotEmpty)(),
+    __metadata("design:type", typeof (_b = typeof payroll_state_enum_1.PayrollState !== "undefined" && payroll_state_enum_1.PayrollState) === "function" ? _b : Object)
+], StateHistoryItemDto.prototype, "to", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Timestamp of state change', example: '2023-01-01T00:00:00Z' }),
+    (0, class_validator_1.IsDate)(),
+    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_transformer_1.Type)(() => Date),
+    __metadata("design:type", typeof (_c = typeof Date !== "undefined" && Date) === "function" ? _c : Object)
+], StateHistoryItemDto.prototype, "timestamp", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ description: 'Optional note about state change', required: false }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.MaxLength)(500),
+    __metadata("design:type", String)
+], StateHistoryItemDto.prototype, "note", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ description: 'Additional details about state change', required: false }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsObject)(),
+    __metadata("design:type", Object)
+], StateHistoryItemDto.prototype, "details", void 0);
+class PayrollDto extends (0, swagger_1.PartialType)(base_dto_1.BaseDto) {
 }
 exports.PayrollDto = PayrollDto;
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Name of the payroll' }),
-    (0, class_validator_1.IsNotEmpty)(),
+    (0, swagger_1.ApiProperty)({ description: 'ID of the related employee', example: '123e4567-e89b-12d3-a456-426614174000' }),
+    (0, class_validator_1.IsUUID)(),
+    __metadata("design:type", String)
+], PayrollDto.prototype, "employeeId", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'ID of the related cutoff period', example: '123e4567-e89b-12d3-a456-426614174000' }),
+    (0, class_validator_1.IsUUID)(),
+    __metadata("design:type", String)
+], PayrollDto.prototype, "cutoffId", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Monthly rate of the employee', example: 20000.00 }),
+    (0, class_validator_1.IsDecimal)({ decimal_digits: '2' }),
+    (0, class_validator_1.Min)(0),
+    __metadata("design:type", Number)
+], PayrollDto.prototype, "monthlyRate", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Daily rate of the employee', example: 950.00 }),
+    (0, class_validator_1.IsDecimal)({ decimal_digits: '2' }),
+    (0, class_validator_1.Min)(0),
+    __metadata("design:type", Number)
+], PayrollDto.prototype, "dailyRate", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Hourly rate of the employee', example: 118.75 }),
+    (0, class_validator_1.IsDecimal)({ decimal_digits: '2' }),
+    (0, class_validator_1.Min)(0),
+    __metadata("design:type", Number)
+], PayrollDto.prototype, "hourlyRate", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Total hours with no time in', example: 0 }),
+    (0, class_validator_1.IsDecimal)({ decimal_digits: '2' }),
+    (0, class_validator_1.Min)(0),
+    __metadata("design:type", Number)
+], PayrollDto.prototype, "totalNoTimeInHours", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Total hours with no time out', example: 0 }),
+    (0, class_validator_1.IsDecimal)({ decimal_digits: '2' }),
+    (0, class_validator_1.Min)(0),
+    __metadata("design:type", Number)
+], PayrollDto.prototype, "totalNoTimeOutHours", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Total absent hours', example: 0 }),
+    (0, class_validator_1.IsDecimal)({ decimal_digits: '2' }),
+    (0, class_validator_1.Min)(0),
+    __metadata("design:type", Number)
+], PayrollDto.prototype, "totalAbsentHours", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Total tardiness hours', example: 0.5 }),
+    (0, class_validator_1.IsDecimal)({ decimal_digits: '2' }),
+    (0, class_validator_1.Min)(0),
+    __metadata("design:type", Number)
+], PayrollDto.prototype, "totalTardinessHours", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Total undertime hours', example: 0 }),
+    (0, class_validator_1.IsDecimal)({ decimal_digits: '2' }),
+    (0, class_validator_1.Min)(0),
+    __metadata("design:type", Number)
+], PayrollDto.prototype, "totalUndertimeHours", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Total regular work hours', example: 80 }),
+    (0, class_validator_1.IsDecimal)({ decimal_digits: '2' }),
+    (0, class_validator_1.Min)(0),
+    __metadata("design:type", Number)
+], PayrollDto.prototype, "totalRegularHours", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Total holiday work hours', example: 0 }),
+    (0, class_validator_1.IsDecimal)({ decimal_digits: '2' }),
+    (0, class_validator_1.Min)(0),
+    __metadata("design:type", Number)
+], PayrollDto.prototype, "totalHolidayHours", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Total special holiday work hours', example: 0 }),
+    (0, class_validator_1.IsDecimal)({ decimal_digits: '2' }),
+    (0, class_validator_1.Min)(0),
+    __metadata("design:type", Number)
+], PayrollDto.prototype, "totalSpecialHolidayHours", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Total rest day work hours', example: 0 }),
+    (0, class_validator_1.IsDecimal)({ decimal_digits: '2' }),
+    (0, class_validator_1.Min)(0),
+    __metadata("design:type", Number)
+], PayrollDto.prototype, "totalRestDayHours", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Total overtime hours', example: 4 }),
+    (0, class_validator_1.IsDecimal)({ decimal_digits: '2' }),
+    (0, class_validator_1.Min)(0),
+    __metadata("design:type", Number)
+], PayrollDto.prototype, "totalOvertimeHours", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Total holiday overtime hours', example: 0 }),
+    (0, class_validator_1.IsDecimal)({ decimal_digits: '2' }),
+    (0, class_validator_1.Min)(0),
+    __metadata("design:type", Number)
+], PayrollDto.prototype, "totalHolidayOvertimeHours", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Total special holiday overtime hours', example: 0 }),
+    (0, class_validator_1.IsDecimal)({ decimal_digits: '2' }),
+    (0, class_validator_1.Min)(0),
+    __metadata("design:type", Number)
+], PayrollDto.prototype, "totalSpecialHolidayOvertimeHours", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Total rest day overtime hours', example: 0 }),
+    (0, class_validator_1.IsDecimal)({ decimal_digits: '2' }),
+    (0, class_validator_1.Min)(0),
+    __metadata("design:type", Number)
+], PayrollDto.prototype, "totalRestDayOvertimeHours", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Total night differential hours', example: 0 }),
+    (0, class_validator_1.IsDecimal)({ decimal_digits: '2' }),
+    (0, class_validator_1.Min)(0),
+    __metadata("design:type", Number)
+], PayrollDto.prototype, "totalNightDifferentialHours", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Total work hours', example: 84 }),
+    (0, class_validator_1.IsDecimal)({ decimal_digits: '2' }),
+    (0, class_validator_1.Min)(0),
+    __metadata("design:type", Number)
+], PayrollDto.prototype, "totalHours", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Basic pay amount', example: 9500.00 }),
+    (0, class_validator_1.IsDecimal)({ decimal_digits: '2' }),
+    (0, class_validator_1.Min)(0),
+    __metadata("design:type", Number)
+], PayrollDto.prototype, "basicPay", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Overtime pay amount', example: 594.00 }),
+    (0, class_validator_1.IsDecimal)({ decimal_digits: '2' }),
+    (0, class_validator_1.Min)(0),
+    __metadata("design:type", Number)
+], PayrollDto.prototype, "overtimePay", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Holiday pay amount', example: 0 }),
+    (0, class_validator_1.IsDecimal)({ decimal_digits: '2' }),
+    (0, class_validator_1.Min)(0),
+    __metadata("design:type", Number)
+], PayrollDto.prototype, "holidayPay", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Holiday overtime pay amount', example: 0 }),
+    (0, class_validator_1.IsDecimal)({ decimal_digits: '2' }),
+    (0, class_validator_1.Min)(0),
+    __metadata("design:type", Number)
+], PayrollDto.prototype, "holidayOvertimePay", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Special holiday pay amount', example: 0 }),
+    (0, class_validator_1.IsDecimal)({ decimal_digits: '2' }),
+    (0, class_validator_1.Min)(0),
+    __metadata("design:type", Number)
+], PayrollDto.prototype, "specialHolidayPay", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Special holiday overtime pay amount', example: 0 }),
+    (0, class_validator_1.IsDecimal)({ decimal_digits: '2' }),
+    (0, class_validator_1.Min)(0),
+    __metadata("design:type", Number)
+], PayrollDto.prototype, "specialHolidayOvertimePay", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Rest day pay amount', example: 0 }),
+    (0, class_validator_1.IsDecimal)({ decimal_digits: '2' }),
+    (0, class_validator_1.Min)(0),
+    __metadata("design:type", Number)
+], PayrollDto.prototype, "restDayPay", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Rest day overtime pay amount', example: 0 }),
+    (0, class_validator_1.IsDecimal)({ decimal_digits: '2' }),
+    (0, class_validator_1.Min)(0),
+    __metadata("design:type", Number)
+], PayrollDto.prototype, "restDayOvertimePay", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Night differential pay amount', example: 0 }),
+    (0, class_validator_1.IsDecimal)({ decimal_digits: '2' }),
+    (0, class_validator_1.Min)(0),
+    __metadata("design:type", Number)
+], PayrollDto.prototype, "nightDifferentialPay", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Absences deduction amount', example: 0 }),
+    (0, class_validator_1.IsDecimal)({ decimal_digits: '2' }),
+    (0, class_validator_1.Min)(0),
+    __metadata("design:type", Number)
+], PayrollDto.prototype, "absences", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Tardiness deduction amount', example: 59.38 }),
+    (0, class_validator_1.IsDecimal)({ decimal_digits: '2' }),
+    (0, class_validator_1.Min)(0),
+    __metadata("design:type", Number)
+], PayrollDto.prototype, "tardiness", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Undertime deduction amount', example: 0 }),
+    (0, class_validator_1.IsDecimal)({ decimal_digits: '2' }),
+    (0, class_validator_1.Min)(0),
+    __metadata("design:type", Number)
+], PayrollDto.prototype, "undertime", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'No time in deduction amount', example: 0 }),
+    (0, class_validator_1.IsDecimal)({ decimal_digits: '2' }),
+    (0, class_validator_1.Min)(0),
+    __metadata("design:type", Number)
+], PayrollDto.prototype, "noTimeIn", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'No time out deduction amount', example: 0 }),
+    (0, class_validator_1.IsDecimal)({ decimal_digits: '2' }),
+    (0, class_validator_1.Min)(0),
+    __metadata("design:type", Number)
+], PayrollDto.prototype, "noTimeOut", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Total basic deductions amount', example: 59.38 }),
+    (0, class_validator_1.IsDecimal)({ decimal_digits: '2' }),
+    (0, class_validator_1.Min)(0),
+    __metadata("design:type", Number)
+], PayrollDto.prototype, "totalBasicDeductions", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Comparison with previous payroll', required: false }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.ValidateNested)(),
+    (0, class_transformer_1.Type)(() => ComparisonDto),
+    __metadata("design:type", ComparisonDto)
+], PayrollDto.prototype, "comparisonWithPreviousPayroll", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Currency code', example: 'PHP', required: false }),
+    (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
-], PayrollDto.prototype, "name", void 0);
-class UpdatePayrollDto extends (0, swagger_2.PartialType)(PayrollDto) {
+], PayrollDto.prototype, "currency", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Exchange rate', example: 1.0, required: false }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsNumber)({ maxDecimalPlaces: 6 }),
+    __metadata("design:type", Number)
+], PayrollDto.prototype, "exchangeRate", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Total allowances amount', example: 1000.00 }),
+    (0, class_validator_1.IsDecimal)({ decimal_digits: '2' }),
+    (0, class_validator_1.Min)(0),
+    __metadata("design:type", Number)
+], PayrollDto.prototype, "totalAllowances", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Total deductions amount', example: 1559.38 }),
+    (0, class_validator_1.IsDecimal)({ decimal_digits: '2' }),
+    (0, class_validator_1.Min)(0),
+    __metadata("design:type", Number)
+], PayrollDto.prototype, "totalDeductions", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Gross pay amount', example: 11094.00 }),
+    (0, class_validator_1.IsDecimal)({ decimal_digits: '2' }),
+    (0, class_validator_1.Min)(0),
+    __metadata("design:type", Number)
+], PayrollDto.prototype, "grossPay", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Taxable income amount', example: 9534.62 }),
+    (0, class_validator_1.IsDecimal)({ decimal_digits: '2' }),
+    (0, class_validator_1.Min)(0),
+    __metadata("design:type", Number)
+], PayrollDto.prototype, "taxableIncome", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Net pay amount', example: 8534.62 }),
+    (0, class_validator_1.IsDecimal)({ decimal_digits: '2' }),
+    (0, class_validator_1.Min)(0),
+    __metadata("design:type", Number)
+], PayrollDto.prototype, "netPay", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ description: 'Additional notes', example: 'First payroll of the month', required: false }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.MaxLength)(1000),
+    __metadata("design:type", String)
+], PayrollDto.prototype, "notes", void 0);
+class UpdatePayrollDto extends (0, swagger_1.PartialType)(PayrollDto) {
 }
 exports.UpdatePayrollDto = UpdatePayrollDto;
-class GetPayrollDto extends (0, create_get_dto_factory_1.createGetDto)(PayrollDto) {
+class GetPayrollDto extends (0, create_get_dto_factory_1.createGetDto)(UpdatePayrollDto, 'payroll') {
 }
 exports.GetPayrollDto = GetPayrollDto;
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Payment method', example: 'Bank Transfer', required: false }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], GetPayrollDto.prototype, "paymentMethod", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Bank account number', example: '1234567890', required: false }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], GetPayrollDto.prototype, "bankAccount", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Bank reference number', example: 'REF12345', required: false }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], GetPayrollDto.prototype, "bankReferenceNumber", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Check number', example: 'CK001234', required: false }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], GetPayrollDto.prototype, "checkNumber", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Payment date', required: false }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsDate)(),
+    (0, class_transformer_1.Type)(() => Date),
+    __metadata("design:type", typeof (_d = typeof Date !== "undefined" && Date) === "function" ? _d : Object)
+], GetPayrollDto.prototype, "paymentDate", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Batch ID', example: 'BATCH20231015', required: false }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], GetPayrollDto.prototype, "batchId", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Current state of the payroll', enum: payroll_state_enum_1.PayrollState, default: payroll_state_enum_1.PayrollState.DRAFT }),
+    (0, class_validator_1.IsEnum)(payroll_state_enum_1.PayrollState),
+    (0, class_validator_1.IsNotEmpty)(),
+    __metadata("design:type", typeof (_e = typeof payroll_state_enum_1.PayrollState !== "undefined" && payroll_state_enum_1.PayrollState) === "function" ? _e : Object)
+], GetPayrollDto.prototype, "state", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ description: 'History of state changes', type: [StateHistoryItemDto], required: false }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsArray)(),
+    (0, class_validator_1.ValidateNested)({ each: true }),
+    (0, class_transformer_1.Type)(() => StateHistoryItemDto),
+    __metadata("design:type", Array)
+], GetPayrollDto.prototype, "stateHistory", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Processed timestamp', required: false }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsDate)(),
+    (0, class_transformer_1.Type)(() => Date),
+    __metadata("design:type", typeof (_f = typeof Date !== "undefined" && Date) === "function" ? _f : Object)
+], GetPayrollDto.prototype, "processedAt", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'ID of the user who processed the payroll', required: false }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsUUID)(),
+    __metadata("design:type", String)
+], GetPayrollDto.prototype, "processedBy", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Approved timestamp', required: false }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsDate)(),
+    (0, class_transformer_1.Type)(() => Date),
+    __metadata("design:type", typeof (_g = typeof Date !== "undefined" && Date) === "function" ? _g : Object)
+], GetPayrollDto.prototype, "approvedAt", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'ID of the user who approved the payroll', required: false }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsUUID)(),
+    __metadata("design:type", String)
+], GetPayrollDto.prototype, "approvedBy", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Rejected timestamp', required: false }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsDate)(),
+    (0, class_transformer_1.Type)(() => Date),
+    __metadata("design:type", typeof (_h = typeof Date !== "undefined" && Date) === "function" ? _h : Object)
+], GetPayrollDto.prototype, "rejectedAt", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'ID of the user who rejected the payroll', required: false }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsUUID)(),
+    __metadata("design:type", String)
+], GetPayrollDto.prototype, "rejectedBy", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Reason for rejection', example: 'Incorrect calculations', required: false }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.MaxLength)(500),
+    __metadata("design:type", String)
+], GetPayrollDto.prototype, "rejectionReason", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Released timestamp', required: false }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsDate)(),
+    (0, class_transformer_1.Type)(() => Date),
+    __metadata("design:type", typeof (_j = typeof Date !== "undefined" && Date) === "function" ? _j : Object)
+], GetPayrollDto.prototype, "releasedAt", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'ID of the user who released the payroll', required: false }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsUUID)(),
+    __metadata("design:type", String)
+], GetPayrollDto.prototype, "releasedBy", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Voided timestamp', required: false }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsDate)(),
+    (0, class_transformer_1.Type)(() => Date),
+    __metadata("design:type", typeof (_k = typeof Date !== "undefined" && Date) === "function" ? _k : Object)
+], GetPayrollDto.prototype, "voidedAt", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'ID of the user who voided the payroll', required: false }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsUUID)(),
+    __metadata("design:type", String)
+], GetPayrollDto.prototype, "voidedBy", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Count of reprocessing attempts', default: 0 }),
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.Min)(0),
+    (0, class_validator_1.IsNotEmpty)(),
+    __metadata("design:type", Number)
+], GetPayrollDto.prototype, "reprocessedCount", void 0);
+
+
+/***/ }),
+
+/***/ "./src/modules/payroll-management/dtos/recalculate-options.dto.ts":
+/*!************************************************************************!*\
+  !*** ./src/modules/payroll-management/dtos/recalculate-options.dto.ts ***!
+  \************************************************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+"use strict";
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.RecalculateOptionsDto = void 0;
+const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
+const class_validator_1 = __webpack_require__(/*! class-validator */ "class-validator");
+class RecalculateOptionsDto {
+}
+exports.RecalculateOptionsDto = RecalculateOptionsDto;
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Whether to preserve the current state during recalculation',
+        example: true,
+        default: true,
+    }),
+    (0, class_validator_1.IsNotEmpty)({ message: 'preserveState is required' }),
+    (0, class_validator_1.IsBoolean)({ message: 'preserveState must be a boolean value' }),
+    __metadata("design:type", Boolean)
+], RecalculateOptionsDto.prototype, "preserveState", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'Whether to recalculate deductions',
+        example: true,
+        default: false
+    }),
+    (0, class_validator_1.IsBoolean)({ message: 'recalculateDeductions must be a boolean value' }),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Boolean)
+], RecalculateOptionsDto.prototype, "recalculateDeductions", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'Whether to recalculate allowances',
+        example: true,
+        default: false
+    }),
+    (0, class_validator_1.IsBoolean)({ message: 'recalculateAllowances must be a boolean value' }),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Boolean)
+], RecalculateOptionsDto.prototype, "recalculateAllowances", void 0);
+
+
+/***/ }),
+
+/***/ "./src/modules/payroll-management/dtos/release-payroll.dto.ts":
+/*!********************************************************************!*\
+  !*** ./src/modules/payroll-management/dtos/release-payroll.dto.ts ***!
+  \********************************************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+"use strict";
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var _a;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.ReleasePayrollDto = void 0;
+const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
+const class_validator_1 = __webpack_require__(/*! class-validator */ "class-validator");
+class ReleasePayrollDto {
+}
+exports.ReleasePayrollDto = ReleasePayrollDto;
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Payment method type',
+        example: 'BANK_TRANSFER',
+        enum: ['BANK_TRANSFER', 'CHECK', 'CASH']
+    }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsNotEmpty)(),
+    __metadata("design:type", String)
+], ReleasePayrollDto.prototype, "paymentMethod", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Date when the payment was released',
+        example: '2023-04-15T00:00:00Z'
+    }),
+    (0, class_validator_1.IsDate)(),
+    (0, class_validator_1.IsNotEmpty)(),
+    __metadata("design:type", typeof (_a = typeof Date !== "undefined" && Date) === "function" ? _a : Object)
+], ReleasePayrollDto.prototype, "paymentDate", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'Reference number provided by the bank for the transaction',
+        example: 'TX12345678'
+    }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], ReleasePayrollDto.prototype, "bankReferenceNumber", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'Bank account number for bank transfers',
+        example: '****4567'
+    }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], ReleasePayrollDto.prototype, "bankAccount", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'Check number for check payments',
+        example: '10024'
+    }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], ReleasePayrollDto.prototype, "checkNumber", void 0);
 
 
 /***/ }),
@@ -27898,12 +31280,11 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
-var _a, _b, _c, _d, _e, _f, _g, _h, _j;
+var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Payroll = void 0;
-const government_contribution_type_enum_1 = __webpack_require__(/*! @/common/enums/government-contribution-type.enum */ "./src/common/enums/government-contribution-type.enum.ts");
-const payroll_processing_state_enum_1 = __webpack_require__(/*! @/common/enums/payroll-processing-state.enum */ "./src/common/enums/payroll-processing-state.enum.ts");
-const payroll_status_enum_1 = __webpack_require__(/*! @/common/enums/payroll-status.enum */ "./src/common/enums/payroll-status.enum.ts");
+const government_contribution_type_enum_1 = __webpack_require__(/*! @/common/enums/payroll/government-contribution-type.enum */ "./src/common/enums/payroll/government-contribution-type.enum.ts");
+const payroll_state_enum_1 = __webpack_require__(/*! @/common/enums/payroll/payroll-state.enum */ "./src/common/enums/payroll/payroll-state.enum.ts");
 const base_entity_1 = __webpack_require__(/*! @/database/entities/base.entity */ "./src/database/entities/base.entity.ts");
 const employee_entity_1 = __webpack_require__(/*! @/modules/employee-management/entities/employee.entity */ "./src/modules/employee-management/entities/employee.entity.ts");
 const class_transformer_1 = __webpack_require__(/*! class-transformer */ "class-transformer");
@@ -27945,7 +31326,7 @@ let Payroll = class Payroll extends base_entity_1.BaseEntity {
             total: Number((employee + employer).toFixed(2))
         };
     }
-    get withHoldingTax() {
+    get withholdingTax() {
         var _a;
         const taxItem = (_a = this.payrollItems) === null || _a === void 0 ? void 0 : _a.find(item => { var _a; return ((_a = item.payrollItemType) === null || _a === void 0 ? void 0 : _a.governmentMandatedType) === government_contribution_type_enum_1.GovernmentMandatedType.TAX; });
         return Number(Number((taxItem === null || taxItem === void 0 ? void 0 : taxItem.amount) || 0).toFixed(2));
@@ -27953,12 +31334,12 @@ let Payroll = class Payroll extends base_entity_1.BaseEntity {
 };
 exports.Payroll = Payroll;
 __decorate([
-    (0, typeorm_1.ManyToOne)(() => employee_entity_1.Employee, (employee) => employee.payrolls),
+    (0, typeorm_1.ManyToOne)(() => employee_entity_1.Employee, (employee) => employee.payrolls, { eager: true }),
     (0, typeorm_1.JoinColumn)({ name: 'employeeId' }),
     __metadata("design:type", typeof (_a = typeof employee_entity_1.Employee !== "undefined" && employee_entity_1.Employee) === "function" ? _a : Object)
 ], Payroll.prototype, "employee", void 0);
 __decorate([
-    (0, typeorm_1.ManyToOne)(() => cutoff_entity_1.Cutoff, (cutoff) => cutoff.payrolls),
+    (0, typeorm_1.ManyToOne)(() => cutoff_entity_1.Cutoff, (cutoff) => cutoff.payrolls, { eager: true }),
     (0, typeorm_1.JoinColumn)({ name: 'cutoffId' }),
     __metadata("design:type", typeof (_b = typeof cutoff_entity_1.Cutoff !== "undefined" && cutoff_entity_1.Cutoff) === "function" ? _b : Object)
 ], Payroll.prototype, "cutoff", void 0);
@@ -28041,6 +31422,10 @@ __decorate([
 __decorate([
     (0, typeorm_1.Column)('decimal', { precision: 10, scale: 2, default: 0 }),
     __metadata("design:type", Number)
+], Payroll.prototype, "totalNightDifferentialOvertimeHours", void 0);
+__decorate([
+    (0, typeorm_1.Column)('decimal', { precision: 10, scale: 2, default: 0 }),
+    __metadata("design:type", Number)
 ], Payroll.prototype, "totalHours", void 0);
 __decorate([
     (0, typeorm_1.Column)('decimal', { precision: 15, scale: 2, default: 0 }),
@@ -28078,6 +31463,10 @@ __decorate([
     (0, typeorm_1.Column)('decimal', { precision: 15, scale: 2, default: 0 }),
     __metadata("design:type", Number)
 ], Payroll.prototype, "nightDifferentialPay", void 0);
+__decorate([
+    (0, typeorm_1.Column)('decimal', { precision: 15, scale: 2, default: 0 }),
+    __metadata("design:type", Number)
+], Payroll.prototype, "nightDifferentialOvertimePay", void 0);
 __decorate([
     (0, typeorm_1.Column)('decimal', { precision: 15, scale: 2, default: 0 }),
     __metadata("design:type", Number)
@@ -28155,28 +31544,24 @@ __decorate([
     __metadata("design:type", typeof (_c = typeof Date !== "undefined" && Date) === "function" ? _c : Object)
 ], Payroll.prototype, "paymentDate", void 0);
 __decorate([
-    (0, typeorm_1.Column)({
-        type: 'enum',
-        enum: payroll_status_enum_1.PayrollStatus,
-        default: payroll_status_enum_1.PayrollStatus.DRAFT
-    }),
-    __metadata("design:type", typeof (_d = typeof payroll_status_enum_1.PayrollStatus !== "undefined" && payroll_status_enum_1.PayrollStatus) === "function" ? _d : Object)
-], Payroll.prototype, "status", void 0);
+    (0, typeorm_1.Column)({ nullable: true }),
+    __metadata("design:type", String)
+], Payroll.prototype, "batchId", void 0);
 __decorate([
     (0, typeorm_1.Column)({
         type: 'enum',
-        enum: payroll_processing_state_enum_1.PayrollProcessingState,
-        default: payroll_processing_state_enum_1.PayrollProcessingState.DRAFT
+        enum: payroll_state_enum_1.PayrollState,
+        default: payroll_state_enum_1.PayrollState.DRAFT
     }),
-    __metadata("design:type", typeof (_e = typeof payroll_processing_state_enum_1.PayrollProcessingState !== "undefined" && payroll_processing_state_enum_1.PayrollProcessingState) === "function" ? _e : Object)
-], Payroll.prototype, "processingState", void 0);
+    __metadata("design:type", typeof (_d = typeof payroll_state_enum_1.PayrollState !== "undefined" && payroll_state_enum_1.PayrollState) === "function" ? _d : Object)
+], Payroll.prototype, "state", void 0);
 __decorate([
     (0, typeorm_1.Column)('json', { nullable: true }),
-    __metadata("design:type", typeof (_f = typeof Array !== "undefined" && Array) === "function" ? _f : Object)
+    __metadata("design:type", typeof (_e = typeof Array !== "undefined" && Array) === "function" ? _e : Object)
 ], Payroll.prototype, "stateHistory", void 0);
 __decorate([
     (0, typeorm_1.Column)({ nullable: true }),
-    __metadata("design:type", typeof (_g = typeof Date !== "undefined" && Date) === "function" ? _g : Object)
+    __metadata("design:type", typeof (_f = typeof Date !== "undefined" && Date) === "function" ? _f : Object)
 ], Payroll.prototype, "processedAt", void 0);
 __decorate([
     (0, typeorm_1.Column)({ nullable: true }),
@@ -28184,12 +31569,24 @@ __decorate([
 ], Payroll.prototype, "processedBy", void 0);
 __decorate([
     (0, typeorm_1.Column)({ nullable: true }),
-    __metadata("design:type", typeof (_h = typeof Date !== "undefined" && Date) === "function" ? _h : Object)
+    __metadata("design:type", typeof (_g = typeof Date !== "undefined" && Date) === "function" ? _g : Object)
 ], Payroll.prototype, "approvedAt", void 0);
 __decorate([
     (0, typeorm_1.Column)({ nullable: true }),
     __metadata("design:type", String)
 ], Payroll.prototype, "approvedBy", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ nullable: true }),
+    __metadata("design:type", typeof (_h = typeof Date !== "undefined" && Date) === "function" ? _h : Object)
+], Payroll.prototype, "rejectedAt", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ nullable: true }),
+    __metadata("design:type", String)
+], Payroll.prototype, "rejectedBy", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ nullable: true }),
+    __metadata("design:type", String)
+], Payroll.prototype, "rejectionReason", void 0);
 __decorate([
     (0, typeorm_1.Column)({ nullable: true }),
     __metadata("design:type", typeof (_j = typeof Date !== "undefined" && Date) === "function" ? _j : Object)
@@ -28199,9 +31596,21 @@ __decorate([
     __metadata("design:type", String)
 ], Payroll.prototype, "releasedBy", void 0);
 __decorate([
+    (0, typeorm_1.Column)({ nullable: true }),
+    __metadata("design:type", typeof (_k = typeof Date !== "undefined" && Date) === "function" ? _k : Object)
+], Payroll.prototype, "voidedAt", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ nullable: true }),
+    __metadata("design:type", String)
+], Payroll.prototype, "voidedBy", void 0);
+__decorate([
     (0, typeorm_1.Column)('json', { nullable: true }),
     __metadata("design:type", Object)
 ], Payroll.prototype, "calculationDetails", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ default: 0 }),
+    __metadata("design:type", Number)
+], Payroll.prototype, "reprocessedCount", void 0);
 __decorate([
     (0, typeorm_1.Column)({ nullable: true }),
     __metadata("design:type", String)
@@ -28230,244 +31639,315 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
-var _a, _b, _c, _d;
+var _a, _b, _c, _d, _e;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.GetPayrollItemTypeDto = exports.UpdatePayrollItemTypeDto = exports.PayrollItemTypeDto = void 0;
 const base_dto_1 = __webpack_require__(/*! @/common/dtos/base.dto */ "./src/common/dtos/base.dto.ts");
-const payroll_item_category_enum_1 = __webpack_require__(/*! @/common/enums/payroll-item-category.enum */ "./src/common/enums/payroll-item-category.enum.ts");
+const occurrence_enum_1 = __webpack_require__(/*! @/common/enums/occurrence.enum */ "./src/common/enums/occurrence.enum.ts");
+const government_contribution_type_enum_1 = __webpack_require__(/*! @/common/enums/payroll/government-contribution-type.enum */ "./src/common/enums/payroll/government-contribution-type.enum.ts");
+const payroll_item_category_enum_1 = __webpack_require__(/*! @/common/enums/payroll/payroll-item-category.enum */ "./src/common/enums/payroll/payroll-item-category.enum.ts");
 const create_get_dto_factory_1 = __webpack_require__(/*! @/common/factories/create-get-dto.factory */ "./src/common/factories/create-get-dto.factory.ts");
 const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
-const class_transformer_1 = __webpack_require__(/*! class-transformer */ "class-transformer");
 const class_validator_1 = __webpack_require__(/*! class-validator */ "class-validator");
-class ValidationRulesDto {
-}
-__decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Minimum amount allowed', required: false, example: 100 }),
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsNumber)(),
-    (0, class_validator_1.Min)(0),
-    __metadata("design:type", Number)
-], ValidationRulesDto.prototype, "minAmount", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Maximum amount allowed', required: false, example: 10000 }),
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsNumber)(),
-    (0, class_validator_1.Max)(1000000),
-    __metadata("design:type", Number)
-], ValidationRulesDto.prototype, "maxAmount", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Minimum salary required', required: false, example: 10000 }),
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsNumber)(),
-    (0, class_validator_1.Min)(0),
-    __metadata("design:type", Number)
-], ValidationRulesDto.prototype, "minSalary", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Maximum salary allowed', required: false, example: 100000 }),
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsNumber)(),
-    (0, class_validator_1.Max)(10000000),
-    __metadata("design:type", Number)
-], ValidationRulesDto.prototype, "maxSalary", void 0);
 class PayrollItemTypeDto extends (0, swagger_1.PartialType)(base_dto_1.BaseDto) {
-    constructor() {
-        super(...arguments);
-        this.isActive = true;
-        this.isSystemGenerated = false;
-        this.isGovernmentMandated = false;
-        this.hasEmployerShare = false;
-        this.isPartOfTaxCalculation = false;
-        this.isTaxable = true;
-        this.isTaxDeductible = false;
-        this.isDisplayedInPayslip = true;
-        this.isRequired = true;
-    }
 }
 exports.PayrollItemTypeDto = PayrollItemTypeDto;
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Name of the payroll item type' }),
-    (0, class_validator_1.IsNotEmpty)(),
+    (0, swagger_1.ApiProperty)({
+        description: 'Name of the payroll item type',
+        example: 'Basic Salary'
+    }),
     (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsNotEmpty)(),
     __metadata("design:type", String)
 ], PayrollItemTypeDto.prototype, "name", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Description of the payroll item type', required: false }),
-    (0, class_validator_1.IsOptional)(),
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'Description of the payroll item type',
+        example: 'Basic monthly salary for employees',
+        nullable: true
+    }),
     (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
     __metadata("design:type", String)
 ], PayrollItemTypeDto.prototype, "description", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'Group of the payroll item type',
+        example: 'Salary',
+        nullable: true
+    }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], PayrollItemTypeDto.prototype, "group", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'Whether the payroll item type has an amount',
+        default: false,
+        example: false,
+        nullable: true
+    }),
+    (0, class_validator_1.IsBoolean)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Boolean)
+], PayrollItemTypeDto.prototype, "hasAmount", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'Whether the payroll item type has a percentage',
+        default: false,
+        example: false,
+        nullable: true
+    }),
+    (0, class_validator_1.IsBoolean)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Boolean)
+], PayrollItemTypeDto.prototype, "hasPercentage", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'Whether the payroll item type has an effectivity date',
+        default: false,
+        example: false,
+        nullable: true
+    }),
+    (0, class_validator_1.IsBoolean)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Boolean)
+], PayrollItemTypeDto.prototype, "hasEffectivity", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'Image or icon representing the payroll item type (file key, url, or icon)',
+        example: 'https://example.com/icon.png',
+        nullable: true
+    }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], PayrollItemTypeDto.prototype, "imageOrIcon", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({
         description: 'Category of the payroll item type',
         enum: payroll_item_category_enum_1.PayrollItemCategory,
-        example: Object.values(payroll_item_category_enum_1.PayrollItemCategory)[0]
+        example: payroll_item_category_enum_1.PayrollItemCategory.COMPENSATION
     }),
     (0, class_validator_1.IsEnum)(payroll_item_category_enum_1.PayrollItemCategory),
     (0, class_validator_1.IsNotEmpty)(),
     __metadata("design:type", typeof (_a = typeof payroll_item_category_enum_1.PayrollItemCategory !== "undefined" && payroll_item_category_enum_1.PayrollItemCategory) === "function" ? _a : Object)
 ], PayrollItemTypeDto.prototype, "category", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Default occurrence of the payroll item', example: 'Monthly' }),
+    (0, swagger_1.ApiProperty)({
+        description: 'Default occurrence of the payroll item',
+        enum: occurrence_enum_1.Occurrence,
+        default: occurrence_enum_1.Occurrence.MONTHLY,
+        example: occurrence_enum_1.Occurrence.MONTHLY
+    }),
+    (0, class_validator_1.IsEnum)(occurrence_enum_1.Occurrence),
     (0, class_validator_1.IsNotEmpty)(),
-    (0, class_validator_1.IsString)(),
-    __metadata("design:type", String)
+    __metadata("design:type", typeof (_b = typeof occurrence_enum_1.Occurrence !== "undefined" && occurrence_enum_1.Occurrence) === "function" ? _b : Object)
 ], PayrollItemTypeDto.prototype, "defaultOccurrence", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Unit of measurement for the payroll item', example: 'Hours' }),
-    (0, class_validator_1.IsNotEmpty)(),
-    (0, class_validator_1.IsString)(),
-    __metadata("design:type", String)
-], PayrollItemTypeDto.prototype, "unit", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Formula used for computation', example: 'baseRate * hours' }),
-    (0, class_validator_1.IsNotEmpty)(),
-    (0, class_validator_1.IsString)(),
-    __metadata("design:type", String)
-], PayrollItemTypeDto.prototype, "computationFormula", void 0);
-__decorate([
     (0, swagger_1.ApiProperty)({
-        description: 'Default amount for the payroll item',
-        type: 'number',
-        format: 'decimal',
-        required: false,
-        example: 1000.50
+        description: 'Type of payroll item calculation',
+        enum: ['fixed', 'formula'],
+        example: 'fixed'
     }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsNotEmpty)(),
+    __metadata("design:type", String)
+], PayrollItemTypeDto.prototype, "type", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'Default amount for fixed payroll items',
+        example: 5000.00,
+        nullable: true
+    }),
+    (0, class_validator_1.IsNumber)(),
     (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsNumber)({ maxDecimalPlaces: 2 }),
     __metadata("design:type", Number)
 ], PayrollItemTypeDto.prototype, "defaultAmount", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Whether the payroll item is active', default: true }),
+    (0, swagger_1.ApiProperty)({
+        description: 'Whether the payroll item type is active',
+        default: true,
+        example: true
+    }),
     (0, class_validator_1.IsBoolean)(),
-    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsNotEmpty)(),
     __metadata("design:type", Boolean)
 ], PayrollItemTypeDto.prototype, "isActive", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Whether the item is system generated', default: false }),
-    (0, class_validator_1.IsBoolean)(),
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'Type of government mandated contribution',
+        enum: government_contribution_type_enum_1.GovernmentMandatedType,
+        nullable: true,
+        example: government_contribution_type_enum_1.GovernmentMandatedType.SSS
+    }),
+    (0, class_validator_1.IsEnum)(government_contribution_type_enum_1.GovernmentMandatedType),
     (0, class_validator_1.IsOptional)(),
-    __metadata("design:type", Boolean)
-], PayrollItemTypeDto.prototype, "isSystemGenerated", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Whether the item is government mandated', default: false }),
-    (0, class_validator_1.IsBoolean)(),
-    (0, class_validator_1.IsOptional)(),
-    __metadata("design:type", Boolean)
-], PayrollItemTypeDto.prototype, "isGovernmentMandated", void 0);
+    __metadata("design:type", typeof (_c = typeof government_contribution_type_enum_1.GovernmentMandatedType !== "undefined" && government_contribution_type_enum_1.GovernmentMandatedType) === "function" ? _c : Object)
+], PayrollItemTypeDto.prototype, "governmentMandatedType", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({
-        description: 'Type of government contribution (SSS, PHILHEALTH, PAGIBIG, etc.)',
-        required: false,
-        example: 'SSS'
+        description: 'Whether the payroll item is required',
+        default: true,
+        example: true
     }),
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsString)(),
-    __metadata("design:type", String)
-], PayrollItemTypeDto.prototype, "governmentContributionType", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Whether the item has employer share', default: false }),
     (0, class_validator_1.IsBoolean)(),
-    (0, class_validator_1.IsOptional)(),
-    __metadata("design:type", Boolean)
-], PayrollItemTypeDto.prototype, "hasEmployerShare", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({
-        description: 'Employer formula percentage',
-        required: false,
-        example: '3.5%'
-    }),
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsString)(),
-    __metadata("design:type", String)
-], PayrollItemTypeDto.prototype, "employerFormulaPercentage", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Whether the item is part of tax calculation', default: false }),
-    (0, class_validator_1.IsBoolean)(),
-    (0, class_validator_1.IsOptional)(),
-    __metadata("design:type", Boolean)
-], PayrollItemTypeDto.prototype, "isPartOfTaxCalculation", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Whether the item is taxable', default: true }),
-    (0, class_validator_1.IsBoolean)(),
-    (0, class_validator_1.IsOptional)(),
-    __metadata("design:type", Boolean)
-], PayrollItemTypeDto.prototype, "isTaxable", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Whether the item is tax deductible', default: false }),
-    (0, class_validator_1.IsBoolean)(),
-    (0, class_validator_1.IsOptional)(),
-    __metadata("design:type", Boolean)
-], PayrollItemTypeDto.prototype, "isTaxDeductible", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Whether the item is displayed in payslip', default: true }),
-    (0, class_validator_1.IsBoolean)(),
-    (0, class_validator_1.IsOptional)(),
-    __metadata("design:type", Boolean)
-], PayrollItemTypeDto.prototype, "isDisplayedInPayslip", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({
-        description: 'Which employee types this item applies to',
-        required: false,
-        isArray: true,
-        example: ['Regular', 'Contractual']
-    }),
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsArray)(),
-    (0, class_validator_1.IsString)({ each: true }),
-    __metadata("design:type", Array)
-], PayrollItemTypeDto.prototype, "applicableTo", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Whether the item is required', default: true }),
-    (0, class_validator_1.IsBoolean)(),
-    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsNotEmpty)(),
     __metadata("design:type", Boolean)
 ], PayrollItemTypeDto.prototype, "isRequired", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({
-        description: 'Date when this item becomes effective',
-        required: false,
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'Date from which the payroll item is effective',
         type: Date,
+        nullable: true,
         example: '2023-01-01T00:00:00Z'
     }),
+    (0, class_validator_1.IsDate)(),
     (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsDateString)(),
-    __metadata("design:type", typeof (_b = typeof Date !== "undefined" && Date) === "function" ? _b : Object)
+    __metadata("design:type", typeof (_d = typeof Date !== "undefined" && Date) === "function" ? _d : Object)
 ], PayrollItemTypeDto.prototype, "effectiveFrom", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({
-        description: 'Date when this item expires',
-        required: false,
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'Date until which the payroll item is effective',
         type: Date,
-        example: '2024-12-31T23:59:59Z'
+        nullable: true,
+        example: '2024-12-31T00:00:00Z'
     }),
+    (0, class_validator_1.IsDate)(),
     (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsDateString)(),
-    __metadata("design:type", typeof (_c = typeof Date !== "undefined" && Date) === "function" ? _c : Object)
+    __metadata("design:type", typeof (_e = typeof Date !== "undefined" && Date) === "function" ? _e : Object)
 ], PayrollItemTypeDto.prototype, "effectiveTo", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({
-        description: 'Additional parameters for calculation',
-        required: false,
-        example: {
-            thresholds: [5000, 10000, 15000],
-            rates: [0.05, 0.1, 0.15]
-        }
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'Percentage value for percentage-based calculations',
+        example: 10.5,
+        nullable: true
     }),
+    (0, class_validator_1.IsNumber)(),
     (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsObject)(),
-    __metadata("design:type", typeof (_d = typeof Record !== "undefined" && Record) === "function" ? _d : Object)
-], PayrollItemTypeDto.prototype, "calculationParameters", void 0);
+    __metadata("design:type", Number)
+], PayrollItemTypeDto.prototype, "percentage", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'Processing period for the payroll item in a month (e.g., 1 for the first cutoff period of the month)',
+        example: 1,
+        nullable: true
+    }),
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Number)
+], PayrollItemTypeDto.prototype, "processEvery", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'Employer contribution percentage',
+        example: 5.5,
+        nullable: true
+    }),
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Number)
+], PayrollItemTypeDto.prototype, "employerPercentage", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({
-        description: 'Validation rules for the payroll item',
-        required: false,
-        type: ValidationRulesDto
+        description: 'Whether to include in payroll item processing',
+        default: true,
+        example: true
     }),
+    (0, class_validator_1.IsBoolean)(),
+    (0, class_validator_1.IsNotEmpty)(),
+    __metadata("design:type", Boolean)
+], PayrollItemTypeDto.prototype, "includeInPayrollItemsProcessing", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Whether the payroll item is taxable',
+        default: false,
+        example: false
+    }),
+    (0, class_validator_1.IsBoolean)(),
+    (0, class_validator_1.IsNotEmpty)(),
+    __metadata("design:type", Boolean)
+], PayrollItemTypeDto.prototype, "isTaxable", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Whether the payroll item is tax deductible',
+        default: false,
+        example: false
+    }),
+    (0, class_validator_1.IsBoolean)(),
+    (0, class_validator_1.IsNotEmpty)(),
+    __metadata("design:type", Boolean)
+], PayrollItemTypeDto.prototype, "isTaxDeductible", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'Tax exemption amount',
+        example: 2000.00,
+        nullable: true
+    }),
+    (0, class_validator_1.IsNumber)(),
     (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.ValidateNested)(),
-    (0, class_transformer_1.Type)(() => ValidationRulesDto),
-    __metadata("design:type", ValidationRulesDto)
-], PayrollItemTypeDto.prototype, "validationRules", void 0);
+    __metadata("design:type", Number)
+], PayrollItemTypeDto.prototype, "taxExemptionAmount", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'Minimum amount for calculation',
+        example: 1000.00,
+        nullable: true
+    }),
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Number)
+], PayrollItemTypeDto.prototype, "minAmount", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'Maximum amount for calculation',
+        example: 10000.00,
+        nullable: true
+    }),
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Number)
+], PayrollItemTypeDto.prototype, "maxAmount", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'Minimum additional amount',
+        example: 500.00,
+        nullable: true
+    }),
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Number)
+], PayrollItemTypeDto.prototype, "minAdditionalAmount", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'Maximum additional amount',
+        example: 1500.00,
+        nullable: true
+    }),
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Number)
+], PayrollItemTypeDto.prototype, "maxAdditionalAmount", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'Minimum contribution amount',
+        example: 200.00,
+        nullable: true
+    }),
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Number)
+], PayrollItemTypeDto.prototype, "minContribution", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'Maximum contribution amount',
+        example: 2000.00,
+        nullable: true
+    }),
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Number)
+], PayrollItemTypeDto.prototype, "maxContribution", void 0);
 class UpdatePayrollItemTypeDto extends (0, swagger_1.PartialType)(PayrollItemTypeDto) {
 }
 exports.UpdatePayrollItemTypeDto = UpdatePayrollItemTypeDto;
@@ -28498,9 +31978,9 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var _a, _b, _c, _d, _e;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.PayrollItemType = void 0;
-const government_contribution_type_enum_1 = __webpack_require__(/*! @/common/enums/government-contribution-type.enum */ "./src/common/enums/government-contribution-type.enum.ts");
 const occurrence_enum_1 = __webpack_require__(/*! @/common/enums/occurrence.enum */ "./src/common/enums/occurrence.enum.ts");
-const payroll_item_category_enum_1 = __webpack_require__(/*! @/common/enums/payroll-item-category.enum */ "./src/common/enums/payroll-item-category.enum.ts");
+const government_contribution_type_enum_1 = __webpack_require__(/*! @/common/enums/payroll/government-contribution-type.enum */ "./src/common/enums/payroll/government-contribution-type.enum.ts");
+const payroll_item_category_enum_1 = __webpack_require__(/*! @/common/enums/payroll/payroll-item-category.enum */ "./src/common/enums/payroll/payroll-item-category.enum.ts");
 const base_entity_1 = __webpack_require__(/*! @/database/entities/base.entity */ "./src/database/entities/base.entity.ts");
 const employee_payroll_item_type_entity_1 = __webpack_require__(/*! @/modules/employee-management/employee-payroll-item-types/entities/employee-payroll-item-type.entity */ "./src/modules/employee-management/employee-payroll-item-types/entities/employee-payroll-item-type.entity.ts");
 const typeorm_1 = __webpack_require__(/*! typeorm */ "typeorm");
@@ -28516,6 +31996,10 @@ __decorate([
     (0, typeorm_1.Column)({ nullable: true }),
     __metadata("design:type", String)
 ], PayrollItemType.prototype, "description", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ nullable: true }),
+    __metadata("design:type", String)
+], PayrollItemType.prototype, "imageOrIcon", void 0);
 __decorate([
     (0, typeorm_1.Column)({
         type: 'enum',
@@ -28551,6 +32035,22 @@ __decorate([
     (0, typeorm_1.Column)({ default: true }),
     __metadata("design:type", Boolean)
 ], PayrollItemType.prototype, "isRequired", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ nullable: true }),
+    __metadata("design:type", String)
+], PayrollItemType.prototype, "group", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ default: false }),
+    __metadata("design:type", Boolean)
+], PayrollItemType.prototype, "hasAmount", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ default: false }),
+    __metadata("design:type", Boolean)
+], PayrollItemType.prototype, "hasPercentage", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ default: false }),
+    __metadata("design:type", Boolean)
+], PayrollItemType.prototype, "hasEffectivity", void 0);
 __decorate([
     (0, typeorm_1.Column)({ nullable: true }),
     __metadata("design:type", typeof (_d = typeof Date !== "undefined" && Date) === "function" ? _d : Object)
@@ -28677,6 +32177,15 @@ const payroll_item_type_dto_1 = __webpack_require__(/*! ./dtos/payroll-item-type
 const payroll_item_type_entity_1 = __webpack_require__(/*! ./entities/payroll-item-type.entity */ "./src/modules/payroll-management/payroll-item-types/entities/payroll-item-type.entity.ts");
 const payroll_item_types_service_1 = __webpack_require__(/*! ./payroll-item-types.service */ "./src/modules/payroll-management/payroll-item-types/payroll-item-types.service.ts");
 class PayrollItemTypesController extends (0, create_controller_factory_1.createController)(payroll_item_type_entity_1.PayrollItemType, payroll_item_types_service_1.PayrollItemTypesService, payroll_item_type_dto_1.GetPayrollItemTypeDto, payroll_item_type_dto_1.PayrollItemTypeDto, payroll_item_type_dto_1.UpdatePayrollItemTypeDto) {
+    async delete(id) {
+        return super.delete(id);
+    }
+    softDelete(id, deletedBy) {
+        return super.softDelete(id, deletedBy);
+    }
+    async findOne(fieldsString, relations, select) {
+        return super.findOne(fieldsString, relations, select);
+    }
 }
 exports.PayrollItemTypesController = PayrollItemTypesController;
 
@@ -28744,9 +32253,9 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 var _a, _b;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.PayrollItemTypesService = void 0;
-const government_contribution_type_enum_1 = __webpack_require__(/*! @/common/enums/government-contribution-type.enum */ "./src/common/enums/government-contribution-type.enum.ts");
 const occurrence_enum_1 = __webpack_require__(/*! @/common/enums/occurrence.enum */ "./src/common/enums/occurrence.enum.ts");
-const payroll_item_category_enum_1 = __webpack_require__(/*! @/common/enums/payroll-item-category.enum */ "./src/common/enums/payroll-item-category.enum.ts");
+const government_contribution_type_enum_1 = __webpack_require__(/*! @/common/enums/payroll/government-contribution-type.enum */ "./src/common/enums/payroll/government-contribution-type.enum.ts");
+const payroll_item_category_enum_1 = __webpack_require__(/*! @/common/enums/payroll/payroll-item-category.enum */ "./src/common/enums/payroll/payroll-item-category.enum.ts");
 const base_service_1 = __webpack_require__(/*! @/common/services/base.service */ "./src/common/services/base.service.ts");
 const users_service_1 = __webpack_require__(/*! @/modules/account-management/users/users.service */ "./src/modules/account-management/users/users.service.ts");
 const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
@@ -28838,6 +32347,7 @@ let PayrollItemTypesService = class PayrollItemTypesService extends base_service
                     name: 'Monthly Salary',
                     category: payroll_item_category_enum_1.PayrollItemCategory.COMPENSATION,
                     unit: 'PHP',
+                    group: 'Salary',
                     defaultOccurrence: occurrence_enum_1.Occurrence.MONTHLY,
                     type: 'fixed',
                     isRequired: true,
@@ -28848,6 +32358,7 @@ let PayrollItemTypesService = class PayrollItemTypesService extends base_service
                     name: 'Daily Rate',
                     category: payroll_item_category_enum_1.PayrollItemCategory.COMPENSATION,
                     unit: 'PHP',
+                    group: 'Salary',
                     defaultOccurrence: occurrence_enum_1.Occurrence.DAILY,
                     type: 'fixed',
                     includeInPayrollItemsProcessing: false,
@@ -28857,6 +32368,7 @@ let PayrollItemTypesService = class PayrollItemTypesService extends base_service
                     name: 'Hourly Rate',
                     category: payroll_item_category_enum_1.PayrollItemCategory.COMPENSATION,
                     unit: 'PHP',
+                    group: 'Salary',
                     defaultOccurrence: occurrence_enum_1.Occurrence.HOURLY,
                     includeInPayrollItemsProcessing: false,
                     type: 'fixed',
@@ -29264,12 +32776,18 @@ exports.PayrollItem = PayrollItem = __decorate([
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.PayrollItemsController = void 0;
 const create_controller_factory_1 = __webpack_require__(/*! @/common/factories/create-controller.factory */ "./src/common/factories/create-controller.factory.ts");
-const payroll_dto_1 = __webpack_require__(/*! ../dtos/payroll.dto */ "./src/modules/payroll-management/dtos/payroll.dto.ts");
+const payroll_item_dto_1 = __webpack_require__(/*! ./dtos/payroll-item.dto */ "./src/modules/payroll-management/payroll-items/dtos/payroll-item.dto.ts");
 const payroll_item_entity_1 = __webpack_require__(/*! ./entities/payroll-item.entity */ "./src/modules/payroll-management/payroll-items/entities/payroll-item.entity.ts");
 const payroll_items_service_1 = __webpack_require__(/*! ./payroll-items.service */ "./src/modules/payroll-management/payroll-items/payroll-items.service.ts");
-class PayrollItemsController extends (0, create_controller_factory_1.createController)(payroll_item_entity_1.PayrollItem, payroll_items_service_1.PayrollItemsService, payroll_dto_1.GetPayrollDto, payroll_dto_1.PayrollDto, payroll_dto_1.UpdatePayrollDto) {
+class PayrollItemsController extends (0, create_controller_factory_1.createController)(payroll_item_entity_1.PayrollItem, payroll_items_service_1.PayrollItemsService, payroll_item_dto_1.GetPayrollItemDto, payroll_item_dto_1.PayrollItemDto, payroll_item_dto_1.UpdatePayrollItemDto) {
     async deleteMany(ids, hardDelete) {
         return super.deleteMany(ids, hardDelete);
+    }
+    async softDelete(id, deletedBy) {
+        return super.softDelete(id, deletedBy);
+    }
+    async findOne(fieldsString, relations, select) {
+        return super.findOne(fieldsString, relations, select);
     }
     delete(id) {
         return super.delete(id);
@@ -29384,10 +32902,12 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.PayrollManagementModule = void 0;
+const bull_1 = __webpack_require__(/*! @nestjs/bull */ "@nestjs/bull");
 const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
 const core_1 = __webpack_require__(/*! @nestjs/core */ "@nestjs/core");
 const typeorm_1 = __webpack_require__(/*! @nestjs/typeorm */ "@nestjs/typeorm");
 const final_work_hours_module_1 = __webpack_require__(/*! ../attendance-management/final-work-hours/final-work-hours.module */ "./src/modules/attendance-management/final-work-hours/final-work-hours.module.ts");
+const work_time_requests_module_1 = __webpack_require__(/*! ../attendance-management/work-time-requests/work-time-requests.module */ "./src/modules/attendance-management/work-time-requests/work-time-requests.module.ts");
 const employee_management_module_1 = __webpack_require__(/*! ../employee-management/employee-management.module */ "./src/modules/employee-management/employee-management.module.ts");
 const cutoffs_module_1 = __webpack_require__(/*! ./cutoffs/cutoffs.module */ "./src/modules/payroll-management/cutoffs/cutoffs.module.ts");
 const payroll_entity_1 = __webpack_require__(/*! ./entities/payroll.entity */ "./src/modules/payroll-management/entities/payroll.entity.ts");
@@ -29395,7 +32915,9 @@ const payroll_item_types_module_1 = __webpack_require__(/*! ./payroll-item-types
 const payroll_items_module_1 = __webpack_require__(/*! ./payroll-items/payroll-items.module */ "./src/modules/payroll-management/payroll-items/payroll-items.module.ts");
 const payrolls_controller_1 = __webpack_require__(/*! ./payrolls.controller */ "./src/modules/payroll-management/payrolls.controller.ts");
 const payrolls_service_1 = __webpack_require__(/*! ./payrolls.service */ "./src/modules/payroll-management/payrolls.service.ts");
-const work_time_requests_module_1 = __webpack_require__(/*! ../attendance-management/work-time-requests/work-time-requests.module */ "./src/modules/attendance-management/work-time-requests/work-time-requests.module.ts");
+const payroll_metrics_service_1 = __webpack_require__(/*! ./services/payroll-metrics.service */ "./src/modules/payroll-management/services/payroll-metrics.service.ts");
+const payroll_processor_service_1 = __webpack_require__(/*! ./services/payroll-processor.service */ "./src/modules/payroll-management/services/payroll-processor.service.ts");
+const payroll_state_machine_service_1 = __webpack_require__(/*! ./services/payroll-state-machine.service */ "./src/modules/payroll-management/services/payroll-state-machine.service.ts");
 let PayrollManagementModule = class PayrollManagementModule {
 };
 exports.PayrollManagementModule = PayrollManagementModule;
@@ -29403,6 +32925,9 @@ exports.PayrollManagementModule = PayrollManagementModule = __decorate([
     (0, common_1.Module)({
         imports: [
             typeorm_1.TypeOrmModule.forFeature([payroll_entity_1.Payroll]),
+            bull_1.BullModule.registerQueue({
+                name: 'payroll-processing',
+            }),
             core_1.RouterModule.register([
                 {
                     path: 'payrolls',
@@ -29427,10 +32952,10 @@ exports.PayrollManagementModule = PayrollManagementModule = __decorate([
             payroll_item_types_module_1.PayrollItemTypesModule,
             cutoffs_module_1.CutoffsModule,
             employee_management_module_1.EmployeeManagementModule,
-            final_work_hours_module_1.FinalWorkHoursModule,
+            (0, common_1.forwardRef)(() => final_work_hours_module_1.FinalWorkHoursModule),
             work_time_requests_module_1.WorkTimeRequestsModule,
         ],
-        providers: [payrolls_service_1.PayrollsService],
+        providers: [payrolls_service_1.PayrollsService, payroll_state_machine_service_1.PayrollStateMachine, payroll_processor_service_1.PayrollProcessorService, payroll_metrics_service_1.PayrollMetricsService],
         exports: [
             payrolls_service_1.PayrollsService,
             payroll_items_module_1.PayrollItemsModule,
@@ -29464,7 +32989,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-var _a, _b, _c, _d, _e, _f, _g, _h;
+var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r, _s, _t;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.PayrollsController = void 0;
 const authorize_decorator_1 = __webpack_require__(/*! @/common/decorators/authorize.decorator */ "./src/common/decorators/authorize.decorator.ts");
@@ -29472,23 +32997,95 @@ const current_user_decorator_1 = __webpack_require__(/*! @/common/decorators/cur
 const generalresponse_dto_1 = __webpack_require__(/*! @/common/dtos/generalresponse.dto */ "./src/common/dtos/generalresponse.dto.ts");
 const action_enum_1 = __webpack_require__(/*! @/common/enums/action.enum */ "./src/common/enums/action.enum.ts");
 const create_controller_factory_1 = __webpack_require__(/*! @/common/factories/create-controller.factory */ "./src/common/factories/create-controller.factory.ts");
+const utility_helper_1 = __webpack_require__(/*! @/common/helpers/utility.helper */ "./src/common/helpers/utility.helper.ts");
+const bull_1 = __webpack_require__(/*! @nestjs/bull */ "@nestjs/bull");
 const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
 const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
+const bull_2 = __webpack_require__(/*! bull */ "bull");
 const express_1 = __webpack_require__(/*! express */ "express");
+const payroll_batch_process_dto_1 = __webpack_require__(/*! ./dtos/payroll-batch-process.dto */ "./src/modules/payroll-management/dtos/payroll-batch-process.dto.ts");
 const payroll_dto_1 = __webpack_require__(/*! ./dtos/payroll.dto */ "./src/modules/payroll-management/dtos/payroll.dto.ts");
+const recalculate_options_dto_1 = __webpack_require__(/*! ./dtos/recalculate-options.dto */ "./src/modules/payroll-management/dtos/recalculate-options.dto.ts");
+const release_payroll_dto_1 = __webpack_require__(/*! ./dtos/release-payroll.dto */ "./src/modules/payroll-management/dtos/release-payroll.dto.ts");
 const payroll_entity_1 = __webpack_require__(/*! ./entities/payroll.entity */ "./src/modules/payroll-management/entities/payroll.entity.ts");
 const payrolls_service_1 = __webpack_require__(/*! ./payrolls.service */ "./src/modules/payroll-management/payrolls.service.ts");
-class PayrollsController extends (0, create_controller_factory_1.createController)(payroll_entity_1.Payroll, payrolls_service_1.PayrollsService, payroll_dto_1.GetPayrollDto, payroll_dto_1.PayrollDto, payroll_dto_1.UpdatePayrollDto) {
+const payslip_pdf_generator_1 = __webpack_require__(/*! ./utils/payslip-pdf-generator */ "./src/modules/payroll-management/utils/payslip-pdf-generator.ts");
+let PayrollsController = class PayrollsController extends (0, create_controller_factory_1.createController)(payroll_entity_1.Payroll, payrolls_service_1.PayrollsService, payroll_dto_1.GetPayrollDto, payroll_dto_1.PayrollDto, payroll_dto_1.UpdatePayrollDto) {
+    constructor(baseService, payrollQueue) {
+        super(baseService);
+        this.baseService = baseService;
+        this.payrollQueue = payrollQueue;
+    }
+    async create(entityDto, createdById) {
+        return await super.create(entityDto, createdById);
+    }
+    async update(id, entityDto, updatedById) {
+        return await this.baseService.update(id, entityDto, updatedById);
+    }
+    async delete(id) {
+        return await super.delete(id);
+    }
+    async softDelete(id, deletedBy) {
+        return await super.softDelete(id, deletedBy);
+    }
+    async findOne(fieldsString, relations, select) {
+        return await super.findOne(fieldsString, relations, select);
+    }
     async processPayrollForEmployee(employeeId, cutoffId, userId) {
         const payroll = await this.baseService.processPayrollForEmployee(employeeId, cutoffId, userId);
         return {
-            message: 'Payroll processed successfully',
+            message: `Payroll processed successfully for employee ${employeeId} in cutoff ${cutoffId}`,
         };
     }
-    async processPayrollForCutoff(cutoffId, userId) {
-        const payrolls = await this.baseService.processPayrollForCutoff(cutoffId, userId);
-        return payrolls;
+    async archivePayroll(id) {
+        const payroll = await this.baseService.findOneByOrFail({ id });
+        const success = this.baseService.stateMachine.archive(payroll);
+        if (!success) {
+            throw new common_1.BadRequestException(`Cannot archive payroll ${id} in state: ${payroll.state}`);
+        }
+        await this.baseService.getRepository().save(payroll);
+        return {
+            message: `Payroll ${id} archived successfully`
+        };
     }
+    async voidPayroll(id, userId) {
+        const payroll = await this.baseService.findOneByOrFail({ id });
+        const success = this.baseService.stateMachine.void(payroll, userId);
+        if (!success) {
+            throw new common_1.BadRequestException(`Cannot void payroll ${id} in state: ${payroll.state}`);
+        }
+        await this.baseService.getRepository().save(payroll);
+        return {
+            message: `Payroll ${id} voided successfully`
+        };
+    }
+    // @Put('process/cutoff/:cutoffId')
+    // @Authorize({ endpointType: Action.CREATE })
+    // @ApiOperation({
+    //     summary: 'Process payroll for all employees in a cutoff',
+    //     description: 'Batch process payrolls for all eligible employees in a specified cutoff period'
+    // })
+    // @ApiParam({
+    //     name: 'cutoffId',
+    //     description: 'ID of the cutoff period to process payrolls for',
+    //     required: true
+    // })
+    // @ApiResponse({
+    //     status: HttpStatus.CREATED,
+    //     description: 'Payrolls successfully processed',
+    //     type: [GetPayrollDto]
+    // })
+    // @ApiResponse({
+    //     status: HttpStatus.BAD_REQUEST,
+    //     description: 'Invalid request, cutoff not active, or no eligible employees'
+    // })
+    // async processPayrollForCutoff(
+    //     @Param('cutoffId') cutoffId: string,
+    //     @CurrentUser('sub') userId: string
+    // ): Promise<GetPayrollDto[]> {
+    //     const payrolls = await this.baseService.processPayrollForCutoff(cutoffId, userId);
+    //     return payrolls as GetPayrollDto[];
+    // }
     async generatePayslipData(id) {
         return await this.baseService.generatePayslipData(id);
     }
@@ -29496,56 +33093,148 @@ class PayrollsController extends (0, create_controller_factory_1.createControlle
         const payroll = await this.baseService.findOneByOrFail({ id });
         const employee = payroll.employee;
         const payslipData = await this.baseService.generatePayslipData(id);
-        // You would need to implement PDF generation logic here
-        // For example: const pdfBuffer = await generatePayslipPdf(payslipData);
-        const fileName = `Payslip_${employee.employeeNumber}_${payroll.cutoff.startDate.toISOString().slice(0, 10)}.pdf`;
-        // Set headers and send file
-        // res.setHeader('Content-Type', 'application/pdf');
-        // res.setHeader('Content-Disposition', `attachment; filename=${fileName}`);
-        // res.send(pdfBuffer);
-        // For now, just return JSON as placeholder
-        res.json({
-            message: 'PDF generation to be implemented',
-            payslipData,
-            fileName
-        });
+        // log
+        // Generate PDF using the custom generator
+        const pdfBuffer = await (0, payslip_pdf_generator_1.generateMiniPayslipPdf)(payslipData);
+        const fileName = `Payslip_${employee.employeeNumber}_${utility_helper_1.UtilityHelper.ensureDate(payroll.cutoff.startDate).toISOString().slice(0, 10)}.pdf`;
+        // Set appropriate headers for PDF download
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `attachment; filename=${fileName}`);
+        res.setHeader('Content-Length', pdfBuffer.length);
+        // Send the PDF
+        res.send(pdfBuffer);
     }
     async approvePayroll(id, userId) {
-        await this.baseService.update(id, {
-            status: 'APPROVED',
-            approvedAt: new Date(),
-            approvedBy: userId
-        }, userId);
+        // Get the full payroll entity
+        const payroll = await this.baseService.findOneByOrFail({ id });
+        // Use the state machine to perform transition with validation
+        const success = this.baseService.stateMachine.approve(payroll, userId);
+        if (!success) {
+            throw new common_1.BadRequestException(`Cannot approve payroll ${id} in current state: ${payroll.state}`);
+        }
+        // Save the updated payroll with history
+        await this.baseService.getRepository().save(payroll);
         return {
-            message: 'Payroll approved successfully'
+            message: `Payroll ${id} approved successfully`
         };
     }
     async releasePayroll(id, releaseData, userId) {
-        await this.baseService.update(id, {
-            status: 'RELEASED',
-            releasedAt: new Date(),
-            releasedBy: userId,
+        const payroll = await this.baseService.findOneByOrFail({ id });
+        // Use markPaid instead of direct update
+        const success = this.baseService.stateMachine.markPaid(payroll, userId, {
             paymentMethod: releaseData.paymentMethod,
             paymentDate: releaseData.paymentDate || new Date(),
             bankReferenceNumber: releaseData.bankReferenceNumber,
             bankAccount: releaseData.bankAccount,
             checkNumber: releaseData.checkNumber
-        }, userId);
+        });
+        if (!success) {
+            throw new common_1.BadRequestException(`Cannot release payroll ${id} in current state: ${payroll.state}`);
+        }
+        // Additional payment details
+        payroll.paymentMethod = releaseData.paymentMethod;
+        payroll.paymentDate = releaseData.paymentDate || new Date();
+        payroll.bankReferenceNumber = releaseData.bankReferenceNumber;
+        payroll.bankAccount = releaseData.bankAccount;
+        payroll.checkNumber = releaseData.checkNumber;
+        await this.baseService.getRepository().save(payroll);
         return {
-            message: 'Payroll released successfully'
+            message: `Payroll ${id} released successfully`
         };
     }
     async rejectPayroll(id, reason, userId) {
-        await this.baseService.update(id, {
-            status: 'REJECTED',
-            notes: `Rejected: ${reason}`,
-            updatedBy: userId
-        }, userId);
+        // Get the full payroll entity
+        const payroll = await this.baseService.findOneByOrFail({ id });
+        // Use the state machine to perform transition with validation
+        const success = this.baseService.stateMachine.reject(payroll, userId, reason);
+        if (!success) {
+            throw new common_1.BadRequestException(`Cannot reject payroll ${id} in current state: ${payroll.state}`);
+        }
+        // Save the updated payroll with history
+        await this.baseService.getRepository().save(payroll);
         return {
-            message: 'Payroll rejected successfully'
+            message: `Payroll ${id} approved successfully`
         };
     }
-}
+    async processBatchPayroll(data, userId) {
+        const batches = await this.baseService.createProcessingBatches(data.cutoffId, data.batchSize);
+        // log
+        this.logger.log(`Processing ${batches.length} batches for cutoff ${data.cutoffId}`);
+        // Queue each batch for processing
+        for (const batch of batches) {
+            await this.payrollQueue.add('process-batch-payroll', {
+                cutoffId: data.cutoffId,
+                userId,
+                batchId: batch.batchId
+            });
+        }
+        // Estimate completion time (3 seconds per employee as a rough estimate)
+        let estimatedCompletionTime;
+        const totalEmployees = batches.reduce((sum, batch) => sum + batch.employeeCount, 0);
+        try {
+            // Prevent division by zero
+            if (batches.length === 0) {
+                estimatedCompletionTime = new Date().toISOString();
+            }
+            else {
+                const estimatedSeconds = Math.ceil((totalEmployees * 2) / batches.length);
+                // Add a safety limit to prevent extremely large values
+                const safeSeconds = Math.min(estimatedSeconds, 86400); // Max 24 hours
+                estimatedCompletionTime = new Date(Date.now() + safeSeconds * 1000).toISOString();
+            }
+        }
+        catch (error) {
+            // Fallback to current time if any calculation fails
+            estimatedCompletionTime = new Date().toISOString();
+        }
+        return {
+            cutoffId: data.cutoffId,
+            batchSize: data.batchSize,
+            message: `Processing started for ${totalEmployees} employees in ${batches.length} batches`,
+            batchCount: batches.length,
+            batches,
+            estimatedCompletionTime
+        };
+    }
+    async retryFailedPayrolls(data, userId) {
+        const result = await this.baseService.retryFailedPayrolls(data.cutoffId, userId, {
+            maxRetries: data.maxRetries,
+            onlySpecificIds: data.specificIds
+        });
+        return {
+            message: `Retry process completed`,
+            successful: result.successful,
+            failed: result.failed,
+            skipped: result.skipped
+        };
+    }
+    async getBatchProcessingStatus(cutoffId) {
+        // Implement a method in your service to get batch processing statistics
+        return this.baseService.getBatchProcessingStatus(cutoffId);
+    }
+    // @Get('audit/:payrollId')
+    // @Authorize({ endpointType: Action.READ })
+    // @ApiOperation({
+    //   summary: 'Get payroll audit trail',
+    //   description: 'Returns detailed audit information for a payroll record'
+    // })
+    // async getPayrollAudit(
+    //   @Param('payrollId') payrollId: string
+    // ): Promise<{
+    //   payrollId: string,
+    //   stateHistory: any[],
+    //   calculations: any,
+    //   changes: any[]
+    // }> {
+    //   return this.baseService.getPayrollAudit(payrollId);
+    // }
+    async recalculatePayroll(id, options, userId) {
+        await this.baseService.recalculatePayroll(id, options, userId);
+        return {
+            message: `Payroll ${id} recalculated successfully`
+        };
+    }
+};
 exports.PayrollsController = PayrollsController;
 __decorate([
     (0, common_1.Post)('process/employee/:employeeId/cutoff/:cutoffId'),
@@ -29565,52 +33254,136 @@ __decorate([
         required: true
     }),
     (0, swagger_1.ApiResponse)({
-        status: common_1.HttpStatus.CREATED,
+        status: common_1.HttpStatus.OK,
         description: 'Payroll successfully processed',
-        type: payroll_dto_1.GetPayrollDto
+        type: generalresponse_dto_1.GeneralResponseDto
     }),
     (0, swagger_1.ApiResponse)({
         status: common_1.HttpStatus.BAD_REQUEST,
-        description: 'Invalid request or payroll already processed'
+        description: 'Invalid request or payroll already processed',
+        type: generalresponse_dto_1.GeneralResponseDto
     }),
     (0, swagger_1.ApiResponse)({
         status: common_1.HttpStatus.NOT_FOUND,
         description: 'Employee or cutoff not found'
     }),
-    __param(0, (0, common_1.Param)('employeeId')),
-    __param(1, (0, common_1.Param)('cutoffId')),
+    (0, swagger_1.ApiResponse)({
+        status: common_1.HttpStatus.INTERNAL_SERVER_ERROR,
+        description: 'Internal server error',
+        type: generalresponse_dto_1.GeneralResponseDto
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: common_1.HttpStatus.UNAUTHORIZED,
+        description: 'Unauthorized',
+        type: generalresponse_dto_1.GeneralResponseDto
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: common_1.HttpStatus.FORBIDDEN,
+        description: 'Forbidden',
+        type: generalresponse_dto_1.GeneralResponseDto
+    }),
+    __param(0, (0, common_1.Param)('employeeId', common_1.ParseUUIDPipe)),
+    __param(1, (0, common_1.Param)('cutoffId', common_1.ParseUUIDPipe)),
     __param(2, (0, current_user_decorator_1.CurrentUser)('sub')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, String, String]),
-    __metadata("design:returntype", typeof (_a = typeof Promise !== "undefined" && Promise) === "function" ? _a : Object)
+    __metadata("design:returntype", typeof (_c = typeof Promise !== "undefined" && Promise) === "function" ? _c : Object)
 ], PayrollsController.prototype, "processPayrollForEmployee", null);
 __decorate([
-    (0, common_1.Post)('process/cutoff/:cutoffId'),
-    (0, authorize_decorator_1.Authorize)({ endpointType: action_enum_1.Action.CREATE }),
+    (0, common_1.Patch)(':id/archive'),
+    (0, authorize_decorator_1.Authorize)({ endpointType: action_enum_1.Action.UPDATE }),
     (0, swagger_1.ApiOperation)({
-        summary: 'Process payroll for all employees in a cutoff',
-        description: 'Batch process payrolls for all eligible employees in a specified cutoff period'
+        summary: 'Archive a payroll',
+        description: 'Moves payroll to archived state for long-term storage'
     }),
     (0, swagger_1.ApiParam)({
-        name: 'cutoffId',
-        description: 'ID of the cutoff period to process payrolls for',
+        name: 'id',
+        description: 'ID of the payroll to archive',
         required: true
     }),
     (0, swagger_1.ApiResponse)({
-        status: common_1.HttpStatus.CREATED,
-        description: 'Payrolls successfully processed',
-        type: [payroll_dto_1.GetPayrollDto]
+        status: common_1.HttpStatus.OK,
+        description: 'Payroll archived successfully',
+        type: generalresponse_dto_1.GeneralResponseDto
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: common_1.HttpStatus.NOT_FOUND,
+        description: 'Payroll not found',
+        type: generalresponse_dto_1.GeneralResponseDto
     }),
     (0, swagger_1.ApiResponse)({
         status: common_1.HttpStatus.BAD_REQUEST,
-        description: 'Invalid request, cutoff not active, or no eligible employees'
+        description: 'Payroll cannot be archived (invalid status)',
+        type: generalresponse_dto_1.GeneralResponseDto
     }),
-    __param(0, (0, common_1.Param)('cutoffId')),
+    (0, swagger_1.ApiResponse)({
+        status: common_1.HttpStatus.INTERNAL_SERVER_ERROR,
+        description: 'Internal server error',
+        type: generalresponse_dto_1.GeneralResponseDto
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: common_1.HttpStatus.UNAUTHORIZED,
+        description: 'Unauthorized',
+        type: generalresponse_dto_1.GeneralResponseDto
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: common_1.HttpStatus.FORBIDDEN,
+        description: 'Forbidden',
+        type: generalresponse_dto_1.GeneralResponseDto
+    }),
+    __param(0, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", typeof (_d = typeof Promise !== "undefined" && Promise) === "function" ? _d : Object)
+], PayrollsController.prototype, "archivePayroll", null);
+__decorate([
+    (0, common_1.Patch)(':id/void'),
+    (0, authorize_decorator_1.Authorize)({ endpointType: action_enum_1.Action.UPDATE }),
+    (0, swagger_1.ApiOperation)({
+        summary: 'Void a payroll',
+        description: 'Marks a payroll as voided, indicating it is no longer valid'
+    }),
+    (0, swagger_1.ApiParam)({
+        name: 'id',
+        description: 'ID of the payroll to void',
+        required: true
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: common_1.HttpStatus.OK,
+        description: 'Payroll voided successfully',
+        type: generalresponse_dto_1.GeneralResponseDto
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: common_1.HttpStatus.NOT_FOUND,
+        description: 'Payroll not found',
+        type: generalresponse_dto_1.GeneralResponseDto
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: common_1.HttpStatus.BAD_REQUEST,
+        description: 'Payroll cannot be voided (invalid status)',
+        type: generalresponse_dto_1.GeneralResponseDto
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: common_1.HttpStatus.INTERNAL_SERVER_ERROR,
+        description: 'Internal server error',
+        type: generalresponse_dto_1.GeneralResponseDto
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: common_1.HttpStatus.UNAUTHORIZED,
+        description: 'Unauthorized',
+        type: generalresponse_dto_1.GeneralResponseDto
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: common_1.HttpStatus.FORBIDDEN,
+        description: 'Forbidden',
+        type: generalresponse_dto_1.GeneralResponseDto
+    }),
+    __param(0, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
     __param(1, (0, current_user_decorator_1.CurrentUser)('sub')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, String]),
-    __metadata("design:returntype", typeof (_b = typeof Promise !== "undefined" && Promise) === "function" ? _b : Object)
-], PayrollsController.prototype, "processPayrollForCutoff", null);
+    __metadata("design:returntype", typeof (_e = typeof Promise !== "undefined" && Promise) === "function" ? _e : Object)
+], PayrollsController.prototype, "voidPayroll", null);
 __decorate([
     (0, common_1.Get)(':id/payslip'),
     (0, authorize_decorator_1.Authorize)({ endpointType: action_enum_1.Action.READ }),
@@ -29625,16 +33398,32 @@ __decorate([
     }),
     (0, swagger_1.ApiResponse)({
         status: common_1.HttpStatus.OK,
-        description: 'Payslip data generated successfully'
+        description: 'Payslip data generated successfully',
+        type: 'any'
     }),
     (0, swagger_1.ApiResponse)({
         status: common_1.HttpStatus.NOT_FOUND,
         description: 'Payroll not found'
     }),
-    __param(0, (0, common_1.Param)('id')),
+    (0, swagger_1.ApiResponse)({
+        status: common_1.HttpStatus.INTERNAL_SERVER_ERROR,
+        description: 'Internal server error',
+        type: generalresponse_dto_1.GeneralResponseDto
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: common_1.HttpStatus.UNAUTHORIZED,
+        description: 'Unauthorized',
+        type: generalresponse_dto_1.GeneralResponseDto
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: common_1.HttpStatus.FORBIDDEN,
+        description: 'Forbidden',
+        type: generalresponse_dto_1.GeneralResponseDto
+    }),
+    __param(0, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
-    __metadata("design:returntype", typeof (_c = typeof Promise !== "undefined" && Promise) === "function" ? _c : Object)
+    __metadata("design:returntype", typeof (_f = typeof Promise !== "undefined" && Promise) === "function" ? _f : Object)
 ], PayrollsController.prototype, "generatePayslipData", null);
 __decorate([
     (0, common_1.Get)(':id/payslip/download'),
@@ -29659,12 +33448,12 @@ __decorate([
     __param(0, (0, common_1.Param)('id')),
     __param(1, (0, common_1.Res)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, typeof (_d = typeof express_1.Response !== "undefined" && express_1.Response) === "function" ? _d : Object]),
-    __metadata("design:returntype", typeof (_e = typeof Promise !== "undefined" && Promise) === "function" ? _e : Object)
+    __metadata("design:paramtypes", [String, typeof (_g = typeof express_1.Response !== "undefined" && express_1.Response) === "function" ? _g : Object]),
+    __metadata("design:returntype", typeof (_h = typeof Promise !== "undefined" && Promise) === "function" ? _h : Object)
 ], PayrollsController.prototype, "downloadPayslip", null);
 __decorate([
-    (0, common_1.Post)(':id/approve'),
-    (0, authorize_decorator_1.Authorize)({ endpointType: action_enum_1.Action.UPDATE }),
+    (0, common_1.Patch)(':id/approve'),
+    (0, authorize_decorator_1.Authorize)({ endpointType: action_enum_1.Action.MANAGE }),
     (0, swagger_1.ApiOperation)({
         summary: 'Approve a payroll',
         description: 'Changes the status of a payroll to APPROVED'
@@ -29681,20 +33470,37 @@ __decorate([
     }),
     (0, swagger_1.ApiResponse)({
         status: common_1.HttpStatus.NOT_FOUND,
-        description: 'Payroll not found'
+        description: 'Payroll not found',
+        type: generalresponse_dto_1.GeneralResponseDto
     }),
     (0, swagger_1.ApiResponse)({
         status: common_1.HttpStatus.BAD_REQUEST,
-        description: 'Payroll cannot be approved (invalid status)'
+        description: 'Payroll cannot be approved (invalid status)',
+        type: generalresponse_dto_1.GeneralResponseDto
     }),
-    __param(0, (0, common_1.Param)('id')),
+    (0, swagger_1.ApiResponse)({
+        status: common_1.HttpStatus.INTERNAL_SERVER_ERROR,
+        description: 'Internal server error',
+        type: generalresponse_dto_1.GeneralResponseDto
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: common_1.HttpStatus.UNAUTHORIZED,
+        description: 'Unauthorized',
+        type: generalresponse_dto_1.GeneralResponseDto
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: common_1.HttpStatus.FORBIDDEN,
+        description: 'Forbidden',
+        type: generalresponse_dto_1.GeneralResponseDto
+    }),
+    __param(0, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
     __param(1, (0, current_user_decorator_1.CurrentUser)('sub')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, String]),
-    __metadata("design:returntype", typeof (_f = typeof Promise !== "undefined" && Promise) === "function" ? _f : Object)
+    __metadata("design:returntype", typeof (_j = typeof Promise !== "undefined" && Promise) === "function" ? _j : Object)
 ], PayrollsController.prototype, "approvePayroll", null);
 __decorate([
-    (0, common_1.Post)(':id/release'),
+    (0, common_1.Patch)(':id/release'),
     (0, authorize_decorator_1.Authorize)({ endpointType: action_enum_1.Action.UPDATE }),
     (0, swagger_1.ApiOperation)({
         summary: 'Release a payroll',
@@ -29706,28 +33512,48 @@ __decorate([
         required: true
     }),
     (0, swagger_1.ApiBody)({
-        schema: {
-            properties: {
-                paymentMethod: { type: 'string' },
-                paymentDate: { type: 'string', format: 'date-time' },
-                bankReferenceNumber: { type: 'string' }
-            }
-        }
+        type: release_payroll_dto_1.ReleasePayrollDto,
+        description: 'Details for releasing the payroll'
     }),
     (0, swagger_1.ApiResponse)({
         status: common_1.HttpStatus.OK,
         description: 'Payroll released successfully',
         type: generalresponse_dto_1.GeneralResponseDto
     }),
-    __param(0, (0, common_1.Param)('id')),
+    (0, swagger_1.ApiResponse)({
+        status: common_1.HttpStatus.NOT_FOUND,
+        description: 'Payroll not found',
+        type: generalresponse_dto_1.GeneralResponseDto
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: common_1.HttpStatus.BAD_REQUEST,
+        description: 'Payroll cannot be released (invalid status)',
+        type: generalresponse_dto_1.GeneralResponseDto
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: common_1.HttpStatus.INTERNAL_SERVER_ERROR,
+        description: 'Internal server error',
+        type: generalresponse_dto_1.GeneralResponseDto
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: common_1.HttpStatus.UNAUTHORIZED,
+        description: 'Unauthorized',
+        type: generalresponse_dto_1.GeneralResponseDto
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: common_1.HttpStatus.FORBIDDEN,
+        description: 'Forbidden',
+        type: generalresponse_dto_1.GeneralResponseDto
+    }),
+    __param(0, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
     __param(1, (0, common_1.Body)()),
     __param(2, (0, current_user_decorator_1.CurrentUser)('sub')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, Object, String]),
-    __metadata("design:returntype", typeof (_g = typeof Promise !== "undefined" && Promise) === "function" ? _g : Object)
+    __metadata("design:paramtypes", [String, typeof (_k = typeof release_payroll_dto_1.ReleasePayrollDto !== "undefined" && release_payroll_dto_1.ReleasePayrollDto) === "function" ? _k : Object, String]),
+    __metadata("design:returntype", typeof (_l = typeof Promise !== "undefined" && Promise) === "function" ? _l : Object)
 ], PayrollsController.prototype, "releasePayroll", null);
 __decorate([
-    (0, common_1.Post)(':id/reject'),
+    (0, common_1.Patch)(':id/reject'),
     (0, authorize_decorator_1.Authorize)({ endpointType: action_enum_1.Action.UPDATE }),
     (0, swagger_1.ApiOperation)({
         summary: 'Reject a payroll',
@@ -29748,13 +33574,167 @@ __decorate([
         description: 'Payroll rejected successfully',
         type: generalresponse_dto_1.GeneralResponseDto
     }),
-    __param(0, (0, common_1.Param)('id')),
+    (0, swagger_1.ApiResponse)({
+        status: common_1.HttpStatus.NOT_FOUND,
+        description: 'Payroll not found',
+        type: generalresponse_dto_1.GeneralResponseDto
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: common_1.HttpStatus.BAD_REQUEST,
+        description: 'Payroll cannot be rejected (invalid status)',
+        type: generalresponse_dto_1.GeneralResponseDto
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: common_1.HttpStatus.INTERNAL_SERVER_ERROR,
+        description: 'Internal server error',
+        type: generalresponse_dto_1.GeneralResponseDto
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: common_1.HttpStatus.UNAUTHORIZED,
+        description: 'Unauthorized',
+        type: generalresponse_dto_1.GeneralResponseDto
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: common_1.HttpStatus.FORBIDDEN,
+        description: 'Forbidden',
+        type: generalresponse_dto_1.GeneralResponseDto
+    }),
+    __param(0, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
     __param(1, (0, common_1.Query)('reason')),
     __param(2, (0, current_user_decorator_1.CurrentUser)('sub')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, String, String]),
-    __metadata("design:returntype", typeof (_h = typeof Promise !== "undefined" && Promise) === "function" ? _h : Object)
+    __metadata("design:returntype", typeof (_m = typeof Promise !== "undefined" && Promise) === "function" ? _m : Object)
 ], PayrollsController.prototype, "rejectPayroll", null);
+__decorate([
+    (0, common_1.Post)('process/batch'),
+    (0, authorize_decorator_1.Authorize)({ endpointType: action_enum_1.Action.CREATE }),
+    (0, swagger_1.ApiOperation)({
+        summary: 'Process payrolls in batch mode',
+        description: 'Divides employees into batches and queues them for asynchronous processing'
+    }),
+    (0, swagger_1.ApiBody)({
+        type: payroll_batch_process_dto_1.PayrollBatchProcessRequestDto,
+        description: 'Request body for batch payroll processing'
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: common_1.HttpStatus.OK,
+        description: 'Batch payroll processing initiated successfully',
+        type: payroll_batch_process_dto_1.PayrollBatchProcessResponseDto
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: common_1.HttpStatus.BAD_REQUEST,
+        description: 'Invalid request or cutoff not active',
+        type: generalresponse_dto_1.GeneralResponseDto
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: common_1.HttpStatus.NOT_FOUND,
+        description: 'Cutoff not found',
+        type: generalresponse_dto_1.GeneralResponseDto
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: common_1.HttpStatus.INTERNAL_SERVER_ERROR,
+        description: 'Internal server error',
+        type: generalresponse_dto_1.GeneralResponseDto
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: common_1.HttpStatus.UNAUTHORIZED,
+        description: 'Unauthorized',
+        type: generalresponse_dto_1.GeneralResponseDto
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: common_1.HttpStatus.FORBIDDEN,
+        description: 'Forbidden',
+        type: generalresponse_dto_1.GeneralResponseDto
+    }),
+    __param(0, (0, common_1.Body)()),
+    __param(1, (0, current_user_decorator_1.CurrentUser)('sub')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [typeof (_o = typeof payroll_batch_process_dto_1.PayrollBatchProcessRequestDto !== "undefined" && payroll_batch_process_dto_1.PayrollBatchProcessRequestDto) === "function" ? _o : Object, String]),
+    __metadata("design:returntype", typeof (_p = typeof Promise !== "undefined" && Promise) === "function" ? _p : Object)
+], PayrollsController.prototype, "processBatchPayroll", null);
+__decorate([
+    (0, common_1.Put)('retry-failed'),
+    (0, authorize_decorator_1.Authorize)({ endpointType: action_enum_1.Action.UPDATE }),
+    (0, swagger_1.ApiOperation)({
+        summary: 'Retry failed payroll processing',
+        description: 'Attempts to reprocess failed payrolls with smart retry logic'
+    }),
+    __param(0, (0, common_1.Body)()),
+    __param(1, (0, current_user_decorator_1.CurrentUser)('sub')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", typeof (_q = typeof Promise !== "undefined" && Promise) === "function" ? _q : Object)
+], PayrollsController.prototype, "retryFailedPayrolls", null);
+__decorate([
+    (0, common_1.Get)('batch-status/:cutoffId'),
+    (0, authorize_decorator_1.Authorize)({ endpointType: action_enum_1.Action.READ }),
+    (0, swagger_1.ApiOperation)({
+        summary: 'Check batch processing status',
+        description: 'Returns the current status of batch payroll processing'
+    }),
+    __param(0, (0, common_1.Param)('cutoffId', common_1.ParseUUIDPipe)),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", typeof (_r = typeof Promise !== "undefined" && Promise) === "function" ? _r : Object)
+], PayrollsController.prototype, "getBatchProcessingStatus", null);
+__decorate([
+    (0, common_1.Put)(':id/recalculate'),
+    (0, authorize_decorator_1.Authorize)({ endpointType: action_enum_1.Action.UPDATE }),
+    (0, swagger_1.ApiOperation)({
+        summary: 'Recalculate a specific payroll',
+        description: 'Forces recalculation of an existing payroll with option to preserve or reset state'
+    }),
+    (0, swagger_1.ApiParam)({
+        name: 'id',
+        description: 'ID of the payroll to recalculate',
+        required: true
+    }),
+    (0, swagger_1.ApiBody)({
+        type: recalculate_options_dto_1.RecalculateOptionsDto,
+        description: 'Options for recalculation'
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: common_1.HttpStatus.OK,
+        description: 'Payroll recalculated successfully',
+        type: generalresponse_dto_1.GeneralResponseDto
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: common_1.HttpStatus.NOT_FOUND,
+        description: 'Payroll not found',
+        type: generalresponse_dto_1.GeneralResponseDto
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: common_1.HttpStatus.BAD_REQUEST,
+        description: 'Payroll cannot be recalculated (invalid status)',
+        type: generalresponse_dto_1.GeneralResponseDto
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: common_1.HttpStatus.INTERNAL_SERVER_ERROR,
+        description: 'Internal server error',
+        type: generalresponse_dto_1.GeneralResponseDto
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: common_1.HttpStatus.UNAUTHORIZED,
+        description: 'Unauthorized',
+        type: generalresponse_dto_1.GeneralResponseDto
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: common_1.HttpStatus.FORBIDDEN,
+        description: 'Forbidden',
+        type: generalresponse_dto_1.GeneralResponseDto
+    }),
+    __param(0, (0, common_1.Param)('id', common_1.ParseUUIDPipe)),
+    __param(1, (0, common_1.Body)()),
+    __param(2, (0, current_user_decorator_1.CurrentUser)('sub')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, typeof (_s = typeof recalculate_options_dto_1.RecalculateOptionsDto !== "undefined" && recalculate_options_dto_1.RecalculateOptionsDto) === "function" ? _s : Object, String]),
+    __metadata("design:returntype", typeof (_t = typeof Promise !== "undefined" && Promise) === "function" ? _t : Object)
+], PayrollsController.prototype, "recalculatePayroll", null);
+exports.PayrollsController = PayrollsController = __decorate([
+    __param(1, (0, bull_1.InjectQueue)('payroll-processing')),
+    __metadata("design:paramtypes", [typeof (_a = typeof payrolls_service_1.PayrollsService !== "undefined" && payrolls_service_1.PayrollsService) === "function" ? _a : Object, typeof (_b = typeof bull_2.Queue !== "undefined" && bull_2.Queue) === "function" ? _b : Object])
+], PayrollsController);
 
 
 /***/ }),
@@ -29780,22 +33760,22 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
 var PayrollsService_1;
-var _a, _b, _c, _d, _e, _f, _g, _h, _j;
+var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.PayrollsService = void 0;
-const attendance_status_enum_1 = __webpack_require__(/*! @/common/enums/attendance-status.enum */ "./src/common/enums/attendance-status.enum.ts");
-const cutoff_status_enum_1 = __webpack_require__(/*! @/common/enums/cutoff-status.enum */ "./src/common/enums/cutoff-status.enum.ts");
-const cutoff_type_enum_1 = __webpack_require__(/*! @/common/enums/cutoff-type.enum */ "./src/common/enums/cutoff-type.enum.ts");
-const government_contribution_type_enum_1 = __webpack_require__(/*! @/common/enums/government-contribution-type.enum */ "./src/common/enums/government-contribution-type.enum.ts");
 const occurrence_enum_1 = __webpack_require__(/*! @/common/enums/occurrence.enum */ "./src/common/enums/occurrence.enum.ts");
-const payroll_item_category_enum_1 = __webpack_require__(/*! @/common/enums/payroll-item-category.enum */ "./src/common/enums/payroll-item-category.enum.ts");
-const payroll_status_enum_1 = __webpack_require__(/*! @/common/enums/payroll-status.enum */ "./src/common/enums/payroll-status.enum.ts");
-const request_status_enum_1 = __webpack_require__(/*! @/common/enums/request-status.enum */ "./src/common/enums/request-status.enum.ts");
+const cutoff_status_enum_1 = __webpack_require__(/*! @/common/enums/payroll/cutoff-status.enum */ "./src/common/enums/payroll/cutoff-status.enum.ts");
+const cutoff_type_enum_1 = __webpack_require__(/*! @/common/enums/payroll/cutoff-type.enum */ "./src/common/enums/payroll/cutoff-type.enum.ts");
+const government_contribution_type_enum_1 = __webpack_require__(/*! @/common/enums/payroll/government-contribution-type.enum */ "./src/common/enums/payroll/government-contribution-type.enum.ts");
+const payroll_item_category_enum_1 = __webpack_require__(/*! @/common/enums/payroll/payroll-item-category.enum */ "./src/common/enums/payroll/payroll-item-category.enum.ts");
+const payroll_state_enum_1 = __webpack_require__(/*! @/common/enums/payroll/payroll-state.enum */ "./src/common/enums/payroll/payroll-state.enum.ts");
 const utility_helper_1 = __webpack_require__(/*! @/common/helpers/utility.helper */ "./src/common/helpers/utility.helper.ts");
 const base_service_1 = __webpack_require__(/*! @/common/services/base.service */ "./src/common/services/base.service.ts");
+const transaction_service_1 = __webpack_require__(/*! @/common/services/transaction.service */ "./src/common/services/transaction.service.ts");
 const users_service_1 = __webpack_require__(/*! @/modules/account-management/users/users.service */ "./src/modules/account-management/users/users.service.ts");
 const final_work_hours_service_1 = __webpack_require__(/*! @/modules/attendance-management/final-work-hours/final-work-hours.service */ "./src/modules/attendance-management/final-work-hours/final-work-hours.service.ts");
 const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
+const event_emitter_1 = __webpack_require__(/*! @nestjs/event-emitter */ "@nestjs/event-emitter");
 const typeorm_1 = __webpack_require__(/*! @nestjs/typeorm */ "@nestjs/typeorm");
 const os_1 = __webpack_require__(/*! os */ "os");
 const typeorm_2 = __webpack_require__(/*! typeorm */ "typeorm");
@@ -29806,11 +33786,11 @@ const cutoffs_service_1 = __webpack_require__(/*! ./cutoffs/cutoffs.service */ "
 const payroll_entity_1 = __webpack_require__(/*! ./entities/payroll.entity */ "./src/modules/payroll-management/entities/payroll.entity.ts");
 const payroll_item_types_service_1 = __webpack_require__(/*! ./payroll-item-types/payroll-item-types.service */ "./src/modules/payroll-management/payroll-item-types/payroll-item-types.service.ts");
 const payroll_item_entity_1 = __webpack_require__(/*! ./payroll-items/entities/payroll-item.entity */ "./src/modules/payroll-management/payroll-items/entities/payroll-item.entity.ts");
+const payroll_state_machine_service_1 = __webpack_require__(/*! ./services/payroll-state-machine.service */ "./src/modules/payroll-management/services/payroll-state-machine.service.ts");
 let PayrollsService = PayrollsService_1 = class PayrollsService extends base_service_1.BaseService {
-    constructor(payrollsRepository, dataSource, employeesService, cutoffsService, finalWorkHoursService, employeePayrollItemTypesService, payrollItemTypesService, usersService, workTimeRequestsService) {
+    constructor(payrollsRepository, employeesService, cutoffsService, finalWorkHoursService, employeePayrollItemTypesService, payrollItemTypesService, usersService, workTimeRequestsService, stateMachine, eventEmitter, transactionService) {
         super(payrollsRepository, usersService);
         this.payrollsRepository = payrollsRepository;
-        this.dataSource = dataSource;
         this.employeesService = employeesService;
         this.cutoffsService = cutoffsService;
         this.finalWorkHoursService = finalWorkHoursService;
@@ -29818,6 +33798,9 @@ let PayrollsService = PayrollsService_1 = class PayrollsService extends base_ser
         this.payrollItemTypesService = payrollItemTypesService;
         this.usersService = usersService;
         this.workTimeRequestsService = workTimeRequestsService;
+        this.stateMachine = stateMachine;
+        this.eventEmitter = eventEmitter;
+        this.transactionService = transactionService;
         this.logger = new common_1.Logger(PayrollsService_1.name);
         this.RestDayPayMultiplier = 1.3;
         this.HolidayPayMultiplier = 2.0;
@@ -29827,6 +33810,7 @@ let PayrollsService = PayrollsService_1 = class PayrollsService extends base_ser
         this.SpecialHolidayOvertimePayMultiplier = 1.3;
         this.RestDayOvertimePayMultiplier = 1.69;
         this.NightDifferentialPayMultiplier = 1.1;
+        this.NightDifferentialOvertimePayMultiplier = 1.35;
         this.BaseAmount = 'monthlyRate';
     }
     /**
@@ -30043,6 +34027,7 @@ let PayrollsService = PayrollsService_1 = class PayrollsService extends base_ser
         payroll.totalSpecialHolidayOvertimeHours = 0;
         payroll.totalRestDayOvertimeHours = 0;
         payroll.totalNightDifferentialHours = 0;
+        payroll.totalNightDifferentialOvertimeHours = 0;
         // Reset pay components
         payroll.basicPay = 0;
         payroll.overtimePay = 0;
@@ -30053,6 +34038,7 @@ let PayrollsService = PayrollsService_1 = class PayrollsService extends base_ser
         payroll.restDayPay = 0;
         payroll.restDayOvertimePay = 0;
         payroll.nightDifferentialPay = 0;
+        payroll.nightDifferentialOvertimePay = 0;
         // Reset deduction totals
         payroll.absences = 0;
         payroll.tardiness = 0;
@@ -30082,6 +34068,7 @@ let PayrollsService = PayrollsService_1 = class PayrollsService extends base_ser
             payroll.totalUndertimeHours += +workHour.undertimeHours || 0;
             // Night differential
             payroll.totalNightDifferentialHours += +workHour.nightDifferentialHours || 0;
+            payroll.totalNightDifferentialOvertimeHours += +workHour.overtimeNightDifferentialHours || 0;
         }
         // Calculate pay components with proper rate multipliers according to Philippine labor laws
         // 1. Basic regular day pay (1.0x)
@@ -30102,6 +34089,8 @@ let PayrollsService = PayrollsService_1 = class PayrollsService extends base_ser
         payroll.restDayOvertimePay = payroll.totalRestDayOvertimeHours * payroll.hourlyRate * this.RestDayOvertimePayMultiplier;
         // 9. Night differential (10% of hourly rate)
         payroll.nightDifferentialPay = payroll.totalNightDifferentialHours * payroll.hourlyRate * this.NightDifferentialPayMultiplier;
+        // 9. Overtime night differential (1.35x)
+        payroll.nightDifferentialOvertimePay = payroll.totalNightDifferentialOvertimeHours * payroll.hourlyRate * this.NightDifferentialOvertimePayMultiplier;
         // 10. Deduction hours
         payroll.absences = payroll.totalAbsentHours * payroll.hourlyRate;
         payroll.tardiness = payroll.totalTardinessHours * payroll.hourlyRate;
@@ -30164,7 +34153,7 @@ let PayrollsService = PayrollsService_1 = class PayrollsService extends base_ser
                     cutoff: {
                         cutoffNumber: cutoff.cutoffNumber - 1,
                     },
-                    status: payroll_status_enum_1.PayrollStatus.RELEASED
+                    // status: PayrollStatus.RELEASED
                 },
                 relations: {
                     employee: true,
@@ -30208,7 +34197,7 @@ let PayrollsService = PayrollsService_1 = class PayrollsService extends base_ser
                 const employeeItemConfig = employeePayrollItemMap.get(itemType.id);
                 // Skip if not applicable for this employee
                 // Only process required items or items that have employee-specific configuration
-                if (!employeeItemConfig || employeeItemConfig.exempted || (itemType.processEvery && cutoff.cutoffPlace !== itemType.processEvery)) {
+                if (!employeeItemConfig || employeeItemConfig.isApplicable || (itemType.processEvery && cutoff.cutoffPlace !== itemType.processEvery)) {
                     continue;
                 }
                 // Create new payroll item
@@ -30265,7 +34254,7 @@ let PayrollsService = PayrollsService_1 = class PayrollsService extends base_ser
                                         startDate: (0, typeorm_2.MoreThan)(yearStartDate),
                                         endDate: (0, typeorm_2.LessThan)(yearEndDate)
                                     },
-                                    status: payroll_status_enum_1.PayrollStatus.RELEASED
+                                    state: payroll_state_enum_1.PayrollState.PAID
                                 },
                                 relations: {
                                     employee: true,
@@ -30388,13 +34377,16 @@ let PayrollsService = PayrollsService_1 = class PayrollsService extends base_ser
     /**
      * Process payroll for a single employee
      */
-    async processPayrollForEmployee(employeeId, cutoffId, userId) {
-        return this.dataSource.transaction(async (transactionManager) => {
+    async processPayrollForEmployee(employeeId, cutoffId, userId, batchId) {
+        return this.transactionService.executeInTransaction(async (queryRunner) => {
+            // Use queryRunner.manager instead of transactionManager
+            const transactionManager = queryRunner.manager;
             // Check if payroll already exists for this employee and cutoff
             const existingPayroll = await transactionManager.findOne(payroll_entity_1.Payroll, {
                 where: {
                     employee: { id: employeeId },
-                    cutoff: { id: cutoffId }
+                    cutoff: { id: cutoffId },
+                    state: (0, typeorm_2.Not)(payroll_state_enum_1.PayrollState.VOID)
                 },
                 relations: {
                     payrollItems: {
@@ -30402,34 +34394,13 @@ let PayrollsService = PayrollsService_1 = class PayrollsService extends base_ser
                     }
                 }
             });
+            // If payroll already exist prevent re-processing
+            if (existingPayroll) {
+                throw new common_1.ConflictException(`Payroll already exists for employee ${employeeId} for cutoff ${cutoffId}`);
+            }
             // Get employee and cutoff data
             const employee = await this.employeesService.findOneByOrFail({ id: employeeId });
             const cutoff = await this.cutoffsService.findOneByOrFail({ id: cutoffId });
-            // If exists and already processed, prevent re-processing
-            if (existingPayroll && existingPayroll.status === payroll_status_enum_1.PayrollStatus.RELEASED) {
-                throw new common_1.BadRequestException(`Payroll for employee ${employee.id} for cutoff ${cutoff.id} has already been released and cannot be reprocessed`);
-            }
-            // Get base compensation
-            const baseCompensation = await this.employeePayrollItemTypesService.getEmployeeBaseCompensation(employeeId);
-            if (!baseCompensation) {
-                throw new common_1.BadRequestException(`No base compensation defined for employee ${employeeId}. Please define employee's base compensation first.`);
-            }
-            // Check if there is pending overtime work time requests for this employee
-            const pendingWorkTimeRequests = await this.workTimeRequestsService.getRepository().find({
-                where: {
-                    employee: { id: employeeId },
-                    status: request_status_enum_1.RequestStatus.PENDING,
-                    type: attendance_status_enum_1.AttendanceStatus.OVERTIME,
-                    cutoff: { id: cutoffId }
-                }
-            });
-            if (pendingWorkTimeRequests.length > 0) {
-                // could prevent process or just change payroll status to error
-                throw new common_1.BadRequestException(`There are pending overtime work time requests for employee ${employeeId}. Please approve or reject them first.`);
-            }
-            // if (cutoff.status !== CutoffStatus.PROCESSING) {
-            //   throw new BadRequestException('Cutoff is not in processing status');
-            // }
             // Get final work hours for this employee and cutoff
             const finalWorkHours = await this.finalWorkHoursService.getRepository().findBy({
                 employee: { id: employeeId },
@@ -30439,16 +34410,44 @@ let PayrollsService = PayrollsService_1 = class PayrollsService extends base_ser
             if (!finalWorkHours.length) {
                 throw new common_1.BadRequestException(`No approved work hours found for employee ${employeeId} in cutoff ${cutoffId}`);
             }
-            // Use existing payroll or create new one
-            const payroll = new payroll_entity_1.Payroll({});
-            // Set core properties
+            // Get base compensation
+            const baseCompensation = await this.employeePayrollItemTypesService.getEmployeeBaseCompensation(employeeId);
+            if (!baseCompensation) {
+                throw new common_1.BadRequestException(`No base compensation defined for employee ${employeeId}. Please define employee's base compensation first.`);
+            }
+            // // Check if there is pending overtime work time requests for this employee
+            // const pendingWorkTimeRequests = await this.workTimeRequestsService.getRepository().find({
+            //   where: {
+            //     employee: { id: employeeId },
+            //     status: RequestStatus.PENDING,
+            //     type: AttendanceStatus.OVERTIME,
+            //     cutoff: { id: cutoffId }
+            //   }
+            // });
+            // if (pendingWorkTimeRequests.length > 0) {
+            //   // could prevent process or just change payroll status to error
+            //   throw new BadRequestException(`There are pending overtime work time requests for employee ${employeeId}. Please approve or reject them first.`);
+            // }
+            // if (cutoff.status !== CutoffStatus.PROCESSING) {
+            //   throw new BadRequestException('Cutoff is not in processing status');
+            // }
+            let payroll;
+            // Create a new payroll if none exists
+            payroll = new payroll_entity_1.Payroll({});
             payroll.employee = employee;
             payroll.cutoff = cutoff;
-            payroll.status = payroll_status_enum_1.PayrollStatus.PROCESSING;
+            payroll.batchId = batchId;
+            payroll.state = payroll_state_enum_1.PayrollState.DRAFT;
+            payroll.stateHistory = [];
+            // Start calculation process
+            const startSuccess = this.stateMachine.startCalculation(payroll);
+            if (!startSuccess) {
+                throw new common_1.BadRequestException(`Cannot start calculation for payroll in state ${payroll.state}`);
+            }
             // Calculate basic pay from work hours
             await this.calculateBasicPay(payroll, finalWorkHours);
             // Save payroll to get an ID if new
-            const savedPayroll = await transactionManager.save(payroll);
+            const savedPayroll = await transactionManager.save(payroll_entity_1.Payroll, payroll);
             // In processPayrollForEmployee
             const payrollItems = await this.processPayrollItems(savedPayroll, userId);
             // Set the relationship properly
@@ -30462,6 +34461,11 @@ let PayrollsService = PayrollsService_1 = class PayrollsService extends base_ser
             // Finalize payroll
             savedPayroll.processedAt = new Date();
             savedPayroll.processedBy = userId;
+            // complete calculation
+            const completeSuccess = this.stateMachine.completeCalculation(savedPayroll);
+            if (!completeSuccess) {
+                throw new common_1.BadRequestException(`Cannot complete calculation for payroll in state ${savedPayroll.state}`);
+            }
             // Save the final payroll
             return await transactionManager.save(savedPayroll);
         });
@@ -30478,7 +34482,7 @@ let PayrollsService = PayrollsService_1 = class PayrollsService extends base_ser
         const workHours = await this.finalWorkHoursService.getRepository().findBy({
             cutoff: { id: cutoffId },
             isApproved: true,
-            isProcessed: false
+            // isProcessed: false
         });
         if (!workHours.length) {
             throw new common_1.BadRequestException('No approved work hours found for this cutoff period');
@@ -30511,7 +34515,7 @@ let PayrollsService = PayrollsService_1 = class PayrollsService extends base_ser
      * Generate payslip data for a specific payroll
      */
     async generatePayslipData(payrollId) {
-        var _a, _b, _c, _d;
+        var _a, _b, _c, _d, _e, _f;
         const payroll = await this.findOneByOrFail({ id: payrollId }, {
             relations: {
                 employee: {
@@ -30526,6 +34530,10 @@ let PayrollsService = PayrollsService_1 = class PayrollsService extends base_ser
                 }
             }
         });
+        // check if state is not approve not archive
+        if (![payroll_state_enum_1.PayrollState.APPROVED, payroll_state_enum_1.PayrollState.PAID, payroll_state_enum_1.PayrollState.ARCHIVED].includes(payroll.state)) {
+            throw new common_1.BadRequestException('Payroll must be approved, released, paid or archived to generate payslips');
+        }
         // Get the employee's highest scope role
         const highestRole = utility_helper_1.UtilityHelper.determineEffectiveScope(payroll.employee.roles || []);
         // Group payroll items by category for organized display
@@ -30554,7 +34562,7 @@ let PayrollsService = PayrollsService_1 = class PayrollsService extends base_ser
                 branch: ((_c = highestRole === null || highestRole === void 0 ? void 0 : highestRole.branch) === null || _c === void 0 ? void 0 : _c.name) || 'N/A',
                 organization: ((_d = highestRole === null || highestRole === void 0 ? void 0 : highestRole.organization) === null || _d === void 0 ? void 0 : _d.name) || 'N/A',
             },
-            payPeriod: `${startDate} - ${endDate}`,
+            cutoffPeriod: `${startDate} - ${endDate}`,
             rates: {
                 monthly: payroll.monthlyRate,
                 daily: payroll.dailyRate,
@@ -30570,8 +34578,9 @@ let PayrollsService = PayrollsService_1 = class PayrollsService extends base_ser
                 restDay: payroll.totalRestDayHours,
                 restDayOvertime: payroll.totalRestDayOvertimeHours,
                 nightDifferential: payroll.totalNightDifferentialHours,
+                nightDifferentialOvertime: payroll.totalNightDifferentialOvertimeHours,
             },
-            earnings: {
+            compensation: {
                 basicPay: payroll.basicPay,
                 overtimePay: payroll.overtimePay,
                 holidayPay: payroll.holidayPay,
@@ -30581,10 +34590,11 @@ let PayrollsService = PayrollsService_1 = class PayrollsService extends base_ser
                 restDayPay: payroll.restDayPay,
                 restDayOvertimePay: payroll.restDayOvertimePay,
                 nightDifferentialPay: payroll.nightDifferentialPay,
-                allowances: itemsByCategory[payroll_item_category_enum_1.PayrollItemCategory.ALLOWANCE] || [],
-                tips: itemsByCategory[payroll_item_category_enum_1.PayrollItemCategory.TIP] || [],
-                others: itemsByCategory[payroll_item_category_enum_1.PayrollItemCategory.OTHER] || []
+                nightDifferentialOvertimePay: payroll.nightDifferentialOvertimePay,
+                adjustments: itemsByCategory[payroll_item_category_enum_1.PayrollItemCategory.ADJUSTMENT] || [],
+                others: ((_e = itemsByCategory[payroll_item_category_enum_1.PayrollItemCategory.COMPENSATION]) === null || _e === void 0 ? void 0 : _e.filter((item) => !item.includeInPayrollItemsProcessing)) || []
             },
+            benefits: itemsByCategory[payroll_item_category_enum_1.PayrollItemCategory.BENEFIT] || [],
             deductions: {
                 basic: {
                     absences: payroll.absences,
@@ -30596,12 +34606,13 @@ let PayrollsService = PayrollsService_1 = class PayrollsService extends base_ser
                 },
                 governmentMandated: {
                     sss: payroll.sssContribution.employee,
-                    philhealth: payroll.philHealthContribution.employee,
-                    pagibig: payroll.pagIbigContribution.employee,
-                    tax: payroll.withHoldingTax
+                    philHealth: payroll.philHealthContribution.employee,
+                    pagIbig: payroll.pagIbigContribution.employee,
+                    withholdingTax: payroll.withholdingTax
                 },
-                otherDeductions: itemsByCategory[payroll_item_category_enum_1.PayrollItemCategory.DEDUCTION].filter((item) => item.governmentMandatedType) || []
+                others: ((_f = itemsByCategory[payroll_item_category_enum_1.PayrollItemCategory.DEDUCTION]) === null || _f === void 0 ? void 0 : _f.filter((item) => item.governmentMandatedType)) || []
             },
+            allowances: itemsByCategory[payroll_item_category_enum_1.PayrollItemCategory.ALLOWANCE] || [],
             totals: {
                 grossPay: payroll.grossPay,
                 totalDeductions: payroll.totalDeductions,
@@ -30613,13 +34624,803 @@ let PayrollsService = PayrollsService_1 = class PayrollsService extends base_ser
             payrollDate: utility_helper_1.UtilityHelper.ensureDate(payroll.processedAt || new Date).toLocaleDateString()
         };
     }
+    /**
+     * Process payrolls in batches with optimized performance
+     */
+    async processPayrollBatch(cutoffId, userId, batchId, batchSize = 50) {
+        this.logger.log(`Processing payroll batch ${batchId} for cutoff ${cutoffId}`);
+        const cutoff = await this.cutoffsService.findOneByOrFail({ id: cutoffId });
+        // Get employees in optimized batches with reduced relations
+        const workHours = await this.finalWorkHoursService.getRepository().find({
+            where: {
+                cutoff: { id: cutoffId },
+                isApproved: true,
+                // isProcessed: false, // can be used to filter unprocessed work hours
+                payrollBatchId: batchId // Process only employees in this specific batch
+            },
+            relations: { employee: true },
+            take: batchSize
+        });
+        if (!workHours.length) {
+            throw new common_1.BadRequestException(`No approved work hours found for batch ${batchId} in cutoff ${cutoffId}`);
+        }
+        // Group by employee to prevent duplicate processing
+        const employeeMap = new Map();
+        workHours.forEach(wh => employeeMap.set(wh.employee.id, wh.employee));
+        const employees = Array.from(employeeMap.values());
+        // Process with connection pooling and transaction management
+        const payrolls = [];
+        const failedEmployees = [];
+        let processedCount = 0;
+        for (const employee of employees) {
+            try {
+                const payroll = await this.processPayrollForEmployee(employee.id, cutoffId, userId);
+                payrolls.push(payroll);
+                processedCount++;
+                // // Mark work hours as processed
+                // await this.finalWorkHoursService.getRepository().update(
+                //   { employee: { id: employee.id }, cutoff: { id: cutoffId } },
+                //   { isProcessed: true, processedAt: new Date(), processedBy: userId }
+                // );
+            }
+            catch (error) {
+                this.logger.error(`Failed to process payroll for employee ${employee.id}`, error.message);
+                failedEmployees.push({
+                    id: employee.id,
+                    reason: error.message || 'Unknown error'
+                });
+            }
+        }
+        // Record failure metrics for monitoring
+        if (failedEmployees.length > employees.length * 0.5) {
+            // this.eventEmitter.emit('payroll.batch.partialFailure', {
+            //   batchId,
+            //   cutoffId,
+            //   failedCount: failedEmployees.length,
+            //   totalCount: employees.length,
+            //   failedEmployees
+            // });
+            throw new Error(`Batch ${batchId} had too many failures: ${failedEmployees.length}/${employees.length}`);
+            // if (failedCount > attendanceIds.length * 0.5) { // If more than 50% failed
+            // }
+        }
+        if (processedCount === employees.length) {
+            this.logger.log(`Batch ${batchId} processing completed. Success: ${payrolls.length}, Failed: ${failedEmployees.length}`);
+        }
+        else {
+            this.logger.warn(`Processed ${processedCount} out of ${employees.length} payrolls in batch ${batchId}`);
+        }
+        return payrolls;
+    }
+    /**
+     * Divide employees into processing batches for parallel execution
+     */
+    async createProcessingBatches(cutoffId, batchSize = 200) {
+        // Get all employees with work hours for this cutoff
+        const result = await this.finalWorkHoursService.getRepository()
+            .createQueryBuilder('workHour')
+            .select('workHour.employeeId', 'employeeId')
+            .addSelect('COUNT(*)', 'recordCount')
+            .where('workHour.cutoffId = :cutoffId', { cutoffId })
+            .andWhere('workHour.isApproved = :isApproved', { isApproved: true })
+            // .andWhere('workHour.isProcessed = :isProcessed', { isProcessed: false })
+            .groupBy('workHour.employeeId')
+            .getRawMany();
+        const totalEmployees = result.length;
+        const batchCount = Math.ceil(totalEmployees / batchSize);
+        const batches = [];
+        // Create batch assignments
+        for (let i = 0; i < batchCount; i++) {
+            const start = i * batchSize;
+            const end = Math.min((i + 1) * batchSize, totalEmployees);
+            const batchEmployees = result.slice(start, end);
+            const batchId = `${cutoffId}-batch-${i + 1}`;
+            // Assign batch ID to these work hours
+            await this.finalWorkHoursService.getRepository().createQueryBuilder()
+                .update()
+                .set({ payrollBatchId: batchId })
+                .where('employeeId IN (:...employeeIds)', {
+                employeeIds: batchEmployees.map(e => e.employeeId)
+            })
+                .andWhere('cutoffId = :cutoffId', { cutoffId })
+                .andWhere('isApproved = :isApproved', { isApproved: true })
+                // .andWhere('isProcessed = :isProcessed', { isProcessed: false })
+                .execute();
+            batches.push({
+                batchId,
+                employeeCount: batchEmployees.length
+            });
+        }
+        return batches;
+    }
+    /**
+   * Get batch processing status for a specific cutoff
+   */
+    async getBatchProcessingStatus(cutoffId) {
+        this.logger.log(`Getting batch processing status for cutoff ${cutoffId}`);
+        // Get all payrolls for this cutoff
+        const payrolls = await this.repository.find({
+            where: { cutoff: { id: cutoffId } },
+            relations: ['employee']
+        });
+        // Get all work hours with batch IDs for this cutoff
+        const workHours = await this.finalWorkHoursService.getRepository().find({
+            where: {
+                cutoff: { id: cutoffId },
+                isApproved: true,
+                batchId: (0, typeorm_2.Not)((0, typeorm_2.IsNull)())
+            },
+            relations: { employee: true }
+        });
+        // Extract unique batch IDs
+        const batchIds = [...new Set(workHours
+                .filter(wh => wh.batchId)
+                .map(wh => wh.batchId))];
+        // Count processing states
+        const processed = payrolls.filter(p => [
+            payroll_state_enum_1.PayrollState.PENDING_APPROVAL,
+            payroll_state_enum_1.PayrollState.APPROVED,
+            payroll_state_enum_1.PayrollState.PAID,
+            payroll_state_enum_1.PayrollState.ARCHIVED
+        ].includes(p.state)).length;
+        const failed = payrolls.filter(p => p.state === payroll_state_enum_1.PayrollState.FAILED).length;
+        // Calculate employees with work hours but no payroll yet
+        const employeesWithWorkHours = [...new Set(workHours.map(wh => wh.employee.id))];
+        const employeesWithPayrolls = [...new Set(payrolls.map(p => p.employee.id))];
+        const pending = employeesWithWorkHours.length - employeesWithPayrolls.length +
+            payrolls.filter(p => p.state === payroll_state_enum_1.PayrollState.DRAFT ||
+                p.state === payroll_state_enum_1.PayrollState.CALCULATING).length;
+        const total = Math.max(employeesWithWorkHours.length, employeesWithPayrolls.length);
+        // Calculate batch statuses
+        const batchStatuses = batchIds.map(batchId => {
+            const batchWorkHours = workHours.filter(wh => wh.batchId === batchId);
+            const employeeIdsInBatch = [...new Set(batchWorkHours.map(wh => wh.employee.id))];
+            const batchPayrolls = payrolls.filter(p => employeeIdsInBatch.includes(p.employee.id));
+            const processedCount = batchPayrolls.filter(p => [
+                payroll_state_enum_1.PayrollState.PENDING_APPROVAL,
+                payroll_state_enum_1.PayrollState.APPROVED,
+                payroll_state_enum_1.PayrollState.PAID,
+                payroll_state_enum_1.PayrollState.ARCHIVED
+            ].includes(p.state)).length;
+            const failedCount = batchPayrolls.filter(p => p.state === payroll_state_enum_1.PayrollState.FAILED).length;
+            const pendingCount = employeeIdsInBatch.length - processedCount - failedCount;
+            let status = 'Not Started';
+            if (processedCount > 0 && processedCount < employeeIdsInBatch.length) {
+                status = 'In Progress';
+            }
+            else if (processedCount === employeeIdsInBatch.length) {
+                status = 'Completed';
+            }
+            else if (failedCount > 0) {
+                status = 'Has Failures';
+            }
+            return {
+                batchId,
+                status,
+                processedCount,
+                pendingCount,
+                failedCount
+            };
+        });
+        // Calculate overall status
+        let status = 'Not Started';
+        if (processed > 0 && processed < total) {
+            status = 'In Progress';
+        }
+        else if (processed === total && total > 0) {
+            status = 'Completed';
+        }
+        else if (failed > 0) {
+            status = 'Has Failures';
+        }
+        const percentComplete = total > 0 ? Math.round((processed / total) * 100) : 0;
+        return {
+            status,
+            processed,
+            pending,
+            failed,
+            total,
+            percentComplete,
+            batchStatuses
+        };
+    }
+    /**
+     * Get detailed audit trail for a payroll
+     */
+    async getPayrollAudit(payrollId) {
+        this.logger.log(`Getting audit trail for payroll ${payrollId}`);
+        const payroll = await this.findOneByOrFail({ id: payrollId }, {
+            relations: {
+                employee: true,
+                cutoff: true,
+                payrollItems: {
+                    payrollItemType: true
+                }
+            }
+        });
+        // Get the previous payroll for comparison if available
+        const previousPayrolls = await this.repository.find({
+            where: {
+                employee: { id: payroll.employee.id },
+                cutoff: { endDate: (0, typeorm_2.LessThan)(payroll.cutoff.startDate) }
+            },
+            order: { cutoff: { endDate: 'DESC' } },
+            take: 1
+        });
+        const previousPayroll = previousPayrolls.length > 0 ? previousPayrolls[0] : null;
+        // Calculate changes if previous payroll exists
+        const changes = [];
+        if (previousPayroll) {
+            const compareFields = [
+                { field: 'grossPay', label: 'Gross Pay' },
+                { field: 'netPay', label: 'Net Pay' },
+                { field: 'basicPay', label: 'Basic Pay' },
+                { field: 'totalDeductions', label: 'Total Deductions' },
+                { field: 'totalAllowances', label: 'Total Allowances' }
+            ];
+            for (const { field, label } of compareFields) {
+                const currentValue = Number(payroll[field]);
+                const previousValue = Number(previousPayroll[field]);
+                if (previousValue !== 0) {
+                    const percentChange = ((currentValue - previousValue) / previousValue) * 100;
+                    if (Math.abs(percentChange) > 5) { // Only record significant changes
+                        changes.push({
+                            field: label,
+                            previousValue,
+                            currentValue,
+                            difference: currentValue - previousValue,
+                            percentChange: Math.round(percentChange * 100) / 100
+                        });
+                    }
+                }
+            }
+        }
+        return {
+            payrollId,
+            stateHistory: payroll.stateHistory || [],
+            calculations: payroll.calculationDetails || {},
+            changes
+        };
+    }
+    /**
+     * Recalculate a payroll with options to preserve state and selectively update components
+     */
+    async recalculatePayroll(id, options, userId) {
+        var _a, _b;
+        this.logger.log(`Recalculating payroll ${id} with options:`, options);
+        const payroll = await this.findOneByOrFail({ id }, {
+            relations: {
+                employee: true,
+                cutoff: true,
+                payrollItems: {
+                    payrollItemType: true
+                }
+            }
+        });
+        // Save original state if we need to preserve it
+        const originalState = payroll.state;
+        // Use the state machine to reset if not preserving state
+        if (!options.preserveState) {
+            if (!this.stateMachine.resetToDraft(payroll, 'Recalculation requested')) {
+                throw new common_1.BadRequestException(`Cannot recalculate payroll in state ${payroll.state}`);
+            }
+        }
+        // Get work hours for recalculation
+        const workHours = await this.finalWorkHoursService.getRepository().findBy({
+            employee: { id: payroll.employee.id },
+            cutoff: { id: payroll.cutoff.id },
+            isApproved: true
+        });
+        if (!workHours.length) {
+            throw new common_1.BadRequestException('No approved work hours found for recalculation');
+        }
+        // Recalculate basic pay components (hours, rates, basic pay)
+        await this.calculateBasicPay(payroll, workHours);
+        // Filter payroll items based on recalculation options
+        if ((_a = payroll.payrollItems) === null || _a === void 0 ? void 0 : _a.length) {
+            payroll.payrollItems = payroll.payrollItems.filter(item => {
+                const category = item.payrollItemType.category;
+                if (options.recalculateDeductions &&
+                    category === payroll_item_category_enum_1.PayrollItemCategory.DEDUCTION) {
+                    return false; // Remove to recalculate
+                }
+                if (options.recalculateAllowances &&
+                    category === payroll_item_category_enum_1.PayrollItemCategory.ALLOWANCE) {
+                    return false; // Remove to recalculate
+                }
+                return true; // Keep other items
+            });
+        }
+        // Recalculate the payroll items
+        await this.processPayrollItems(payroll, userId);
+        // Restore original state if preserving
+        if (options.preserveState) {
+            payroll.state = originalState;
+        }
+        else {
+            // Mark as recalculated
+            (_b = payroll.stateHistory) === null || _b === void 0 ? void 0 : _b.push({
+                from: payroll_state_enum_1.PayrollState.DRAFT,
+                to: payroll_state_enum_1.PayrollState.PENDING_APPROVAL,
+                timestamp: new Date(),
+                note: `Recalculated by ${userId}`
+            });
+            payroll.state = payroll_state_enum_1.PayrollState.PENDING_APPROVAL;
+        }
+        // Update processed information
+        payroll.processedAt = new Date();
+        payroll.processedBy = userId;
+        // Save the updated payroll
+        return await this.repository.save(payroll);
+    }
+    /**
+     * Smart re-processing of failed payrolls with metadata tracking
+     */
+    async retryFailedPayrolls(cutoffId, userId, options) {
+        var _a;
+        const maxRetries = (options === null || options === void 0 ? void 0 : options.maxRetries) || 3;
+        // Find payrolls that failed
+        const failedPayrolls = await this.payrollsRepository.find({
+            where: Object.assign({ cutoff: { id: cutoffId }, state: payroll_state_enum_1.PayrollState.FAILED }, ((options === null || options === void 0 ? void 0 : options.onlySpecificIds) ? { id: (0, typeorm_2.In)(options.onlySpecificIds) } : {})),
+            relations: ['employee', 'cutoff'],
+        });
+        this.logger.log(`Found ${failedPayrolls.length} failed payrolls to retry`);
+        const result = { successful: 0, failed: 0, skipped: 0, payrolls: [] };
+        for (const payroll of failedPayrolls) {
+            // Skip if exceeded max retries
+            if ((((_a = payroll.stateHistory) === null || _a === void 0 ? void 0 : _a.filter(h => h.to === payroll_state_enum_1.PayrollState.FAILED).length) || 0) >= maxRetries) {
+                this.logger.warn(`Skipping payroll ${payroll.id} - exceeded max retries (${maxRetries})`);
+                result.skipped++;
+                continue;
+            }
+            try {
+                // Reset and reprocess
+                await this.stateMachine.resetToDraft(payroll, `Retry attempt ${new Date().toISOString()}`);
+                await this.repository.save(payroll);
+                const reprocessed = await this.processPayrollForEmployee(payroll.employee.id, payroll.cutoff.id, userId);
+                result.successful++;
+                result.payrolls.push(reprocessed);
+            }
+            catch (error) {
+                this.logger.error(`Failed to reprocess payroll ${payroll.id}`, error.stack);
+                result.failed++;
+            }
+        }
+        return result;
+    }
 };
 exports.PayrollsService = PayrollsService;
 exports.PayrollsService = PayrollsService = PayrollsService_1 = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, typeorm_1.InjectRepository)(payroll_entity_1.Payroll)),
-    __metadata("design:paramtypes", [typeof (_a = typeof typeorm_2.Repository !== "undefined" && typeorm_2.Repository) === "function" ? _a : Object, typeof (_b = typeof typeorm_2.DataSource !== "undefined" && typeorm_2.DataSource) === "function" ? _b : Object, typeof (_c = typeof employees_service_1.EmployeesService !== "undefined" && employees_service_1.EmployeesService) === "function" ? _c : Object, typeof (_d = typeof cutoffs_service_1.CutoffsService !== "undefined" && cutoffs_service_1.CutoffsService) === "function" ? _d : Object, typeof (_e = typeof final_work_hours_service_1.FinalWorkHoursService !== "undefined" && final_work_hours_service_1.FinalWorkHoursService) === "function" ? _e : Object, typeof (_f = typeof employee_payroll_item_types_service_1.EmployeePayrollItemTypesService !== "undefined" && employee_payroll_item_types_service_1.EmployeePayrollItemTypesService) === "function" ? _f : Object, typeof (_g = typeof payroll_item_types_service_1.PayrollItemTypesService !== "undefined" && payroll_item_types_service_1.PayrollItemTypesService) === "function" ? _g : Object, typeof (_h = typeof users_service_1.UsersService !== "undefined" && users_service_1.UsersService) === "function" ? _h : Object, typeof (_j = typeof work_time_requests_service_1.WorkTimeRequestsService !== "undefined" && work_time_requests_service_1.WorkTimeRequestsService) === "function" ? _j : Object])
+    __metadata("design:paramtypes", [typeof (_a = typeof typeorm_2.Repository !== "undefined" && typeorm_2.Repository) === "function" ? _a : Object, typeof (_b = typeof employees_service_1.EmployeesService !== "undefined" && employees_service_1.EmployeesService) === "function" ? _b : Object, typeof (_c = typeof cutoffs_service_1.CutoffsService !== "undefined" && cutoffs_service_1.CutoffsService) === "function" ? _c : Object, typeof (_d = typeof final_work_hours_service_1.FinalWorkHoursService !== "undefined" && final_work_hours_service_1.FinalWorkHoursService) === "function" ? _d : Object, typeof (_e = typeof employee_payroll_item_types_service_1.EmployeePayrollItemTypesService !== "undefined" && employee_payroll_item_types_service_1.EmployeePayrollItemTypesService) === "function" ? _e : Object, typeof (_f = typeof payroll_item_types_service_1.PayrollItemTypesService !== "undefined" && payroll_item_types_service_1.PayrollItemTypesService) === "function" ? _f : Object, typeof (_g = typeof users_service_1.UsersService !== "undefined" && users_service_1.UsersService) === "function" ? _g : Object, typeof (_h = typeof work_time_requests_service_1.WorkTimeRequestsService !== "undefined" && work_time_requests_service_1.WorkTimeRequestsService) === "function" ? _h : Object, typeof (_j = typeof payroll_state_machine_service_1.PayrollStateMachine !== "undefined" && payroll_state_machine_service_1.PayrollStateMachine) === "function" ? _j : Object, typeof (_k = typeof event_emitter_1.EventEmitter2 !== "undefined" && event_emitter_1.EventEmitter2) === "function" ? _k : Object, typeof (_l = typeof transaction_service_1.TransactionService !== "undefined" && transaction_service_1.TransactionService) === "function" ? _l : Object])
 ], PayrollsService);
+
+
+/***/ }),
+
+/***/ "./src/modules/payroll-management/services/payroll-metrics.service.ts":
+/*!****************************************************************************!*\
+  !*** ./src/modules/payroll-management/services/payroll-metrics.service.ts ***!
+  \****************************************************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+"use strict";
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
+var PayrollMetricsService_1;
+var _a, _b;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.PayrollMetricsService = void 0;
+const payroll_state_enum_1 = __webpack_require__(/*! @/common/enums/payroll/payroll-state.enum */ "./src/common/enums/payroll/payroll-state.enum.ts");
+const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
+const schedule_1 = __webpack_require__(/*! @nestjs/schedule */ "@nestjs/schedule");
+const typeorm_1 = __webpack_require__(/*! @nestjs/typeorm */ "@nestjs/typeorm");
+const prom_client_1 = __webpack_require__(/*! prom-client */ "prom-client");
+const typeorm_2 = __webpack_require__(/*! typeorm */ "typeorm");
+const payroll_entity_1 = __webpack_require__(/*! ../entities/payroll.entity */ "./src/modules/payroll-management/entities/payroll.entity.ts");
+let PayrollMetricsService = PayrollMetricsService_1 = class PayrollMetricsService {
+    constructor(payrollRepository) {
+        this.payrollRepository = payrollRepository;
+        this.logger = new common_1.Logger(PayrollMetricsService_1.name);
+        // Initialize metrics collectors with default values
+        this.payrollProcessingTime = new prom_client_1.Histogram({
+            name: 'payroll_processing_seconds',
+            help: 'Time taken to process payrolls',
+            labelNames: ['cutoff_type', 'status']
+        });
+        this.activePayrollJobs = new prom_client_1.Gauge({
+            name: 'payroll_active_jobs',
+            help: 'Number of currently active payroll jobs'
+        });
+        this.failedPayrollCounter = new prom_client_1.Counter({
+            name: 'payroll_failures_total',
+            help: 'Total number of payroll processing failures',
+            labelNames: ['error_type']
+        });
+    }
+    // Record processing time
+    recordProcessingTime(cutoffType, status, seconds) {
+        this.payrollProcessingTime.labels(cutoffType, status).observe(seconds);
+    }
+    // Increment active jobs
+    incrementActiveJobs() {
+        this.activePayrollJobs.inc();
+    }
+    // Decrement active jobs
+    decrementActiveJobs() {
+        this.activePayrollJobs.dec();
+    }
+    // Increment failure counter
+    recordFailure(errorType) {
+        this.failedPayrollCounter.labels(errorType).inc();
+    }
+    // Gather system metrics periodically
+    async gatherPayrollMetrics() {
+        try {
+            const [processing, completed, failed] = await Promise.all([
+                this.payrollRepository.count({ where: { state: payroll_state_enum_1.PayrollState.CALCULATING } }),
+                this.payrollRepository.count({ where: { state: payroll_state_enum_1.PayrollState.PAID } }),
+                this.payrollRepository.count({ where: { state: payroll_state_enum_1.PayrollState.FAILED } })
+            ]);
+            this.logger.log(`Metrics collected - Processing: ${processing}, Completed: ${completed}, Failed: ${failed}`);
+        }
+        catch (error) {
+            this.logger.error('Failed to gather payroll metrics', error);
+        }
+    }
+};
+exports.PayrollMetricsService = PayrollMetricsService;
+__decorate([
+    (0, schedule_1.Cron)('0 */15 * * * *') // Every 15 minutes
+    ,
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", typeof (_b = typeof Promise !== "undefined" && Promise) === "function" ? _b : Object)
+], PayrollMetricsService.prototype, "gatherPayrollMetrics", null);
+exports.PayrollMetricsService = PayrollMetricsService = PayrollMetricsService_1 = __decorate([
+    (0, common_1.Injectable)(),
+    __param(0, (0, typeorm_1.InjectRepository)(payroll_entity_1.Payroll)),
+    __metadata("design:paramtypes", [typeof (_a = typeof typeorm_2.Repository !== "undefined" && typeorm_2.Repository) === "function" ? _a : Object])
+], PayrollMetricsService);
+
+
+/***/ }),
+
+/***/ "./src/modules/payroll-management/services/payroll-processor.service.ts":
+/*!******************************************************************************!*\
+  !*** ./src/modules/payroll-management/services/payroll-processor.service.ts ***!
+  \******************************************************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+"use strict";
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var PayrollProcessorService_1;
+var _a, _b, _c, _d, _e, _f, _g;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.PayrollProcessorService = void 0;
+const bull_1 = __webpack_require__(/*! @nestjs/bull */ "@nestjs/bull");
+const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
+const event_emitter_1 = __webpack_require__(/*! @nestjs/event-emitter */ "@nestjs/event-emitter");
+const bull_2 = __webpack_require__(/*! bull */ "bull");
+const payrolls_service_1 = __webpack_require__(/*! ../payrolls.service */ "./src/modules/payroll-management/payrolls.service.ts");
+let PayrollProcessorService = PayrollProcessorService_1 = class PayrollProcessorService {
+    constructor(payrollsService, eventEmitter) {
+        this.payrollsService = payrollsService;
+        this.eventEmitter = eventEmitter;
+        this.logger = new common_1.Logger(PayrollProcessorService_1.name);
+    }
+    async processEmployeePayroll(job) {
+        this.logger.log(`Processing payroll for employee ${job.data.employeeId} (${job.id})`);
+        try {
+            const payroll = await this.payrollsService.processPayrollForEmployee(job.data.employeeId, job.data.cutoffId, job.data.userId);
+            return payroll;
+        }
+        catch (error) {
+            this.logger.error(`Failed to process payroll for employee ${job.data.employeeId}`, error);
+            throw error;
+        }
+    }
+    async processBatchPayroll(job) {
+        this.logger.log(`Processing batch payroll for cutoff ${job.data.cutoffId} (Batch: ${job.data.batchId})`);
+        try {
+            const payrolls = await this.payrollsService.processPayrollBatch(job.data.cutoffId, job.data.userId, job.data.batchId);
+            return payrolls;
+        }
+        catch (error) {
+            this.logger.error(`Failed to process batch payroll for cutoff ${job.data.cutoffId}`, error);
+            throw error;
+        }
+    }
+    onFailed(job, error) {
+        this.logger.error(`Failed job ${job.id} of type ${job.name}: ${error.message}`, error.stack);
+        this.eventEmitter.emit('payroll.processing.failed', {
+            jobId: job.id,
+            type: job.name,
+            data: job.data,
+            error: error.message,
+        });
+    }
+    onCompleted(job, result) {
+        this.logger.log(`Completed job ${job.id} of type ${job.name}`);
+        this.eventEmitter.emit('payroll.processing.completed', {
+            jobId: job.id,
+            type: job.name,
+            data: job.data,
+            result,
+        });
+    }
+};
+exports.PayrollProcessorService = PayrollProcessorService;
+__decorate([
+    (0, bull_1.Process)('process-employee-payroll'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [typeof (_c = typeof bull_2.Job !== "undefined" && bull_2.Job) === "function" ? _c : Object]),
+    __metadata("design:returntype", Promise)
+], PayrollProcessorService.prototype, "processEmployeePayroll", null);
+__decorate([
+    (0, bull_1.Process)('process-batch-payroll'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [typeof (_d = typeof bull_2.Job !== "undefined" && bull_2.Job) === "function" ? _d : Object]),
+    __metadata("design:returntype", Promise)
+], PayrollProcessorService.prototype, "processBatchPayroll", null);
+__decorate([
+    (0, bull_1.OnQueueFailed)(),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [typeof (_e = typeof bull_2.Job !== "undefined" && bull_2.Job) === "function" ? _e : Object, typeof (_f = typeof Error !== "undefined" && Error) === "function" ? _f : Object]),
+    __metadata("design:returntype", void 0)
+], PayrollProcessorService.prototype, "onFailed", null);
+__decorate([
+    (0, bull_1.OnQueueCompleted)(),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [typeof (_g = typeof bull_2.Job !== "undefined" && bull_2.Job) === "function" ? _g : Object, Object]),
+    __metadata("design:returntype", void 0)
+], PayrollProcessorService.prototype, "onCompleted", null);
+exports.PayrollProcessorService = PayrollProcessorService = PayrollProcessorService_1 = __decorate([
+    (0, bull_1.Processor)('payroll-processing'),
+    __metadata("design:paramtypes", [typeof (_a = typeof payrolls_service_1.PayrollsService !== "undefined" && payrolls_service_1.PayrollsService) === "function" ? _a : Object, typeof (_b = typeof event_emitter_1.EventEmitter2 !== "undefined" && event_emitter_1.EventEmitter2) === "function" ? _b : Object])
+], PayrollProcessorService);
+
+
+/***/ }),
+
+/***/ "./src/modules/payroll-management/services/payroll-state-machine.service.ts":
+/*!**********************************************************************************!*\
+  !*** ./src/modules/payroll-management/services/payroll-state-machine.service.ts ***!
+  \**********************************************************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+"use strict";
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var PayrollStateMachine_1;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.PayrollStateMachine = void 0;
+const payroll_state_enum_1 = __webpack_require__(/*! @/common/enums/payroll/payroll-state.enum */ "./src/common/enums/payroll/payroll-state.enum.ts");
+const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
+/**
+ * Manages the state transitions for payroll processing to ensure
+ * consistency and prevent invalid state transitions
+ */
+let PayrollStateMachine = PayrollStateMachine_1 = class PayrollStateMachine {
+    constructor() {
+        this.logger = new common_1.Logger(PayrollStateMachine_1.name);
+    }
+    /**
+     * Start the calculation process for a payroll
+     */
+    startCalculation(payroll) {
+        // Only draft payrolls can be calculated
+        if (payroll.state !== payroll_state_enum_1.PayrollState.DRAFT) {
+            this.logger.warn(`Cannot start calculation for payroll ${payroll.id} in state ${payroll.state}`);
+            return false;
+        }
+        // Initialize state history if not exists
+        if (!payroll.stateHistory) {
+            payroll.stateHistory = [];
+        }
+        // Record state transition
+        payroll.stateHistory.push({
+            from: payroll_state_enum_1.PayrollState.DRAFT,
+            to: payroll_state_enum_1.PayrollState.CALCULATING,
+            timestamp: new Date(),
+        });
+        payroll.state = payroll_state_enum_1.PayrollState.CALCULATING;
+        return true;
+    }
+    /**
+     * Complete calculation and move to pending approval
+     */
+    completeCalculation(payroll) {
+        var _a;
+        if (payroll.state !== payroll_state_enum_1.PayrollState.CALCULATING) {
+            this.logger.warn(`Cannot complete calculation for payroll ${payroll.id} in state ${payroll.state}`);
+            return false;
+        }
+        // Record state transition
+        (_a = payroll.stateHistory) === null || _a === void 0 ? void 0 : _a.push({
+            from: payroll_state_enum_1.PayrollState.CALCULATING,
+            to: payroll_state_enum_1.PayrollState.PENDING_APPROVAL,
+            timestamp: new Date(),
+        });
+        payroll.state = payroll_state_enum_1.PayrollState.PENDING_APPROVAL;
+        return true;
+    }
+    /**
+     * Approve the payroll
+     */
+    approve(payroll, approvedBy) {
+        var _a;
+        if (payroll.state !== payroll_state_enum_1.PayrollState.PENDING_APPROVAL) {
+            this.logger.warn(`Cannot approve payroll ${payroll.id} in state ${payroll.state}`);
+            return false;
+        }
+        // Record state transition
+        (_a = payroll.stateHistory) === null || _a === void 0 ? void 0 : _a.push({
+            from: payroll_state_enum_1.PayrollState.PENDING_APPROVAL,
+            to: payroll_state_enum_1.PayrollState.APPROVED,
+            timestamp: new Date(),
+            note: `Approved by ${approvedBy}`,
+        });
+        payroll.state = payroll_state_enum_1.PayrollState.APPROVED;
+        payroll.approvedAt = new Date();
+        payroll.approvedBy = approvedBy;
+        return true;
+    }
+    /**
+     * Reject the payroll
+     */
+    reject(payroll, rejectedBy, reason) {
+        var _a;
+        if (payroll.state !== payroll_state_enum_1.PayrollState.PENDING_APPROVAL) {
+            this.logger.warn(`Cannot reject payroll ${payroll.id} in state ${payroll.state}`);
+            return false;
+        }
+        // Record state transition
+        (_a = payroll.stateHistory) === null || _a === void 0 ? void 0 : _a.push({
+            from: payroll_state_enum_1.PayrollState.PENDING_APPROVAL,
+            to: payroll_state_enum_1.PayrollState.REJECTED,
+            timestamp: new Date(),
+            note: `Rejected by ${rejectedBy}: ${reason}`,
+        });
+        payroll.state = payroll_state_enum_1.PayrollState.REJECTED;
+        payroll.rejectedAt = new Date();
+        payroll.rejectedBy = rejectedBy;
+        payroll.rejectionReason = reason;
+        return true;
+    }
+    /**
+     * Void the payroll
+     */
+    void(payroll, voidedBy) {
+        var _a;
+        // Check if the payroll is already voided
+        if (payroll.state === payroll_state_enum_1.PayrollState.VOID) {
+            this.logger.warn(`Cannot void payroll ${payroll.id} as it is already voided`);
+            return false;
+        }
+        // Record state transition
+        (_a = payroll.stateHistory) === null || _a === void 0 ? void 0 : _a.push({
+            from: payroll.state, // Use current state instead of hardcoded PAID
+            to: payroll_state_enum_1.PayrollState.VOID,
+            timestamp: new Date(),
+            note: `Voided by ${voidedBy}`,
+        });
+        payroll.state = payroll_state_enum_1.PayrollState.VOID;
+        payroll.voidedAt = new Date();
+        payroll.voidedBy = voidedBy;
+        return true;
+    }
+    /**
+     * Mark the payroll as paid
+     */
+    markPaid(payroll, releasedBy, paymentDetails) {
+        var _a;
+        if (payroll.state !== payroll_state_enum_1.PayrollState.APPROVED) {
+            this.logger.warn(`Cannot mark payroll ${payroll.id} as paid in state ${payroll.state}`);
+            return false;
+        }
+        // Record state transition with payment details
+        (_a = payroll.stateHistory) === null || _a === void 0 ? void 0 : _a.push({
+            from: payroll_state_enum_1.PayrollState.APPROVED,
+            to: payroll_state_enum_1.PayrollState.PAID,
+            timestamp: new Date(),
+            note: `Released by ${releasedBy}`,
+            details: paymentDetails || {},
+        });
+        payroll.state = payroll_state_enum_1.PayrollState.PAID;
+        payroll.releasedAt = new Date();
+        payroll.releasedBy = releasedBy;
+        return true;
+    }
+    /**
+     * Archive the payroll
+     */
+    archive(payroll) {
+        var _a;
+        if (payroll.state !== payroll_state_enum_1.PayrollState.PAID) {
+            this.logger.warn(`Cannot archive payroll ${payroll.id} in state ${payroll.state}`);
+            return false;
+        }
+        // Record state transition
+        (_a = payroll.stateHistory) === null || _a === void 0 ? void 0 : _a.push({
+            from: payroll_state_enum_1.PayrollState.PAID,
+            to: payroll_state_enum_1.PayrollState.ARCHIVED,
+            timestamp: new Date(),
+        });
+        payroll.state = payroll_state_enum_1.PayrollState.ARCHIVED;
+        return true;
+    }
+    /**
+     * Mark the payroll as failed
+     */
+    markFailed(payroll, reason) {
+        var _a;
+        // Any state can fail
+        (_a = payroll.stateHistory) === null || _a === void 0 ? void 0 : _a.push({
+            from: payroll.state,
+            to: payroll_state_enum_1.PayrollState.FAILED,
+            timestamp: new Date(),
+            note: reason,
+        });
+        payroll.state = payroll_state_enum_1.PayrollState.FAILED;
+    }
+    /**
+     * Reset the payroll to draft state for reprocessing
+     */
+    resetToDraft(payroll, reason) {
+        var _a;
+        // Only failed or pending approval payrolls can be reset
+        const allowedStates = [
+            payroll_state_enum_1.PayrollState.FAILED,
+            payroll_state_enum_1.PayrollState.PENDING_APPROVAL,
+            payroll_state_enum_1.PayrollState.REJECTED
+        ];
+        if (!allowedStates.includes(payroll.state)) {
+            this.logger.warn(`Cannot reset payroll ${payroll.id} in state ${payroll.state}`);
+            return false;
+        }
+        // Record state transition
+        (_a = payroll.stateHistory) === null || _a === void 0 ? void 0 : _a.push({
+            from: payroll.state,
+            to: payroll_state_enum_1.PayrollState.DRAFT,
+            timestamp: new Date(),
+            note: reason,
+        });
+        payroll.state = payroll_state_enum_1.PayrollState.DRAFT;
+        payroll.reprocessedCount += 1;
+        return true;
+    }
+};
+exports.PayrollStateMachine = PayrollStateMachine;
+exports.PayrollStateMachine = PayrollStateMachine = PayrollStateMachine_1 = __decorate([
+    (0, common_1.Injectable)()
+], PayrollStateMachine);
 
 
 /***/ }),
@@ -30633,6 +35434,693 @@ exports.PayrollsService = PayrollsService = PayrollsService_1 = __decorate([
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
+
+
+/***/ }),
+
+/***/ "./src/modules/payroll-management/utils/payslip-pdf-generator.ts":
+/*!***********************************************************************!*\
+  !*** ./src/modules/payroll-management/utils/payslip-pdf-generator.ts ***!
+  \***********************************************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+"use strict";
+
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.generatePayslipPdf = generatePayslipPdf;
+exports.generateMiniPayslipPdf = generateMiniPayslipPdf;
+const pdfkit_1 = __importDefault(__webpack_require__(/*! pdfkit */ "pdfkit"));
+async function generatePayslipPdf(payslipData) {
+    return new Promise((resolve, reject) => {
+        try {
+            // Ensure all required nested objects exist to prevent undefined errors
+            payslipData = Object.assign({ employee: payslipData.employee || {}, workHours: payslipData.workHours || {}, compensation: payslipData.compensation || {}, deductions: payslipData.deductions || {}, rates: payslipData.rates || {}, totals: payslipData.totals || {}, cutoffPeriod: payslipData.cutoffPeriod || 'N/A', payrollDate: payslipData.payrollDate || 'N/A', benefits: payslipData.benefits || [], allowances: payslipData.allowances || [] }, payslipData);
+            // Ensure nested objects within deductions exist
+            payslipData.deductions.governmentMandated = payslipData.deductions.governmentMandated || {};
+            payslipData.deductions.basic = payslipData.deductions.basic || {};
+            payslipData.deductions.others = payslipData.deductions.others || [];
+            // Create default values for totals if they don't exist
+            payslipData.totals.grossPay = payslipData.totals.grossPay || 0;
+            payslipData.totals.totalDeductions = payslipData.totals.totalDeductions || 0;
+            payslipData.totals.totalAllowances = payslipData.totals.totalAllowances || 0;
+            payslipData.totals.netPay = payslipData.totals.netPay || 0;
+            payslipData.totals.taxableIncome = payslipData.totals.taxableIncome || 0;
+            const buffers = [];
+            const doc = new pdfkit_1.default({
+                margin: 50,
+                size: 'A4',
+                bufferPages: true
+            });
+            // Collect PDF data chunks
+            doc.on('data', buffers.push.bind(buffers));
+            doc.on('end', () => {
+                resolve(Buffer.concat(buffers));
+            });
+            // A4 dimensions
+            const A4Width = 595.28;
+            const A4Height = 841.89;
+            const margin = 50;
+            // Available space after margins
+            const availableWidth = A4Width - 2 * margin;
+            const availableHeight = A4Height - 2 * margin;
+            // Width of each rectangle (dividing available width by 3)
+            const rectWidth = (availableWidth / 3) - 10;
+            // Define consistent styling
+            const styles = {
+                header: { fontSize: 10, font: 'Helvetica-Bold', color: '#333333' },
+                subheader: { fontSize: 12, font: 'Helvetica-Bold', color: '#333333' },
+                title: { fontSize: 18, font: 'Helvetica-Bold', color: '#000000' },
+                normal: { fontSize: 10, font: 'Helvetica', color: '#333333' },
+                small: { fontSize: 8, font: 'Helvetica', color: '#666666' },
+                highlight: { fontSize: 12, font: 'Helvetica-Bold', color: '#000000' },
+                tableHeader: { fontSize: 9, font: 'Helvetica-Bold', color: '#333333' },
+                tableCell: { fontSize: 9, font: 'Helvetica', color: '#333333' },
+                money: { fontSize: 10, font: 'Helvetica-Bold', color: '#000000' }
+            };
+            // Try to load company logo if it exists (adapt path as needed)
+            // try {
+            //     const logoPath = path.resolve(process.cwd(), 'assets/company_logo.png');
+            //     if (fs.existsSync(logoPath)) {
+            //         doc.image(logoPath, 50, 45, { width: 100 });
+            //     }
+            // } catch (err) {
+            //     // Logo loading failed - continue without it
+            //     console.log('Company logo not found, continuing without it');
+            // }
+            const employee = payslipData.employee;
+            // Document Header with Company Information
+            // doc.font(styles.title.font)
+            //      .fontSize(styles.title.fontSize)
+            //      .fillColor(styles.title.color)
+            //      .text(String(employee.organization).toUpperCase(), { align: 'center' });
+            // doc.font(styles.small.font)
+            //      .fontSize(styles.small.fontSize)
+            //      .fillColor(styles.small.color)
+            //      .text('123 Corporate Plaza, Business District', { align: 'center' })
+            //      .text('City, State, ZIP | Phone: (123) 456-7890', { align: 'center' })
+            //      .text('Email: hr@companyname.com | Web: www.companyname.com', { align: 'center' });
+            const startY = 50;
+            // Payslip Title Banner
+            drawFilledRect(doc, margin, startY, doc.page.width - 100, 30, '#f1f1f1');
+            doc.font(styles.title.font)
+                .fontSize(styles.title.fontSize)
+                .fillColor(styles.title.color)
+                .text('EMPLOYEE PAYSLIP', margin, startY + 9, { align: 'center' });
+            // Employee and Payroll Information Section
+            const employeeInfoY = startY + 40;
+            drawOutlinedRect(doc, 50, employeeInfoY, doc.page.width - 100, 120);
+            // Left column - Employee Info
+            doc.font(styles.header.font)
+                .fontSize(styles.header.fontSize)
+                .fillColor(styles.header.color)
+                .text('EMPLOYEE INFORMATION', 60, employeeInfoY + 10);
+            doc.font(styles.normal.font)
+                .fontSize(styles.normal.fontSize)
+                .fillColor(styles.normal.color)
+                .text(`Employee #: ${employee.employeeNumber}`, 60, employeeInfoY + 30)
+                .text(`Name: ${employee.name}`, 60, employeeInfoY + 45)
+                .text(`Position: ${employee.position}`, 60, employeeInfoY + 60)
+                .text(`Department: ${employee.department}`, 60, employeeInfoY + 75)
+                .text(`Branch: ${employee.branch}`, 60, employeeInfoY + 90)
+                .text(`Organization: ${employee.organization}`, 60, employeeInfoY + 105);
+            // Right column - Payroll Info
+            doc.font(styles.header.font)
+                .fontSize(styles.header.fontSize)
+                .fillColor(styles.header.color)
+                .text('PAYROLL INFORMATION', 350, employeeInfoY + 10);
+            doc.font(styles.normal.font)
+                .fontSize(styles.normal.fontSize)
+                .fillColor(styles.normal.color)
+                .text(`Cutoff Period: ${payslipData.cutoffPeriod}`, 350, employeeInfoY + 30)
+                .text(`Pay Date: ${payslipData.payrollDate}`, 350, employeeInfoY + 45)
+                .text(`Payroll #: ${payslipData.payrollReferenceNumber || 'N/A'}`, 350, employeeInfoY + 60);
+            // Rates section
+            const ratesY = employeeInfoY + 130;
+            drawFilledRect(doc, 50, ratesY, doc.page.width - 100, 25, '#f1f1f1');
+            doc.font(styles.subheader.font)
+                .fontSize(styles.subheader.fontSize)
+                .fillColor(styles.subheader.color)
+                .text('PAY RATE INFORMATION', 60, ratesY + 8);
+            const ratesDetailY = ratesY + 35;
+            doc.font(styles.normal.font)
+                .fontSize(styles.normal.fontSize)
+                .fillColor(styles.normal.color);
+            // Draw rates in a 2x2 grid
+            drawInfoBox(doc, 'Monthly Rate', formatCurrency(payslipData.rates.monthly), margin, ratesDetailY, rectWidth);
+            drawInfoBox(doc, 'Daily Rate', formatCurrency(payslipData.rates.daily), margin + rectWidth + 15, ratesDetailY, rectWidth);
+            drawInfoBox(doc, 'Hourly Rate', formatCurrency(payslipData.rates.hourly), margin + (2 * rectWidth) + 30, ratesDetailY, rectWidth);
+            // Main columns layout - Earnings and Deductions side by side
+            const columnsStartY = ratesDetailY + 50;
+            const colWidth = (doc.page.width - 100) / 2 - 10;
+            // Earnings Column
+            drawFilledRect(doc, 50, columnsStartY, colWidth, 25, '#f1f1f1');
+            doc.font(styles.subheader.font)
+                .fontSize(styles.subheader.fontSize)
+                .fillColor(styles.subheader.color)
+                .text('EARNINGS', 60, columnsStartY + 8);
+            // Draw earnings table
+            let currentY = columnsStartY + 35;
+            const earnings = payslipData.compensation;
+            const regularEarnings = [
+                { description: 'Basic Pay', hours: payslipData.workHours.regular || 0, amount: earnings.basicPay || 0 },
+                { description: 'Overtime', hours: payslipData.workHours.overtime || 0, amount: earnings.overtimePay || 0 },
+                { description: 'Regular Holiday', hours: payslipData.workHours.holiday || 0, amount: earnings.holidayPay || 0 },
+                { description: 'Holiday Overtime', hours: payslipData.workHours.holidayOvertime || 0, amount: earnings.holidayOvertimePay || 0 },
+                { description: 'Special Holiday', hours: payslipData.workHours.specialHoliday || 0, amount: earnings.specialHolidayPay || 0 },
+                { description: 'Special Holiday OT', hours: payslipData.workHours.specialHolidayOvertime || 0, amount: earnings.specialHolidayOvertimePay || 0 },
+                { description: 'Rest Day', hours: payslipData.workHours.restDay || 0, amount: earnings.restDayPay || 0 },
+                { description: 'Rest Day OT', hours: payslipData.workHours.restDayOvertime || 0, amount: earnings.restDayOvertimePay || 0 },
+                { description: 'Night Differential', hours: payslipData.workHours.nightDifferential || 0, amount: earnings.nightDifferentialPay || 0 },
+                { description: 'Night Differential OT', hours: payslipData.workHours.nightDifferentialOvertime || 0, amount: earnings.nightDifferentialOvertimePay || 0 }
+            ].filter(item => (item.amount || 0) > 0); // Add fallback for undefined amounts
+            currentY = drawTable(doc, ['Description', 'Hours', 'Amount'], regularEarnings.map(e => [e.description, Number(e.hours).toFixed(2), formatCurrency(e.amount)]), [50, currentY, colWidth], styles, [0.45, 0.2, 0.35]);
+            // Add adjustments if any
+            if (earnings.adjustments && earnings.adjustments.length > 0) {
+                currentY += 10;
+                doc.font(styles.header.font)
+                    .fontSize(styles.header.fontSize)
+                    .fillColor(styles.header.color)
+                    .text('Adjustments', 60, currentY);
+                currentY += 15;
+                currentY = drawTable(doc, ['Description', 'Amount'], earnings.adjustments.map((a) => [a.name, formatCurrency(a.amount)]), [50, currentY, colWidth], styles, [0.7, 0.3]);
+            }
+            // Add other earnings if any
+            if (earnings.others && earnings.others.length > 0) {
+                currentY += 10;
+                doc.font(styles.header.font)
+                    .fontSize(styles.header.fontSize)
+                    .fillColor(styles.header.color)
+                    .text('Other Earnings', 60, currentY);
+                currentY += 15;
+                currentY = drawTable(doc, ['Description', 'Amount'], earnings.others.map((a) => [a.name, formatCurrency(a.amount)]), [50, currentY, colWidth], styles, [0.7, 0.3]);
+            }
+            // Add allowances if any
+            if (payslipData.allowances && payslipData.allowances.length > 0) {
+                currentY += 10;
+                doc.font(styles.header.font)
+                    .fontSize(styles.header.fontSize)
+                    .fillColor(styles.header.color)
+                    .text('Allowances', 60, currentY);
+                currentY += 15;
+                currentY = drawTable(doc, ['Description', 'Amount'], payslipData.allowances.map((a) => [a.name, formatCurrency(a.amount)]), [50, currentY, colWidth], styles, [0.7, 0.3]);
+            }
+            // Add benefits if any
+            if (payslipData.benefits && payslipData.benefits.length > 0) {
+                currentY += 10;
+                doc.font(styles.header.font)
+                    .fontSize(styles.header.fontSize)
+                    .fillColor(styles.header.color)
+                    .text('Benefits', 60, currentY);
+                currentY += 15;
+                currentY = drawTable(doc, ['Description', 'Amount'], payslipData.benefits.map((b) => [b.name, formatCurrency(b.amount)]), [50, currentY, colWidth], styles, [0.6, 0.4]);
+            }
+            // Calculate total earnings
+            currentY += 10;
+            doc.font(styles.highlight.font)
+                .fontSize(styles.highlight.fontSize)
+                .fillColor(styles.highlight.color);
+            doc.text('Total Earnings:', 60, currentY);
+            doc.text(formatCurrency(payslipData.totals.grossPay), 20 + colWidth - 80, currentY, { width: 100, align: 'right' });
+            // Deductions Column
+            const deductionsX = 50 + colWidth + 20;
+            drawFilledRect(doc, deductionsX, columnsStartY, colWidth, 25, '#f1f1f1');
+            doc.font(styles.subheader.font)
+                .fontSize(styles.subheader.fontSize)
+                .fillColor(styles.subheader.color)
+                .text('DEDUCTIONS', deductionsX + 10, columnsStartY + 8);
+            // Draw deductions
+            let deductionsY = columnsStartY + 30;
+            const deductions = payslipData.deductions;
+            // Basic deductions if any
+            if (deductions.basic) {
+                const basicDeductions = [
+                    { description: 'Absences', amount: deductions.basic.absences || 0 },
+                    { description: 'Tardiness', amount: deductions.basic.tardiness || 0 },
+                    { description: 'Undertime', amount: deductions.basic.undertime || 0 },
+                    { description: 'No Time In', amount: deductions.basic.noTimeIn || 0 },
+                    { description: 'No Time Out', amount: deductions.basic.noTimeOut || 0 }
+                ].filter(d => (d.amount || 0) > 0);
+                if (basicDeductions.length > 0) {
+                    // log basic deductions length
+                    console.log('Basic deductions:', basicDeductions.length);
+                    deductionsY += 10;
+                    doc.font(styles.header.font)
+                        .fontSize(styles.header.fontSize)
+                        .fillColor(styles.header.color)
+                        .text('Attendance Deductions', deductionsX + 10, deductionsY - 6);
+                    deductionsY += 10;
+                    deductionsY = drawTable(doc, ['Description', 'Amount'], basicDeductions.map(d => [d.description, formatCurrency(d.amount)]), [deductionsX, deductionsY, colWidth], styles, [0.6, 0.4]);
+                    // Display basic deductions total
+                    if (deductions.basic.total) {
+                        deductionsY += 5;
+                        doc.font(styles.tableCell.font)
+                            .fontSize(styles.tableCell.fontSize)
+                            .fillColor(styles.tableCell.color);
+                        doc.text('Attendance Deductions Total:', deductionsX + 10, deductionsY);
+                        doc.text(formatCurrency(deductions.basic.total), deductionsX + colWidth - 80, deductionsY, { width: 70, align: 'right' });
+                        deductionsY += 15;
+                    }
+                }
+            }
+            // Government mandated deductions
+            const governmentDeductions = [
+                { description: 'SSS Contribution', amount: deductions.governmentMandated.sss || 0 },
+                { description: 'PhilHealth', amount: deductions.governmentMandated.philHealth || 0 },
+                { description: 'Pag-IBIG', amount: deductions.governmentMandated.pagIbig || 0 },
+                { description: 'Withholding Tax', amount: deductions.governmentMandated.withholdingTax || 0 }
+            ].filter(item => (item.amount || 0) > 0);
+            deductionsY = drawTable(doc, ['Description', 'Amount'], governmentDeductions.map(d => [d.description, formatCurrency(d.amount)]), [deductionsX, deductionsY, colWidth], styles, [0.6, 0.4]);
+            // Other deductions if any
+            if (deductions.others && deductions.others.length > 0) {
+                deductionsY += 10;
+                doc.font(styles.header.font)
+                    .fontSize(styles.header.fontSize)
+                    .fillColor(styles.header.color)
+                    .text('Other Deductions', deductionsX + 10, deductionsY);
+                deductionsY += 15;
+                deductionsY = drawTable(doc, ['Description', 'Amount'], deductions.others.map((d) => [d.name, formatCurrency(d.amount)]), [deductionsX, deductionsY, colWidth], styles, [0.6, 0.4]);
+            }
+            // Total deductions
+            deductionsY += 10;
+            doc.font(styles.highlight.font)
+                .fontSize(styles.highlight.fontSize)
+                .fillColor(styles.highlight.color);
+            doc.text('Total Deductions:', deductionsX + 10, deductionsY);
+            doc.text(formatCurrency(payslipData.totals.totalDeductions), deductionsX + colWidth - 100, deductionsY, { width: 90, align: 'right' });
+            // Summary Section - Net Pay
+            const summaryY = Math.max(currentY, deductionsY) + 20;
+            drawFilledRect(doc, 50, summaryY, doc.page.width - 100, 25, '#e6e6e6');
+            doc.font(styles.subheader.font)
+                .fontSize(styles.subheader.fontSize)
+                .fillColor(styles.subheader.color)
+                .text('PAYMENT SUMMARY', 50, summaryY + 8, { align: 'center' });
+            const summaryDetailY = summaryY + 25;
+            const netPayBoxY = summaryDetailY;
+            doc.font(styles.header.font)
+                .fontSize(14)
+                .fillColor('#000')
+                .text('NET PAY', 50, netPayBoxY + 15, { align: 'center' });
+            doc.font('Helvetica-Bold')
+                .fontSize(18)
+                .fillColor('#000')
+                .text(formatCurrency(payslipData.totals.netPay), 50, netPayBoxY + 35, { align: 'center' });
+            // Footer
+            const footerY = netPayBoxY + 60;
+            drawFilledRect(doc, 50, footerY, doc.page.width - 100, 1, '#cccccc');
+            doc.font(styles.small.font)
+                .fontSize(styles.small.fontSize)
+                .fillColor(styles.small.color)
+                .text('This is a computer-generated document. No signature is required.', 50, footerY + 10, { align: 'center' })
+                .text(`Generated on: ${new Date().toLocaleString()}`, 50, footerY + 20, { align: 'center' });
+            // // Add page numbers
+            // const pageCount = doc.bufferedPageRange().count;
+            // for (let i = 0; i < pageCount; i++) {
+            //     doc.switchToPage(i);
+            //     doc.font(styles.small.font)
+            //          .fontSize(styles.small.fontSize)
+            //          .text(
+            //              `Page ${i + 1} of ${pageCount}`,
+            //              50,
+            //              doc.page.height - 50,
+            //              { align: 'right', width: doc.page.width - 100 }
+            //          );
+            // }
+            doc.end();
+        }
+        catch (error) {
+            console.error('Error generating PDF:', error);
+            reject(error);
+        }
+    });
+}
+async function generateMiniPayslipPdf(payslipData) {
+    return new Promise((resolve, reject) => {
+        var _a;
+        try {
+            // Normalize payslip data with defaults
+            payslipData = Object.assign({ employee: payslipData.employee || {}, compensation: payslipData.compensation || {}, deductions: payslipData.deductions || {}, rates: payslipData.rates || {}, totals: payslipData.totals || {}, allowances: payslipData.allowances || [] }, payslipData);
+            // Ensure nested objects within deductions exist
+            payslipData.deductions.governmentMandated = payslipData.deductions.governmentMandated || {};
+            payslipData.deductions.basic = payslipData.deductions.basic || {};
+            payslipData.deductions.others = payslipData.deductions.others || [];
+            const buffers = [];
+            // Create mini payslip - similar to the image
+            const miniWidth = 280;
+            const miniHeight = 500; // Taller to fit all items
+            const doc = new pdfkit_1.default({
+                margin: 10,
+                size: [miniWidth, miniHeight],
+                bufferPages: true
+            });
+            // Collect PDF data chunks
+            doc.on('data', buffers.push.bind(buffers));
+            doc.on('end', () => {
+                resolve(Buffer.concat(buffers));
+            });
+            const margin = 15;
+            const x = margin;
+            let y = margin;
+            const availableWidth = miniWidth - (2 * margin);
+            // Compact styling
+            const styles = {
+                title: { fontSize: 9, font: 'Helvetica-Bold', color: '#000000' },
+                header: { fontSize: 8, font: 'Helvetica-Bold', color: '#000000' },
+                normal: { fontSize: 8, font: 'Helvetica', color: '#000000' },
+                small: { fontSize: 6, font: 'Helvetica', color: '#666666' }
+            };
+            // Company header (if needed)
+            if ((_a = payslipData.employee) === null || _a === void 0 ? void 0 : _a.organization) {
+                doc.font(styles.title.font)
+                    .fontSize(styles.title.fontSize)
+                    .text(String(payslipData.employee.organization).toUpperCase(), x, y, { align: 'center' });
+                y += 15;
+            }
+            // Period information
+            if (payslipData.cutoffPeriod) {
+                doc.font(styles.normal.font)
+                    .fontSize(styles.normal.fontSize)
+                    .text(`Pay Period: ${payslipData.cutoffPeriod}`, x, y);
+                y += 10;
+            }
+            if (payslipData.payrollDate) {
+                doc.font(styles.normal.font)
+                    .fontSize(styles.normal.fontSize)
+                    .text(`Pay Date: ${payslipData.payrollDate}`, x, y);
+                y += 15;
+            }
+            // Employee information
+            const employee = payslipData.employee;
+            if (employee) {
+                doc.font(styles.normal.font)
+                    .fontSize(styles.normal.fontSize);
+                if (employee.name) {
+                    doc.text(`Employee: ${employee.name}`, x, y);
+                    y += 10;
+                }
+                if (employee.position) {
+                    doc.text(`Position: ${employee.position}`, x, y);
+                    y += 10;
+                }
+                if (employee.department) {
+                    doc.text(`Department: ${employee.department}`, x, y);
+                    y += 15;
+                }
+            }
+            // Rate information
+            doc.font(styles.header.font)
+                .fontSize(styles.header.fontSize);
+            if (payslipData.rates.monthly) {
+                doc.text('MONTHLY RATE:', x, y);
+                doc.text(formatCurrency(payslipData.rates.monthly).replace('PHP ', ''), availableWidth + x - 70, y, { align: 'right' });
+                y += 10;
+            }
+            if (payslipData.rates.daily) {
+                doc.text('DAILY RATE:', x, y);
+                doc.text(formatCurrency(payslipData.rates.daily).replace('PHP ', ''), availableWidth + x - 70, y, { align: 'right' });
+                y += 15;
+            }
+            // Earnings section
+            doc.font(styles.header.font)
+                .fontSize(styles.header.fontSize)
+                .text('BASIC PAY', x, y);
+            y += 10;
+            // Add earnings items
+            doc.font(styles.normal.font)
+                .fontSize(styles.normal.fontSize);
+            const earnings = payslipData.compensation;
+            if (earnings.basicPay) {
+                doc.text('ADD:', x, y);
+                y += 10;
+            }
+            const earningsItems = [
+                { name: 'REGULAR OVERTIME', amount: earnings.overtimePay },
+                { name: 'REST DAY', amount: earnings.restDayPay },
+                { name: 'REST DAY OVERTIME', amount: earnings.restDayOvertimePay },
+                { name: 'HOLIDAY PAY', amount: earnings.holidayPay },
+                { name: '13TH MONTH', amount: earnings.thirteenthMonthPay },
+                { name: 'SPECIAL HOLIDAY PAY', amount: earnings.specialHolidayPay },
+                { name: 'SPECIAL HOLIDAY OVERTIME', amount: earnings.specialHolidayOvertimePay },
+                { name: 'NIGHT DIFFERENTIAL', amount: earnings.nightDifferentialPay }
+            ];
+            // Add adjustments as "PAYROLL ADJUSTMENT" if any
+            if (earnings.adjustments && earnings.adjustments.length > 0) {
+                const adjustmentTotal = earnings.adjustments.reduce((sum, adj) => sum + (adj.amount || 0), 0);
+                earningsItems.push({ name: 'PAYROLL ADJUSTMENT', amount: adjustmentTotal });
+            }
+            // Add tip if applicable
+            if (earnings.tip) {
+                earningsItems.push({ name: 'TIP', amount: earnings.tip });
+            }
+            // Display attendance deductions as a negative earning under "ABSENCES/UNDERTIME/TARDINESS"
+            if (payslipData.deductions.basic &&
+                (payslipData.deductions.basic.absences ||
+                    payslipData.deductions.basic.tardiness ||
+                    payslipData.deductions.basic.undertime)) {
+                const attendanceDeductions = (payslipData.deductions.basic.absences || 0) +
+                    (payslipData.deductions.basic.tardiness || 0) +
+                    (payslipData.deductions.basic.undertime || 0);
+                if (attendanceDeductions > 0) {
+                    earningsItems.push({ name: 'ABSENCES/UNDERTIME/TARDINESS', amount: -attendanceDeductions });
+                }
+            }
+            // Print earnings items
+            earningsItems.forEach(item => {
+                if (item.amount) {
+                    doc.text(item.name, x + 10, y);
+                    if (item.amount < 0) {
+                        // For negative amounts (like deductions), use parentheses
+                        doc.text(`(${formatCurrency(Math.abs(item.amount)).replace('PHP ', '')})`, availableWidth + x - 70, y, { align: 'right' });
+                    }
+                    else {
+                        doc.text(formatCurrency(item.amount).replace('PHP ', ''), availableWidth + x - 70, y, { align: 'right' });
+                    }
+                    y += 10;
+                }
+            });
+            // Gross pay
+            doc.font(styles.header.font)
+                .fontSize(styles.header.fontSize);
+            y += 5;
+            doc.text('GROSS PAY', x, y);
+            doc.text(formatCurrency(payslipData.totals.grossPay).replace('PHP ', ''), availableWidth + x - 70, y, { align: 'right' });
+            y += 15;
+            // Deductions section
+            doc.font(styles.header.font)
+                .fontSize(styles.header.fontSize)
+                .text('LESS:', x, y);
+            y += 10;
+            doc.font(styles.normal.font)
+                .fontSize(styles.normal.fontSize);
+            // Government mandated deductions
+            const deductionItems = [
+                { name: 'WITHHOLDING TAX', amount: payslipData.deductions.governmentMandated.withholdingTax },
+                { name: 'SSS PREMIUM', amount: payslipData.deductions.governmentMandated.sss },
+                { name: 'PHIL. HEALTH', amount: payslipData.deductions.governmentMandated.philHealth },
+                { name: 'PAG-IBIG', amount: payslipData.deductions.governmentMandated.pagIbig }
+            ];
+            // Add other deductions
+            if (payslipData.deductions.others && payslipData.deductions.others.length > 0) {
+                payslipData.deductions.others.forEach((deduction) => {
+                    deductionItems.push({
+                        name: deduction.name.toUpperCase(),
+                        amount: deduction.amount
+                    });
+                });
+            }
+            // Print deduction items
+            deductionItems.forEach(item => {
+                if (item.amount) {
+                    doc.text(item.name, x + 10, y);
+                    doc.text(formatCurrency(item.amount).replace('PHP ', ''), availableWidth + x - 70, y, { align: 'right' });
+                    y += 10;
+                }
+            });
+            // Total deductions
+            y += 5;
+            doc.font(styles.header.font)
+                .fontSize(styles.header.fontSize)
+                .text('TOTAL DEDUCTIONS', x, y);
+            doc.text(formatCurrency(payslipData.totals.totalDeductions).replace('PHP ', ''), availableWidth + x - 70, y, { align: 'right' });
+            y += 15;
+            // Allowances section if any
+            if (payslipData.allowances && payslipData.allowances.length > 0) {
+                const allowanceItems = payslipData.allowances.map((allowance) => ({
+                    name: allowance.name.toUpperCase(),
+                    amount: allowance.amount
+                }));
+                // Print allowance items
+                allowanceItems.forEach((item) => {
+                    doc.font(styles.normal.font)
+                        .fontSize(styles.normal.fontSize)
+                        .text(item.name, x + 10, y);
+                    doc.text(formatCurrency(item.amount).replace('PHP ', ''), availableWidth + x - 70, y, { align: 'right' });
+                    y += 10;
+                });
+                // Total allowances
+                y += 5;
+                doc.font(styles.header.font)
+                    .fontSize(styles.header.fontSize)
+                    .text('TOTAL ALLOWANCES', x, y);
+                const totalAllowances = payslipData.totals.totalAllowances ||
+                    payslipData.allowances.reduce((sum, item) => sum + (item.amount || 0), 0);
+                doc.text(formatCurrency(totalAllowances).replace('PHP ', ''), availableWidth + x - 70, y, { align: 'right' });
+                y += 15;
+            }
+            // Net pay
+            doc.font(styles.header.font)
+                .fontSize(styles.header.fontSize)
+                .text('NET PAY', x, y);
+            doc.text(formatCurrency(payslipData.totals.netPay).replace('PHP ', ''), availableWidth + x - 70, y, { align: 'right' });
+            y += 20;
+            // Received by
+            doc.font(styles.header.font)
+                .fontSize(styles.header.fontSize)
+                .text('RECEIVED BY:', x, y);
+            y += 20;
+            // Signature line
+            doc.lineWidth(0.5)
+                .moveTo(x, y)
+                .lineTo(x + 150, y)
+                .stroke();
+            // Accounting Copy
+            y += 5;
+            doc.font(styles.normal.font)
+                .fontSize(styles.normal.fontSize)
+                .text('Accounting Copy', x, y);
+            doc.end();
+        }
+        catch (error) {
+            console.error('Error generating mini payslip:', error);
+            reject(error);
+        }
+    });
+}
+// Helper functions for drawing elements
+function drawOutlinedRect(doc, x, y, width, height, lineWidth = 1) {
+    doc.lineWidth(lineWidth)
+        .rect(x, y, width, height)
+        .stroke();
+}
+function drawFilledRect(doc, x, y, width, height, color) {
+    doc.fillColor(color)
+        .rect(x, y, width, height)
+        .fill();
+}
+function drawInfoBox(doc, label, value, x, y, width) {
+    drawOutlinedRect(doc, x, y, width, 40);
+    doc.font('Helvetica')
+        .fontSize(8)
+        .fillColor('#666666')
+        .text(label, x + 5, y + 5);
+    doc.font('Helvetica-Bold')
+        .fontSize(12)
+        .fillColor('#000000')
+        .text(value, x + 5, y + 20);
+}
+function drawTable(doc, headers, rows, position, // [x, y, width]
+styles, columnRatios // Optional column width ratios
+) {
+    const [x, y, width] = position;
+    const colWidths = columnRatios
+        ? columnRatios.map(ratio => width * ratio)
+        : calculateColumnWidths(width, headers.length);
+    let startX = x;
+    let startY = y;
+    // Draw table header
+    const headerHeight = 20;
+    drawFilledRect(doc, x, y, width, headerHeight, '#e6e6e6');
+    doc.font(styles.tableHeader.font)
+        .fontSize(styles.tableHeader.fontSize)
+        .fillColor(styles.tableHeader.color);
+    headers.forEach((header, i) => {
+        const align = i === headers.length - 1 ? 'right' : 'left';
+        const padding = i === headers.length - 1 ? 10 : 10;
+        doc.text(header, startX + padding, startY + 6, {
+            width: colWidths[i] - (padding * 2),
+            align
+        });
+        startX += colWidths[i];
+    });
+    // Draw horizontal line after header
+    doc.lineWidth(0.5)
+        .moveTo(x, y + headerHeight)
+        .lineTo(x + width, y + headerHeight)
+        .stroke();
+    startY += headerHeight;
+    // Draw rows with dynamic heights
+    doc.font(styles.tableCell.font)
+        .fontSize(styles.tableCell.fontSize)
+        .fillColor(styles.tableCell.color);
+    rows.forEach((row, rowIndex) => {
+        // Calculate row height based on content
+        let rowHeight = 20; // minimum height
+        let cellHeights = [];
+        // Calculate height needed for each cell in this row
+        row.forEach((cell, i) => {
+            const textOptions = {
+                width: colWidths[i] - 20, // 10px padding on each side
+                align: (i === row.length - 1 ? 'right' : 'left')
+            };
+            // Calculate height without actually rendering
+            const textHeight = doc.heightOfString(cell, textOptions);
+            cellHeights.push(Math.max(20, textHeight + 12)); // Add padding
+        });
+        // Row height is the maximum of all cell heights in this row
+        rowHeight = Math.max(...cellHeights);
+        // Draw row background
+        startX = x;
+        row.forEach((cell, i) => {
+            const align = i === row.length - 1 ? 'right' : 'left';
+            const padding = i === row.length - 1 ? 10 : 10;
+            doc.text(cell, startX + padding, startY + 6, {
+                width: colWidths[i] - (padding * 2),
+                align
+            });
+            startX += colWidths[i];
+        });
+        startY += rowHeight;
+    });
+    // Draw bottom border
+    doc.lineWidth(0.5)
+        .moveTo(x, startY)
+        .lineTo(x + width, startY)
+        .stroke();
+    return startY;
+}
+function calculateColumnWidths(totalWidth, columnCount) {
+    if (columnCount === 2) {
+        // For 2 columns, make first one wider (70%)
+        return [
+            totalWidth * 0.7,
+            totalWidth * 0.3
+        ];
+    }
+    else if (columnCount === 3) {
+        // For 3 columns (e.g., description, hours, amount)
+        return [
+            totalWidth * 0.6,
+            totalWidth * 0.2,
+            totalWidth * 0.2
+        ];
+    }
+    // Default: equal widths
+    const width = totalWidth / columnCount;
+    return new Array(columnCount).fill(width);
+}
+function formatCurrency(amount) {
+    const value = amount || 0;
+    // Format the number without currency symbol first
+    const formatter = new Intl.NumberFormat('en-PH', {
+        style: 'decimal',
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    });
+    // Then add the peso symbol manually
+    return `\u20B1${formatter.format(value)}`;
+}
 
 
 /***/ }),
@@ -30769,7 +36257,6 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.GetShiftDto = exports.UpdateShiftDto = exports.ShiftDto = void 0;
 const is_time_string_decorator_1 = __webpack_require__(/*! @/common/decorators/is-time-string.decorator */ "./src/common/decorators/is-time-string.decorator.ts");
 const base_dto_1 = __webpack_require__(/*! @/common/dtos/base.dto */ "./src/common/dtos/base.dto.ts");
-const reference_dto_1 = __webpack_require__(/*! @/common/dtos/reference.dto */ "./src/common/dtos/reference.dto.ts");
 const create_get_dto_factory_1 = __webpack_require__(/*! @/common/factories/create-get-dto.factory */ "./src/common/factories/create-get-dto.factory.ts");
 const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
 const class_transformer_1 = __webpack_require__(/*! class-transformer */ "class-transformer");
@@ -30873,17 +36360,6 @@ __decorate([
     (0, class_transformer_1.Type)(() => shift_day_dto_1.ShiftDayDto),
     __metadata("design:type", Array)
 ], ShiftDto.prototype, "days", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({
-        description: 'Associated cutoffs',
-        type: [reference_dto_1.ReferenceDto],
-    }),
-    (0, class_validator_1.IsNotEmpty)(),
-    (0, class_validator_1.IsArray)(),
-    (0, class_validator_1.ValidateNested)({ each: true }),
-    (0, class_transformer_1.Type)(() => reference_dto_1.ReferenceDto),
-    __metadata("design:type", Array)
-], ShiftDto.prototype, "cutoffs", void 0);
 class UpdateShiftDto extends (0, swagger_1.PartialType)(ShiftDto) {
 }
 exports.UpdateShiftDto = UpdateShiftDto;
@@ -31692,32 +37168,138 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
-var _a, _b;
+var _a, _b, _c, _d, _e, _f, _g;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.GetScheduleDto = exports.UpdateScheduleDto = exports.ScheduleDto = void 0;
 const is_time_string_decorator_1 = __webpack_require__(/*! @/common/decorators/is-time-string.decorator */ "./src/common/decorators/is-time-string.decorator.ts");
 const base_dto_1 = __webpack_require__(/*! @/common/dtos/base.dto */ "./src/common/dtos/base.dto.ts");
+const reference_dto_1 = __webpack_require__(/*! @/common/dtos/reference.dto */ "./src/common/dtos/reference.dto.ts");
 const schedule_status_1 = __webpack_require__(/*! @/common/enums/schedule-status */ "./src/common/enums/schedule-status.ts");
 const create_get_dto_factory_1 = __webpack_require__(/*! @/common/factories/create-get-dto.factory */ "./src/common/factories/create-get-dto.factory.ts");
 const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
+const class_transformer_1 = __webpack_require__(/*! class-transformer */ "class-transformer");
 const class_validator_1 = __webpack_require__(/*! class-validator */ "class-validator");
 class ScheduleDto extends (0, swagger_1.PartialType)(base_dto_1.BaseDto) {
 }
 exports.ScheduleDto = ScheduleDto;
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Date of the schedule', example: '2023-01-01' }),
+    (0, swagger_1.ApiProperty)({
+        description: 'Date of the schedule',
+        example: '2023-01-01',
+        type: String,
+        format: 'date'
+    }),
     (0, class_validator_1.IsNotEmpty)(),
     (0, class_validator_1.IsDateString)(),
     __metadata("design:type", typeof (_a = typeof Date !== "undefined" && Date) === "function" ? _a : Object)
 ], ScheduleDto.prototype, "date", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Notes about the schedule', required: false, example: 'Special schedule for holiday season' }),
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'Notes about the schedule',
+        example: 'Special schedule for holiday season'
+    }),
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], ScheduleDto.prototype, "notes", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'Color of the schedule',
+        example: '#000000'
+    }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], ScheduleDto.prototype, "color", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'Indicates if this is a rest day',
+        default: false,
+        example: false
+    }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsBoolean)(),
+    __metadata("design:type", Boolean)
+], ScheduleDto.prototype, "restDay", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'Start time of the schedule',
+        example: '09:00:00',
+        format: 'time'
+    }),
+    (0, class_validator_1.IsOptional)(),
+    (0, is_time_string_decorator_1.IsTimeString)(),
+    __metadata("design:type", String)
+], ScheduleDto.prototype, "startTime", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'End time of the schedule',
+        example: '17:00:00',
+        format: 'time'
+    }),
+    (0, class_validator_1.IsOptional)(),
+    (0, is_time_string_decorator_1.IsTimeString)(),
+    __metadata("design:type", String)
+], ScheduleDto.prototype, "endTime", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'Break time in minutes',
+        example: 60,
+        minimum: 0
+    }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.Min)(0),
+    __metadata("design:type", Number)
+], ScheduleDto.prototype, "breakTime", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'Employee owns this schedule',
+        type: reference_dto_1.ReferenceDto
+    }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.ValidateNested)(),
+    (0, class_transformer_1.Type)(() => reference_dto_1.ReferenceDto),
+    __metadata("design:type", typeof (_b = typeof reference_dto_1.ReferenceDto !== "undefined" && reference_dto_1.ReferenceDto) === "function" ? _b : Object)
+], ScheduleDto.prototype, "employee", void 0);
+class UpdateScheduleDto extends (0, swagger_1.PartialType)(ScheduleDto) {
+}
+exports.UpdateScheduleDto = UpdateScheduleDto;
+class GetScheduleDto extends (0, create_get_dto_factory_1.createGetDto)(UpdateScheduleDto, 'schedule') {
+}
+exports.GetScheduleDto = GetScheduleDto;
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'Cutoff this schedule belongs to',
+        type: reference_dto_1.ReferenceDto
+    }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.ValidateNested)(),
+    (0, class_transformer_1.Type)(() => reference_dto_1.ReferenceDto),
+    __metadata("design:type", typeof (_c = typeof reference_dto_1.ReferenceDto !== "undefined" && reference_dto_1.ReferenceDto) === "function" ? _c : Object)
+], GetScheduleDto.prototype, "cutoff", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'Shift this schedule is based',
+        type: reference_dto_1.ReferenceDto
+    }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.ValidateNested)(),
+    (0, class_transformer_1.Type)(() => reference_dto_1.ReferenceDto),
+    __metadata("design:type", typeof (_d = typeof reference_dto_1.ReferenceDto !== "undefined" && reference_dto_1.ReferenceDto) === "function" ? _d : Object)
+], GetScheduleDto.prototype, "shift", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'Associated holiday reference',
+        type: reference_dto_1.ReferenceDto
+    }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.ValidateNested)(),
+    (0, class_transformer_1.Type)(() => reference_dto_1.ReferenceDto),
+    __metadata("design:type", typeof (_e = typeof reference_dto_1.ReferenceDto !== "undefined" && reference_dto_1.ReferenceDto) === "function" ? _e : Object)
+], GetScheduleDto.prototype, "holiday", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
         description: 'Status of the schedule',
         enum: schedule_status_1.ScheduleStatus,
         default: schedule_status_1.ScheduleStatus.DEFAULT,
@@ -31725,64 +37307,29 @@ __decorate([
     }),
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsEnum)(schedule_status_1.ScheduleStatus),
-    __metadata("design:type", typeof (_b = typeof schedule_status_1.ScheduleStatus !== "undefined" && schedule_status_1.ScheduleStatus) === "function" ? _b : Object)
-], ScheduleDto.prototype, "status", void 0);
+    __metadata("design:type", typeof (_f = typeof schedule_status_1.ScheduleStatus !== "undefined" && schedule_status_1.ScheduleStatus) === "function" ? _f : Object)
+], GetScheduleDto.prototype, "status", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Start time of the schedule', required: false, example: '09:00:00' }),
-    (0, class_validator_1.IsOptional)(),
-    (0, is_time_string_decorator_1.IsTimeString)(),
-    __metadata("design:type", String)
-], ScheduleDto.prototype, "startTime", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ description: 'End time of the schedule', required: false, example: '17:00:00' }),
-    (0, class_validator_1.IsOptional)(),
-    (0, is_time_string_decorator_1.IsTimeString)(),
-    __metadata("design:type", String)
-], ScheduleDto.prototype, "endTime", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Break time in minutes', required: false, example: 60 }),
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'Duration in hours',
+        example: 8,
+        minimum: 0
+    }),
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsNumber)(),
     (0, class_validator_1.Min)(0),
     __metadata("design:type", Number)
-], ScheduleDto.prototype, "breakTime", void 0);
+], GetScheduleDto.prototype, "duration", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Duration in hours', required: false, example: 8 }),
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'Attendance for this schedule',
+        type: reference_dto_1.ReferenceDto
+    }),
     (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsNumber)(),
-    (0, class_validator_1.Min)(0),
-    __metadata("design:type", Number)
-], ScheduleDto.prototype, "duration", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ description: 'ID of the associated shift', required: true, example: '123e4567-e89b-12d3-a456-426614174000' }),
-    (0, class_validator_1.IsUUID)(),
-    (0, class_validator_1.IsNotEmpty)(),
-    __metadata("design:type", String)
-], ScheduleDto.prototype, "shiftId", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ description: 'ID of the associated holiday', required: false, example: '123e4567-e89b-12d3-a456-426614174000' }),
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsUUID)(),
-    __metadata("design:type", String)
-], ScheduleDto.prototype, "holidayId", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ description: 'ID of the associated employee', required: true, example: '123e4567-e89b-12d3-a456-426614174000' }),
-    (0, class_validator_1.IsUUID)(),
-    (0, class_validator_1.IsNotEmpty)(),
-    __metadata("design:type", String)
-], ScheduleDto.prototype, "employeeId", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ description: 'ID of the associated cutoff', required: true, example: '123e4567-e89b-12d3-a456-426614174000' }),
-    (0, class_validator_1.IsUUID)(),
-    (0, class_validator_1.IsNotEmpty)(),
-    __metadata("design:type", String)
-], ScheduleDto.prototype, "cutoffId", void 0);
-class UpdateScheduleDto extends (0, swagger_1.PartialType)(ScheduleDto) {
-}
-exports.UpdateScheduleDto = UpdateScheduleDto;
-class GetScheduleDto extends (0, create_get_dto_factory_1.createGetDto)(UpdateScheduleDto, 'schedule') {
-}
-exports.GetScheduleDto = GetScheduleDto;
+    (0, class_validator_1.ValidateNested)(),
+    (0, class_transformer_1.Type)(() => reference_dto_1.ReferenceDto),
+    __metadata("design:type", typeof (_g = typeof reference_dto_1.ReferenceDto !== "undefined" && reference_dto_1.ReferenceDto) === "function" ? _g : Object)
+], GetScheduleDto.prototype, "attendance", void 0);
 
 
 /***/ }),
@@ -31836,6 +37383,10 @@ __decorate([
     __metadata("design:type", typeof (_c = typeof attendance_entity_1.Attendance !== "undefined" && attendance_entity_1.Attendance) === "function" ? _c : Object)
 ], Schedule.prototype, "attendance", void 0);
 __decorate([
+    (0, typeorm_1.Column)({ nullable: true }),
+    __metadata("design:type", String)
+], Schedule.prototype, "color", void 0);
+__decorate([
     (0, typeorm_1.Column)({ type: 'time', nullable: true }),
     __metadata("design:type", String)
 ], Schedule.prototype, "startTime", void 0);
@@ -31851,6 +37402,10 @@ __decorate([
     (0, typeorm_1.Column)({ type: 'int', nullable: true }),
     __metadata("design:type", Number)
 ], Schedule.prototype, "duration", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'boolean', default: false }),
+    __metadata("design:type", Boolean)
+], Schedule.prototype, "allowEarlyCheckIn", void 0);
 __decorate([
     (0, typeorm_1.ManyToOne)(() => shift_entity_1.Shift, (shift) => shift.schedules),
     (0, typeorm_1.JoinColumn)({ name: 'shiftId' }),
@@ -31871,7 +37426,7 @@ __decorate([
     __metadata("design:type", typeof (_f = typeof employee_entity_1.Employee !== "undefined" && employee_entity_1.Employee) === "function" ? _f : Object)
 ], Schedule.prototype, "employee", void 0);
 __decorate([
-    (0, typeorm_1.OneToMany)(() => schedule_change_request_entity_1.ScheduleChangeRequest, (scheduleChangeRequest) => scheduleChangeRequest.schedule),
+    (0, typeorm_1.ManyToMany)(() => schedule_change_request_entity_1.ScheduleChangeRequest, (scheduleChangeRequest) => scheduleChangeRequest.originalSchedules, { nullable: true }),
     __metadata("design:type", Array)
 ], Schedule.prototype, "scheduleChangeRequests", void 0);
 __decorate([
@@ -31905,13 +37460,63 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 var _a, _b;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.GetScheduleChangeRequestDto = exports.UpdateScheduleChangeRequestDto = exports.ScheduleChangeRequestDto = void 0;
+exports.GetScheduleChangeRequestDto = exports.UpdateScheduleChangeRequestDto = exports.ScheduleChangeRequestDto = exports.AlternativeScheduleDto = void 0;
 const base_dto_1 = __webpack_require__(/*! @/common/dtos/base.dto */ "./src/common/dtos/base.dto.ts");
+const reference_dto_1 = __webpack_require__(/*! @/common/dtos/reference.dto */ "./src/common/dtos/reference.dto.ts");
 const request_status_enum_1 = __webpack_require__(/*! @/common/enums/request-status.enum */ "./src/common/enums/request-status.enum.ts");
 const schedule_change_request_type_enum_1 = __webpack_require__(/*! @/common/enums/schedule-change-request-type.enum */ "./src/common/enums/schedule-change-request-type.enum.ts");
 const create_get_dto_factory_1 = __webpack_require__(/*! @/common/factories/create-get-dto.factory */ "./src/common/factories/create-get-dto.factory.ts");
 const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
+const class_transformer_1 = __webpack_require__(/*! class-transformer */ "class-transformer");
 const class_validator_1 = __webpack_require__(/*! class-validator */ "class-validator");
+class AlternativeScheduleDto {
+}
+exports.AlternativeScheduleDto = AlternativeScheduleDto;
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Date of the alternative schedule',
+        example: '2023-06-15',
+        type: String,
+        format: 'date'
+    }),
+    (0, class_validator_1.IsNotEmpty)(),
+    __metadata("design:type", String)
+], AlternativeScheduleDto.prototype, "date", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Start time of the alternative schedule',
+        example: '09:00:00',
+        type: String
+    }),
+    (0, class_validator_1.IsNotEmpty)(),
+    __metadata("design:type", String)
+], AlternativeScheduleDto.prototype, "startTime", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'End time of the alternative schedule',
+        example: '17:00:00',
+        type: String
+    }),
+    (0, class_validator_1.IsNotEmpty)(),
+    __metadata("design:type", String)
+], AlternativeScheduleDto.prototype, "endTime", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'Break time in minutes for the alternative schedule',
+        example: 60
+    }),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Number)
+], AlternativeScheduleDto.prototype, "breakTime", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'Notes for this alternative schedule',
+        example: 'Working from home this day'
+    }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], AlternativeScheduleDto.prototype, "notes", void 0);
 class ScheduleChangeRequestDto extends (0, swagger_1.PartialType)(base_dto_1.BaseDto) {
 }
 exports.ScheduleChangeRequestDto = ScheduleChangeRequestDto;
@@ -31926,6 +37531,59 @@ __decorate([
 ], ScheduleChangeRequestDto.prototype, "description", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({
+        description: 'Type of schedule change request',
+        enum: schedule_change_request_type_enum_1.ScheduleChangeRequestType,
+        example: schedule_change_request_type_enum_1.ScheduleChangeRequestType.SICK_LEAVE
+    }),
+    (0, class_validator_1.IsEnum)(schedule_change_request_type_enum_1.ScheduleChangeRequestType),
+    (0, class_validator_1.IsNotEmpty)(),
+    __metadata("design:type", typeof (_a = typeof schedule_change_request_type_enum_1.ScheduleChangeRequestType !== "undefined" && schedule_change_request_type_enum_1.ScheduleChangeRequestType) === "function" ? _a : Object)
+], ScheduleChangeRequestDto.prototype, "type", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Original schedules that need to be changed',
+        type: [reference_dto_1.ReferenceDto],
+        example: [
+            { id: '123e4567-e89b-12d3-a456-426614174000' },
+            { id: '123e4567-e89b-12d3-a456-426614174001' }
+        ]
+    }),
+    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.ValidateNested)({ each: true }),
+    (0, class_transformer_1.Type)(() => reference_dto_1.ReferenceDto),
+    __metadata("design:type", Array)
+], ScheduleChangeRequestDto.prototype, "originalSchedules", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Alternative schedules to replace the originals',
+        type: [AlternativeScheduleDto]
+    }),
+    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.ValidateNested)({ each: true }),
+    (0, class_transformer_1.Type)(() => AlternativeScheduleDto),
+    __metadata("design:type", Array)
+], ScheduleChangeRequestDto.prototype, "alternativeSchedules", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'Documents associated with the schedule change request',
+        type: [reference_dto_1.ReferenceDto],
+        example: [
+            { id: '123e4567-e89b-12d3-a456-426614174000' }
+        ]
+    }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.ValidateNested)({ each: true }),
+    (0, class_transformer_1.Type)(() => reference_dto_1.ReferenceDto),
+    __metadata("design:type", Array)
+], ScheduleChangeRequestDto.prototype, "documents", void 0);
+class UpdateScheduleChangeRequestDto extends (0, swagger_1.PartialType)(ScheduleChangeRequestDto) {
+}
+exports.UpdateScheduleChangeRequestDto = UpdateScheduleChangeRequestDto;
+class GetScheduleChangeRequestDto extends (0, create_get_dto_factory_1.createGetDto)(UpdateScheduleChangeRequestDto, 'schedule change request') {
+}
+exports.GetScheduleChangeRequestDto = GetScheduleChangeRequestDto;
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
         description: 'Status of the request',
         enum: request_status_enum_1.RequestStatus,
         default: request_status_enum_1.RequestStatus.PENDING,
@@ -31933,43 +37591,72 @@ __decorate([
     }),
     (0, class_validator_1.IsEnum)(request_status_enum_1.RequestStatus),
     (0, class_validator_1.IsOptional)(),
-    __metadata("design:type", typeof (_a = typeof request_status_enum_1.RequestStatus !== "undefined" && request_status_enum_1.RequestStatus) === "function" ? _a : Object)
-], ScheduleChangeRequestDto.prototype, "status", void 0);
+    __metadata("design:type", typeof (_b = typeof request_status_enum_1.RequestStatus !== "undefined" && request_status_enum_1.RequestStatus) === "function" ? _b : Object)
+], GetScheduleChangeRequestDto.prototype, "status", void 0);
+
+
+/***/ }),
+
+/***/ "./src/modules/shift-management/schedules/schedule-change-requests/entities/alternative-schedule.entity.ts":
+/*!*****************************************************************************************************************!*\
+  !*** ./src/modules/shift-management/schedules/schedule-change-requests/entities/alternative-schedule.entity.ts ***!
+  \*****************************************************************************************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+"use strict";
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var _a, _b, _c;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.AlternativeSchedule = void 0;
+const base_entity_1 = __webpack_require__(/*! @/database/entities/base.entity */ "./src/database/entities/base.entity.ts");
+const typeorm_1 = __webpack_require__(/*! typeorm */ "typeorm");
+const schedule_entity_1 = __webpack_require__(/*! ../../entities/schedule.entity */ "./src/modules/shift-management/schedules/entities/schedule.entity.ts");
+const schedule_change_request_entity_1 = __webpack_require__(/*! ./schedule-change-request.entity */ "./src/modules/shift-management/schedules/schedule-change-requests/entities/schedule-change-request.entity.ts");
+let AlternativeSchedule = class AlternativeSchedule extends base_entity_1.BaseEntity {
+};
+exports.AlternativeSchedule = AlternativeSchedule;
 __decorate([
-    (0, swagger_1.ApiProperty)({
-        description: 'Type of schedule change request',
-        enum: schedule_change_request_type_enum_1.ScheduleChangeRequestType,
-        example: schedule_change_request_type_enum_1.ScheduleChangeRequestType.SICK_LEAVE // Assuming this is one of the enum values
-    }),
-    (0, class_validator_1.IsEnum)(schedule_change_request_type_enum_1.ScheduleChangeRequestType),
-    (0, class_validator_1.IsNotEmpty)(),
-    __metadata("design:type", typeof (_b = typeof schedule_change_request_type_enum_1.ScheduleChangeRequestType !== "undefined" && schedule_change_request_type_enum_1.ScheduleChangeRequestType) === "function" ? _b : Object)
-], ScheduleChangeRequestDto.prototype, "type", void 0);
+    (0, typeorm_1.Column)({ type: 'date' }),
+    __metadata("design:type", typeof (_a = typeof Date !== "undefined" && Date) === "function" ? _a : Object)
+], AlternativeSchedule.prototype, "date", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({
-        description: 'ID of the schedule this request is associated with',
-        example: '123e4567-e89b-12d3-a456-426614174000'
-    }),
-    (0, class_validator_1.IsUUID)(),
-    (0, class_validator_1.IsNotEmpty)(),
+    (0, typeorm_1.Column)({ type: 'time' }),
     __metadata("design:type", String)
-], ScheduleChangeRequestDto.prototype, "scheduleId", void 0);
+], AlternativeSchedule.prototype, "startTime", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({
-        description: 'ID of the schedule change response if exists',
-        example: '123e4567-e89b-12d3-a456-426614174000',
-        required: false
-    }),
-    (0, class_validator_1.IsUUID)(),
-    (0, class_validator_1.IsOptional)(),
+    (0, typeorm_1.Column)({ type: 'time' }),
     __metadata("design:type", String)
-], ScheduleChangeRequestDto.prototype, "scheduleChangeResponseId", void 0);
-class UpdateScheduleChangeRequestDto extends (0, swagger_1.PartialType)(ScheduleChangeRequestDto) {
-}
-exports.UpdateScheduleChangeRequestDto = UpdateScheduleChangeRequestDto;
-class GetScheduleChangeRequestDto extends (0, create_get_dto_factory_1.createGetDto)(UpdateScheduleChangeRequestDto, 'schedule change request') {
-}
-exports.GetScheduleChangeRequestDto = GetScheduleChangeRequestDto;
+], AlternativeSchedule.prototype, "endTime", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ type: 'int', nullable: true }),
+    __metadata("design:type", Number)
+], AlternativeSchedule.prototype, "breakTime", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ nullable: true }),
+    __metadata("design:type", String)
+], AlternativeSchedule.prototype, "notes", void 0);
+__decorate([
+    (0, typeorm_1.ManyToOne)(() => schedule_change_request_entity_1.ScheduleChangeRequest, scheduleChangeRequest => scheduleChangeRequest.alternativeSchedules),
+    (0, typeorm_1.JoinColumn)({ name: 'scheduleChangeRequestId' }),
+    __metadata("design:type", typeof (_b = typeof schedule_change_request_entity_1.ScheduleChangeRequest !== "undefined" && schedule_change_request_entity_1.ScheduleChangeRequest) === "function" ? _b : Object)
+], AlternativeSchedule.prototype, "scheduleChangeRequest", void 0);
+__decorate([
+    (0, typeorm_1.ManyToOne)(() => schedule_entity_1.Schedule, { nullable: true }),
+    (0, typeorm_1.JoinColumn)({ name: 'resultingScheduleId' }),
+    __metadata("design:type", typeof (_c = typeof schedule_entity_1.Schedule !== "undefined" && schedule_entity_1.Schedule) === "function" ? _c : Object)
+], AlternativeSchedule.prototype, "resultingSchedule", void 0);
+exports.AlternativeSchedule = AlternativeSchedule = __decorate([
+    (0, typeorm_1.Entity)('alternative-schedules')
+], AlternativeSchedule);
 
 
 /***/ }),
@@ -32001,6 +37688,7 @@ const document_entity_1 = __webpack_require__(/*! @/modules/documents/entities/d
 const typeorm_1 = __webpack_require__(/*! typeorm */ "typeorm");
 const schedule_entity_1 = __webpack_require__(/*! ../../entities/schedule.entity */ "./src/modules/shift-management/schedules/entities/schedule.entity.ts");
 const schedule_change_response_entity_1 = __webpack_require__(/*! ../schedule-change-responses/entities/schedule-change-response.entity */ "./src/modules/shift-management/schedules/schedule-change-requests/schedule-change-responses/entities/schedule-change-response.entity.ts");
+const alternative_schedule_entity_1 = __webpack_require__(/*! ./alternative-schedule.entity */ "./src/modules/shift-management/schedules/schedule-change-requests/entities/alternative-schedule.entity.ts");
 let ScheduleChangeRequest = class ScheduleChangeRequest extends base_entity_1.BaseEntity {
 };
 exports.ScheduleChangeRequest = ScheduleChangeRequest;
@@ -32017,21 +37705,100 @@ __decorate([
     __metadata("design:type", typeof (_b = typeof schedule_change_request_type_enum_1.ScheduleChangeRequestType !== "undefined" && schedule_change_request_type_enum_1.ScheduleChangeRequestType) === "function" ? _b : Object)
 ], ScheduleChangeRequest.prototype, "type", void 0);
 __decorate([
-    (0, typeorm_1.ManyToOne)(() => schedule_entity_1.Schedule, (schedule) => schedule.scheduleChangeRequests),
+    (0, typeorm_1.ManyToMany)(() => schedule_entity_1.Schedule, { cascade: false }),
+    (0, typeorm_1.JoinTable)({
+        name: 'schedule_change_request_originals',
+        joinColumn: { name: 'scheduleChangeRequestId', referencedColumnName: 'id' },
+        inverseJoinColumn: { name: 'scheduleId', referencedColumnName: 'id' },
+    }),
     __metadata("design:type", Array)
-], ScheduleChangeRequest.prototype, "schedule", void 0);
+], ScheduleChangeRequest.prototype, "originalSchedules", void 0);
 __decorate([
-    (0, typeorm_1.OneToMany)(() => document_entity_1.Document, (document) => document.scheduleChangeRequest),
+    (0, typeorm_1.OneToMany)(() => alternative_schedule_entity_1.AlternativeSchedule, alternativeSchedule => alternativeSchedule.scheduleChangeRequest, { cascade: true }),
+    __metadata("design:type", Array)
+], ScheduleChangeRequest.prototype, "alternativeSchedules", void 0);
+__decorate([
+    (0, typeorm_1.OneToMany)(() => document_entity_1.Document, (document) => document.scheduleChangeRequest, { nullable: true, cascade: true }),
     __metadata("design:type", Array)
 ], ScheduleChangeRequest.prototype, "documents", void 0);
 __decorate([
-    (0, typeorm_1.OneToOne)(() => schedule_change_response_entity_1.ScheduleChangeResponse, (scheduleChangeResponse) => scheduleChangeResponse.scheduleChangeRequest, { eager: true, nullable: true, cascade: true }),
-    (0, typeorm_1.JoinColumn)({ name: 'scheduleChangeResponseId' }),
+    (0, typeorm_1.OneToOne)(() => schedule_change_response_entity_1.ScheduleChangeResponse, (scheduleChangeResponse) => scheduleChangeResponse.scheduleChangeRequest, { eager: true, nullable: true }),
     __metadata("design:type", typeof (_c = typeof schedule_change_response_entity_1.ScheduleChangeResponse !== "undefined" && schedule_change_response_entity_1.ScheduleChangeResponse) === "function" ? _c : Object)
 ], ScheduleChangeRequest.prototype, "scheduleChangeResponse", void 0);
 exports.ScheduleChangeRequest = ScheduleChangeRequest = __decorate([
     (0, typeorm_1.Entity)('schedule-change-requests')
 ], ScheduleChangeRequest);
+
+
+/***/ }),
+
+/***/ "./src/modules/shift-management/schedules/schedule-change-requests/listener/schedule-change.listener.ts":
+/*!**************************************************************************************************************!*\
+  !*** ./src/modules/shift-management/schedules/schedule-change-requests/listener/schedule-change.listener.ts ***!
+  \**************************************************************************************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+"use strict";
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var ScheduleChangeListener_1;
+var _a, _b, _c;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.ScheduleChangeListener = void 0;
+const request_status_enum_1 = __webpack_require__(/*! @/common/enums/request-status.enum */ "./src/common/enums/request-status.enum.ts");
+const schedule_change_event_1 = __webpack_require__(/*! @/common/events/schedule-change.event */ "./src/common/events/schedule-change.event.ts");
+const work_time_event_1 = __webpack_require__(/*! @/common/events/work-time.event */ "./src/common/events/work-time.event.ts");
+const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
+const event_emitter_1 = __webpack_require__(/*! @nestjs/event-emitter */ "@nestjs/event-emitter");
+const schedule_change_requests_service_1 = __webpack_require__(/*! ../schedule-change-requests.service */ "./src/modules/shift-management/schedules/schedule-change-requests/schedule-change-requests.service.ts");
+let ScheduleChangeListener = ScheduleChangeListener_1 = class ScheduleChangeListener {
+    constructor(scheduleChangeRequestsService) {
+        this.scheduleChangeRequestsService = scheduleChangeRequestsService;
+        this.logger = new common_1.Logger(ScheduleChangeListener_1.name);
+    }
+    async handleScheduleChangeResponded(event) {
+        this.logger.log(`Schedule change request responded: ${event.scheduleChangeRequestId}, approved: ${event.isApproved}`);
+        if (!event.scheduleChangeRequestId) {
+            this.logger.warn('Schedule change request ID is missing');
+            return;
+        }
+        // Update the request status
+        const newStatus = event.isApproved === true
+            ? request_status_enum_1.RequestStatus.APPROVED
+            : (event.isApproved === false ? request_status_enum_1.RequestStatus.REJECTED : request_status_enum_1.RequestStatus.PENDING);
+        await this.scheduleChangeRequestsService.update(event.scheduleChangeRequestId, { status: newStatus }, event.respondedBy);
+        // If approved, apply the schedule changes
+        if (event.isApproved === true) {
+            try {
+                await this.scheduleChangeRequestsService.applyScheduleChanges(event.scheduleChangeRequestId, event.respondedBy);
+                this.logger.log(`Successfully applied schedule changes for request ${event.scheduleChangeRequestId}`);
+            }
+            catch (error) {
+                this.logger.error(`Failed to apply schedule changes: ${error.message}`, error.stack);
+                // Consider creating a notification for the failure
+            }
+        }
+    }
+};
+exports.ScheduleChangeListener = ScheduleChangeListener;
+__decorate([
+    (0, event_emitter_1.OnEvent)(work_time_event_1.WORK_TIME_EVENTS.WORK_TIME_RESPONDED),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [typeof (_b = typeof schedule_change_event_1.ScheduleChangeRespondedEvent !== "undefined" && schedule_change_event_1.ScheduleChangeRespondedEvent) === "function" ? _b : Object]),
+    __metadata("design:returntype", typeof (_c = typeof Promise !== "undefined" && Promise) === "function" ? _c : Object)
+], ScheduleChangeListener.prototype, "handleScheduleChangeResponded", null);
+exports.ScheduleChangeListener = ScheduleChangeListener = ScheduleChangeListener_1 = __decorate([
+    (0, common_1.Injectable)(),
+    __metadata("design:paramtypes", [typeof (_a = typeof schedule_change_requests_service_1.ScheduleChangeRequestsService !== "undefined" && schedule_change_requests_service_1.ScheduleChangeRequestsService) === "function" ? _a : Object])
+], ScheduleChangeListener);
 
 
 /***/ }),
@@ -32078,23 +37845,24 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ScheduleChangeRequestsModule = void 0;
 const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
 const typeorm_1 = __webpack_require__(/*! @nestjs/typeorm */ "@nestjs/typeorm");
+const schedules_module_1 = __webpack_require__(/*! ../schedules.module */ "./src/modules/shift-management/schedules/schedules.module.ts");
+const alternative_schedule_entity_1 = __webpack_require__(/*! ./entities/alternative-schedule.entity */ "./src/modules/shift-management/schedules/schedule-change-requests/entities/alternative-schedule.entity.ts");
 const schedule_change_request_entity_1 = __webpack_require__(/*! ./entities/schedule-change-request.entity */ "./src/modules/shift-management/schedules/schedule-change-requests/entities/schedule-change-request.entity.ts");
+const schedule_change_listener_1 = __webpack_require__(/*! ./listener/schedule-change.listener */ "./src/modules/shift-management/schedules/schedule-change-requests/listener/schedule-change.listener.ts");
 const schedule_change_requests_controller_1 = __webpack_require__(/*! ./schedule-change-requests.controller */ "./src/modules/shift-management/schedules/schedule-change-requests/schedule-change-requests.controller.ts");
 const schedule_change_requests_service_1 = __webpack_require__(/*! ./schedule-change-requests.service */ "./src/modules/shift-management/schedules/schedule-change-requests/schedule-change-requests.service.ts");
-const schedule_change_responses_module_1 = __webpack_require__(/*! ./schedule-change-responses/schedule-change-responses.module */ "./src/modules/shift-management/schedules/schedule-change-requests/schedule-change-responses/schedule-change-responses.module.ts");
 let ScheduleChangeRequestsModule = class ScheduleChangeRequestsModule {
 };
 exports.ScheduleChangeRequestsModule = ScheduleChangeRequestsModule;
 exports.ScheduleChangeRequestsModule = ScheduleChangeRequestsModule = __decorate([
     (0, common_1.Module)({
         imports: [
-            typeorm_1.TypeOrmModule.forFeature([schedule_change_request_entity_1.ScheduleChangeRequest]),
-            schedule_change_responses_module_1.ScheduleChangeResponsesModule,
+            typeorm_1.TypeOrmModule.forFeature([schedule_change_request_entity_1.ScheduleChangeRequest, alternative_schedule_entity_1.AlternativeSchedule]),
+            (0, common_1.forwardRef)(() => schedules_module_1.SchedulesModule),
         ],
-        providers: [schedule_change_requests_service_1.ScheduleChangeRequestsService],
+        providers: [schedule_change_requests_service_1.ScheduleChangeRequestsService, schedule_change_listener_1.ScheduleChangeListener],
         exports: [
             schedule_change_requests_service_1.ScheduleChangeRequestsService,
-            schedule_change_responses_module_1.ScheduleChangeResponsesModule,
         ],
         controllers: [schedule_change_requests_controller_1.ScheduleChangeRequestsController],
     })
@@ -32123,27 +37891,144 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-var _a, _b;
+var ScheduleChangeRequestsService_1;
+var _a, _b, _c, _d;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ScheduleChangeRequestsService = void 0;
+const request_status_enum_1 = __webpack_require__(/*! @/common/enums/request-status.enum */ "./src/common/enums/request-status.enum.ts");
+const schedule_status_1 = __webpack_require__(/*! @/common/enums/schedule-status */ "./src/common/enums/schedule-status.ts");
 const base_service_1 = __webpack_require__(/*! @/common/services/base.service */ "./src/common/services/base.service.ts");
 const users_service_1 = __webpack_require__(/*! @/modules/account-management/users/users.service */ "./src/modules/account-management/users/users.service.ts");
 const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
 const typeorm_1 = __webpack_require__(/*! @nestjs/typeorm */ "@nestjs/typeorm");
 const typeorm_2 = __webpack_require__(/*! typeorm */ "typeorm");
+const schedule_entity_1 = __webpack_require__(/*! ../entities/schedule.entity */ "./src/modules/shift-management/schedules/entities/schedule.entity.ts");
+const schedules_service_1 = __webpack_require__(/*! ../schedules.service */ "./src/modules/shift-management/schedules/schedules.service.ts");
+const alternative_schedule_entity_1 = __webpack_require__(/*! ./entities/alternative-schedule.entity */ "./src/modules/shift-management/schedules/schedule-change-requests/entities/alternative-schedule.entity.ts");
 const schedule_change_request_entity_1 = __webpack_require__(/*! ./entities/schedule-change-request.entity */ "./src/modules/shift-management/schedules/schedule-change-requests/entities/schedule-change-request.entity.ts");
-let ScheduleChangeRequestsService = class ScheduleChangeRequestsService extends base_service_1.BaseService {
-    constructor(scheduleChangeRequestsRepository, usersService) {
+let ScheduleChangeRequestsService = ScheduleChangeRequestsService_1 = class ScheduleChangeRequestsService extends base_service_1.BaseService {
+    constructor(scheduleChangeRequestsRepository, alternativeSchedulesRepository, schedulesService, usersService) {
         super(scheduleChangeRequestsRepository, usersService);
         this.scheduleChangeRequestsRepository = scheduleChangeRequestsRepository;
+        this.alternativeSchedulesRepository = alternativeSchedulesRepository;
+        this.schedulesService = schedulesService;
         this.usersService = usersService;
+        this.logger = new common_1.Logger(ScheduleChangeRequestsService_1.name);
+    }
+    async validateScheduleChangeRequest(dto) {
+        if (!dto.originalSchedules || dto.originalSchedules.length === 0) {
+            throw new common_1.BadRequestException('Original schedules must be specified');
+        }
+        if (!dto.alternativeSchedules || dto.alternativeSchedules.length === 0) {
+            throw new common_1.BadRequestException('Alternative schedules must be specified');
+        }
+        // Fetch the original schedules to validate
+        const scheduleIds = dto.originalSchedules.map(s => s.id).filter(Boolean);
+        const schedules = await this.schedulesService.getRepository().find({
+            where: { id: (0, typeorm_2.In)(scheduleIds) },
+            relations: ['attendance']
+        });
+        if (schedules.length !== scheduleIds.length) {
+            throw new common_1.BadRequestException('One or more schedules do not exist');
+        }
+        // Check schedules are in the future
+        const now = new Date();
+        now.setHours(0, 0, 0, 0); // Start of today
+        for (const schedule of schedules) {
+            // Check schedule is in the future
+            const scheduleDate = new Date(schedule.date);
+            if (scheduleDate <= now) {
+                throw new common_1.BadRequestException(`Cannot change schedules from the past or today (${schedule.date})`);
+            }
+            // Check for attendance
+            if (schedule.attendance) {
+                throw new common_1.BadRequestException(`Cannot change schedule (${schedule.date}) that already has attendance records`);
+            }
+        }
+    }
+    async create(createDto, createdBy) {
+        await this.validateScheduleChangeRequest(createDto);
+        return super.create(createDto, createdBy);
+    }
+    async update(id, updateDto, updatedBy) {
+        if (updateDto.originalSchedules || updateDto.alternativeSchedules) {
+            // Get existing request to check status
+            const existingRequest = await this.findOneByOrFail({ id });
+            if (existingRequest.status !== request_status_enum_1.RequestStatus.PENDING) {
+                throw new common_1.BadRequestException(`Cannot modify schedules for a request that is ${existingRequest.status}`);
+            }
+            await this.validateScheduleChangeRequest(Object.assign(Object.assign({}, existingRequest), updateDto));
+        }
+        return super.update(id, updateDto, updatedBy);
+    }
+    async applyScheduleChanges(scheduleChangeRequestId, userId) {
+        const request = await this.scheduleChangeRequestsRepository.findOne({
+            where: { id: scheduleChangeRequestId },
+            relations: ['originalSchedules', 'alternativeSchedules']
+        });
+        if (!request) {
+            throw new common_1.NotFoundException('Schedule change request not found');
+        }
+        if (request.status !== request_status_enum_1.RequestStatus.APPROVED) {
+            throw new common_1.BadRequestException('Cannot apply changes for a request that is not approved');
+        }
+        // Start a transaction
+        await this.schedulesService.getRepository().manager.transaction(async (transactionalEntityManager) => {
+            try {
+                // Get the employee ID and other details from the first original schedule
+                const firstSchedule = request.originalSchedules[0];
+                const employeeData = await this.schedulesService.getRepository().findOne({
+                    where: { id: firstSchedule.id },
+                    relations: ['employee', 'shift', 'cutoff']
+                });
+                if (!employeeData || !employeeData.employee) {
+                    throw new common_1.BadRequestException('Cannot find employee data for the schedules');
+                }
+                // Soft delete original schedules
+                for (const schedule of request.originalSchedules) {
+                    await transactionalEntityManager.update(schedule_entity_1.Schedule, schedule.id, {
+                        deletedAt: new Date(),
+                        deletedBy: userId,
+                        status: schedule_status_1.ScheduleStatus.CANCELLED
+                    });
+                    this.logger.log(`Removed original schedule ${schedule.id}`);
+                }
+                // Create new schedules from alternatives
+                for (const alternative of request.alternativeSchedules) {
+                    const newSchedule = transactionalEntityManager.create(schedule_entity_1.Schedule, {
+                        date: alternative.date,
+                        startTime: alternative.startTime,
+                        endTime: alternative.endTime,
+                        breakTime: alternative.breakTime,
+                        notes: alternative.notes || `Created from change request ${request.id}`,
+                        status: schedule_status_1.ScheduleStatus.MODIFIED,
+                        employee: employeeData.employee,
+                        shift: employeeData.shift,
+                        cutoff: employeeData.cutoff,
+                        createdBy: userId
+                    });
+                    const savedSchedule = await transactionalEntityManager.save(schedule_entity_1.Schedule, newSchedule);
+                    this.logger.log(`Created alternative schedule ${savedSchedule.id}`);
+                    // Link the alternative to the resulting schedule
+                    await transactionalEntityManager.update(alternative_schedule_entity_1.AlternativeSchedule, alternative.id, {
+                        resultingSchedule: savedSchedule
+                    });
+                }
+                this.logger.log(`Successfully applied schedule changes for request ${scheduleChangeRequestId}`);
+            }
+            catch (error) {
+                this.logger.error(`Failed to apply schedule changes: ${error.message}`, error.stack);
+                throw error;
+            }
+        });
     }
 };
 exports.ScheduleChangeRequestsService = ScheduleChangeRequestsService;
-exports.ScheduleChangeRequestsService = ScheduleChangeRequestsService = __decorate([
+exports.ScheduleChangeRequestsService = ScheduleChangeRequestsService = ScheduleChangeRequestsService_1 = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, typeorm_1.InjectRepository)(schedule_change_request_entity_1.ScheduleChangeRequest)),
-    __metadata("design:paramtypes", [typeof (_a = typeof typeorm_2.Repository !== "undefined" && typeorm_2.Repository) === "function" ? _a : Object, typeof (_b = typeof users_service_1.UsersService !== "undefined" && users_service_1.UsersService) === "function" ? _b : Object])
+    __param(1, (0, typeorm_1.InjectRepository)(alternative_schedule_entity_1.AlternativeSchedule)),
+    __metadata("design:paramtypes", [typeof (_a = typeof typeorm_2.Repository !== "undefined" && typeorm_2.Repository) === "function" ? _a : Object, typeof (_b = typeof typeorm_2.Repository !== "undefined" && typeorm_2.Repository) === "function" ? _b : Object, typeof (_c = typeof schedules_service_1.SchedulesService !== "undefined" && schedules_service_1.SchedulesService) === "function" ? _c : Object, typeof (_d = typeof users_service_1.UsersService !== "undefined" && users_service_1.UsersService) === "function" ? _d : Object])
 ], ScheduleChangeRequestsService);
 
 
@@ -32166,11 +38051,14 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
+var _a;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.GetScheduleChangeResponseDto = exports.UpdateScheduleChangeResponseDto = exports.ScheduleChangeResponseDto = void 0;
 const base_dto_1 = __webpack_require__(/*! @/common/dtos/base.dto */ "./src/common/dtos/base.dto.ts");
+const reference_dto_1 = __webpack_require__(/*! @/common/dtos/reference.dto */ "./src/common/dtos/reference.dto.ts");
 const create_get_dto_factory_1 = __webpack_require__(/*! @/common/factories/create-get-dto.factory */ "./src/common/factories/create-get-dto.factory.ts");
 const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
+const class_transformer_1 = __webpack_require__(/*! class-transformer */ "class-transformer");
 const class_validator_1 = __webpack_require__(/*! class-validator */ "class-validator");
 class ScheduleChangeResponseDto extends (0, swagger_1.PartialType)(base_dto_1.BaseDto) {
 }
@@ -32196,12 +38084,13 @@ __decorate([
 __decorate([
     (0, swagger_1.ApiProperty)({
         description: 'ID of the associated schedule change request',
-        example: '123e4567-e89b-12d3-a456-426614174000'
+        type: reference_dto_1.ReferenceDto,
     }),
     (0, class_validator_1.IsNotEmpty)(),
-    (0, class_validator_1.IsUUID)(),
-    __metadata("design:type", String)
-], ScheduleChangeResponseDto.prototype, "scheduleChangeRequestId", void 0);
+    (0, class_validator_1.ValidateNested)(),
+    (0, class_transformer_1.Type)(() => reference_dto_1.ReferenceDto),
+    __metadata("design:type", typeof (_a = typeof reference_dto_1.ReferenceDto !== "undefined" && reference_dto_1.ReferenceDto) === "function" ? _a : Object)
+], ScheduleChangeResponseDto.prototype, "scheduleChangeRequest", void 0);
 class UpdateScheduleChangeResponseDto extends (0, swagger_1.PartialType)(ScheduleChangeResponseDto) {
 }
 exports.UpdateScheduleChangeResponseDto = UpdateScheduleChangeResponseDto;
@@ -32247,7 +38136,7 @@ __decorate([
     __metadata("design:type", String)
 ], ScheduleChangeResponse.prototype, "message", void 0);
 __decorate([
-    (0, typeorm_1.OneToOne)(() => schedule_change_request_entity_1.ScheduleChangeRequest, (scheduleChangeRequest) => scheduleChangeRequest.scheduleChangeResponse),
+    (0, typeorm_1.OneToOne)(() => schedule_change_request_entity_1.ScheduleChangeRequest, (scheduleChangeRequest) => scheduleChangeRequest.scheduleChangeResponse, { cascade: true }),
     (0, typeorm_1.JoinColumn)({ name: 'scheduleChangeRequestId' }),
     __metadata("design:type", typeof (_a = typeof schedule_change_request_entity_1.ScheduleChangeRequest !== "undefined" && schedule_change_request_entity_1.ScheduleChangeRequest) === "function" ? _a : Object)
 ], ScheduleChangeResponse.prototype, "scheduleChangeRequest", void 0);
@@ -32276,6 +38165,15 @@ class ScheduleChangeResponsesController extends (0, create_controller_factory_1.
     async delete(id) {
         return await super.delete(id);
     }
+    async deleteMany(ids, hardDelete) {
+        return await super.deleteMany(ids, hardDelete);
+    }
+    async softDelete(id, deletedBy) {
+        return await super.softDelete(id, deletedBy);
+    }
+    async findOne(fieldsString, relations, select) {
+        return await super.findOne(fieldsString, relations, select);
+    }
 }
 exports.ScheduleChangeResponsesController = ScheduleChangeResponsesController;
 
@@ -32303,6 +38201,7 @@ const typeorm_1 = __webpack_require__(/*! @nestjs/typeorm */ "@nestjs/typeorm");
 const schedule_change_response_entity_1 = __webpack_require__(/*! ./entities/schedule-change-response.entity */ "./src/modules/shift-management/schedules/schedule-change-requests/schedule-change-responses/entities/schedule-change-response.entity.ts");
 const schedule_change_responses_controller_1 = __webpack_require__(/*! ./schedule-change-responses.controller */ "./src/modules/shift-management/schedules/schedule-change-requests/schedule-change-responses/schedule-change-responses.controller.ts");
 const schedule_change_responses_service_1 = __webpack_require__(/*! ./schedule-change-responses.service */ "./src/modules/shift-management/schedules/schedule-change-requests/schedule-change-responses/schedule-change-responses.service.ts");
+const schedule_change_requests_module_1 = __webpack_require__(/*! ../schedule-change-requests.module */ "./src/modules/shift-management/schedules/schedule-change-requests/schedule-change-requests.module.ts");
 let ScheduleChangeResponsesModule = class ScheduleChangeResponsesModule {
 };
 exports.ScheduleChangeResponsesModule = ScheduleChangeResponsesModule;
@@ -32310,6 +38209,7 @@ exports.ScheduleChangeResponsesModule = ScheduleChangeResponsesModule = __decora
     (0, common_1.Module)({
         imports: [
             typeorm_1.TypeOrmModule.forFeature([schedule_change_response_entity_1.ScheduleChangeResponse]),
+            schedule_change_requests_module_1.ScheduleChangeRequestsModule,
         ],
         providers: [schedule_change_responses_service_1.ScheduleChangeResponsesService],
         exports: [schedule_change_responses_service_1.ScheduleChangeResponsesService],
@@ -32340,27 +38240,53 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-var _a, _b;
+var _a, _b, _c, _d;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ScheduleChangeResponsesService = void 0;
+const schedule_change_event_1 = __webpack_require__(/*! @/common/events/schedule-change.event */ "./src/common/events/schedule-change.event.ts");
 const base_service_1 = __webpack_require__(/*! @/common/services/base.service */ "./src/common/services/base.service.ts");
 const users_service_1 = __webpack_require__(/*! @/modules/account-management/users/users.service */ "./src/modules/account-management/users/users.service.ts");
 const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
+const event_emitter_1 = __webpack_require__(/*! @nestjs/event-emitter */ "@nestjs/event-emitter");
 const typeorm_1 = __webpack_require__(/*! @nestjs/typeorm */ "@nestjs/typeorm");
 const typeorm_2 = __webpack_require__(/*! typeorm */ "typeorm");
+const schedule_change_requests_service_1 = __webpack_require__(/*! ../schedule-change-requests.service */ "./src/modules/shift-management/schedules/schedule-change-requests/schedule-change-requests.service.ts");
 const schedule_change_response_entity_1 = __webpack_require__(/*! ./entities/schedule-change-response.entity */ "./src/modules/shift-management/schedules/schedule-change-requests/schedule-change-responses/entities/schedule-change-response.entity.ts");
 let ScheduleChangeResponsesService = class ScheduleChangeResponsesService extends base_service_1.BaseService {
-    constructor(scheduleChangeResponsesRepository, usersService) {
+    constructor(scheduleChangeResponsesRepository, usersService, scheduleChangeRequestsService, eventEmitter) {
         super(scheduleChangeResponsesRepository, usersService);
         this.scheduleChangeResponsesRepository = scheduleChangeResponsesRepository;
         this.usersService = usersService;
+        this.scheduleChangeRequestsService = scheduleChangeRequestsService;
+        this.eventEmitter = eventEmitter;
+    }
+    async validateBefore(dto) {
+        dto = await this.validateReferences(dto, [
+            {
+                field: 'scheduleChangeRequest',
+                service: this.scheduleChangeRequestsService,
+                required: true
+            }
+        ]);
+    }
+    async create(createDto, createdBy) {
+        var _a;
+        const scheduleChangeResponse = await super.create(createDto, createdBy);
+        this.eventEmitter.emit(schedule_change_event_1.SCHEDULE_CHANGE_EVENTS.SCHEDULE_CHANGE_RESPONDED, new schedule_change_event_1.ScheduleChangeRespondedEvent((_a = createDto.scheduleChangeRequest) === null || _a === void 0 ? void 0 : _a.id, createDto.approved, createdBy));
+        return scheduleChangeResponse;
+    }
+    async update(id, updateDto, updatedBy) {
+        var _a;
+        const scheduleChangeResponse = await super.update(id, updateDto, updatedBy);
+        this.eventEmitter.emit(schedule_change_event_1.SCHEDULE_CHANGE_EVENTS.SCHEDULE_CHANGE_RESPONDED, new schedule_change_event_1.ScheduleChangeRespondedEvent((_a = updateDto.scheduleChangeRequest) === null || _a === void 0 ? void 0 : _a.id, updateDto.approved, updatedBy));
+        return scheduleChangeResponse;
     }
 };
 exports.ScheduleChangeResponsesService = ScheduleChangeResponsesService;
 exports.ScheduleChangeResponsesService = ScheduleChangeResponsesService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, typeorm_1.InjectRepository)(schedule_change_response_entity_1.ScheduleChangeResponse)),
-    __metadata("design:paramtypes", [typeof (_a = typeof typeorm_2.Repository !== "undefined" && typeorm_2.Repository) === "function" ? _a : Object, typeof (_b = typeof users_service_1.UsersService !== "undefined" && users_service_1.UsersService) === "function" ? _b : Object])
+    __metadata("design:paramtypes", [typeof (_a = typeof typeorm_2.Repository !== "undefined" && typeorm_2.Repository) === "function" ? _a : Object, typeof (_b = typeof users_service_1.UsersService !== "undefined" && users_service_1.UsersService) === "function" ? _b : Object, typeof (_c = typeof schedule_change_requests_service_1.ScheduleChangeRequestsService !== "undefined" && schedule_change_requests_service_1.ScheduleChangeRequestsService) === "function" ? _c : Object, typeof (_d = typeof event_emitter_1.EventEmitter2 !== "undefined" && event_emitter_1.EventEmitter2) === "function" ? _d : Object])
 ], ScheduleChangeResponsesService);
 
 
@@ -32381,6 +38307,18 @@ const schedule_dto_1 = __webpack_require__(/*! ./dtos/schedule.dto */ "./src/mod
 const schedule_entity_1 = __webpack_require__(/*! ./entities/schedule.entity */ "./src/modules/shift-management/schedules/entities/schedule.entity.ts");
 const schedules_service_1 = __webpack_require__(/*! ./schedules.service */ "./src/modules/shift-management/schedules/schedules.service.ts");
 class SchedulesController extends (0, create_controller_factory_1.createController)(schedule_entity_1.Schedule, schedules_service_1.SchedulesService, schedule_dto_1.GetScheduleDto, schedule_dto_1.ScheduleDto, schedule_dto_1.UpdateScheduleDto) {
+    async create(entityDto, createdById) {
+        return super.create(entityDto, createdById);
+    }
+    async update(id, entityDto, updatedById) {
+        return super.update(id, entityDto, updatedById);
+    }
+    async findOne(fieldsString, relations, select) {
+        return super.findOne(fieldsString, relations, select);
+    }
+    async delete(id) {
+        return super.delete(id);
+    }
 }
 exports.SchedulesController = SchedulesController;
 
@@ -32412,6 +38350,7 @@ const groups_module_1 = __webpack_require__(/*! ../groups/groups.module */ "./sr
 const holidays_module_1 = __webpack_require__(/*! ../holidays/holidays.module */ "./src/modules/shift-management/holidays/holidays.module.ts");
 const schedule_entity_1 = __webpack_require__(/*! ./entities/schedule.entity */ "./src/modules/shift-management/schedules/entities/schedule.entity.ts");
 const schedule_change_requests_module_1 = __webpack_require__(/*! ./schedule-change-requests/schedule-change-requests.module */ "./src/modules/shift-management/schedules/schedule-change-requests/schedule-change-requests.module.ts");
+const schedule_change_responses_module_1 = __webpack_require__(/*! ./schedule-change-requests/schedule-change-responses/schedule-change-responses.module */ "./src/modules/shift-management/schedules/schedule-change-requests/schedule-change-responses/schedule-change-responses.module.ts");
 const schedules_controller_1 = __webpack_require__(/*! ./schedules.controller */ "./src/modules/shift-management/schedules/schedules.controller.ts");
 const schedules_service_1 = __webpack_require__(/*! ./schedules.service */ "./src/modules/shift-management/schedules/schedules.service.ts");
 const schedule_generation_service_1 = __webpack_require__(/*! ./services/schedule-generation.service */ "./src/modules/shift-management/schedules/services/schedule-generation.service.ts");
@@ -32426,6 +38365,7 @@ exports.SchedulesModule = SchedulesModule = __decorate([
                 name: 'schedule-generation',
             }),
             schedule_change_requests_module_1.ScheduleChangeRequestsModule,
+            schedule_change_responses_module_1.ScheduleChangeResponsesModule,
             cutoffs_module_1.CutoffsModule,
             employee_management_module_1.EmployeeManagementModule,
             groups_module_1.GroupsModule,
@@ -32435,6 +38375,7 @@ exports.SchedulesModule = SchedulesModule = __decorate([
         exports: [
             schedules_service_1.SchedulesService,
             schedule_change_requests_module_1.ScheduleChangeRequestsModule,
+            schedule_change_responses_module_1.ScheduleChangeResponsesModule,
             schedule_generation_service_1.ScheduleGenerationProcessor,
             schedule_generation_service_1.ScheduleGenerationService,
         ],
@@ -32490,6 +38431,16 @@ let SchedulesService = class SchedulesService extends base_service_1.BaseService
         this.cutoffsService = cutoffsService;
         this.holidaysService = holidaysService;
         this.employeesService = employeesService;
+    }
+    async validateBefore(dto) {
+        // Validate that the employee exists
+        dto = await this.validateReferences(dto, [
+            {
+                field: 'employee',
+                service: this.employeesService,
+                required: true
+            }
+        ]);
     }
     async getEmployeeScheduleToday(employeeId) {
         return await this.schedulesRepository.findOne({
@@ -32606,6 +38557,10 @@ let SchedulesService = class SchedulesService extends base_service_1.BaseService
                     endTime: shiftDay.endTime || shift.defaultEndTime,
                     breakTime: shiftDay.breakTime || shift.defaultBreakTime,
                     duration: shiftDay.duration || shift.defaultDuration,
+                    organizationId: employee.organizationId,
+                    userId: employee.userId,
+                    departmentId: employee.departmentId,
+                    branchId: employee.branchId,
                 };
                 // If it's a holiday, associate it with the schedule
                 if (holiday) {
@@ -32769,8 +38724,8 @@ var DefaultShiftsSeeder_1;
 var _a, _b, _c;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.DefaultShiftsSeeder = void 0;
-const cutoff_status_enum_1 = __webpack_require__(/*! @/common/enums/cutoff-status.enum */ "./src/common/enums/cutoff-status.enum.ts");
 const day_enum_1 = __webpack_require__(/*! @/common/enums/day.enum */ "./src/common/enums/day.enum.ts");
+const cutoff_status_enum_1 = __webpack_require__(/*! @/common/enums/payroll/cutoff-status.enum */ "./src/common/enums/payroll/cutoff-status.enum.ts");
 const cutoffs_service_1 = __webpack_require__(/*! @/modules/payroll-management/cutoffs/cutoffs.service */ "./src/modules/payroll-management/cutoffs/cutoffs.service.ts");
 const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
 const groups_service_1 = __webpack_require__(/*! ../groups/groups.service */ "./src/modules/shift-management/groups/groups.service.ts");
@@ -33539,6 +39494,17 @@ module.exports = require("nodemailer");
 
 /***/ }),
 
+/***/ "passport-google-oauth20":
+/*!******************************************!*\
+  !*** external "passport-google-oauth20" ***!
+  \******************************************/
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("passport-google-oauth20");
+
+/***/ }),
+
 /***/ "passport-jwt":
 /*!*******************************!*\
   !*** external "passport-jwt" ***!
@@ -33569,6 +39535,17 @@ module.exports = require("pdfkit");
 
 "use strict";
 module.exports = require("pluralize");
+
+/***/ }),
+
+/***/ "prom-client":
+/*!******************************!*\
+  !*** external "prom-client" ***!
+  \******************************/
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("prom-client");
 
 /***/ }),
 

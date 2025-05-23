@@ -15,17 +15,16 @@ import { SchedulesService } from '@/modules/shift-management/schedules/schedules
 import { Injectable, Logger } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { differenceInMinutes, format, isAfter, isBefore, parseISO } from 'date-fns';
+import { AttendanceConfigurationsService } from '../attendance-configurations/attendance-configurations.service';
 import { Attendance } from '../entities/attendance.entity';
 import { DayType } from '../final-work-hours/entities/final-work-hour.entity';
 import { WorkHourCalculationService } from '../final-work-hours/services/work-hour-calculation.service';
+import { WorkTimeRequest } from '../work-time-requests/entities/work-time-request.entity';
 import { WorkTimeRequestsService } from '../work-time-requests/work-time-requests.service';
 
 @Injectable()
 export class AttendanceListener {
   private readonly logger = new Logger(AttendanceListener.name);
-  private readonly GRACE_PERIOD_MINUTES = 5; // Consider late after 5 minutes
-  private readonly OVER_TIME_THRESHOLD_MINUTES = 30; // Consider overtime if more than 30 minutes
-  private readonly UNDER_TIME_THRESHOLD_MINUTES = 0; // Consider under time if less than 30 minutes
 
   constructor(
     private readonly attendancesService: AttendancesService,
@@ -36,6 +35,7 @@ export class AttendanceListener {
     private readonly notificationsService: NotificationsService,
     private readonly workTimeRequestsService: WorkTimeRequestsService,
     private readonly workHourCalculationService: WorkHourCalculationService,
+    private readonly attendanceConfigurationsService: AttendanceConfigurationsService,
   ) {}
 
   @OnEvent(ATTENDANCE_EVENTS.ATTENDANCE_RECORDED)
@@ -71,6 +71,8 @@ export class AttendanceListener {
           this.logger.warn(`No employee found with biometric ID ${record.userId}`);
           continue;
         }
+
+        const config = await this.attendanceConfigurationsService.getOrganizationAttendanceConfiguration(employee.organizationId);
         
         const punchTime = new Date(record.timestamp);
         const punchDate = format(punchTime, 'yyyy-MM-dd');
@@ -175,9 +177,13 @@ export class AttendanceListener {
             employee: { id: employee.id },
             schedule: { id: todaySchedule.id },
             cutoff: { id: todaySchedule.cutoff.id },
+            date: todaySchedule.date,
             dayType,
-            createdBy: employee.user.id,
-          });
+            organizationId: employee.organizationId,
+            departmentId: employee.departmentId,
+            branchId: employee.branchId,
+            userId: employee.user.id,
+          }, employee.user.id);
         }
 
         // Determine check-in status based on middle time threshold
@@ -187,27 +193,109 @@ export class AttendanceListener {
           if (!existingAttendance.timeIn) {
             // log
             this.logger.log(`Employee ${employee.user.email} is checking in`);
-            attendanceStatuses.push(AttendanceStatus.CHECKED_IN);
+
             // Check if late
             if (isAfter(punchTime, shiftStartTime)) {
               const minutesLate = differenceInMinutes(punchTime, shiftStartTime);
-              if (minutesLate > this.GRACE_PERIOD_MINUTES) {
-                attendanceStatuses.push(AttendanceStatus.LATE);
-                this.logger.log(`Employee ${employee.user.email} is late by ${minutesLate} minutes`);
-                
-                // Create work time request for late arrival
-                await this.createWorkTimeRequest(dayType, employee.id, AttendanceStatus.LATE, existingAttendance, minutesLate);
-                
-                // Notify employee
-                await this.notificationsService.create({
-                  title: 'Late Check-in',
-                  message: `You are late by ${minutesLate} minutes on ${punchDate} at ${punchTimeStr}.`,
-                  type: NotificationType.WARNING,
-                  category: 'ATTENDANCE',
-                  user: { id: employee.user.id },
-                });
+              // log minutes late
+              this.logger.log(`Employee ${employee.user.email} is late by ${minutesLate} minutes`);
+              // Check if orgnaization does not allow late time
+              if (!config.allowLate) {
+                // Check if minutes late can be considered as late time
+                if (minutesLate > config.gracePeriodMinutes) {
+                  // Mark attendance as late time
+                  attendanceStatuses.push(AttendanceStatus.LATE);
+                  this.logger.log(`Employee ${employee.user.email} is late by ${minutesLate} minutes`);
+                  let roundedMinutes = minutesLate;
+
+                  // Check if organization rounds up late time
+                  if (config.roundUpLate) {
+                    roundedMinutes = Math.ceil(minutesLate / config.roundUpLateMinutes) * config.roundUpLateMinutes;
+                    this.logger.log(`Rounded late time to ${roundedMinutes} minutes`);
+                  }
+                  
+                  // Create work time request for late arrival
+                  await this.createWorkTimeRequest(dayType, employee.id, AttendanceStatus.LATE, existingAttendance, roundedMinutes);
+                  
+                  // Notify employee
+                  await this.notificationsService.create({
+                    title: 'Late Check-in',
+                    message: `You are late by ${minutesLate} minutes on ${punchDate} at ${punchTimeStr}.${config.roundUpLate ? ` This was rounded up to ${roundedMinutes} minutes.` : ''}`,
+                    type: NotificationType.WARNING,
+                    category: 'ATTENDANCE',
+                    user: { id: employee.user.id },
+                  });
+                }
+                else {
+                  this.logger.log('Minutes late is not considered as late time');
+                }
+              }
+              else 
+              {
+                this.logger.log('Organization allows late time');
               }
             }
+
+            else {
+              let minutesEarly = differenceInMinutes(shiftStartTime, punchTime);
+              // log minutes early
+              this.logger.log(`Employee ${employee.user.email} is early by ${minutesEarly} minutes`);
+              // Check organization allow early time
+              if (config.allowEarlyTime) 
+              {
+                this.logger.log('Organization allows early time');
+                // Check if minutes early can be considered as early time
+                if (minutesEarly > config.earlyTimeThresholdMinutes)
+                {
+                  // Mark attendance as early time
+                  this.logger.log(`Employee ${employee.user.email} is early by ${minutesEarly} minutes`);
+                  attendanceStatuses.push(AttendanceStatus.EARLY);
+                  attendanceStatuses.push(AttendanceStatus.CHECKED_IN);
+
+                  // Check if early time is management-requested
+                  const isManagementRequested = await this.checkForManagementRequested(
+                    employee.id, 
+                    punchDate,
+                    AttendanceStatus.EARLY
+                  );
+                  
+                  if (isManagementRequested) {
+                    this.logger.log(`Early time is management-requested`);
+                    let roundedMinutes = minutesEarly;
+                    
+                    // Check if organization rounds down early time
+                    if (config.roundDownEarlyTime) {
+                      // Round down early time by the organization's round down minutes
+                      roundedMinutes = Math.floor(minutesEarly / config.roundDownEarlyTimeMinutes) * config.roundDownEarlyTimeMinutes;
+                      this.logger.log(`Rounded early time from ${minutesEarly} to ${roundedMinutes} minutes`);
+                    }
+
+                    // Update management-requested work time request
+                    isManagementRequested.duration = roundedMinutes;
+                    isManagementRequested.dayType = dayType;
+                    isManagementRequested.attendance = existingAttendance;
+                    await this.workTimeRequestsService.save(isManagementRequested);
+                    
+                    // Notify employee
+                    await this.notificationsService.create({
+                      title: 'Early Time Check-in',
+                      message: `You checked in early by ${minutesEarly} minutes on ${punchDate} at ${punchTimeStr}.${config.roundDownEarlyTime ? ` This was rounded down to ${roundedMinutes} minutes.` : ''}`,
+                      type: NotificationType.INFO,
+                      category: 'ATTENDANCE',
+                      user: { id: employee.user.id },
+                    });
+                  }
+                }
+                else {
+                  this.logger.log('Time in is not considered as early time');
+                }
+              }
+            }
+
+            if (!existingAttendance.statuses?.includes(AttendanceStatus.CHECKED_IN)) {
+              attendanceStatuses.push(AttendanceStatus.CHECKED_IN);
+            }
+
             existingAttendance.timeIn = punchTime;
             existingAttendance.statuses = attendanceStatuses;
           }
@@ -240,14 +328,12 @@ export class AttendanceListener {
             });
           }
 
-          
-
           // Check if employee is undertime
           if (isBefore(punchTime, shiftEndTime)) {
             // log
             this.logger.log(`Employee ${employee.user.email} is leaving early on ${punchDate} at ${punchTimeStr}`);
             const minutesEarly = differenceInMinutes(shiftEndTime, punchTime);
-            if (minutesEarly > this.UNDER_TIME_THRESHOLD_MINUTES) {
+            if (!config.allowUnderTime && minutesEarly > config.underTimeThresholdMinutes) {
               if (!existingAttendance.statuses?.includes(AttendanceStatus.UNDER_TIME)) {
                 attendanceStatuses.push(AttendanceStatus.UNDER_TIME);
               }
@@ -265,13 +351,19 @@ export class AttendanceListener {
               //   category: 'ATTENDANCE',
               //   user: { id: employee.user.id },
               // });
+
+              // if (config.roundDownUnderTime) {
+              //   const roundedMinutes = Math.floor(minutesEarly / config.roundDownUnderTimeMinutes) * config.roundDownUnderTimeMinutes;
+              //   punchTime.setMinutes(punchTime.getMinutes() - roundedMinutes);
+              //   this.logger.log(`Rounded early time to ${roundedMinutes} minutes`);
+              // }
             }
 
           } else {
             // Check if employee is overtime
             attendanceStatuses = attendanceStatuses.filter(status => status !== AttendanceStatus.UNDER_TIME);
             const minutesOvertime = differenceInMinutes(punchTime, shiftEndTime);
-            if (minutesOvertime > this.OVER_TIME_THRESHOLD_MINUTES) {
+            if (config.allowOvertime && minutesOvertime > config.overtimeThresholdMinutes) {
               if (!existingAttendance.statuses?.includes(AttendanceStatus.OVERTIME)) {
                 attendanceStatuses.push(AttendanceStatus.OVERTIME);
               }
@@ -288,6 +380,11 @@ export class AttendanceListener {
               //   category: 'ATTENDANCE',
               //   user: { id: employee.user.id },
               // });
+              // if (config.roundUpOvertime) {
+              //   const roundedMinutes = Math.ceil(minutesOvertime / config.roundUpOvertimeMinutes) * config.roundUpOvertimeMinutes;
+              //   punchTime.setMinutes(punchTime.getMinutes() + roundedMinutes);
+              //   this.logger.log(`Rounded overtime time to ${roundedMinutes} minutes`);
+              // }
             }
           }
           
@@ -307,9 +404,12 @@ export class AttendanceListener {
           punchType: record.punchType,
           punchMethod: record.punchMethod,
           employeeNumber,
+          userId: employee.user.id,
+          organizationId: employee.organizationId,
+          departmentId: employee.departmentId,
+          branchId: employee.branchId,
           biometricDevice: { id: biometricDevice.id },
-          createdBy: employee.user.id,
-        });
+        }, employee.user.id,);
         
         this.logger.log(`Successfully processed ${record.punchMethod} punch for employee ${employee.user.email} at ${punchTimeStr} with status ${existingAttendance.statuses}`);
       } catch (error) {
@@ -349,7 +449,7 @@ export class AttendanceListener {
       where: { isProcessed: true, cutoff: { id: event.cutoffId } },
     });
 
-    const attendanceIds = attendances.map(attendance => attendance.id);
+    const attendanceIds = event.cutoffId ? attendances.map(attendance => attendance.id) : event.specificAttendanceIds || [];
 
     // Queue the attendances for final work hour calculation
     await this.workHourCalculationService.queueFinalWorkHoursCalculation(
@@ -368,6 +468,7 @@ export class AttendanceListener {
         type,
         duration,
         dayType,
+        date: attendance.date,
         status: RequestStatus.PENDING,
         createdBy: employeeId,
         employee: { id: employeeId },
@@ -375,6 +476,39 @@ export class AttendanceListener {
       this.logger.log(`Created work time request for employee ${employeeId} for type ${type}`);
     } catch (error: any) {
       this.logger.error(`Failed to create work time request: ${error.message}`);
+    }
+  }
+
+  /**
+   * Checks if there is an approved management request for a specific attendance type on a given date
+   * @param employeeId The employee ID
+   * @param date The date string in YYYY-MM-DD format
+   * @param type The attendance status type to check (EARLY or OVERTIME)
+   * @returns Boolean indicating if an approved management request exists
+   */
+  private async checkForManagementRequested(
+    employeeId: string, 
+    date: string, 
+    type: AttendanceStatus.EARLY | AttendanceStatus.OVERTIME
+  ): Promise<WorkTimeRequest | null> {
+    try {
+      // Check for an approved work time request that was management-requested for this date
+      const request = await this.workTimeRequestsService.findOneBy({
+        employee: new Employee({ id: employeeId }),
+        type,
+        managementRequested: true,
+        date: new Date(date),
+        status: RequestStatus.APPROVED,
+      });
+
+      if (request) {
+        this.logger.log(`Found approved management-requested ${type} for employee ${employeeId} on ${date}`);
+      }
+
+      return request;
+    } catch (error: any) {
+      this.logger.error(`Error checking for management-requested ${type}: ${error.message}`);
+      return null;
     }
   }
 }

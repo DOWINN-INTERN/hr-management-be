@@ -7,6 +7,7 @@ import { GroupsModule } from '../groups/groups.module';
 import { HolidaysModule } from '../holidays/holidays.module';
 import { Schedule } from './entities/schedule.entity';
 import { ScheduleChangeRequestsModule } from './schedule-change-requests/schedule-change-requests.module';
+import { ScheduleChangeResponsesModule } from './schedule-change-requests/schedule-change-responses/schedule-change-responses.module';
 import { SchedulesController } from './schedules.controller';
 import { SchedulesService } from './schedules.service';
 import { ScheduleGenerationProcessor, ScheduleGenerationService } from './services/schedule-generation.service';
@@ -18,6 +19,7 @@ import { ScheduleGenerationProcessor, ScheduleGenerationService } from './servic
             name: 'schedule-generation',
         }),
         ScheduleChangeRequestsModule,
+        ScheduleChangeResponsesModule,
         CutoffsModule,
         EmployeeManagementModule,
         GroupsModule,
@@ -27,6 +29,7 @@ import { ScheduleGenerationProcessor, ScheduleGenerationService } from './servic
     exports: [
         SchedulesService,
         ScheduleChangeRequestsModule,
+        ScheduleChangeResponsesModule,
         ScheduleGenerationProcessor,
         ScheduleGenerationService,
     ],

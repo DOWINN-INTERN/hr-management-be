@@ -23,8 +23,8 @@ export class EmployeePayrollItemType extends BaseEntity<EmployeePayrollItemType>
     @Column({ default: true })
     isActive!: boolean;
 
-    @Column({ default: false })
-    exempted!: boolean;
+    @Column({ default: true })
+    isApplicable!: boolean;
 
     @Column('decimal', { 
         precision: 15, 
@@ -38,25 +38,15 @@ export class EmployeePayrollItemType extends BaseEntity<EmployeePayrollItemType>
         scale: 2,
         nullable: true
     })
-    accrualAmount?: number;
-
-    @Column({ nullable: true})
-    accrualCount?: number;
-
-    @Column('decimal', { 
-        precision: 15, 
-        scale: 2,
-        nullable: true
-    })
     percentage?: number;
 
-    @Column('decimal', {
-        precision: 15,
-        scale: 2,
-        nullable: true
-    })
-    fee?: number;
+    // @Column('decimal', {
+    //     precision: 15,
+    //     scale: 2,
+    //     nullable: true
+    // })
+    // fee?: number;
 
-    @Column({ nullable: true })
-    term?: string;
+    // @Column({ nullable: true })
+    // term?: string;
 }

@@ -10,12 +10,14 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { InjectRepository } from '@nestjs/typeorm';
 import { differenceInMinutes, endOfDay, format, startOfDay } from 'date-fns';
-import { Between, LessThan, Repository } from 'typeorm';
+import { Between, DeepPartial, LessThan, Repository } from 'typeorm';
 import { EmployeesService } from '../employee-management/employees.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { SchedulesService } from '../shift-management/schedules/schedules.service';
+import { AttendanceConfigurationsService } from './attendance-configurations/attendance-configurations.service';
 import { Attendance } from './entities/attendance.entity';
 import { DayType } from './final-work-hours/entities/final-work-hour.entity';
+import { AttendancesGateway } from './gateways/attendances.gateway';
 import { WorkTimeRequest } from './work-time-requests/entities/work-time-request.entity';
 import { WorkTimeRequestsService } from './work-time-requests/work-time-requests.service';
 
@@ -30,8 +32,25 @@ export class AttendancesService extends BaseService<Attendance> {
         private readonly employeesService: EmployeesService,
         private readonly schedulesService: SchedulesService,
         private readonly eventEmitter: EventEmitter2,
+        private readonly attendancesGateway: AttendancesGateway,
+        private readonly attendanceConfigurationsService: AttendanceConfigurationsService,
     ) {
         super(attendancesRepository, usersService);
+    }
+
+    override async create(createDto: DeepPartial<Attendance>, createdBy?: string): Promise<Attendance> {
+        await this.attendancesGateway.pingAll();
+        return await super.create(createDto, createdBy);
+    }
+
+    override async update(id: string, updateDto: DeepPartial<Attendance>, updatedBy?: string): Promise<Attendance> {
+        await this.attendancesGateway.pingAll();
+        return await super.update(id, updateDto, updatedBy);
+    }
+
+    override async save(entity: Attendance): Promise<Attendance> {
+        await this.attendancesGateway.pingAll();
+        return await super.save(entity);
     }
 
     getEmployeeAttendanceToday(employeeId: string, punchTime: Date) {
@@ -123,14 +142,22 @@ export class AttendancesService extends BaseService<Attendance> {
             try {
                 this.logger.log(`Processing under time for employee ${attendance.employee.user.email}`);
 
+                // get organization config
+                const config = await this.attendanceConfigurationsService.getOrganizationAttendanceConfiguration(attendance.employee.organizationId);
+
                 const formattedAttendanceDate = format(attendance.schedule.date, 'yyyy-MM-dd');
 
                 // Calculate total undertime minutes
                 const scheduleEndTime = new Date(`${formattedAttendanceDate}T${attendance.schedule.endTime}`);
                 const timeOut = attendance.timeOut ? new Date(attendance.timeOut) : new Date(attendance.schedule.endTime);
 
-                // Calculate undertime (when employee leaves before scheduled end time)
-                let undertimeMinutes = Math.floor((scheduleEndTime.getTime() - timeOut.getTime()) / (1000 * 60));
+                // Calculate under time (when employee leaves before scheduled end time)
+                let underTimeMinutes = (scheduleEndTime.getTime() - timeOut.getTime()) / (1000 * 60);
+
+                // Check if organization rounds down under time
+                if (config.roundDownUnderTime) {
+                    underTimeMinutes = Math.floor(underTimeMinutes / config.roundDownUnderTimeMinutes) * config.roundDownUnderTimeMinutes;
+                }
 
                 // Check if there is already worktime request for undertime
                 const existingRequest = await this.workTimeRequestsService.findOneBy({
@@ -145,7 +172,7 @@ export class AttendancesService extends BaseService<Attendance> {
                     const workTimeRequest = new WorkTimeRequest({
                         attendance: attendance,
                         type: AttendanceStatus.UNDER_TIME,
-                        duration: undertimeMinutes,
+                        duration: underTimeMinutes,
                         status: RequestStatus.PENDING,
                         cutoff: attendance.cutoff,
                         dayType: attendance.dayType,
@@ -157,7 +184,7 @@ export class AttendancesService extends BaseService<Attendance> {
     
                     await this.notificationsService.create({
                         title: 'Early Check-out',
-                        message: `You left ${undertimeMinutes} minutes early on ${formattedAttendanceDate}.`,
+                        message: `You left ${underTimeMinutes} minutes early on ${formattedAttendanceDate}.`,
                         type: NotificationType.WARNING,
                         category: 'ATTENDANCE',
                         user: { id: attendance.employee.user.id },
@@ -172,6 +199,7 @@ export class AttendancesService extends BaseService<Attendance> {
     }
 
     async handleOverTimeEmployees(attendances: Attendance[]) {
+
         // filter attendances for over time
         const overTimeAttendances = attendances.filter(attendance => {
             return attendance.statuses?.includes(AttendanceStatus.OVERTIME) === true;

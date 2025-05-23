@@ -534,7 +534,7 @@ export class PayrollsService extends BaseService<Payroll> {
 
         // Skip if not applicable for this employee
         // Only process required items or items that have employee-specific configuration
-        if (!employeeItemConfig || employeeItemConfig.exempted || (itemType.processEvery && cutoff.cutoffPlace !== itemType.processEvery)) {
+        if (!employeeItemConfig || employeeItemConfig.isApplicable|| (itemType.processEvery && cutoff.cutoffPlace !== itemType.processEvery)) {
           continue;
         }
         
@@ -999,9 +999,9 @@ export class PayrollsService extends BaseService<Payroll> {
         },
         governmentMandated: {
           sss: payroll.sssContribution.employee,
-          philhealth: payroll.philHealthContribution.employee,
-          pagibig: payroll.pagIbigContribution.employee,
-          withholdingtax: payroll.withholdingTax
+          philHealth: payroll.philHealthContribution.employee,
+          pagIbig: payroll.pagIbigContribution.employee,
+          withholdingTax: payroll.withholdingTax
         },
         others: itemsByCategory[PayrollItemCategory.DEDUCTION]?.filter((item: PayrollItemType) => item.governmentMandatedType) || []
       },

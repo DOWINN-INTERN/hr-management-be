@@ -6,15 +6,15 @@ import { createGetDto } from "@/common/factories/create-get-dto.factory";
 import { ApiProperty, ApiPropertyOptional, PartialType } from "@nestjs/swagger";
 import { Type } from "class-transformer";
 import {
-    IsBoolean,
-    IsDateString,
-    IsEnum,
-    IsNotEmpty,
-    IsNumber,
-    IsOptional,
-    IsString,
-    Min,
-    ValidateNested
+  IsBoolean,
+  IsDateString,
+  IsEnum,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsString,
+  Min,
+  ValidateNested
 } from "class-validator";
 
 export class ScheduleDto extends PartialType(BaseDto) {
@@ -35,6 +35,14 @@ export class ScheduleDto extends PartialType(BaseDto) {
     @IsOptional()
     @IsString()
     notes?: string;
+
+    @ApiPropertyOptional({ 
+      description: 'Color of the schedule', 
+      example: '#000000'
+    })
+    @IsOptional()
+    @IsString()
+    color?: string;
     
     @ApiPropertyOptional({ 
       description: 'Indicates if this is a rest day', 
@@ -74,16 +82,28 @@ export class ScheduleDto extends PartialType(BaseDto) {
     breakTime?: number;
     
     @ApiPropertyOptional({ 
-      description: 'Duration in hours',
-      example: 8,
-      minimum: 0
+      description: 'Employee owns this schedule',
+      type: ReferenceDto
     })
     @IsOptional()
-    @IsNumber()
-    @Min(0)
-    duration?: number;
-    
-    @ApiPropertyOptional({ 
+    @ValidateNested()
+    @Type(() => ReferenceDto)
+    employee?: ReferenceDto;
+}
+
+export class UpdateScheduleDto extends PartialType(ScheduleDto) {}
+
+export class GetScheduleDto extends createGetDto(UpdateScheduleDto, 'schedule') {
+      @ApiPropertyOptional({ 
+      description: 'Cutoff this schedule belongs to',
+      type: ReferenceDto
+    })
+    @IsOptional()
+    @ValidateNested()
+    @Type(() => ReferenceDto)
+    cutoff?: ReferenceDto;
+
+        @ApiPropertyOptional({ 
       description: 'Shift this schedule is based',
       type: ReferenceDto
     })
@@ -91,7 +111,8 @@ export class ScheduleDto extends PartialType(BaseDto) {
     @ValidateNested()
     @Type(() => ReferenceDto)
     shift?: ReferenceDto;
-    
+
+  // This should be a full object of holiday
     @ApiPropertyOptional({ 
       description: 'Associated holiday reference',
       type: ReferenceDto
@@ -100,31 +121,7 @@ export class ScheduleDto extends PartialType(BaseDto) {
     @ValidateNested()
     @Type(() => ReferenceDto)
     holiday?: ReferenceDto;
-    
-    @ApiPropertyOptional({ 
-      description: 'Employee owns this schedule',
-      type: ReferenceDto
-    })
-    @IsOptional()
-    @ValidateNested()
-    @Type(() => ReferenceDto)
-    employee?: ReferenceDto;
-    
-    @ApiPropertyOptional({ 
-      description: 'Cutoff this schedule belongs to',
-      type: ReferenceDto
-    })
-    @IsOptional()
-    @ValidateNested()
-    @Type(() => ReferenceDto)
-    cutoff?: ReferenceDto;
-}
 
-export class CreateScheduleDto extends ScheduleDto {}
-
-export class UpdateScheduleDto extends PartialType(ScheduleDto) {}
-
-export class GetScheduleDto extends createGetDto(UpdateScheduleDto, 'schedule') {
     @ApiPropertyOptional({ 
         description: 'Status of the schedule', 
         enum: ScheduleStatus, 
@@ -134,6 +131,16 @@ export class GetScheduleDto extends createGetDto(UpdateScheduleDto, 'schedule') 
     @IsOptional()
     @IsEnum(ScheduleStatus)
     status?: ScheduleStatus;
+
+    @ApiPropertyOptional({ 
+      description: 'Duration in hours',
+      example: 8,
+      minimum: 0
+    })
+    @IsOptional()
+    @IsNumber()
+    @Min(0)
+    duration?: number;
 
     @ApiPropertyOptional({
         description: 'Attendance for this schedule',

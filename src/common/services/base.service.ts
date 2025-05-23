@@ -584,10 +584,23 @@ export abstract class BaseService<T extends BaseEntity<T>> {
           console.log(`Applied TypeORM equals: ${alias}.${field} = '${valueObj._value}'`);
           break;
         case 'not':
-          queryBuilder.andWhere(`${alias}.${field} != :${paramName}`, { 
-            [paramName]: valueObj._value 
-          });
-          console.log(`Applied TypeORM not equals: ${alias}.${field} != '${valueObj._value}'`);
+          if (valueObj._value === null) {
+            queryBuilder.andWhere(`${alias}.${field} IS NOT NULL`);
+            console.log(`Applied TypeORM not equals for NULL: ${alias}.${field} IS NOT NULL`);
+          }
+          else if (valueObj._value._type === 'in') 
+          {
+            queryBuilder.andWhere(`${alias}.${field} NOT IN (:...${paramName})`, { 
+              [paramName]: valueObj._value._value 
+            });
+            console.log(`Applied TypeORM not equals IN: ${alias}.${field} NOT IN (${valueObj._value._value.join(', ')})`);
+          }
+          else {
+            queryBuilder.andWhere(`${alias}.${field} != :${paramName} OR ${alias}.${field} IS NULL`, { 
+              [paramName]: valueObj._value 
+            });
+            console.log(`Applied TypeORM not equals with NULL check: ${alias}.${field} != '${valueObj._value}' OR ${alias}.${field} IS NULL`);
+          }
           break;
         case 'gt':
           queryBuilder.andWhere(`${alias}.${field} > :${paramName}`, { 
@@ -619,6 +632,14 @@ export abstract class BaseService<T extends BaseEntity<T>> {
               [paramName]: valueObj._value 
             });
             console.log(`Applied TypeORM IN: ${alias}.${field} IN (${valueObj._value.join(', ')})`);
+          }
+          break;
+        case 'nin':
+          if (Array.isArray(valueObj._value)) {
+            queryBuilder.andWhere(`${alias}.${field} NOT IN (:...${paramName})`, { 
+              [paramName]: valueObj._value 
+            });
+            console.log(`Applied TypeORM NOT IN: ${alias}.${field} NOT IN (${valueObj._value.join(', ')})`);
           }
           break;
         case 'any':
@@ -694,6 +715,11 @@ export abstract class BaseService<T extends BaseEntity<T>> {
         const paramName = `${paramBaseName}_in`;
         queryBuilder.andWhere(`${alias}.${field} IN (:...${paramName})`, { [paramName]: valueObj.in });
         console.log(`Applied custom IN: ${alias}.${field} IN (${valueObj.in.join(', ')})`);
+      }
+      else if ('nin' in valueObj && Array.isArray(valueObj.notIn)) {
+        const paramName = `${paramBaseName}_notIn`;
+        queryBuilder.andWhere(`${alias}.${field} NOT IN (:...${paramName})`, { [paramName]: valueObj.notIn });
+        console.log(`Applied custom NOT IN: ${alias}.${field} NOT IN (${valueObj.notIn.join(', ')})`);
       } else if ('between' in valueObj && Array.isArray(valueObj.between) && valueObj.between.length === 2) {
         const paramMinName = `${paramBaseName}_between_min`;
         const paramMaxName = `${paramBaseName}_between_max`;

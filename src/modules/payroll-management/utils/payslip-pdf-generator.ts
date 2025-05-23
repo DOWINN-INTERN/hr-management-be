@@ -1,5 +1,3 @@
-import fs from 'fs';
-import path from 'path';
 import PDFDocument from 'pdfkit';
 
 export async function generatePayslipPdf(payslipData: any): Promise<Buffer> {
@@ -71,72 +69,74 @@ export async function generatePayslipPdf(payslipData: any): Promise<Buffer> {
             };
             
             // Try to load company logo if it exists (adapt path as needed)
-            try {
-                const logoPath = path.resolve(process.cwd(), 'assets/company_logo.png');
-                if (fs.existsSync(logoPath)) {
-                    doc.image(logoPath, 50, 45, { width: 100 });
-                }
-            } catch (err) {
-                // Logo loading failed - continue without it
-                console.log('Company logo not found, continuing without it');
-            }
+            // try {
+            //     const logoPath = path.resolve(process.cwd(), 'assets/company_logo.png');
+            //     if (fs.existsSync(logoPath)) {
+            //         doc.image(logoPath, 50, 45, { width: 100 });
+            //     }
+            // } catch (err) {
+            //     // Logo loading failed - continue without it
+            //     console.log('Company logo not found, continuing without it');
+            // }
 
             const employee = payslipData.employee;
             // Document Header with Company Information
-            doc.font(styles.title.font)
-                 .fontSize(styles.title.fontSize)
-                 .fillColor(styles.title.color)
-                 .text(String(employee.organization).toUpperCase(), { align: 'center' });
+            // doc.font(styles.title.font)
+            //      .fontSize(styles.title.fontSize)
+            //      .fillColor(styles.title.color)
+            //      .text(String(employee.organization).toUpperCase(), { align: 'center' });
             
-            doc.font(styles.small.font)
-                 .fontSize(styles.small.fontSize)
-                 .fillColor(styles.small.color)
-                 .text('123 Corporate Plaza, Business District', { align: 'center' })
-                 .text('City, State, ZIP | Phone: (123) 456-7890', { align: 'center' })
-                 .text('Email: hr@companyname.com | Web: www.companyname.com', { align: 'center' });
+            // doc.font(styles.small.font)
+            //      .fontSize(styles.small.fontSize)
+            //      .fillColor(styles.small.color)
+            //      .text('123 Corporate Plaza, Business District', { align: 'center' })
+            //      .text('City, State, ZIP | Phone: (123) 456-7890', { align: 'center' })
+            //      .text('Email: hr@companyname.com | Web: www.companyname.com', { align: 'center' });
+
+            const startY = 50;
 
             // Payslip Title Banner
-            drawFilledRect(doc, 50, 130, doc.page.width - 100, 30, '#f1f1f1');
+            drawFilledRect(doc, margin, startY, doc.page.width - 100, 30, '#f1f1f1');
             doc.font(styles.title.font)
                  .fontSize(styles.title.fontSize)
                  .fillColor(styles.title.color)
-                 .text('EMPLOYEE PAYSLIP', 50, 139, { align: 'center' });
+                 .text('EMPLOYEE PAYSLIP', margin, startY + 9, { align: 'center' });
             
             // Employee and Payroll Information Section
-            const startY = 180;
-            drawOutlinedRect(doc, 50, startY, doc.page.width - 100, 110);
+            const employeeInfoY = startY + 40;
+            drawOutlinedRect(doc, 50, employeeInfoY, doc.page.width - 100, 120);
             
             // Left column - Employee Info
             doc.font(styles.header.font)
                  .fontSize(styles.header.fontSize)
                  .fillColor(styles.header.color)
-                 .text('EMPLOYEE INFORMATION', 60, startY + 10);
+                 .text('EMPLOYEE INFORMATION', 60, employeeInfoY + 10);
             
             doc.font(styles.normal.font)
                  .fontSize(styles.normal.fontSize)
                  .fillColor(styles.normal.color)
-                 .text(`Employee #: ${employee.employeeNumber}`, 60, startY + 30)
-                 .text(`Name: ${employee.name}`, 60, startY + 45)
-                 .text(`Position: ${employee.position}`, 60, startY + 60)
-                 .text(`Department: ${employee.department}`, 60, startY + 75)
-                 .text(`Branch: ${employee.branch}`, 60, startY + 90)
+                 .text(`Employee #: ${employee.employeeNumber}`, 60, employeeInfoY + 30)
+                 .text(`Name: ${employee.name}`, 60, employeeInfoY + 45)
+                 .text(`Position: ${employee.position}`, 60, employeeInfoY + 60)
+                 .text(`Department: ${employee.department}`, 60, employeeInfoY + 75)
+                 .text(`Branch: ${employee.branch}`, 60, employeeInfoY + 90)
+                 .text(`Organization: ${employee.organization}`, 60, employeeInfoY + 105)
             
             // Right column - Payroll Info
             doc.font(styles.header.font)
                  .fontSize(styles.header.fontSize)
                  .fillColor(styles.header.color)
-                 .text('PAYROLL INFORMATION', 350, startY + 10);
+                 .text('PAYROLL INFORMATION', 350, employeeInfoY + 10);
             
             doc.font(styles.normal.font)
                  .fontSize(styles.normal.fontSize)
                  .fillColor(styles.normal.color)
-                 .text(`Cutoff Period: ${payslipData.cutoffPeriod}`, 350, startY + 30)
-                 .text(`Pay Date: ${payslipData.payrollDate}`, 350, startY + 45)
-                 .text(`Payroll #: ${payslipData.payrollReferenceNumber || 'N/A'}`, 350, startY + 60)
-                 .text(`Employee ID: ${employee.employeeNumber}`, 350, startY + 90);
+                 .text(`Cutoff Period: ${payslipData.cutoffPeriod}`, 350, employeeInfoY + 30)
+                 .text(`Pay Date: ${payslipData.payrollDate}`, 350, employeeInfoY + 45)
+                 .text(`Payroll #: ${payslipData.payrollReferenceNumber || 'N/A'}`, 350, employeeInfoY + 60)
 
             // Rates section
-            const ratesY = startY + 130;
+            const ratesY = employeeInfoY + 130;
             drawFilledRect(doc, 50, ratesY, doc.page.width - 100, 25, '#f1f1f1');
             doc.font(styles.subheader.font)
                  .fontSize(styles.subheader.fontSize)
@@ -186,7 +186,7 @@ export async function generatePayslipPdf(payslipData: any): Promise<Buffer> {
                 regularEarnings.map(e => [e.description, Number(e.hours).toFixed(2), formatCurrency(e.amount)]),
                 [50, currentY, colWidth],
                 styles,
-                [0.4, 0.2, 0.4]
+                [0.45, 0.2, 0.35]
             );
             
             // Add adjustments if any
@@ -282,7 +282,7 @@ export async function generatePayslipPdf(payslipData: any): Promise<Buffer> {
                  .text('DEDUCTIONS', deductionsX + 10, columnsStartY + 8);
             
             // Draw deductions
-            let deductionsY = columnsStartY + 35;
+            let deductionsY = columnsStartY + 30;
             const deductions = payslipData.deductions;
 
             // Basic deductions if any
@@ -302,7 +302,7 @@ export async function generatePayslipPdf(payslipData: any): Promise<Buffer> {
                     doc.font(styles.header.font)
                             .fontSize(styles.header.fontSize)
                             .fillColor(styles.header.color)
-                            .text('Attendance Deductions', deductionsX + 10, deductionsY - 10);
+                            .text('Attendance Deductions', deductionsX + 10, deductionsY - 6);
                     
                     deductionsY += 10;
                     deductionsY = drawTable(
@@ -330,9 +330,9 @@ export async function generatePayslipPdf(payslipData: any): Promise<Buffer> {
             // Government mandated deductions
             const governmentDeductions = [
                 { description: 'SSS Contribution', amount: deductions.governmentMandated.sss || 0 },
-                { description: 'PhilHealth', amount: deductions.governmentMandated.philhealth || 0 },
-                { description: 'Pag-IBIG', amount: deductions.governmentMandated.pagibig || 0 },
-                { description: 'Withholding Tax', amount: deductions.governmentMandated.withholdingtax || 0 }
+                { description: 'PhilHealth', amount: deductions.governmentMandated.philHealth || 0 },
+                { description: 'Pag-IBIG', amount: deductions.governmentMandated.pagIbig || 0 },
+                { description: 'Withholding Tax', amount: deductions.governmentMandated.withholdingTax || 0 }
             ].filter(item => (item.amount || 0) > 0);
             
             deductionsY = drawTable(
@@ -372,55 +372,345 @@ export async function generatePayslipPdf(payslipData: any): Promise<Buffer> {
             doc.text(formatCurrency(payslipData.totals.totalDeductions), deductionsX + colWidth - 100, deductionsY, { width: 90, align: 'right' });
 
             // Summary Section - Net Pay
-            const summaryY = Math.max(currentY, deductionsY) + 30;
+            const summaryY = Math.max(currentY, deductionsY) + 20;
             drawFilledRect(doc, 50, summaryY, doc.page.width - 100, 25, '#e6e6e6');
             doc.font(styles.subheader.font)
                  .fontSize(styles.subheader.fontSize)
                  .fillColor(styles.subheader.color)
                  .text('PAYMENT SUMMARY', 50, summaryY + 8, { align: 'center' });
             
-            const summaryDetailY = summaryY + 35;
+            const summaryDetailY = summaryY + 25;
 
-            const netPayBoxY = summaryDetailY + 90;
-            drawOutlinedRect(doc, 150, netPayBoxY, doc.page.width - 300, 60, 2);
+            const netPayBoxY = summaryDetailY;
             
             doc.font(styles.header.font)
                  .fontSize(14)
                  .fillColor('#000')
-                 .text('NET PAY', 0, netPayBoxY + 15, { align: 'center' });
+                 .text('NET PAY', 50, netPayBoxY + 15, { align: 'center' });
             
             doc.font('Helvetica-Bold')
                  .fontSize(18)
                  .fillColor('#000')
-                 .text(formatCurrency(payslipData.totals.netPay), 0, netPayBoxY + 35, { align: 'center' });
+                 .text(formatCurrency(payslipData.totals.netPay), 50, netPayBoxY + 35, { align: 'center' });
 
             // Footer
-            const footerY = doc.page.height - 50;
-            drawFilledRect(doc, 50, footerY - 20, doc.page.width - 100, 1, '#cccccc');
+            const footerY = netPayBoxY + 60;
+            drawFilledRect(doc, 50, footerY, doc.page.width - 100, 1, '#cccccc');
             
             doc.font(styles.small.font)
                  .fontSize(styles.small.fontSize)
                  .fillColor(styles.small.color)
-                 .text('This is a computer-generated document. No signature is required.', 0, footerY, { align: 'center' })
-                 .text(`Generated on: ${new Date().toLocaleString()}`, 0, footerY + 15, { align: 'center' });
+                 .text('This is a computer-generated document. No signature is required.', 50, footerY + 10, { align: 'center' })
+                 .text(`Generated on: ${new Date().toLocaleString()}`, 50, footerY + 20, { align: 'center' });
 
-            // Add page numbers
-            const pageCount = doc.bufferedPageRange().count;
-            for (let i = 0; i < pageCount; i++) {
-                doc.switchToPage(i);
-                doc.font(styles.small.font)
-                     .fontSize(styles.small.fontSize)
-                     .text(
-                         `Page ${i + 1} of ${pageCount}`,
-                         50,
-                         doc.page.height - 50,
-                         { align: 'right', width: doc.page.width - 100 }
-                     );
-            }
+            // // Add page numbers
+            // const pageCount = doc.bufferedPageRange().count;
+            // for (let i = 0; i < pageCount; i++) {
+            //     doc.switchToPage(i);
+            //     doc.font(styles.small.font)
+            //          .fontSize(styles.small.fontSize)
+            //          .text(
+            //              `Page ${i + 1} of ${pageCount}`,
+            //              50,
+            //              doc.page.height - 50,
+            //              { align: 'right', width: doc.page.width - 100 }
+            //          );
+            // }
 
             doc.end();
         } catch (error) {
             console.error('Error generating PDF:', error);
+            reject(error);
+        }
+    });
+}
+
+export async function generateMiniPayslipPdf(payslipData: any): Promise<Buffer> {
+    return new Promise<Buffer>((resolve, reject) => {
+        try {
+            // Normalize payslip data with defaults
+            payslipData = {
+                employee: payslipData.employee || {},
+                compensation: payslipData.compensation || {},
+                deductions: payslipData.deductions || {},
+                rates: payslipData.rates || {},
+                totals: payslipData.totals || {},
+                allowances: payslipData.allowances || [],
+                ...payslipData
+            };
+            
+            // Ensure nested objects within deductions exist
+            payslipData.deductions.governmentMandated = payslipData.deductions.governmentMandated || {};
+            payslipData.deductions.basic = payslipData.deductions.basic || {};
+            payslipData.deductions.others = payslipData.deductions.others || [];
+
+            const buffers: Buffer[] = [];
+            
+            // Create mini payslip - similar to the image
+            const miniWidth = 280;
+            const miniHeight = 500; // Taller to fit all items
+            
+            const doc = new PDFDocument({ 
+                margin: 10,
+                size: [miniWidth, miniHeight],
+                bufferPages: true
+            });
+            
+            // Collect PDF data chunks
+            doc.on('data', buffers.push.bind(buffers));
+            doc.on('end', () => {
+                resolve(Buffer.concat(buffers));
+            });
+
+            const margin = 15;
+            const x = margin;
+            let y = margin;
+            const availableWidth = miniWidth - (2 * margin);
+            
+            // Compact styling
+            const styles = {
+                title: { fontSize: 9, font: 'Helvetica-Bold', color: '#000000' },
+                header: { fontSize: 8, font: 'Helvetica-Bold', color: '#000000' },
+                normal: { fontSize: 8, font: 'Helvetica', color: '#000000' },
+                small: { fontSize: 6, font: 'Helvetica', color: '#666666' }
+            };
+
+            // Company header (if needed)
+            if (payslipData.employee?.organization) {
+                doc.font(styles.title.font)
+                   .fontSize(styles.title.fontSize)
+                   .text(String(payslipData.employee.organization).toUpperCase(), x, y, { align: 'center' });
+                y += 15;
+            }
+            
+            // Period information
+            if (payslipData.cutoffPeriod) {
+                doc.font(styles.normal.font)
+                   .fontSize(styles.normal.fontSize)
+                   .text(`Pay Period: ${payslipData.cutoffPeriod}`, x, y);
+                y += 10;
+            }
+            
+            if (payslipData.payrollDate) {
+                doc.font(styles.normal.font)
+                   .fontSize(styles.normal.fontSize)
+                   .text(`Pay Date: ${payslipData.payrollDate}`, x, y);
+                y += 15;
+            }
+            
+            // Employee information
+            const employee = payslipData.employee;
+            if (employee) {
+                doc.font(styles.normal.font)
+                   .fontSize(styles.normal.fontSize);
+                   
+                if (employee.name) {
+                    doc.text(`Employee: ${employee.name}`, x, y);
+                    y += 10;
+                }
+                
+                if (employee.position) {
+                    doc.text(`Position: ${employee.position}`, x, y);
+                    y += 10;
+                }
+                
+                if (employee.department) {
+                    doc.text(`Department: ${employee.department}`, x, y);
+                    y += 15;
+                }
+            }
+
+            // Rate information
+            doc.font(styles.header.font)
+               .fontSize(styles.header.fontSize);
+            
+            if (payslipData.rates.monthly) {
+                doc.text('MONTHLY RATE:', x, y);
+                doc.text(formatCurrency(payslipData.rates.monthly).replace('PHP ', ''), availableWidth + x - 70, y, { align: 'right' });
+                y += 10;
+            }
+            
+            if (payslipData.rates.daily) {
+                doc.text('DAILY RATE:', x, y);
+                doc.text(formatCurrency(payslipData.rates.daily).replace('PHP ', ''), availableWidth + x - 70, y, { align: 'right' });
+                y += 15;
+            }
+
+            // Earnings section
+            doc.font(styles.header.font)
+               .fontSize(styles.header.fontSize)
+               .text('BASIC PAY', x, y);
+            y += 10;
+               
+            // Add earnings items
+            doc.font(styles.normal.font)
+               .fontSize(styles.normal.fontSize);
+            
+            const earnings = payslipData.compensation;
+            if (earnings.basicPay) {
+                doc.text('ADD:', x, y);
+                y += 10;
+            }
+            
+            const earningsItems = [
+                { name: 'REGULAR OVERTIME', amount: earnings.overtimePay },
+                { name: 'REST DAY', amount: earnings.restDayPay },
+                { name: 'REST DAY OVERTIME', amount: earnings.restDayOvertimePay },
+                { name: 'HOLIDAY PAY', amount: earnings.holidayPay },
+                { name: '13TH MONTH', amount: earnings.thirteenthMonthPay },
+                { name: 'SPECIAL HOLIDAY PAY', amount: earnings.specialHolidayPay },
+                { name: 'SPECIAL HOLIDAY OVERTIME', amount: earnings.specialHolidayOvertimePay },
+                { name: 'NIGHT DIFFERENTIAL', amount: earnings.nightDifferentialPay }
+            ];
+
+            // Add adjustments as "PAYROLL ADJUSTMENT" if any
+            if (earnings.adjustments && earnings.adjustments.length > 0) {
+                const adjustmentTotal = earnings.adjustments.reduce((sum: number, adj: any) => sum + (adj.amount || 0), 0);
+                earningsItems.push({ name: 'PAYROLL ADJUSTMENT', amount: adjustmentTotal });
+            }
+            
+            // Add tip if applicable
+            if (earnings.tip) {
+                earningsItems.push({ name: 'TIP', amount: earnings.tip });
+            }
+            
+            // Display attendance deductions as a negative earning under "ABSENCES/UNDERTIME/TARDINESS"
+            if (payslipData.deductions.basic && 
+                (payslipData.deductions.basic.absences || 
+                 payslipData.deductions.basic.tardiness || 
+                 payslipData.deductions.basic.undertime)) {
+                const attendanceDeductions = (payslipData.deductions.basic.absences || 0) + 
+                                             (payslipData.deductions.basic.tardiness || 0) + 
+                                             (payslipData.deductions.basic.undertime || 0);
+                if (attendanceDeductions > 0) {
+                    earningsItems.push({ name: 'ABSENCES/UNDERTIME/TARDINESS', amount: -attendanceDeductions });
+                }
+            }
+            
+            // Print earnings items
+            earningsItems.forEach(item => {
+                if (item.amount) {
+                    doc.text(item.name, x + 10, y);
+                    if (item.amount < 0) {
+                        // For negative amounts (like deductions), use parentheses
+                        doc.text(`(${formatCurrency(Math.abs(item.amount)).replace('PHP ', '')})`, availableWidth + x - 70, y, { align: 'right' });
+                    } else {
+                        doc.text(formatCurrency(item.amount).replace('PHP ', ''), availableWidth + x - 70, y, { align: 'right' });
+                    }
+                    y += 10;
+                }
+            });
+
+            // Gross pay
+            doc.font(styles.header.font)
+               .fontSize(styles.header.fontSize);
+            
+            y += 5;
+            doc.text('GROSS PAY', x, y);
+            doc.text(formatCurrency(payslipData.totals.grossPay).replace('PHP ', ''), availableWidth + x - 70, y, { align: 'right' });
+            y += 15;
+
+            // Deductions section
+            doc.font(styles.header.font)
+               .fontSize(styles.header.fontSize)
+               .text('LESS:', x, y);
+            y += 10;
+            
+            doc.font(styles.normal.font)
+               .fontSize(styles.normal.fontSize);
+            
+            // Government mandated deductions
+            const deductionItems = [
+                { name: 'WITHHOLDING TAX', amount: payslipData.deductions.governmentMandated.withholdingTax },
+                { name: 'SSS PREMIUM', amount: payslipData.deductions.governmentMandated.sss },
+                { name: 'PHIL. HEALTH', amount: payslipData.deductions.governmentMandated.philHealth },
+                { name: 'PAG-IBIG', amount: payslipData.deductions.governmentMandated.pagIbig }
+            ];
+
+            // Add other deductions
+            if (payslipData.deductions.others && payslipData.deductions.others.length > 0) {
+                payslipData.deductions.others.forEach((deduction: any) => {
+                    deductionItems.push({ 
+                        name: deduction.name.toUpperCase(), 
+                        amount: deduction.amount 
+                    });
+                });
+            }
+            
+            // Print deduction items
+            deductionItems.forEach(item => {
+                if (item.amount) {
+                    doc.text(item.name, x + 10, y);
+                    doc.text(formatCurrency(item.amount).replace('PHP ', ''), availableWidth + x - 70, y, { align: 'right' });
+                    y += 10;
+                }
+            });
+
+            // Total deductions
+            y += 5;
+            doc.font(styles.header.font)
+               .fontSize(styles.header.fontSize)
+               .text('TOTAL DEDUCTIONS', x, y);
+            doc.text(formatCurrency(payslipData.totals.totalDeductions).replace('PHP ', ''), availableWidth + x - 70, y, { align: 'right' });
+            y += 15;
+
+            // Allowances section if any
+            if (payslipData.allowances && payslipData.allowances.length > 0) {
+                const allowanceItems = payslipData.allowances.map((allowance: any) => ({
+                    name: allowance.name.toUpperCase(),
+                    amount: allowance.amount
+                }));
+                
+                // Print allowance items
+                allowanceItems.forEach((item: any)=> {
+                    doc.font(styles.normal.font)
+                       .fontSize(styles.normal.fontSize)
+                       .text(item.name, x + 10, y);
+                    doc.text(formatCurrency(item.amount).replace('PHP ', ''), availableWidth + x - 70, y, { align: 'right' });
+                    y += 10;
+                });
+                
+                // Total allowances
+                y += 5;
+                doc.font(styles.header.font)
+                   .fontSize(styles.header.fontSize)
+                   .text('TOTAL ALLOWANCES', x, y);
+                   
+                const totalAllowances = payslipData.totals.totalAllowances || 
+                    payslipData.allowances.reduce((sum: number, item: any) => sum + (item.amount || 0), 0);
+                    
+                doc.text(formatCurrency(totalAllowances).replace('PHP ', ''), availableWidth + x - 70, y, { align: 'right' });
+                y += 15;
+            }
+
+            // Net pay
+            doc.font(styles.header.font)
+               .fontSize(styles.header.fontSize)
+               .text('NET PAY', x, y);
+            doc.text(formatCurrency(payslipData.totals.netPay).replace('PHP ', ''), availableWidth + x - 70, y, { align: 'right' });
+            y += 20;
+
+            // Received by
+            doc.font(styles.header.font)
+               .fontSize(styles.header.fontSize)
+               .text('RECEIVED BY:', x, y);
+            y += 20;
+            
+            // Signature line
+            doc.lineWidth(0.5)
+               .moveTo(x, y)
+               .lineTo(x + 150, y)
+               .stroke();
+            
+            // Accounting Copy
+            y += 5;
+            doc.font(styles.normal.font)
+               .fontSize(styles.normal.fontSize)
+               .text('Accounting Copy', x, y);
+               
+            doc.end();
+        } catch (error) {
+            console.error('Error generating mini payslip:', error);
             reject(error);
         }
     });
@@ -567,9 +857,14 @@ function calculateColumnWidths(totalWidth: number, columnCount: number): number[
 }
 
 function formatCurrency(amount: number): string {
-    return new Intl.NumberFormat('en-PH', { 
-        style: 'currency', 
-        currency: 'PHP',
-        currencyDisplay: 'code'  // Shows "PHP" instead of the symbol
-    }).format(amount || 0);
+    const value = amount || 0;
+    // Format the number without currency symbol first
+    const formatter = new Intl.NumberFormat('en-PH', {
+        style: 'decimal',
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    });
+    
+    // Then add the peso symbol manually
+    return `\u20B1${formatter.format(value)}`;
 }

@@ -19,7 +19,7 @@ export class User extends BaseEntity<User> {
   @Column({ unique: true })
   userName!: string;
 
-  @OneToOne(() => Profile, (profile: Profile) => profile.user, { cascade: true, eager: true })
+  @OneToOne(() => Profile, (profile: Profile) => profile.user, { cascade: true, eager: true, nullable: true })
   profile?: Profile;
 
   @Column({ type: 'timestamp', nullable: true })

@@ -15,7 +15,7 @@ import { RecalculateOptionsDto } from './dtos/recalculate-options.dto';
 import { ReleasePayrollDto } from './dtos/release-payroll.dto';
 import { Payroll } from "./entities/payroll.entity";
 import { PayrollsService } from './payrolls.service';
-import { generatePayslipPdf } from './utils/payslip-pdf-generator';
+import { generateMiniPayslipPdf } from './utils/payslip-pdf-generator';
 export class PayrollsController extends createController(Payroll, PayrollsService, GetPayrollDto, PayrollDto, UpdatePayrollDto)
 {
     constructor(
@@ -295,43 +295,43 @@ export class PayrollsController extends createController(Payroll, PayrollsServic
     @Get(':id/payslip/download')
     @Authorize({ endpointType: Action.READ })
     @ApiOperation({
-    summary: 'Download payslip as PDF',
-    description: 'Generates and downloads a PDF payslip for the specified payroll'
+        summary: 'Download payslip as PDF',
+        description: 'Generates and downloads a PDF payslip for the specified payroll'
     })
     @ApiParam({
-    name: 'id',
-    description: 'ID of the payroll to generate PDF payslip for',
-    required: true
+        name: 'id',
+        description: 'ID of the payroll to generate PDF payslip for',
+        required: true
     })
     @ApiResponse({
-    status: HttpStatus.OK,
-    description: 'PDF generated and downloaded successfully'
+        status: HttpStatus.OK,
+        description: 'PDF generated and downloaded successfully'
     })
     @ApiResponse({
-    status: HttpStatus.NOT_FOUND,
-    description: 'Payroll not found'
+        status: HttpStatus.NOT_FOUND,
+        description: 'Payroll not found'
     })
     async downloadPayslip(
-    @Param('id') id: string,
-    @Res() res: Response
+        @Param('id') id: string,
+        @Res() res: Response
     ): Promise<void> {
-    const payroll = await this.baseService.findOneByOrFail({ id });
-    const employee = payroll.employee;
-    const payslipData = await this.baseService.generatePayslipData(id);
-    // log
-    
-    // Generate PDF using the custom generator
-    const pdfBuffer = await generatePayslipPdf(payslipData);
-    
-    const fileName = `Payslip_${employee.employeeNumber}_${UtilityHelper.ensureDate(payroll.cutoff.startDate).toISOString().slice(0, 10)}.pdf`;
-    
-    // Set appropriate headers for PDF download
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', `attachment; filename=${fileName}`);
-    res.setHeader('Content-Length', pdfBuffer.length);
-    
-    // Send the PDF
-    res.send(pdfBuffer);
+        const payroll = await this.baseService.findOneByOrFail({ id });
+        const employee = payroll.employee;
+        const payslipData = await this.baseService.generatePayslipData(id);
+        // log
+        
+        // Generate PDF using the custom generator
+        const pdfBuffer = await generateMiniPayslipPdf(payslipData);
+        
+        const fileName = `Payslip_${employee.employeeNumber}_${UtilityHelper.ensureDate(payroll.cutoff.startDate).toISOString().slice(0, 10)}.pdf`;
+        
+        // Set appropriate headers for PDF download
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `attachment; filename=${fileName}`);
+        res.setHeader('Content-Length', pdfBuffer.length);
+        
+        // Send the PDF
+        res.send(pdfBuffer);
     }
 
     @Patch(':id/approve')

@@ -15,6 +15,7 @@ import { NotificationsModule } from './modules/notifications/notifications.modul
 import { OrganizationManagementModule } from './modules/organization-management/organization-management.module';
 import { PayrollManagementModule } from './modules/payroll-management/payroll-management.module';
 import { ShiftManagementModule } from './modules/shift-management/shift-management.module';
+import { MemorandumsModule } from './modules/memorandums/memorandums.module';
 @Module({
   imports: [
     ConfigModule,
@@ -34,6 +35,7 @@ import { ShiftManagementModule } from './modules/shift-management/shift-manageme
     BiometricsModule,
     PayrollManagementModule,
     EmailsModule,
+    MemorandumsModule,
   ],
   controllers: [],
 })

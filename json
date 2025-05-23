@@ -1,0 +1,110 @@
+{
+  "name": "Workforce 360 HR Management System",
+  "rules": [
+    {
+      "name": "Multi-tenant Access Control",
+      "description": "Ipatupad ang wastong tenant isolation sa lahat ng modules",
+      "pattern": "((?:find|get|update|delete|create)(?:All|One|Many|ById)?\\s*\\([^)]*\\)\\s*{)",
+      "message": "Ang mga service method ay dapat may tenant isolation checks (organizationId, branchId, departmentId)",
+      "severity": "warning"
+    },
+    {
+      "name": "Permission Decorator Required",
+      "description": "Lahat ng controller endpoints ay dapat may wastong authorization",
+      "pattern": "@(Get|Post|Put|Delete|Patch)(\\(.*\\))\\s+(?!.*@Authorize)",
+      "message": "Ang controller endpoints ay dapat gumamit ng @Authorize decorator na may tamang permissions",
+      "severity": "error"
+    },
+    {
+      "name": "DTO Validation Required",
+      "description": "Lahat ng DTOs ay dapat may tamang validation decorators",
+      "pattern": "export\\s+class\\s+(.+Dto)\\s+{[^}]*(?!@IsOptional|@IsString|@IsNumber|@IsBoolean|@IsDate|@IsUUID|@IsEnum|@ValidateNested|@IsArray)[^}]*}",
+      "message": "Ang mga DTO ay dapat may tamang validation decorators mula sa class-validator",
+      "severity": "error"
+    },
+    {
+      "name": "Use ReferenceDto",
+      "description": "Gumamit ng ReferenceDto para sa mga object reference",
+      "pattern": "@(ApiProperty|ApiPropertyOptional)\\([^)]*\\)\\s*@(IsUUID|IsOptional)[^}]*\\s*[a-zA-Z]+\\??: { id: string }",
+      "message": "Gumamit ng ReferenceDto sa halip na inline { id: string } objects para sa consistent entity references",
+      "severity": "warning"
+    },
+    {
+      "name": "Base Class Extension",
+      "description": "Ang mga entity ay dapat mag-extend ng BaseEntity",
+      "pattern": "export\\s+class\\s+(.+Entity)(?!\\s+extends\\s+BaseEntity)",
+      "message": "Ang mga entity ay dapat mag-extend ng BaseEntity para sa consistent timestamps, soft delete, at tenant fields",
+      "severity": "error"
+    },
+    {
+      "name": "Service Error Handling",
+      "description": "Ang mga service ay dapat gumamit ng tamang error handling patterns",
+      "pattern": "(try\\s*{[^}]*})(?!\\s*catch\\s*\\(error\\))",
+      "message": "Ang mga service method ay dapat mag-catch at mag-handle ng errors gamit ang tamang exception filters",
+      "severity": "warning"
+    },
+    {
+      "name": "Query Performance Warning",
+      "description": "Tukuyin ang mga posibleng mabigat na queries",
+      "pattern": "(findAll|find)(?!.*take:|.*limit:)",
+      "message": "Ang mga query ay dapat may pagination para maiwasan ang mga performance issues",
+      "severity": "warning"
+    },
+    {
+      "name": "Event-driven Pattern",
+      "description": "Ipatupad ang event-driven architecture para sa cross-cutting concerns",
+      "pattern": "(this\\.[a-zA-Z]+Service\\.[a-zA-Z]+\\(.*\\).*\\s+this\\.[a-zA-Z]+Service\\.[a-zA-Z]+\\()",
+      "message": "Isaalang-alang ang paggamit ng event emitter para sa cross-service operations upang mapanatili ang loose coupling",
+      "severity": "info"
+    },
+    {
+      "name": "Swagger Documentation",
+      "description": "Tiyakin na ang mga API endpoint ay maayos na naka-document",
+      "pattern": "@(Controller|Get|Post|Put|Delete|Patch)\\(.*\\)(?!\\s*@Api[A-Za-z]+\\()",
+      "message": "Ang mga API endpoint ay dapat may Swagger documentation decorators",
+      "severity": "warning"
+    },
+    {
+      "name": "Transaction Management",
+      "description": "Ipatupad ang tamang transaction handling para sa data integrity",
+      "pattern": "(create|update|delete)(?!.*transaction|.*queryRunner)",
+      "message": "Ang mga data modification operation ay dapat gumamit ng transactions para sa data integrity",
+      "severity": "warning"
+    },
+    {
+      "name": "Tenant Filtering",
+      "description": "Tiyakin ang tenant filtering sa mga query builder",
+      "pattern": "createQueryBuilder\\([^)]*\\)(?!.*andWhere\\(['\"].*organizationId['\"])",
+      "message": "Ang mga query builder ay dapat may tenant filtering para sa data isolation",
+      "severity": "warning"
+    },
+    {
+      "name": "Cache Decorator Usage",
+      "description": "Imungkahi ang caching para sa read-heavy operations",
+      "pattern": "(find|get)All(?!.*@Cacheable|.*@CacheTTL)",
+      "message": "Isaalang-alang ang paggamit ng cache decorators para sa read-heavy operations",
+      "severity": "info"
+    },
+    {
+      "name": "Base Service Extension",
+      "description": "Ang mga service ay dapat mag-extend ng BaseService",
+      "pattern": "export\\s+class\\s+(.+Service)(?!\\s+extends\\s+BaseService)",
+      "message": "Ang mga service ay dapat mag-extend ng BaseService para sa consistent CRUD operations",
+      "severity": "warning"
+    },
+    {
+      "name": "Sensitive Data Exposure",
+      "description": "Iwasan ang pag-expose ng sensitive data sa mga DTO",
+      "pattern": "export\\s+class\\s+(.+Dto)[^}]*@ApiProperty\\([^)]*\\)\\s*[^@}]*password[^}]*",
+      "message": "Huwag i-expose ang sensitive data tulad ng passwords sa mga DTO",
+      "severity": "error"
+    },
+    {
+      "name": "Enforce TypeORM Query Parameters",
+      "description": "Iwasan ang SQL injection",
+      "pattern": "createQueryBuilder\\([^)]*\\)\\.where\\(['\"][^'\"]*\\$\\{",
+      "message": "Gumamit ng parameterized queries sa halip na string interpolation para maiwasan ang SQL injection",
+      "severity": "error"
+    }
+  ]
+} 

@@ -10,7 +10,7 @@ export class ScheduleChangeResponse extends BaseEntity<ScheduleChangeResponse> {
     @Column()
     message!: string;
 
-    @OneToOne(() => ScheduleChangeRequest, (scheduleChangeRequest: ScheduleChangeRequest) => scheduleChangeRequest.scheduleChangeResponse)
+    @OneToOne(() => ScheduleChangeRequest, (scheduleChangeRequest: ScheduleChangeRequest) => scheduleChangeRequest.scheduleChangeResponse, { cascade: true })
     @JoinColumn({ name: 'scheduleChangeRequestId' })
     scheduleChangeRequest!: ScheduleChangeRequest;
 }

@@ -34,6 +34,36 @@ export class PayrollItemTypeDto extends PartialType(BaseDto) {
   group?: string;
 
   @ApiPropertyOptional({
+    description: 'Whether the payroll item type has an amount',
+    default: false,
+    example: false,
+    nullable: true
+  })
+  @IsBoolean()
+  @IsOptional()
+  hasAmount?: boolean;
+
+  @ApiPropertyOptional({
+    description: 'Whether the payroll item type has a percentage',
+    default: false,
+    example: false,
+    nullable: true
+  })
+  @IsBoolean()
+  @IsOptional()
+  hasPercentage?: boolean;
+
+  @ApiPropertyOptional({
+    description: 'Whether the payroll item type has an effectivity date',
+    default: false,
+    example: false,
+    nullable: true
+  })
+  @IsBoolean()
+  @IsOptional()
+  hasEffectivity?: boolean;
+
+  @ApiPropertyOptional({
     description: 'Image or icon representing the payroll item type (file key, url, or icon)',
     example: 'https://example.com/icon.png',
     nullable: true

@@ -147,7 +147,7 @@ export class CutoffsService extends BaseService<Cutoff> {
     async getActiveCutoffs(): Promise<Cutoff[]> {
         return await this.repository.find({
             where: {
-                status: CutoffStatus.ACTIVE,
+                status: CutoffStatus.ACTIVE || CutoffStatus.PENDING,
                 startDate: MoreThan(new Date()),
                 isDeleted: false
             },
@@ -158,7 +158,7 @@ export class CutoffsService extends BaseService<Cutoff> {
     async getActiveCutoff(): Promise<Cutoff | null> {
         return await this.repository.findOne({
             where: {
-                status: CutoffStatus.ACTIVE,
+                status: CutoffStatus.ACTIVE || CutoffStatus.PENDING,
                 startDate: MoreThan(new Date()),
                 isDeleted: false
             },

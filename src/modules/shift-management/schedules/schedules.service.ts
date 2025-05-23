@@ -13,6 +13,7 @@ import { Cutoff } from '../../payroll-management/cutoffs/entities/cutoff.entity'
 import { Shift } from '../entities/shift.entity';
 import { GroupsService } from '../groups/groups.service';
 import { HolidaysService } from '../holidays/holidays.service';
+import { ScheduleDto } from './dtos/schedule.dto';
 import { Schedule } from './entities/schedule.entity';
 
 export interface ScheduleDeletionParams {
@@ -23,17 +24,29 @@ export interface ScheduleDeletionParams {
 
 @Injectable()
 export class SchedulesService extends BaseService<Schedule> {
-    constructor(
-        @InjectRepository(Schedule)
-        private readonly schedulesRepository: Repository<Schedule>,
-        protected readonly usersService: UsersService,
-        private readonly groupsService: GroupsService,
-        private readonly cutoffsService: CutoffsService,
-        private readonly holidaysService: HolidaysService,
-        private readonly employeesService: EmployeesService
-    ) {
-        super(schedulesRepository, usersService);
-    }
+  constructor(
+      @InjectRepository(Schedule)
+      private readonly schedulesRepository: Repository<Schedule>,
+      protected readonly usersService: UsersService,
+      private readonly groupsService: GroupsService,
+      private readonly cutoffsService: CutoffsService,
+      private readonly holidaysService: HolidaysService,
+      private readonly employeesService: EmployeesService
+  ) {
+      super(schedulesRepository, usersService);
+  }
+
+  override async validateBefore(dto: ScheduleDto): Promise<void> {
+    // Validate that the employee exists
+    dto = await this.validateReferences(dto, [
+      {
+        field: 'employee',
+        service: this.employeesService,
+        required: true
+      }
+    ]);
+  }
+
 
     async getEmployeeScheduleToday(employeeId: string)
     {
@@ -196,7 +209,10 @@ export class SchedulesService extends BaseService<Schedule> {
               endTime: shiftDay.endTime || shift.defaultEndTime,
               breakTime: shiftDay.breakTime || shift.defaultBreakTime,
               duration: shiftDay.duration || shift.defaultDuration,
-              
+              organizationId: employee.organizationId,
+              userId: employee.userId,
+              departmentId: employee.departmentId,
+              branchId: employee.branchId,
             };
             
             // If it's a holiday, associate it with the schedule
@@ -212,7 +228,7 @@ export class SchedulesService extends BaseService<Schedule> {
         }
         
         return schedules;
-      }
+      }  
       
       // Check if a schedule already exists
       async findExistingSchedules(

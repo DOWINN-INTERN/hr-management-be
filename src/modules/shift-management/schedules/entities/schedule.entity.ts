@@ -3,7 +3,7 @@ import { BaseEntity } from '@/database/entities/base.entity';
 import { Attendance } from '@/modules/attendance-management/entities/attendance.entity';
 import { Employee } from '@/modules/employee-management/entities/employee.entity';
 import { Cutoff } from '@/modules/payroll-management/cutoffs/entities/cutoff.entity';
-import { Column, Entity, JoinColumn, JoinTable, ManyToMany, ManyToOne, OneToOne } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToMany, ManyToOne, OneToOne } from 'typeorm';
 import { Shift } from '../../entities/shift.entity';
 import { Holiday } from '../../holidays/entities/holiday.entity';
 import { ScheduleChangeRequest } from '../schedule-change-requests/entities/schedule-change-request.entity';
@@ -22,6 +22,9 @@ export class Schedule extends BaseEntity<Schedule> {
     @OneToOne(() => Attendance, (attendance: Attendance) => attendance.schedule, { nullable: true })
     attendance?: Attendance;
 
+    @Column({ nullable: true })
+    color?: string;
+
     @Column({ type: 'time', nullable: true })
     startTime!: string;
     
@@ -33,6 +36,9 @@ export class Schedule extends BaseEntity<Schedule> {
     
     @Column({ type: 'int', nullable: true })
     duration!: number; // in hours
+
+    @Column({ type: 'boolean', default: false })
+    allowEarlyCheckIn!: boolean;
 
     @ManyToOne(() => Shift, (shift: Shift) => shift.schedules)
     @JoinColumn({ name: 'shiftId' })
@@ -49,18 +55,7 @@ export class Schedule extends BaseEntity<Schedule> {
     @JoinColumn({ name: 'employeeId' })
     employee!: Employee;
 
-    @ManyToMany(() => ScheduleChangeRequest, (scheduleChangeRequest: ScheduleChangeRequest) => scheduleChangeRequest.schedules, { nullable: true })
-    @JoinTable({
-        name: 'schedule_change_requests',
-        joinColumn: {
-            name: 'scheduleId',
-            referencedColumnName: 'id',
-        },
-        inverseJoinColumn: {
-            name: 'scheduleChangeRequestId',
-            referencedColumnName: 'id',
-        },
-    })
+    @ManyToMany(() => ScheduleChangeRequest, (scheduleChangeRequest: ScheduleChangeRequest) => scheduleChangeRequest.originalSchedules, { nullable: true })
     scheduleChangeRequests?: ScheduleChangeRequest[];
 
     @ManyToOne(() => Cutoff, (cutoff: Cutoff) => cutoff.schedules, { eager: true })

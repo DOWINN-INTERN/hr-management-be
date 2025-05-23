@@ -1,3 +1,4 @@
+import { GoogleAuthGuard } from '@/common/guards/google-auth.guard';
 import { EmailsModule } from '@/modules/emails/emails.module';
 import { PermissionsModule } from '@/modules/employee-management/roles/permissions/permissions.module';
 import { Global, Module } from '@nestjs/common';
@@ -12,6 +13,7 @@ import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { JwtService } from './services/jwt.service';
 import { AccessTokenStrategy } from './strategies/access-token.strategy';
+import { GoogleStrategy } from './strategies/google.strategy';
 
 @Global()
 @Module({
@@ -29,7 +31,7 @@ import { AccessTokenStrategy } from './strategies/access-token.strategy';
     }),
     EmailsModule,
   ],
-  providers: [AuthService, JwtService, AccessTokenStrategy, JwtAuthGuard, PermissionsGuard, RolesGuard],
+  providers: [AuthService, JwtService, AccessTokenStrategy, GoogleStrategy, JwtAuthGuard, GoogleAuthGuard, PermissionsGuard, RolesGuard],
   controllers: [AuthController],
   exports: [AuthService, JwtService],
 })

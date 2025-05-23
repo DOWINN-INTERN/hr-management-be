@@ -48,7 +48,15 @@ export class PayrollItemType extends BaseEntity<PayrollItemType> {
     @Column({ nullable: true })
     group?: string;
 
-    
+    @Column({ default: false })
+    hasAmount!: boolean;
+
+    @Column({ default: false })
+    hasPercentage!: boolean;
+
+    @Column({ default: false })
+    hasEffectivity!: boolean;
+
     @Column({ nullable: true })
     effectiveFrom?: Date;
     

@@ -3,13 +3,14 @@ import { RouterModule } from '@nestjs/core';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { BiometricsModule } from '../biometrics/biometrics.module';
 import { EmployeeManagementModule } from '../employee-management/employee-management.module';
-import { ShiftManagementModule } from '../shift-management/shift-management.module';
+import { SchedulesModule } from '../shift-management/schedules/schedules.module';
+import { AttendanceConfigurationsModule } from './attendance-configurations/attendance-configurations.module';
 import { AttendancePunchesModule } from './attendance-punches/attendance-punches.module';
 import { AttendancesController } from './attendances.controller';
 import { AttendancesService } from './attendances.service';
 import { Attendance } from './entities/attendance.entity';
 import { FinalWorkHoursModule } from './final-work-hours/final-work-hours.module';
-import { WorkHourCalculationProcessor } from './final-work-hours/services/work-hour-calculation.service';
+import { AttendancesGateway } from './gateways/attendances.gateway';
 import { AttendanceListener } from './listeners/attendance.listener';
 import { AttendanceDataSeederService } from './services/attendance-data-seeder.service';
 import { WorkTimeRequestsModule } from './work-time-requests/work-time-requests.module';
@@ -40,25 +41,29 @@ import { WorkTimeResponsesModule } from './work-time-requests/work-time-response
                     {
                         path: 'final-work-hours',
                         module: FinalWorkHoursModule,
+                    },
+                    {
+                        path: 'configurations',
+                        module: AttendanceConfigurationsModule
                     }
                 ],
             }
         ]),
         AttendancePunchesModule,
         WorkTimeRequestsModule,
-        WorkTimeResponsesModule,
         FinalWorkHoursModule,
-        BiometricsModule,
+        AttendanceConfigurationsModule,
         EmployeeManagementModule,
-        ShiftManagementModule,
+        SchedulesModule,
+        BiometricsModule
     ],
-    providers: [AttendancesService, AttendanceListener, AttendanceDataSeederService, WorkHourCalculationProcessor],
+    providers: [AttendancesService, AttendanceListener, AttendanceDataSeederService, AttendancesGateway],
     exports: [
         AttendancesService,
         AttendancePunchesModule,
         WorkTimeRequestsModule,
-        WorkTimeResponsesModule,
         FinalWorkHoursModule,
+        AttendanceConfigurationsModule
     ],
     controllers: [AttendancesController],
 })

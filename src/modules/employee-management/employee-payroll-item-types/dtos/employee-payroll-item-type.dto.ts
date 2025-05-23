@@ -1,7 +1,7 @@
 import { BaseDto } from "@/common/dtos/base.dto";
 import { ReferenceDto } from "@/common/dtos/reference.dto";
 import { createGetDto } from "@/common/factories/create-get-dto.factory";
-import { ApiProperty, PartialType } from "@nestjs/swagger";
+import { ApiProperty, ApiPropertyOptional, PartialType } from "@nestjs/swagger";
 import { Type } from "class-transformer";
 import { IsBoolean, IsNotEmpty, IsNumber, IsOptional, IsString, Max, Min, ValidateNested } from "class-validator";
 
@@ -42,14 +42,14 @@ export class EmployeePayrollItemTypeDto extends PartialType(BaseDto) {
   @IsOptional()
   isActive?: boolean;
 
-  @ApiProperty({
-    description: 'Whether this payroll item type is exempted',
-    example: false,
-    default: false
+  @ApiPropertyOptional({
+    description: 'Whether this payroll item type is applicable',
+    example: true,
+    default: true
   })
   @IsBoolean()
   @IsOptional()
-  exempted?: boolean;
+  isApplicable?: boolean;
 
   @ApiProperty({
     description: 'Amount value for this payroll item type',
@@ -61,25 +61,25 @@ export class EmployeePayrollItemTypeDto extends PartialType(BaseDto) {
   @IsOptional()
   amount?: number;
 
-  @ApiProperty({
-    description: 'Accrual amount for this payroll item type',
-    example: 500.25,
-    required: false,
-    type: Number
-  })
-  @IsNumber()
-  @IsOptional()
-  accrualAmount?: number;
+  // @ApiProperty({
+  //   description: 'Accrual amount for this payroll item type',
+  //   example: 500.25,
+  //   required: false,
+  //   type: Number
+  // })
+  // @IsNumber()
+  // @IsOptional()
+  // accrualAmount?: number;
 
-  @ApiProperty({
-    description: 'Accrual count for this payroll item type',
-    example: 5,
-    required: false,
-    type: Number
-  })
-  @IsNumber()
-  @IsOptional()
-  accrualCount?: number;
+  // @ApiProperty({
+  //   description: 'Accrual count for this payroll item type',
+  //   example: 5,
+  //   required: false,
+  //   type: Number
+  // })
+  // @IsNumber()
+  // @IsOptional()
+  // accrualCount?: number;
 
   @ApiProperty({
     description: 'Percentage value for this payroll item type',
@@ -95,24 +95,24 @@ export class EmployeePayrollItemTypeDto extends PartialType(BaseDto) {
   @Max(100)
   percentage?: number;
 
-  @ApiProperty({
-    description: 'Fee amount for this payroll item type',
-    example: 25.99,
-    required: false,
-    type: Number
-  })
-  @IsNumber()
-  @IsOptional()
-  fee?: number;
+  // @ApiProperty({
+  //   description: 'Fee amount for this payroll item type',
+  //   example: 25.99,
+  //   required: false,
+  //   type: Number
+  // })
+  // @IsNumber()
+  // @IsOptional()
+  // fee?: number;
 
-  @ApiProperty({
-    description: 'Term information for this payroll item type',
-    example: 'Monthly',
-    required: false
-  })
-  @IsString()
-  @IsOptional()
-  term?: string;
+  // @ApiProperty({
+  //   description: 'Term information for this payroll item type',
+  //   example: 'Monthly',
+  //   required: false
+  // })
+  // @IsString()
+  // @IsOptional()
+  // term?: string;
 }
 
 export class UpdateEmployeePayrollItemTypeDto extends PartialType(EmployeePayrollItemTypeDto) {}

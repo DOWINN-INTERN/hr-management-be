@@ -32,6 +32,9 @@ export class Attendance extends BaseEntity<Attendance> {
     @Column({ nullable: true })
     processedBy?: string;
 
+    @Column({ type: 'date', nullable: true })
+    date?: Date;
+
     @Column({ type: 'timestamp', nullable: true })
     processedAt?: Date;
 

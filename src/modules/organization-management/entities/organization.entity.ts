@@ -1,4 +1,5 @@
 import { Address } from "@/modules/addresses/entities/address.entity";
+import { AttendanceConfiguration } from "@/modules/attendance-management/attendance-configurations/entities/attendance-configuration.entity";
 import { Role } from "@/modules/employee-management/roles/entities/role.entity";
 import { Column, Entity, OneToMany, OneToOne } from "typeorm";
 import { BaseEntity } from "../../../database/entities/base.entity";
@@ -34,4 +35,7 @@ export class Organization extends BaseEntity<Organization> {
 
     @OneToMany(() => Role, (role: Role) => role.organization, { nullable: true, cascade: true })
     roles?: Role[];
+
+    @OneToOne(() => AttendanceConfiguration, (attendanceConfiguration: AttendanceConfiguration) => attendanceConfiguration.organization, { nullable: true, cascade: true })
+    attendanceConfiguration?: AttendanceConfiguration;
 }

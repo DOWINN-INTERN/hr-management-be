@@ -3,7 +3,7 @@ import { AttendanceStatus } from '@/common/enums/attendance-status.enum';
 import { createGetDto } from "@/common/factories/create-get-dto.factory";
 import { ApiProperty, PartialType } from "@nestjs/swagger";
 import { Type } from "class-transformer";
-import { IsArray, IsDate, IsEnum, IsNotEmpty, IsOptional, IsUUID } from "class-validator";
+import { IsArray, IsDate, IsDateString, IsEnum, IsNotEmpty, IsOptional, IsUUID } from "class-validator";
 
 export class AttendanceDto extends PartialType(BaseDto) {
     @ApiProperty({ 
@@ -24,6 +24,16 @@ export class AttendanceDto extends PartialType(BaseDto) {
     @IsEnum(AttendanceStatus, { each: true })
     @IsNotEmpty()
     statuses!: AttendanceStatus[];
+
+    @ApiProperty({ 
+        description: 'Date of the attendance', 
+        example: '2023-01-01',
+        type: String,
+        format: 'date'
+    })
+    @IsNotEmpty()
+    @IsDateString()
+    date!: Date;
 
     @ApiProperty({ 
         description: 'Time when employee clocked in',

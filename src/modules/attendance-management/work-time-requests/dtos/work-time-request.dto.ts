@@ -5,7 +5,7 @@ import { RequestStatus } from "@/common/enums/request-status.enum";
 import { createGetDto } from "@/common/factories/create-get-dto.factory";
 import { ApiProperty, ApiPropertyOptional, PartialType } from "@nestjs/swagger";
 import { Type } from "class-transformer";
-import { IsEnum, IsNotEmpty, IsNumber, IsOptional, IsString, ValidateNested } from "class-validator";
+import { IsBoolean, IsEnum, IsNotEmpty, IsNumber, IsOptional, IsString, ValidateNested } from "class-validator";
 import { DayType } from "../../final-work-hours/entities/final-work-hour.entity";
 
 export class WorkTimeRequestDto extends PartialType(BaseDto) {
@@ -74,6 +74,31 @@ export class WorkTimeRequestDto extends PartialType(BaseDto) {
     @IsNotEmpty()
     @IsString()
     reason!: string;
+
+    @ApiPropertyOptional({
+        description: 'Indicates if early time should be considered as overtime',
+        example: false,
+    })
+    @IsOptional()
+    @IsBoolean()
+    earlyTimeAsOvertime?: boolean;
+
+    @ApiPropertyOptional({
+        description: 'Indicates if this request was initiated by management',
+        example: false,
+    })
+    @IsBoolean()
+    @IsOptional()
+    managementRequested?: boolean;
+
+    @ApiPropertyOptional({
+        description: 'ID of the manager who requested this (if management requested)',
+        example: '123e4567-e89b-12d3-a456-426614174000',
+    })
+    @IsOptional()
+    @ValidateNested()
+    @Type(() => ReferenceDto)
+    requestedByManager?: ReferenceDto;
 }
 
 export class UpdateWorkTimeRequestDto extends PartialType(WorkTimeRequestDto) {}

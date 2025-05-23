@@ -1,4 +1,5 @@
 export enum AttendanceStatus {
+    EARLY = 'EARLY', // Early attendance status
     NO_CHECKED_IN = 'NO_CHECKED_IN', // Not checked in status
     NO_CHECKED_OUT = 'NO_CHECKED_OUT', // Not checked out status
     CHECKED_IN = 'CHECKED_IN', // Checked in status

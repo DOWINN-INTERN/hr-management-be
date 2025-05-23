@@ -1,7 +1,9 @@
 import { BaseDto } from "@/common/dtos/base.dto";
+import { ReferenceDto } from "@/common/dtos/reference.dto";
 import { createGetDto } from "@/common/factories/create-get-dto.factory";
 import { ApiProperty, PartialType } from "@nestjs/swagger";
-import { IsBoolean, IsNotEmpty, IsString, IsUUID } from "class-validator";
+import { Type } from "class-transformer";
+import { IsBoolean, IsNotEmpty, IsString, ValidateNested } from "class-validator";
 
 export class ScheduleChangeResponseDto extends PartialType(BaseDto) {
     @ApiProperty({ 
@@ -22,11 +24,12 @@ export class ScheduleChangeResponseDto extends PartialType(BaseDto) {
 
     @ApiProperty({ 
         description: 'ID of the associated schedule change request',
-        example: '123e4567-e89b-12d3-a456-426614174000'
+        type: ReferenceDto,
     })
     @IsNotEmpty()
-    @IsUUID()
-    scheduleChangeRequestId!: string;
+    @ValidateNested()
+    @Type(() => ReferenceDto)
+    scheduleChangeRequest!: ReferenceDto;
 }
 
 export class UpdateScheduleChangeResponseDto extends PartialType(ScheduleChangeResponseDto) {}

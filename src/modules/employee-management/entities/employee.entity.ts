@@ -7,6 +7,9 @@ import { Attendance } from '@/modules/attendance-management/entities/attendance.
 import { FinalWorkHour } from '@/modules/attendance-management/final-work-hours/entities/final-work-hour.entity';
 import { WorkTimeRequest } from '@/modules/attendance-management/work-time-requests/entities/work-time-request.entity';
 import { Role } from '@/modules/employee-management/roles/entities/role.entity';
+import { Memorandum } from '@/modules/memorandums/entities/memorandum.entity';
+import { MemorandumFlow } from '@/modules/memorandums/memorandum-flows/entities/memorandum-flow.entity';
+import { MemorandumRecipient } from '@/modules/memorandums/memorandum-recipients/entities/memorandum-recipient.entity';
 import { Payroll } from '@/modules/payroll-management/entities/payroll.entity';
 import { Group } from '@/modules/shift-management/groups/entities/group.entity';
 import { Schedule } from '@/modules/shift-management/schedules/entities/schedule.entity';
@@ -90,4 +93,13 @@ export class Employee extends BaseEntity<Employee> {
 
     @OneToMany(() => WorkTimeRequest, (workTimeRequest: WorkTimeRequest) => workTimeRequest.employee, { nullable: true })
     workTimeRequests?: WorkTimeRequest[];
+
+    @OneToMany(() => Memorandum, (memorandum: Memorandum) => memorandum.issuer, { nullable: true })
+    issuedMemos?: Memorandum[];
+
+    @OneToMany(() => MemorandumRecipient, (memorandumRecipient: MemorandumRecipient) => memorandumRecipient.employee, { nullable: true })
+    receivedMemos?: MemorandumRecipient[];
+
+    @OneToMany(() => MemorandumFlow, (memorandumFlow: MemorandumFlow) => memorandumFlow.approver, { nullable: true })
+    approvalSteps?: MemorandumFlow[];
 }

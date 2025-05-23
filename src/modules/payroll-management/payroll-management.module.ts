@@ -1,5 +1,5 @@
 import { BullModule } from '@nestjs/bull';
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { RouterModule } from '@nestjs/core';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { FinalWorkHoursModule } from '../attendance-management/final-work-hours/final-work-hours.module';
@@ -45,7 +45,7 @@ import { PayrollStateMachine } from './services/payroll-state-machine.service';
         PayrollItemTypesModule,
         CutoffsModule,
         EmployeeManagementModule,
-        FinalWorkHoursModule,
+        forwardRef(() => FinalWorkHoursModule),
         WorkTimeRequestsModule,
     ],
     providers: [PayrollsService, PayrollStateMachine, PayrollProcessorService, PayrollMetricsService],

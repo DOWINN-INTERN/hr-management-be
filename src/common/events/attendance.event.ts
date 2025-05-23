@@ -32,7 +32,8 @@ export class FinalWorkHoursCalculationEvent {
 
 export class RecalculateFinalWorkHoursEvent {
   constructor(
-    public readonly cutoffId: string,
-    public readonly recalculatedBy: string
+    public readonly recalculatedBy?: string,
+    public readonly cutoffId?: string,
+    public readonly specificAttendanceIds?: string[]
   ) {}
 }

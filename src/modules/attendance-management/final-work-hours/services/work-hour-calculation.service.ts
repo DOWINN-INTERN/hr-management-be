@@ -1,8 +1,12 @@
 import { AttendanceStatus } from "@/common/enums/attendance-status.enum";
+import { PayrollState } from "@/common/enums/payroll/payroll-state.enum";
+import { PayrollsService } from "@/modules/payroll-management/payrolls.service";
 import { InjectQueue, Process, Processor } from "@nestjs/bull";
 import { Injectable, Logger } from "@nestjs/common";
 import { Job, Queue } from "bull";
+import { Not } from "typeorm";
 import { v4 as uuidv4 } from "uuid";
+import { AttendanceConfigurationsService } from "../../attendance-configurations/attendance-configurations.service";
 import { AttendancesService } from "../../attendances.service";
 import { Attendance } from "../../entities/attendance.entity";
 import { WorkTimeRequestsService } from "../../work-time-requests/work-time-requests.service";
@@ -26,7 +30,7 @@ export class WorkHourCalculationService {
 
   async queueFinalWorkHoursCalculation(
     attendanceIds: string[],
-    processedBy: string
+    processedBy?: string
   ): Promise<string> {
     try {
       // Validate input
@@ -70,12 +74,13 @@ export class WorkHourCalculationService {
 export class WorkHourCalculationProcessor {
   private readonly logger = new Logger(WorkHourCalculationProcessor.name);
   private readonly GRACE_PERIOD_MINUTES = 5; // Consider late after 5 minutes
-  private readonly OVER_TIME_THRESHOLD_MINUTES = 30; // Consider overtime if more than 30 minutes
   
   constructor(
     private readonly attendanceService: AttendancesService,
     private readonly finalWorkHourService: FinalWorkHoursService,
     private readonly workTimeRequestsService: WorkTimeRequestsService,
+    private readonly payrollsService: PayrollsService,
+    private readonly attendanceConfigurationsService: AttendanceConfigurationsService,
   ) {}
   
   @Process('calculate-final-work-hours')
@@ -118,7 +123,7 @@ export class WorkHourCalculationProcessor {
     }
   }
   
-  private async processAttendance(attendanceId: string, batchId: string, processedBy: string): Promise<void> {
+  public async processAttendance(attendanceId: string, batchId: string, processedBy: string): Promise<void> {
     this.logger.log(`Processing attendance ${attendanceId}`);
     
     // Find attendance with all necessary relations
@@ -139,6 +144,10 @@ export class WorkHourCalculationProcessor {
       this.logger.log(`Creating new final work hour for attendance ${attendanceId}`);
       finalWorkHour = new FinalWorkHour({});
     }
+
+    const config = await this.attendanceConfigurationsService.getOrganizationAttendanceConfiguration(
+      attendance.organizationId
+    )
 
     // Convert schedule times to Date objects when needed
       let timeIn = attendance.timeIn;
@@ -163,24 +172,26 @@ export class WorkHourCalculationProcessor {
 
         // Clone the dates to avoid mutation issues
         const scheduleStartTimePlus = new Date(scheduleStartTime);
-        scheduleStartTimePlus.setMinutes(scheduleStartTimePlus.getMinutes() + this.GRACE_PERIOD_MINUTES);
+        scheduleStartTimePlus.setMinutes(scheduleStartTimePlus.getMinutes() + config.gracePeriodMinutes);
 
         // Handle timeIn logic
         if (!timeIn) {
           // Check if attendance status contains absent
           if (attendance.statuses?.includes(AttendanceStatus.ABSENT) === false) {
-            noTimeInHours = 1;
+            noTimeInHours = config.noTimeInDeductionMinutes / 60;
           }
-        } else if (timeIn <= scheduleStartTimePlus) {
-          timeIn = new Date(scheduleStartTime);
-          this.logger.log(`TimeIn is within grace period for attendance ${attendanceId}, using schedule start time`);
+        } else if (timeIn < scheduleStartTime) {
+          // check if config allow early check in
+          if (!config.allowEarlyTime) {
+            timeIn = new Date(scheduleStartTime);
+          }
         }
 
         // Handle timeOut logic
         if (!timeOut) {
           // Check if attendance status contains absent
           if (attendance.statuses?.includes(AttendanceStatus.ABSENT) === false) {
-            noTimeOutHours = 1;
+            noTimeOutHours = config.noTimeOutDeductionMinutes / 60;
           }
         } else if (timeOut > scheduleEndTime) {
           try {
@@ -228,6 +239,18 @@ export class WorkHourCalculationProcessor {
         
         // Update work hours breakdown
         await this.finalWorkHourService.updateWorkHoursBreakdown(finalWorkHour.id, processedBy);
+
+        const payroll = await this.payrollsService.getRepository().findOneOrFail({
+          where: {
+            cutoff: { id: attendance.schedule.cutoff.id },
+            employee: { id: attendance.employee.id },
+            state: Not(PayrollState.VOID)
+          },
+          relations: { cutoff: true, employee: true }
+        });
+
+        // Update payrolls if needed
+        await this.payrollsService.recalculatePayroll(payroll?.id, { preserveState: true }, processedBy);
       } catch (saveError: any) {
         throw new Error(`Database error while saving final work hour: ${saveError.message}`);
       }

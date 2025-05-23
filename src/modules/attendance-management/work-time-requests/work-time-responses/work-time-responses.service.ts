@@ -1,7 +1,7 @@
 import { WORK_TIME_EVENTS, WorkTimeRespondedEvent } from '@/common/events/work-time.event';
 import { BaseService } from '@/common/services/base.service';
 import { UsersService } from '@/modules/account-management/users/users.service';
-import { Injectable } from '@nestjs/common';
+import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DeepPartial, Repository } from 'typeorm';
@@ -15,6 +15,7 @@ export class WorkTimeResponsesService extends BaseService<WorkTimeResponse> {
         @InjectRepository(WorkTimeResponse)
         private readonly workTimeResponsesRepository: Repository<WorkTimeResponse>,
         protected readonly usersService: UsersService,
+        @Inject(forwardRef(() => WorkTimeRequestsService))
         private readonly workTimeRequestsService: WorkTimeRequestsService,
         private readonly eventEmitter: EventEmitter2,
     ) {

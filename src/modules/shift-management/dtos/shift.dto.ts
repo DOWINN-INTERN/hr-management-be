@@ -1,6 +1,5 @@
 import { IsTimeString } from "@/common/decorators/is-time-string.decorator";
 import { BaseDto } from "@/common/dtos/base.dto";
-import { ReferenceDto } from "@/common/dtos/reference.dto";
 import { createGetDto } from "@/common/factories/create-get-dto.factory";
 import { ApiProperty, PartialType } from "@nestjs/swagger";
 import { Type } from "class-transformer";
@@ -98,16 +97,6 @@ export class ShiftDto extends PartialType(BaseDto) {
     @ValidateNested({ each: true })
     @Type(() => ShiftDayDto)
     days!: ShiftDayDto[];
-    
-    @ApiProperty({ 
-        description: 'Associated cutoffs',
-        type: [ReferenceDto],
-    })
-    @IsNotEmpty()
-    @IsArray()
-    @ValidateNested({ each: true })
-    @Type(() => ReferenceDto)
-    cutoffs!: ReferenceDto[];
 }
 
 export class UpdateShiftDto extends PartialType(ShiftDto) {}

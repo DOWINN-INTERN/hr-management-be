@@ -15,4 +15,4 @@ export class <%= classify(entityName) %>Dto extends PartialType(BaseDto) {
 
 export class Update<%= classify(entityName) %>Dto extends PartialType(<%= classify(entityName) %>Dto) {}
 
-export class Get<%= classify(entityName) %>Dto extends createGetDto(<%= classify(entityName) %>Dto) {}
+export class Get<%= classify(entityName) %>Dto extends createGetDto(Update<%= classify(entityName) %>Dto) {}

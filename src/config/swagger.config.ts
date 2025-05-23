@@ -67,8 +67,8 @@ export const swaggerConfig = new DocumentBuilder()
       },
     },
   })
-  .addTag('Cutoffs', 'User management operations')
-  .addTag('auth', 'Authentication related endpoints')
+  // .addTag('Cutoffs', 'User management operations')
+  // .addTag('auth', 'Authentication related endpoints')
   .addExtension('x-company-name', 'Dowinn HR')
   .addExtension('x-environment', process.env.NODE_ENV)
   .addServer(configService.getOrThrow<string>('APP_URL'), "Local Development Server")

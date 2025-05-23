@@ -3,4 +3,5 @@ export enum ScheduleStatus {
     MODIFIED = 'MODIFIED', // Schedule has been modified
     SWAPPED = 'SWAPPED', // Schedule has been swapped
     LEAVE = 'LEAVE', // Schedule is a leave day
+    CANCELLED = 'CANCELLED', // Schedule has been cancelled
 }

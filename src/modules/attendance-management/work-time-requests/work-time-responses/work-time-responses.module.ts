@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { WorkTimeRequestsModule } from '../work-time-requests.module';
 import { WorkTimeResponse } from './entities/work-time-response.entity';
@@ -8,7 +8,7 @@ import { WorkTimeResponsesService } from './work-time-responses.service';
 @Module({
     imports: [
         TypeOrmModule.forFeature([WorkTimeResponse]),
-        WorkTimeRequestsModule,
+        forwardRef(() => WorkTimeRequestsModule)
     ],
     providers: [WorkTimeResponsesService],
     exports: [WorkTimeResponsesService],
