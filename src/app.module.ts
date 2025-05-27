@@ -6,6 +6,7 @@ import { AccountManagementModule } from './modules/account-management/account-ma
 import { AddressesModule } from './modules/addresses/addresses.module';
 import { AttendanceManagementModule } from './modules/attendance-management/attendance-management.module';
 import { BiometricsModule } from './modules/biometrics/biometrics.module';
+import { ComplianceManagementModule } from './modules/compliance-management/compliance-management.module';
 import { DocumentsModule } from './modules/documents/documents.module';
 import { EmailsModule } from './modules/emails/emails.module';
 import { EmployeeManagementModule } from './modules/employee-management/employee-management.module';
@@ -15,7 +16,6 @@ import { NotificationsModule } from './modules/notifications/notifications.modul
 import { OrganizationManagementModule } from './modules/organization-management/organization-management.module';
 import { PayrollManagementModule } from './modules/payroll-management/payroll-management.module';
 import { ShiftManagementModule } from './modules/shift-management/shift-management.module';
-import { MemorandumsModule } from './modules/memorandums/memorandums.module';
 @Module({
   imports: [
     ConfigModule,
@@ -35,7 +35,7 @@ import { MemorandumsModule } from './modules/memorandums/memorandums.module';
     BiometricsModule,
     PayrollManagementModule,
     EmailsModule,
-    MemorandumsModule,
+    ComplianceManagementModule,
   ],
   controllers: [],
 })

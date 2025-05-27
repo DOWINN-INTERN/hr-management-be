@@ -98,4 +98,36 @@ export class NotificationsService extends BaseService<Notification> {
     
     return savedNotifications;
   }
+
+  async getUnreadCount(userId: string): Promise<number> {
+    const count = await this.notificationRepo.count({
+      where: { user: { id: userId }, read: false }
+    });
+    return count;
+  }
+
+  async markAllAsRead(userId: string): Promise<boolean> {
+    const result = await this.notificationRepo.update(
+      { user: { id: userId }, read: false },
+      { read: true, readAt: new Date() }
+    );
+
+    if (result.affected) {
+      // Emit event to update client
+      this.notificationsGateway.pingUser(userId);
+      return true;
+    }
+    return false;
+  }
+
+  async clearAll(userId: string): Promise<boolean> {
+    const result = await this.notificationRepo.softDelete({ user: { id: userId } });
+    
+    if (result.affected) {
+      // Emit event to update client
+      this.notificationsGateway.pingUser(userId);
+      return true;
+    }
+    return false;
+  }
 }

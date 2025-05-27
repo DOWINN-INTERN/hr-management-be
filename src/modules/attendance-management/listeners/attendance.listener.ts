@@ -19,7 +19,6 @@ import { AttendanceConfigurationsService } from '../attendance-configurations/at
 import { Attendance } from '../entities/attendance.entity';
 import { DayType } from '../final-work-hours/entities/final-work-hour.entity';
 import { WorkHourCalculationService } from '../final-work-hours/services/work-hour-calculation.service';
-import { WorkTimeRequest } from '../work-time-requests/entities/work-time-request.entity';
 import { WorkTimeRequestsService } from '../work-time-requests/work-time-requests.service';
 
 @Injectable()
@@ -75,8 +74,9 @@ export class AttendanceListener {
         const config = await this.attendanceConfigurationsService.getOrganizationAttendanceConfiguration(employee.organizationId);
         
         const punchTime = new Date(record.timestamp);
+        punchTime.setSeconds(0, 0); // Set seconds and milliseconds to zero
         const punchDate = format(punchTime, 'yyyy-MM-dd');
-        const punchTimeStr = format(punchTime, 'HH:mm:ss');
+        const punchTimeStr = format(punchTime, 'HH:mm');
 
         // Find today's schedule for the employee
         const todaySchedule = await this.schedulesService.getEmployeeScheduleToday(employee.id);
@@ -163,6 +163,7 @@ export class AttendanceListener {
           shiftStartTime.getTime() + 
           (shiftEndTime.getTime() - shiftStartTime.getTime()) / 2
         );
+        middleTime.setSeconds(0, 0); // Set seconds and milliseconds to zero
 
         // Find attendance for today if it exists
         let existingAttendance = await this.attendancesService.findOneBy({
@@ -196,18 +197,16 @@ export class AttendanceListener {
 
             // Check if late
             if (isAfter(punchTime, shiftStartTime)) {
-              const minutesLate = differenceInMinutes(punchTime, shiftStartTime);
-              // log minutes late
-              this.logger.log(`Employee ${employee.user.email} is late by ${minutesLate} minutes`);
               // Check if orgnaization does not allow late time
               if (!config.allowLate) {
+                const minutesLate = differenceInMinutes(punchTime, shiftStartTime);
                 // Check if minutes late can be considered as late time
                 if (minutesLate > config.gracePeriodMinutes) {
+                  this.logger.log(`Employee ${employee.user.email} is late by ${minutesLate} minutes`);
                   // Mark attendance as late time
                   attendanceStatuses.push(AttendanceStatus.LATE);
-                  this.logger.log(`Employee ${employee.user.email} is late by ${minutesLate} minutes`);
+                  
                   let roundedMinutes = minutesLate;
-
                   // Check if organization rounds up late time
                   if (config.roundUpLate) {
                     roundedMinutes = Math.ceil(minutesLate / config.roundUpLateMinutes) * config.roundUpLateMinutes;
@@ -235,15 +234,11 @@ export class AttendanceListener {
                 this.logger.log('Organization allows late time');
               }
             }
-
             else {
-              let minutesEarly = differenceInMinutes(shiftStartTime, punchTime);
-              // log minutes early
-              this.logger.log(`Employee ${employee.user.email} is early by ${minutesEarly} minutes`);
               // Check organization allow early time
               if (config.allowEarlyTime) 
               {
-                this.logger.log('Organization allows early time');
+                let minutesEarly = differenceInMinutes(shiftStartTime, punchTime);
                 // Check if minutes early can be considered as early time
                 if (minutesEarly > config.earlyTimeThresholdMinutes)
                 {
@@ -253,7 +248,7 @@ export class AttendanceListener {
                   attendanceStatuses.push(AttendanceStatus.CHECKED_IN);
 
                   // Check if early time is management-requested
-                  const isManagementRequested = await this.checkForManagementRequested(
+                  const isManagementRequested = await this.workTimeRequestsService.checkForManagementRequest(
                     employee.id, 
                     punchDate,
                     AttendanceStatus.EARLY
@@ -289,6 +284,9 @@ export class AttendanceListener {
                 else {
                   this.logger.log('Time in is not considered as early time');
                 }
+              }
+              else {
+                this.logger.log('Organization does not allow early time');
               }
             }
 
@@ -476,39 +474,6 @@ export class AttendanceListener {
       this.logger.log(`Created work time request for employee ${employeeId} for type ${type}`);
     } catch (error: any) {
       this.logger.error(`Failed to create work time request: ${error.message}`);
-    }
-  }
-
-  /**
-   * Checks if there is an approved management request for a specific attendance type on a given date
-   * @param employeeId The employee ID
-   * @param date The date string in YYYY-MM-DD format
-   * @param type The attendance status type to check (EARLY or OVERTIME)
-   * @returns Boolean indicating if an approved management request exists
-   */
-  private async checkForManagementRequested(
-    employeeId: string, 
-    date: string, 
-    type: AttendanceStatus.EARLY | AttendanceStatus.OVERTIME
-  ): Promise<WorkTimeRequest | null> {
-    try {
-      // Check for an approved work time request that was management-requested for this date
-      const request = await this.workTimeRequestsService.findOneBy({
-        employee: new Employee({ id: employeeId }),
-        type,
-        managementRequested: true,
-        date: new Date(date),
-        status: RequestStatus.APPROVED,
-      });
-
-      if (request) {
-        this.logger.log(`Found approved management-requested ${type} for employee ${employeeId} on ${date}`);
-      }
-
-      return request;
-    } catch (error: any) {
-      this.logger.error(`Error checking for management-requested ${type}: ${error.message}`);
-      return null;
     }
   }
 }

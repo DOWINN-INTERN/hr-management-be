@@ -41,7 +41,6 @@ export class WorkTimeRequestsService extends BaseService<WorkTimeRequest> {
             {
                 field: 'documents',
                 service: this.documentsService,
-                required: true
             },
             {
                 field: 'employee',
@@ -49,6 +48,32 @@ export class WorkTimeRequestsService extends BaseService<WorkTimeRequest> {
                 required: true
             }
         ]);
+    }
+
+    async checkForManagementRequest(
+        employeeId: string, 
+        date: string, 
+        type: AttendanceStatus.EARLY | AttendanceStatus.OVERTIME
+    ): Promise<WorkTimeRequest | null> {
+        try {
+            // Check for an approved work time request that was management-requested for this date
+            const request = await this.findOneBy({
+                employee: new Employee({ id: employeeId }),
+                type,
+                managementRequested: true,
+                date: new Date(date),
+                status: RequestStatus.APPROVED,
+            });
+
+            if (request) {
+                this.logger.log(`Found approved management-requested ${type} for employee ${employeeId} on ${date}`);
+            }
+
+            return request;
+        } catch (error: any) {
+            this.logger.error(`Error checking for management-requested ${type}: ${error.message}`);
+            return null;
+        }
     }
 
     async createManagementWorkRequest(dto: ManagementWorkTimeRequestDto, managerId: string): Promise<boolean> {

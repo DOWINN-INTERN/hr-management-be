@@ -58,6 +58,19 @@ export class EmployeesService extends BaseService<Employee> {
         if (!createDto.roles?.some(role => role.id === employeeRole.id)) {
             createDto.roles?.push(employeeRole);
         }
+
+        
+
+        // find the user id
+        if (createDto.userId) {
+            const user = await this.usersService.findOneByOrFail({ id: createDto.userId });
+            user.isEmployee = true;
+            await this.usersService.update(user.id, user, createdBy);
+            createDto.user = user;
+        } else {
+            // if no userId is provided, throw an error
+            throw new NotFoundException('User ID is required to create an employee');
+        }
         
         return await super.create(createDto, createdBy);
     }

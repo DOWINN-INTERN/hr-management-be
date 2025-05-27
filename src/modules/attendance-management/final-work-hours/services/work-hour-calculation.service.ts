@@ -4,6 +4,7 @@ import { PayrollsService } from "@/modules/payroll-management/payrolls.service";
 import { InjectQueue, Process, Processor } from "@nestjs/bull";
 import { Injectable, Logger } from "@nestjs/common";
 import { Job, Queue } from "bull";
+import { format } from "date-fns";
 import { Not } from "typeorm";
 import { v4 as uuidv4 } from "uuid";
 import { AttendanceConfigurationsService } from "../../attendance-configurations/attendance-configurations.service";
@@ -170,20 +171,58 @@ export class WorkHourCalculationProcessor {
         throw new Error(`Invalid schedule times for attendance ${attendanceId}: ${parseError.message}`);
       }
 
-        // Clone the dates to avoid mutation issues
-        const scheduleStartTimePlus = new Date(scheduleStartTime);
-        scheduleStartTimePlus.setMinutes(scheduleStartTimePlus.getMinutes() + config.gracePeriodMinutes);
-
         // Handle timeIn logic
+        // Check if there is no time in
         if (!timeIn) {
-          // Check if attendance status contains absent
+          // Check if attendance status is not an absent
           if (attendance.statuses?.includes(AttendanceStatus.ABSENT) === false) {
             noTimeInHours = config.noTimeInDeductionMinutes / 60;
           }
-        } else if (timeIn < scheduleStartTime) {
-          // check if config allow early check in
+        } 
+        // Check if timeIn is before schedule start time
+        else if (timeIn < scheduleStartTime) {
+          // check if config does not allow early time
           if (!config.allowEarlyTime) {
             timeIn = new Date(scheduleStartTime);
+          }
+          else {
+            const isManagementRequested = await this.workTimeRequestsService.checkForManagementRequest(
+              attendance.employee.id, 
+              format(attendance.schedule.date, 'yyyy-MM-dd'),
+              AttendanceStatus.EARLY
+            );
+
+            if (isManagementRequested) {
+              this.logger.debug(`Management requested early time for attendance ${attendanceId}`);
+               // Calculate new timeIn by subtracting the approved duration (in minutes) from the schedule start time
+              const durationInMinutes = isManagementRequested.duration || 0;
+              timeIn = new Date(scheduleStartTime);
+              timeIn.setMinutes(timeIn.getMinutes() - durationInMinutes);
+              
+            } else {
+              // If management did not request early time, set timeIn to schedule start time
+              timeIn = new Date(scheduleStartTime);
+              this.logger.debug(`Setting timeIn to schedule start time for attendance ${attendanceId}`);
+            }
+          }
+
+        }
+        else 
+        {
+          const lateRequest = await this.workTimeRequestsService.getRepository().findOne({
+            where: {
+              attendance: { id: attendanceId },
+              type: AttendanceStatus.LATE
+            },
+            relations: { workTimeResponse: true, attendance: true }
+          });
+
+          if (lateRequest)
+          {
+            this.logger.debug(`Late request found for attendance ${attendanceId}, adjusting timeIn`);
+            // Adjust timeIn based on late request
+            timeIn = new Date(scheduleStartTime);
+            timeIn.setMinutes(scheduleStartTime.getMinutes() + (lateRequest.duration || 0));
           }
         }
 
@@ -208,14 +247,41 @@ export class WorkHourCalculationProcessor {
             );
             
             if (workTimeRequest) {
-              overTimeOut = new Date(timeOut);
               this.logger.debug(`Overtime approved for attendance ${attendanceId}`);
+              timeOut = new Date(scheduleEndTime);
+              overTimeOut = new Date(timeOut);
+              overTimeOut.setMinutes(overTimeOut.getMinutes() + (workTimeRequest.duration || 0));
+              this.logger.debug(`Setting timeOut to ${overTimeOut} for attendance ${attendanceId}`);
+            }
+            else {
+              // If no overtime request, set timeOut to schedule end time
+              this.logger.debug(`No overtime request found for attendance ${attendanceId}, setting timeOut to schedule end time`);
+              timeOut = new Date(scheduleEndTime);
             }
 
-            timeOut = new Date(scheduleEndTime);
           } catch (queryError: any) {
             this.logger.warn(`Error checking work time request for attendance ${attendanceId}: ${queryError.message}`);
             timeOut = new Date(scheduleEndTime);
+          }
+        }
+        else {
+          // Check if there is an early time request
+          const underRequest = await this.workTimeRequestsService.getRepository().findOne({
+            where: {
+              attendance: { id: attendanceId },
+              type: AttendanceStatus.UNDER_TIME
+            },
+            relations: { workTimeResponse: true, attendance: true }
+          });
+
+          if (underRequest) {
+            this.logger.debug(`Early request found for attendance ${attendanceId}, adjusting timeOut`);
+            // Adjust timeOut based on early request
+            timeOut = new Date(scheduleEndTime);
+            timeOut.setMinutes(scheduleEndTime.getMinutes() - (underRequest.duration || 0));
+          }
+          else {
+            this.logger.debug(`No early request found for attendance ${attendanceId}, keeping original timeOut`);
           }
         }
 
@@ -231,6 +297,10 @@ export class WorkHourCalculationProcessor {
           overTimeOut,
           noTimeInHours,
           noTimeOutHours,
+          organizationId: attendance.organizationId,
+          branchId: attendance.branchId,
+          departmentId: attendance.departmentId,
+          userId: attendance.employee.user.id,
           dayType: attendance.dayType,
           workDate: attendance.schedule.date,
           createdBy: finalWorkHour.id ? finalWorkHour.createdBy : processedBy,
@@ -240,7 +310,7 @@ export class WorkHourCalculationProcessor {
         // Update work hours breakdown
         await this.finalWorkHourService.updateWorkHoursBreakdown(finalWorkHour.id, processedBy);
 
-        const payroll = await this.payrollsService.getRepository().findOneOrFail({
+        const payroll = await this.payrollsService.getRepository().findOne({
           where: {
             cutoff: { id: attendance.schedule.cutoff.id },
             employee: { id: attendance.employee.id },
@@ -249,8 +319,9 @@ export class WorkHourCalculationProcessor {
           relations: { cutoff: true, employee: true }
         });
 
-        // Update payrolls if needed
-        await this.payrollsService.recalculatePayroll(payroll?.id, { preserveState: true }, processedBy);
+        // update payrolls if needed
+        if (payroll)
+          await this.payrollsService.recalculatePayroll(payroll?.id, { preserveState: true }, processedBy);
       } catch (saveError: any) {
         throw new Error(`Database error while saving final work hour: ${saveError.message}`);
       }

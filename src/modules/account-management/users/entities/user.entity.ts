@@ -3,7 +3,7 @@ import { Document } from '@/modules/documents/entities/document.entity';
 import { Employee } from '@/modules/employee-management/entities/employee.entity';
 import { ActivityLog } from '@/modules/logs/activity-logs/entities/activity-log.entity';
 import { Notification } from '@/modules/notifications/entities/notification.entity';
-import { Column, Entity, OneToMany, OneToOne } from 'typeorm';
+import { AfterLoad, Column, Entity, OneToMany, OneToOne } from 'typeorm';
 import { BaseEntity } from '../../../../database/entities/base.entity';
 import { Profile } from '../../profiles/entities/profile.entity';
 import { Session } from '../../sessions/entities/session.entity';
@@ -67,9 +67,18 @@ export class User extends BaseEntity<User> {
   @OneToMany(() => Notification, (notification: Notification) => notification.user, { nullable: true })
   notifications?: Notification[];
 
+  
   @OneToOne(() => Employee, (employee) => employee.user, { nullable: true })
   employee?: Employee;
-
-  // @OneToMany(() => SocialLogin, (socialLogin) => socialLogin.user)
-  // socialLogins?: SocialLogin[];
+  
+  @Column({ type: 'bool', default: false })
+  isEmployee!: boolean;
+    
+  @AfterLoad()
+  updateIsEmployeeStatus() {
+    // Set isEmployee to true if the employee relation exists
+    if (this.employee !== null && this.employee !== undefined) {
+      this.isEmployee = true;
+    }
+  }
 }
