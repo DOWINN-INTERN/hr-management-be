@@ -866,5 +866,5 @@ function formatCurrency(amount: number): string {
     });
     
     // Then add the peso symbol manually
-    return `\u20B1${formatter.format(value)}`;
+    return `₱${formatter.format(value)}`;
 }

@@ -57,7 +57,7 @@ export class AuthService {
         password: await bcrypt.hash(uuidv4(), 10), // Generate random password
       });
       
-      user = await this.usersService.save(newUser);
+      user = await this.usersService.save(newUser) as User;
       
       this.logger.log(`Created new user from Google OAuth: ${user.id}`);
     } else {

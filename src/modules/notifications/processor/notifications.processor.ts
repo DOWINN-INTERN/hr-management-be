@@ -30,6 +30,14 @@ export class NotificationsProcessor {
     private readonly userConnectionService: UserConnectionService
   ) {}
 
+  @Process('handleUserOnline')
+  async handleUserOnline(job: Job<{ userId: string }>) {
+    const { userId } = job.data;
+    
+    // Send accumulated notifications to newly online user
+    // This is where you'd fetch and send unread notifications
+  }
+
   @Process('processNotification')
   async handleProcessNotification(job: Job<{ notificationId: string; userId: string; isUpdate?: boolean }>) {
     const { notificationId, userId, isUpdate } = job.data;
@@ -86,12 +94,12 @@ export class NotificationsProcessor {
       if (isUserOnline) {
         // Send via WebSocket
         this.notificationsGateway.pingUser(userId);
-        this.logger.debug(`Sent batch of ${notifications.length} notifications via WebSocket`);
       } else {
         // User is offline, send as grouped push notification if possible
         if (notifications.length === 1) {
           // Single notification
           await this.sendPushNotification(userId, notifications[0]);
+          this.notificationsGateway.emitToUser(notifications[0], userId);
         } else {
           // Group notifications
           await this.sendGroupedPushNotification(userId, notifications);

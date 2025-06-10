@@ -2,7 +2,7 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsNotEmpty, IsNumber, IsOptional, IsString, Length, Max, Min } from 'class-validator';
 
 export class SetUserDto {
-  @ApiProperty({ description: 'Target device ID' })
+  @ApiProperty({ description: 'Target device ID', example: '10.10.10.110:5010' })
   @IsString()
   @IsNotEmpty()
   deviceId!: string;

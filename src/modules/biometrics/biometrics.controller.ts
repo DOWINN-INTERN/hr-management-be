@@ -6,50 +6,7 @@ import { TimeoutInterceptor } from './interceptors/timeout.interceptor';
 import { AttendanceRecord, IBiometricTemplate, IBiometricUser } from './interfaces/biometric.interface';
 import { BiometricDevicesService } from './services/biometric-devices.service';
 import { BiometricsFactoryService } from './services/biometrics-factory.service';
-
-class SetUserDto {
-    @ApiProperty({
-        description: 'Device ID to register user on',
-        example: '192.168.1.100:4370'
-    })
-    deviceId!: string;
-
-    @ApiProperty({
-        description: 'User ID',
-        example: '1001'
-    })
-    userId!: string;
-
-    @ApiProperty({
-        description: 'User name',
-        example: 'John Doe'
-    })
-    name!: string;
-
-    @ApiProperty({
-        description: 'User password',
-        example: '1234',
-        required: false
-    })
-    @IsOptional()
-    password?: string;
-
-    @ApiProperty({
-        description: 'User card number',
-        example: '8987656789',
-        required: false
-    })
-    @IsOptional()
-    cardNumber?: string;
-
-    @ApiProperty({
-        description: 'User role (0=normal, 14=admin)',
-        example: 0,
-        required: false
-    })
-    @IsOptional()
-    role?: number;
-}
+import { SetUserDto } from './dtos/set-user.dto';
 
 class GetFingerprintDto {
     @ApiProperty({

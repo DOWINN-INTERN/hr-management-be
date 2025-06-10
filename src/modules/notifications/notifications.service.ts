@@ -8,6 +8,7 @@ import { DeepPartial, In, Repository } from 'typeorm';
 import { NotificationDto } from './dtos/notification.dto';
 import { Notification } from './entities/notification.entity';
 import { NotificationsGateway } from './gateways/notifications.gateway';
+import { UserConnectionService } from './services/user-connection.service';
 
 @Injectable()
 export class NotificationsService extends BaseService<Notification> {
@@ -18,6 +19,7 @@ export class NotificationsService extends BaseService<Notification> {
     private notificationRepo: Repository<Notification>,
     protected readonly usersService: UsersService,
     private readonly notificationsGateway: NotificationsGateway,
+    private readonly userConnectionService: UserConnectionService,
     @InjectQueue('notifications') private notificationsQueue: Queue
   ) {
     super(notificationRepo, usersService);
@@ -26,7 +28,9 @@ export class NotificationsService extends BaseService<Notification> {
   override async create(createDto: DeepPartial<Notification>, createdBy?: string): Promise<Notification> {
     const notification = await super.create(createDto, createdBy);
 
-    this.notificationsGateway.emitToUser(notification, notification.user.id);
+    if (this.userConnectionService.isUserOnline(notification.user.id)) {
+      this.notificationsGateway.emitToUser(notification, notification.user.id);
+    }
 
     // Queue for processing instead of immediate sending
     await this.notificationsQueue.add('processNotification', {
@@ -47,7 +51,9 @@ export class NotificationsService extends BaseService<Notification> {
       });
     } else {
       // Just emit read status update via WebSocket
-      this.notificationsGateway.emitToUser(notification, notification.user.id);
+      if (this.userConnectionService.isUserOnline(notification.user.id)) {
+        this.notificationsGateway.emitToUser(notification, notification.user.id);
+      }
     }
     return notification;
   }
@@ -63,38 +69,51 @@ export class NotificationsService extends BaseService<Notification> {
   
   async createBulkNotifications(dto: NotificationDto, createdBy: string): Promise<Notification[]> {
     const notifications = dto.recipients.map(recipient => {
-      // Log a warning if recipient.id is missing
       if (!recipient.id) {
         this.notificationLogger.warn(`Recipient id is missing for recipient: ${JSON.stringify(recipient)}`);
       }
       return this.notificationRepo.create({
         ...dto,
-        user: { id: recipient.id }, // this should not be null if recipient.id is provided
+        user: { id: recipient.id },
         read: false,
         createdBy,
       });
     });
-    // Save all to database
+    
     const savedNotifications = await this.notificationRepo.save(notifications);
     
-    // Group by user
+    // Separate online and offline users for different processing
+    const onlineNotifications: string[] = [];
+    const offlineNotifications: string[] = [];
     const notificationsByUser = new Map<string, string[]>();
     
     savedNotifications.forEach(notification => {
       const userId = notification.user.id;
+      
       if (!notificationsByUser.has(userId)) {
         notificationsByUser.set(userId, []);
       }
       notificationsByUser.get(userId)!.push(notification.id);
+      
+      // Check if user is online and emit immediately
+      if (this.userConnectionService.isUserOnline(userId)) {
+        this.notificationsGateway.emitToUser(notification, userId);
+        onlineNotifications.push(notification.id);
+      } else {
+        offlineNotifications.push(notification.id);
+      }
     });
     
     // Queue batch processing jobs
     for (const [userId, notificationIds] of notificationsByUser.entries()) {
       await this.notificationsQueue.add('processBatch', {
         notificationIds,
-        userId
+        userId,
+        isUserOnline: this.userConnectionService.isUserOnline(userId)
       });
     }
+    
+    this.notificationLogger.log(`Processed ${onlineNotifications.length} online users, ${offlineNotifications.length} offline users`);
     
     return savedNotifications;
   }

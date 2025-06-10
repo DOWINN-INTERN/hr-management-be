@@ -158,14 +158,6 @@ export class AttendanceConfigurationDto extends PartialType(BaseDto) {
     roundUpOvertimeMinutes?: number;
 
     @ApiPropertyOptional({
-        description: 'Consider early time as over time',
-        example: false,
-    })
-    @IsBoolean()
-    @IsOptional()
-    considerEarlyTimeAsOvertime?: boolean;
-    
-    @ApiPropertyOptional({
         description: 'Apply deduction for missing time in',
         example: true,
     })

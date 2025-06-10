@@ -470,6 +470,10 @@ export class AttendanceListener {
         status: RequestStatus.PENDING,
         createdBy: employeeId,
         employee: { id: employeeId },
+        organizationId: attendance.organizationId,
+        departmentId: attendance.departmentId,
+        branchId: attendance.branchId,
+        userId: attendance.userId,
       });
       this.logger.log(`Created work time request for employee ${employeeId} for type ${type}`);
     } catch (error: any) {

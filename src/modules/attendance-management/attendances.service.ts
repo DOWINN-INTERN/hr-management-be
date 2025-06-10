@@ -48,7 +48,7 @@ export class AttendancesService extends BaseService<Attendance> {
         return await super.update(id, updateDto, updatedBy);
     }
 
-    override async save(entity: Attendance): Promise<Attendance> {
+    override async save(entity: Attendance | Attendance[]): Promise<Attendance | Attendance[]> {
         await this.attendancesGateway.pingAll();
         return await super.save(entity);
     }
@@ -72,7 +72,6 @@ export class AttendancesService extends BaseService<Attendance> {
         // Get all attendance records for the day that has no final work hours yet
         const attendances = await this.attendancesRepository.find({
             where: {
-                isProcessed: false,
                 schedule: {
                     date: LessThan(today),
                 }
@@ -118,7 +117,16 @@ export class AttendancesService extends BaseService<Attendance> {
             attendance.processedAt = new Date();
         }
 
-        await this.attendancesRepository.save(attendances);
+        await this.save(attendances);
+
+        // notification
+        await this.notificationsService.create({
+            title: 'Attendance Processed',
+            message: `Attendance records for ${attendances.length} employees have been processed successfully.`,
+            type: NotificationType.INFO,
+            category: 'ATTENDANCE',
+            user: { id: processedBy },
+        });
 
         // log attendance processing
         this.logger.log(`Attendance records processed successfully`);
@@ -176,7 +184,11 @@ export class AttendancesService extends BaseService<Attendance> {
                         date: attendance.schedule.date,
                         dayType: attendance.dayType,
                         createdBy: attendance.employee.id,
-                        employee: attendance.employee
+                        employee: attendance.employee,
+                        organizationId: attendance.employee.organizationId,
+                        branchId: attendance.employee.branchId,
+                        departmentId: attendance.employee.departmentId,
+                        userId: attendance.employee.userId
                     });
 
                     await this.workTimeRequestsService.save(workTimeRequest);
@@ -254,7 +266,11 @@ export class AttendancesService extends BaseService<Attendance> {
                         date: attendance.schedule.date,
                         dayType: attendance.dayType,
                         createdBy: attendance.employee.id,
-                        employee: attendance.employee
+                        employee: attendance.employee,
+                        organizationId: attendance.employee.organizationId,
+                        branchId: attendance.employee.branchId,
+                        departmentId: attendance.employee.departmentId,
+                        userId: attendance.employee.userId
                     });
 
                     await this.workTimeRequestsService.save(workTimeRequest);
@@ -340,7 +356,11 @@ export class AttendancesService extends BaseService<Attendance> {
                         date: attendance.schedule.date,
                         dayType: attendance.dayType,
                         createdBy: attendance.employee.id,
-                        employee: attendance.employee
+                        employee: attendance.employee,
+                        organizationId: attendance.employee.organizationId,
+                        branchId: attendance.employee.branchId,
+                        departmentId: attendance.employee.departmentId,
+                        userId: attendance.employee.userId
                     });
 
                     await this.workTimeRequestsService.save(workTimeRequest);
@@ -426,7 +446,11 @@ export class AttendancesService extends BaseService<Attendance> {
                         dayType: attendance.dayType,
                         cutoff: attendance.cutoff,
                         createdBy: attendance.employee.id,
-                        employee: attendance.employee
+                        employee: attendance.employee,
+                        organizationId: attendance.employee.organizationId,
+                        branchId: attendance.employee.branchId,
+                        departmentId: attendance.employee.departmentId,
+                        userId: attendance.employee.userId
                     });
 
                     await this.workTimeRequestsService.save(workTimeRequest);
@@ -501,6 +525,10 @@ export class AttendancesService extends BaseService<Attendance> {
                         date: attendance.schedule.date,
                         createdBy: attendance.employee.id,
                         employee: { id: attendance.employee.id },
+                        organizationId: attendance.employee.organizationId,
+                        branchId: attendance.employee.branchId,
+                        departmentId: attendance.employee.departmentId,
+                        userId: attendance.employee.userId
                     });
 
                     await this.notificationsService.create({
@@ -560,6 +588,10 @@ export class AttendancesService extends BaseService<Attendance> {
                         date: attendance.schedule.date,
                         createdBy: attendance.employee.id,
                         employee: { id: attendance.employee.id },
+                        organizationId: attendance.employee.organizationId,
+                        branchId: attendance.employee.branchId,
+                        departmentId: attendance.employee.departmentId,
+                        userId: attendance.employee.userId
                     });
 
                     await this.notificationsService.create({
@@ -669,6 +701,10 @@ export class AttendancesService extends BaseService<Attendance> {
                             date: attendance.schedule.date,
                             status: RequestStatus.PENDING,
                             employee: { id: attendance.employee.id },
+                            organizationId: attendance.employee.organizationId,
+                            branchId: attendance.employee.branchId,
+                            departmentId: attendance.employee.departmentId,
+                            userId: attendance.employee.userId
                         });
                     }
                     else {
@@ -710,7 +746,7 @@ export class AttendancesService extends BaseService<Attendance> {
        // First resolve all attendance checks with Promise.all
         const schedulesWithAbsenceInfo = await Promise.all(previousSchedules.map(async (schedule) => {
             const attendance = await this.attendancesRepository.findOne({
-                where: { schedule: { id: schedule.id }, isProcessed: false },
+                where: { schedule: { id: schedule.id } },
                 relations: { schedule: { employee: true } }
             });
 
@@ -802,7 +838,10 @@ export class AttendancesService extends BaseService<Attendance> {
                     workTimeRequest.cutoff = schedule.cutoff;
                     workTimeRequest.dayType = dayType;
                     workTimeRequest.createdBy = schedule.employee.id;
-                    
+                    workTimeRequest.organizationId = schedule.employee.organizationId;
+                    workTimeRequest.branchId = schedule.employee.branchId;
+                    workTimeRequest.departmentId = schedule.employee.departmentId;
+                    workTimeRequest.userId = schedule.employee.userId;
                     await this.workTimeRequestsService.save(workTimeRequest);
                 }
 

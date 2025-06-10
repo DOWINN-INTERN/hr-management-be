@@ -176,38 +176,48 @@ export class PayrollsService extends BaseService<Payroll> {
     calculatedAmount: number;
     calculationDetail: WithholdingTaxCalculationDetails;
   } {
-    // Compute annual taxable income from monthly
+    // Convert monthly to annual taxable income
     const annualTaxableIncome = monthlyTaxableIncome * 12;
     
-    // Apply 2025 tax table
+    // Apply 2025 TRAIN Law tax brackets (accurate rates and thresholds)
     let annualTax = 0;
     
     if (annualTaxableIncome <= 250000) {
-      annualTax = 0; // Exempt
+      // First bracket: 0% for income up to ₱250,000
+      annualTax = 0;
     } else if (annualTaxableIncome <= 400000) {
-      annualTax = (annualTaxableIncome - 250000) * 0.15; // 15% of excess over 250,000
+      // Second bracket: 15% of excess over ₱250,000
+      annualTax = (annualTaxableIncome - 250000) * 0.15;
     } else if (annualTaxableIncome <= 800000) {
-      annualTax = 22500 + (annualTaxableIncome - 400000) * 0.2; // 22,500 + 20% of excess over 400,000
+      // Third bracket: ₱22,500 + 20% of excess over ₱400,000
+      annualTax = 22500 + (annualTaxableIncome - 400000) * 0.20;
     } else if (annualTaxableIncome <= 2000000) {
-      annualTax = 102500 + (annualTaxableIncome - 800000) * 0.25; // 102,500 + 25% of excess over 800,000
+      // Fourth bracket: ₱102,500 + 25% of excess over ₱800,000
+      annualTax = 102500 + (annualTaxableIncome - 800000) * 0.25;
     } else if (annualTaxableIncome <= 8000000) {
-      annualTax = 402500 + (annualTaxableIncome - 2000000) * 0.3; // 402,500 + 30% of excess over 2,000,000
+      // Fifth bracket: ₱402,500 + 30% of excess over ₱2,000,000
+      annualTax = 402500 + (annualTaxableIncome - 2000000) * 0.30;
     } else {
-      annualTax = 2202500 + (annualTaxableIncome - 8000000) * 0.35; // 2,202,500 + 35% of excess over 8,000,000
+      // Sixth bracket: ₱2,202,500 + 35% of excess over ₱8,000,000
+      annualTax = 2202500 + (annualTaxableIncome - 8000000) * 0.35;
     }
     
-    // Get monthly tax
-    const calculatedAmount = parseFloat((annualTax / 12).toFixed(2));
+    // Calculate monthly withholding tax
+    // Round to 2 decimal places to avoid floating point precision issues
+    const monthlyTax = Math.round((annualTax / 12) * 100) / 100;
     
     const calculationDetail: WithholdingTaxCalculationDetails = {
       calculationType: 'WITHHOLDING_TAX',
       monthlyTaxableIncome: monthlyTaxableIncome,
       annualTaxableIncome: annualTaxableIncome,
-      annualTax: annualTax,
-      monthlyTax: calculatedAmount
+      annualTax: Math.round(annualTax * 100) / 100, // Round annual tax too
+      monthlyTax: monthlyTax
     };
 
-    return { calculatedAmount, calculationDetail };
+    return { 
+      calculatedAmount: monthlyTax, 
+      calculationDetail 
+    };
   }
 
   /**
@@ -409,6 +419,8 @@ export class PayrollsService extends BaseService<Payroll> {
     payroll.noTimeOut = payroll.totalNoTimeOutHours * payroll.hourlyRate;
     payroll.totalBasicDeductions = payroll.absences + payroll.tardiness + payroll.undertime
       + payroll.noTimeIn + payroll.noTimeOut;
+
+    payroll.totalDeductions = payroll.totalBasicDeductions;
     
     // 10. Initial gross pay from basic components
     payroll.grossPay = payroll.basicPay + payroll.restDayPay + payroll.holidayPay
@@ -426,7 +438,7 @@ export class PayrollsService extends BaseService<Payroll> {
     payroll.taxableIncome = payroll.grossPay;
 
     // 13. Initial net pay
-    payroll.netPay = payroll.grossPay;
+    payroll.netPay = payroll.grossPay - payroll.totalDeductions;
   }
   
   /**
@@ -464,6 +476,8 @@ export class PayrollsService extends BaseService<Payroll> {
     let combinedTaxableIncome = payroll.taxableIncome;
 
     if (cutoff.cutoffPlace === 2) {
+      // log 
+      this.logger.log(`Processing second cutoff payroll for employee ${payroll.employee.id} with gross pay ${payroll.grossPay} and taxable income ${payroll.taxableIncome}`);
       // Find the first cutoff payroll in the same month
       const firstCutoffDate = new Date(cutoff.startDate);
       firstCutoffDate.setDate(1); // Set to first day of month
@@ -532,9 +546,14 @@ export class PayrollsService extends BaseService<Payroll> {
         // Check if this employee has a specific configuration for this item type
         const employeeItemConfig = employeePayrollItemMap.get(itemType.id);
 
+        // log
+        this.logger.log(`Processing payroll item type: ${itemType.name} for employee ${payroll.employee.id} in category ${category}`);
+
         // Skip if not applicable for this employee
         // Only process required items or items that have employee-specific configuration
-        if (!employeeItemConfig || employeeItemConfig.isApplicable|| (itemType.processEvery && cutoff.cutoffPlace !== itemType.processEvery)) {
+        if (!employeeItemConfig || !employeeItemConfig.isApplicable || (itemType.processEvery && cutoff.cutoffPlace !== itemType.processEvery)) {
+          // log
+          this.logger.log(`Skipping payroll item type: ${itemType.name} for employee ${payroll.employee.id} as it is not applicable or not configured.`);
           continue;
         }
         
@@ -903,10 +922,14 @@ export class PayrollsService extends BaseService<Payroll> {
     const payroll = await this.findOneByOrFail({ id: payrollId }, {
       relations: {
         employee: {
+          roles: {
+            organization: true,
+            department: true,
+            branch: true
+          },
           user: {
             profile: true
           },
-          roles: true
         },
         cutoff: true,
         payrollItems: {
@@ -920,8 +943,14 @@ export class PayrollsService extends BaseService<Payroll> {
       throw new BadRequestException('Payroll must be approved, released, paid or archived to generate payslips');
     }
 
+    // log employee roles
+    this.logger.log(`Generating payslip for employee ${payroll.employee.id} with roles: ${payroll.employee.roles?.map(role => role.name).join(', ')}`);
+
     // Get the employee's highest scope role
     const highestRole = UtilityHelper.determineEffectiveScope(payroll.employee.roles || []);
+
+    // log highest role
+    this.logger.log(`Highest role for employee ${payroll.employee.id}: ${highestRole.name}`);
 
     // Group payroll items by category for organized display
     const itemsByCategory: Record<string, any[]> = {};
@@ -1423,12 +1452,12 @@ async recalculatePayroll(
       const category = item.payrollItemType.category;
       
       if (options.recalculateDeductions && 
-          category === PayrollItemCategory.DEDUCTION) {
+        category === PayrollItemCategory.DEDUCTION) {
         return false; // Remove to recalculate
       }
       
       if (options.recalculateAllowances && 
-          category === PayrollItemCategory.ALLOWANCE) {
+        category === PayrollItemCategory.ALLOWANCE) {
         return false; // Remove to recalculate
       }
       
@@ -1437,7 +1466,7 @@ async recalculatePayroll(
   }
   
   // Recalculate the payroll items
-  await this.processPayrollItems(payroll, userId);
+  const payrollItems = await this.processPayrollItems(payroll, userId);
   
   // Restore original state if preserving
   if (options.preserveState) {
@@ -1456,7 +1485,12 @@ async recalculatePayroll(
   // Update processed information
   payroll.processedAt = new Date();
   payroll.processedBy = userId;
-  
+  payroll.payrollItems = payrollItems;
+  payroll.organizationId = payroll.employee.organizationId;
+  payroll.branchId = payroll.employee.branchId;
+  payroll.departmentId = payroll.employee.departmentId;
+  payroll.userId = payroll.employee.userId;
+
   // Save the updated payroll
   return await this.repository.save(payroll);
 }

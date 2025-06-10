@@ -217,7 +217,7 @@ export class SchedulesService extends BaseService<Schedule> {
             
             // If it's a holiday, associate it with the schedule
             if (holiday) {
-              scheduleEntry.holiday = { id: holiday.id };
+              scheduleEntry.holiday = holiday;
             }
             
             schedules.push(scheduleEntry);

@@ -11,7 +11,7 @@ import { ChunkUploadResult } from '../dtos/chunk-upload-result.dto';
 import { ChunkedFileInfo } from '../dtos/chunked-file-info.dto';
 import { DirectoryMetadata } from '../dtos/directory-metadata.dto';
 import { FileExportOptions } from '../dtos/file-export-options.dto';
-import { FileListOptions } from '../dtos/file-list-options.dto';
+import { FileListOptionsDto } from '../dtos/file-list-options.dto';
 import { FileListResponseDto } from '../dtos/file-list-response.dto';
 import { FileMetadata } from '../dtos/file-meta-data.dto';
 import { FileUploadOptions } from '../dtos/file-upload-options.dto';
@@ -28,7 +28,7 @@ export abstract class BaseFileService implements IFileService {
     this.uploadDir = uploadDir || '';
     this.baseUrl = baseUrl || '';
   }
-  abstract listFiles(options?: FileListOptions, authorization?: string): Promise<FileListResponseDto>;
+  abstract listFiles(options?: FileListOptionsDto, authorization?: string): Promise<FileListResponseDto>;
   abstract createDirectory(dirPath: string): Promise<DirectoryMetadata>;
   abstract deleteDirectory(dirPath: string, recursive?: boolean): Promise<boolean>;
   abstract renameDirectory(oldPath: string, newPath: string): Promise<DirectoryMetadata>;

@@ -1,11 +1,12 @@
 import { InjectQueue } from '@nestjs/bull';
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { Queue } from 'bull';
 
 @Injectable()
 export class UserConnectionService {
-  // Track online users
-  private onlineUsers = new Set<string>();
+  private readonly logger = new Logger(UserConnectionService.name);
+  // Track online users with connection timestamps
+  private onlineUsers = new Map<string, Date>();
 
   constructor(
     @InjectQueue('notifications') private notificationsQueue: Queue
@@ -15,8 +16,11 @@ export class UserConnectionService {
    * Mark a user as online
    */
   async userConnected(userId: string): Promise<void> {
-    if (!this.onlineUsers.has(userId)) {
-      this.onlineUsers.add(userId);
+    const wasOffline = !this.onlineUsers.has(userId);
+    this.onlineUsers.set(userId, new Date());
+    
+    if (wasOffline) {
+      this.logger.log(`User ${userId} came online`);
       
       // Queue job to send unread notifications
       await this.notificationsQueue.add('handleUserOnline', {
@@ -31,7 +35,10 @@ export class UserConnectionService {
    * Mark a user as offline
    */
   userDisconnected(userId: string): void {
-    this.onlineUsers.delete(userId);
+    if (this.onlineUsers.has(userId)) {
+      this.onlineUsers.delete(userId);
+      this.logger.log(`User ${userId} went offline`);
+    }
   }
   
   /**
@@ -39,5 +46,26 @@ export class UserConnectionService {
    */
   isUserOnline(userId: string): boolean {
     return this.onlineUsers.has(userId);
+  }
+
+  /**
+   * Get all online users
+   */
+  getOnlineUsers(): string[] {
+    return Array.from(this.onlineUsers.keys());
+  }
+
+  /**
+   * Get user's last seen time (when they came online)
+   */
+  getUserLastSeen(userId: string): Date | null {
+    return this.onlineUsers.get(userId) || null;
+  }
+
+  /**
+   * Get online user count
+   */
+  getOnlineUserCount(): number {
+    return this.onlineUsers.size;
   }
 }

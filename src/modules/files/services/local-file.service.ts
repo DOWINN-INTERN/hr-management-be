@@ -8,7 +8,7 @@ import { Readable } from 'stream';
 import { ChunkUploadResult } from '../dtos/chunk-upload-result.dto';
 import { ChunkedFileInfo } from '../dtos/chunked-file-info.dto';
 import { DirectoryMetadata } from '../dtos/directory-metadata.dto';
-import { FileListOptions, FileSortField, SortDirection } from '../dtos/file-list-options.dto';
+import { FileListOptionsDto, FileSortField, SortDirection } from '../dtos/file-list-options.dto';
 import { FileListResponseDto } from '../dtos/file-list-response.dto';
 import { FileMetadata } from '../dtos/file-meta-data.dto';
 import { FileUploadOptions } from '../dtos/file-upload-options.dto';
@@ -235,6 +235,7 @@ export class LocalFileService extends BaseFileService {
     }
   }
 
+  // TODO: Implement tenant scoping
   async uploadFile(file: Express.Multer.File, options?: FileUploadOptions): Promise<FileMetadata> {
     const folder = options?.folder || '';
     const finalDir = path.join(this.uploadDir, folder);
@@ -271,6 +272,7 @@ export class LocalFileService extends BaseFileService {
     return metadata;
   }
 
+  // TODO: Implement tenant scoping and separation
   async uploadFiles(files: Express.Multer.File[], options?: FileUploadOptions): Promise<FileMetadata[]> {
     const results: FileMetadata[] = [];
     
@@ -326,100 +328,101 @@ export class LocalFileService extends BaseFileService {
     }
   }
 
-  async listFiles(options?: FileListOptions, authorization?: string): Promise<FileListResponseDto> {
-    try {
-      // Set default options
-      const opts = {
-        limit: 100,
-        includeDirs: true,
-        recursive: false,
-        sortDirection: 'asc' as SortDirection,
-        ...options
-      };
   
-      // Resolve base directory
-      const baseDir = opts.prefix 
-        ? path.join(this.uploadDir, opts.prefix) 
-        : this.uploadDir;
-      
-      // Check if directory exists
-      if (!fs.existsSync(baseDir)) {
-        return {
-          files: [],
-          directories: [],
-          count: 0,
-          prefix: opts.prefix,
-          hasMore: false,
-          totalSize: 0,
-        };
+  
+  async listFiles(options?: FileListOptionsDto, authorization?: string): Promise<FileListResponseDto> {
+  try {
+    // Set default options with proper typing
+    const opts = {
+      page: options?.page || 1,
+      limit: options?.limit || 50,
+      folder: options?.folder,
+      includeDirs: options?.includeDirs ?? true,
+      includeUrls: options?.includeUrls ?? true,
+      sortBy: options?.sortBy || FileSortField.NAME,
+      sortDirection: options?.sortDirection || SortDirection.ASC,
+      searchTerm: options?.searchTerm,
+      showHidden: options?.showHidden ?? false,
+      scope: options?.scope,
+      ...options
+    };
+
+    // Resolve base directory using 'folder' instead of 'prefix'
+    const baseDir = opts.folder 
+      ? path.join(this.uploadDir, opts.folder) 
+      : this.uploadDir;
+    
+    // Check if directory exists
+    if (!fs.existsSync(baseDir)) {
+      return {
+        files: [],
+        directories: [],
+        pagination: {
+          page: opts.page,
+          limit: opts.limit,
+          totalCount: 0,
+          totalPages: 0,
+          hasNextPage: false,
+          hasPreviousPage: false,
+          nextPage: undefined,
+          previousPage: undefined,
+          itemsPerPage: opts.limit
+        },
+        breadcrumbs: this.generateBreadcrumbs(opts.folder),
+        parentDir: this.getParentDirectory(opts.folder),
+        scope: opts.scope
+      };
+    }
+
+    // Initialize result containers
+    const files: FileMetadata[] = [];
+    const directories: DirectoryMetadata[] = [];
+    let totalSize = 0;
+
+    // Helper function to check if file matches filters
+    const matchesFilters = async (filePath: string, stats: fs.Stats, fileName: string): Promise<boolean> => {
+      // Skip hidden files unless showHidden is true
+      if (!opts.showHidden && fileName.startsWith('.')) {
+        return false;
       }
-  
-      // Initialize result containers
-      const files: FileMetadata[] = [];
-      const directories: DirectoryMetadata[] = [];
-      let totalSize = 0;
-  
-      // Helper function to check if file matches filters
-      const matchesFilters = async (filePath: string, stats: fs.Stats): Promise<boolean> => {
-        // Extension filter
-        if (opts.extensions) {
-          const fileExt = path.extname(filePath).toLowerCase().replace('.', '');
-          const allowedExts = opts.extensions.split(',').map(e => e.trim().toLowerCase());
-          if (!allowedExts.includes(fileExt)) return false;
-        }
-  
-        // Size filter
-        if (opts.size) {
-          if (opts.size.min !== undefined && stats.size < opts.size.min) return false;
-          if (opts.size.max !== undefined && stats.size > opts.size.max) return false;
-        }
-  
-        // Create date filter
-        if (opts.createdAt) {
-          const createTime = stats.birthtime.getTime();
-          if (opts.createdAt.from && createTime < new Date(opts.createdAt.from).getTime()) return false;
-          if (opts.createdAt.to && createTime > new Date(opts.createdAt.to).getTime()) return false;
-        }
-  
-        // Modified date filter
-        if (opts.modifiedAt) {
-          const modTime = stats.mtime.getTime();
-          if (opts.modifiedAt.from && modTime < new Date(opts.modifiedAt.from).getTime()) return false;
-          if (opts.modifiedAt.to && modTime > new Date(opts.modifiedAt.to).getTime()) return false;
-        }
-  
-        // MIME type filter
-        if (opts.mimeType) {
-          const fileMime = mime.lookup(filePath) || 'application/octet-stream';
-          if (!fileMime.includes(opts.mimeType)) return false;
-        }
-  
-        // Text search filter
-        if (opts.searchTerm) {
-          const fileName = path.basename(filePath).toLowerCase();
-          if (!fileName.includes(opts.searchTerm.toLowerCase())) return false;
-        }
-  
-        return true;
-      };
-  
-      // Function to process directory content
-      const processDirectory = async (dirPath: string, relPath: string = ''): Promise<void> => {
-        const items = await fsPromises.readdir(dirPath);
-  
-        // Process directories first
-        if (opts.includeDirs) {
-          for (const item of items) {
-            const itemPath = path.join(dirPath, item);
+      
+      
+
+      // Text search filter
+      if (opts.searchTerm) {
+        const lowerFileName = fileName.toLowerCase();
+        const searchTerm = opts.searchTerm.toLowerCase();
+        if (!lowerFileName.includes(searchTerm)) return false;
+      }
+
+      return true;
+    };
+
+    // Function to process directory content
+    const processDirectory = async (dirPath: string, relPath: string = ''): Promise<void> => {
+      // Read directory contents
+      const items = await fsPromises.readdir(dirPath);
+
+      // Process directories first
+      if (opts.includeDirs) {
+        for (const item of items) {
+          // Skip hidden items if not showing hidden
+          if (!opts.showHidden && item.startsWith('.')) {
+            continue;
+          }
+          
+          const itemPath = path.join(dirPath, item);
+          
+          try {
             const stats = await fsPromises.stat(itemPath);
-  
+
             if (stats.isDirectory()) {
               const dirRelPath = relPath ? `${relPath}/${item}` : item;
-              const dirKey = opts.prefix ? `${opts.prefix}/${dirRelPath}` : dirRelPath;
-  
-              // Skip if this is the root of a recursive search
+              const dirKey = opts.folder ? `${opts.folder}/${dirRelPath}` : dirRelPath;
+
+              // Only include directories at the current level (not recursive)
               if (dirPath === baseDir) {
-                // Calculate directory size and item count (can be expensive for large dirs)
+                // Calculate directory size and item count
                 let dirSize = 0;
                 let itemCount = 0;
                 
@@ -427,16 +430,12 @@ export class LocalFileService extends BaseFileService {
                   const dirItems = await fsPromises.readdir(itemPath);
                   itemCount = dirItems.length;
                   
-                  // Optionally calculate directory size
-                  // This can be expensive, so we might want to make it optional
-                  if (opts.includeSizes) {
-                    dirSize = await this.calculateDirectorySize(itemPath);
-                  }
+                  dirSize = await this.calculateDirectorySize(itemPath, opts.showHidden);
                 } catch (err) {
                   const error = err as Error;
                   this.logger.warn(`Error reading directory ${dirKey}: ${error.message}`);
                 }
-  
+
                 directories.push({
                   key: dirKey,
                   name: item,
@@ -446,169 +445,194 @@ export class LocalFileService extends BaseFileService {
                   size: dirSize
                 });
               }
-  
-              // If recursive, process subdirectories
-              if (opts.recursive) {
-                await processDirectory(itemPath, dirRelPath);
-              }
             }
+          } catch (err) {
+            // Skip directories we can't access
+            this.logger.warn(`Error processing directory ${itemPath}: ${(err as Error).message}`);
           }
         }
-  
-        // Process files
-        for (const item of items) {
-          const itemPath = path.join(dirPath, item);
+      }
+
+      // Process files
+      for (const item of items) {
+        const itemPath = path.join(dirPath, item);
+        
+        try {
           const stats = await fsPromises.stat(itemPath);
-  
+
           if (stats.isFile()) {
             const fileRelPath = relPath ? `${relPath}/${item}` : item;
-            const fileKey = opts.prefix ? `${opts.prefix}/${fileRelPath}` : fileRelPath;
-  
+            const fileKey = opts.folder ? `${opts.folder}/${fileRelPath}` : fileRelPath;
+
             // Apply filters
-            if (await matchesFilters(itemPath, stats)) {
+            if (await matchesFilters(itemPath, stats, item)) {
               totalSize += stats.size;
-  
+
               files.push({
                 key: fileKey,
                 originalName: item,
                 size: stats.size,
                 mimeType: mime.lookup(itemPath) || 'application/octet-stream',
-                url: opts.includeUrls ? await this.getFileUrl(fileKey) : undefined,
+                url: opts.includeUrls ? await this.getFileUrl(fileKey, authorization) : undefined,
                 createdAt: stats.birthtime,
                 lastModified: stats.mtime,
               });
             }
           }
-        }
-      };
-  
-      // Process main directory and all subdirectories if recursive
-      await processDirectory(baseDir);
-  
-      // Generate breadcrumbs
-      const breadcrumbs = [];
-      if (opts.prefix) {
-        const segments = opts.prefix.split('/');
-        let currentPath = '';
-        
-        breadcrumbs.push({ name: 'Home', path: '' });
-        
-        for (let i = 0; i < segments.length; i++) {
-          currentPath = currentPath ? `${currentPath}/${segments[i]}` : segments[i];
-          breadcrumbs.push({
-            name: segments[i],
-            path: currentPath
-          });
+        } catch (err) {
+          // Skip files we can't access
+          this.logger.warn(`Error processing file ${itemPath}: ${(err as Error).message}`);
         }
       }
-  
-      // Calculate parent directory
-      let parentDir = undefined;
-      if (opts.prefix) {
-        const segments = opts.prefix.split('/');
-        segments.pop();
-        parentDir = segments.join('/');
+    };
+
+    // Process main directory
+    await processDirectory(baseDir);
+
+    // Apply sorting with directories first
+    const sortItems = (a: any, b: any) => {
+      // Always sort directories before files
+      const aIsDir = !('originalName' in a);
+      const bIsDir = !('originalName' in b);
+      
+      if (aIsDir && !bIsDir) return -1;
+      if (!aIsDir && bIsDir) return 1;
+      
+      const direction = opts.sortDirection === SortDirection.DESC ? -1 : 1;
+      
+      switch(opts.sortBy) {
+        case FileSortField.NAME:
+          return (a.originalName || a.name).localeCompare(b.originalName || b.name) * direction;
+        case FileSortField.SIZE:
+          return ((a.size || 0) - (b.size || 0)) * direction;
+        case FileSortField.DATE_CREATED:
+          return (a.createdAt?.getTime() - b.createdAt?.getTime()) * direction;
+        case FileSortField.DATE_MODIFIED:
+          return (a.lastModified?.getTime() - b.lastModified?.getTime()) * direction;
+        case FileSortField.TYPE:
+          const aType = a.mimeType || '';
+          const bType = b.mimeType || '';
+          return aType.localeCompare(bType) * direction;
+        default:
+          return (a.originalName || a.name).localeCompare(b.originalName || b.name) * direction;
       }
+    };
+
+    // Sort files and directories
+    files.sort(sortItems);
+    directories.sort(sortItems);
+    
+    // Generate combined results for pagination
+    const combinedItems = [...directories, ...files];
+    const totalItems = combinedItems.length;
+    
+    // Calculate pagination
+    const page = opts.page;
+    const limit = opts.limit;
+    const totalPages = Math.ceil(totalItems / limit);
+    const startIdx = (page - 1) * limit;
+    const endIdx = Math.min(startIdx + limit, totalItems);
+    
+    // Slice the array based on pagination parameters
+    const paginatedItems = combinedItems.slice(startIdx, endIdx);
+    
+    // Separate files and directories again
+    const paginatedFiles = paginatedItems
+      .filter(item => 'originalName' in item) as FileMetadata[];
+      
+    const paginatedDirs = paginatedItems
+      .filter(item => !('originalName' in item)) as DirectoryMetadata[];
+      
+    // Build pagination response
+    const pagination = {
+      page,
+      limit,
+      totalCount: totalItems,
+      totalPages,
+      hasNextPage: page < totalPages,
+      hasPreviousPage: page > 1,
+      nextPage: page < totalPages ? page + 1 : undefined,
+      previousPage: page > 1 ? page - 1 : undefined,
+      itemsPerPage: limit
+    };
+
+    return {
+      files: paginatedFiles,
+      directories: paginatedDirs,
+      pagination,
+      parentDir: this.getParentDirectory(opts.folder),
+      breadcrumbs: this.generateBreadcrumbs(opts.folder),
+      scope: opts.scope
+    };
+  } catch (error) {
+    const err = error as Error;
+    this.logger.error(`Error listing files: ${err.message}`, err.stack);
+    throw error;
+  }
+}
+
+// Helper methods
+private generateBreadcrumbs(folderPath?: string): Array<{ name: string; path: string }> {
+  const breadcrumbs = [{ name: 'Home', path: '' }];
   
-      // Apply sorting
-      const sortItems = (a: any, b: any) => {
-        const direction = opts.sortDirection === SortDirection.DESC ? -1 : 1;
-        
-        switch(opts.sortBy) {
-          case FileSortField.NAME:
-            return a.originalName?.localeCompare(b.originalName || b.name) * direction;
-          case FileSortField.SIZE:
-            return ((a.size || 0) - (b.size || 0)) * direction;
-          case FileSortField.DATE_CREATED:
-            return (a.createdAt?.getTime() - b.createdAt?.getTime()) * direction;
-          case FileSortField.DATE_MODIFIED:
-            return (a.lastModified?.getTime() - b.lastModified?.getTime()) * direction;
-          case FileSortField.TYPE:
-            const aType = a.mimeType || '';
-            const bType = b.mimeType || '';
-            return aType.localeCompare(bType) * direction;
-          default:
-            return a.originalName?.localeCompare(b.originalName || b.name) * direction;
-        }
-      };
-  
-      // Sort files and directories
-      files.sort(sortItems);
-      directories.sort(sortItems);
-  
-      // Apply pagination
-      let hasMore = false;
-      let nextMarker = undefined;
-      
-      // Calculate actual limit considering marker-based pagination
-      let startIdx = 0;
-      const combinedItems = [...directories, ...files];
-      
-      if (opts.marker) {
-        // Find the index after the marker
-        startIdx = combinedItems.findIndex(item => 
-          (item.key || '') === opts.marker
-        ) + 1;
-        
-        if (startIdx <= 0) startIdx = 0;
-      }
-      
-      // Slice the results based on pagination
-      const endIdx = opts.limit ? startIdx + opts.limit : combinedItems.length;
-      const paginatedItems = combinedItems.slice(startIdx, endIdx);
-      
-      // Calculate if there are more results and next marker
-      hasMore = endIdx < combinedItems.length;
-      
-      if (hasMore && paginatedItems.length > 0) {
-        nextMarker = paginatedItems[paginatedItems.length - 1].key;
-      }
-      
-      // Separate files and directories again
-      const paginatedFiles = paginatedItems
-        .filter(item => 'originalName' in item) as FileMetadata[];
-        
-      const paginatedDirs = paginatedItems
-        .filter(item => !('originalName' in item)) as DirectoryMetadata[];
-  
-      return {
-        files: paginatedFiles,
-        directories: opts.includeDirs ? paginatedDirs : undefined,
-        count: paginatedFiles.length + (paginatedDirs?.length || 0),
-        prefix: opts.prefix,
-        hasMore,
-        nextMarker,
-        totalSize,
-        parentDir,
-        breadcrumbs: breadcrumbs.length > 0 ? breadcrumbs : undefined
-      };
-    } catch (error) {
-      const err = error as Error;
-      this.logger.error(`Error listing files: ${err.message}`, err.stack);
-      throw error;
+  if (folderPath) {
+    const segments = folderPath.split('/');
+    let currentPath = '';
+    
+    for (let i = 0; i < segments.length; i++) {
+      currentPath = currentPath ? `${currentPath}/${segments[i]}` : segments[i];
+      breadcrumbs.push({
+        name: segments[i],
+        path: currentPath
+      });
     }
   }
   
-  // Helper method to calculate directory size
-  private async calculateDirectorySize(dirPath: string): Promise<number> {
-    let totalSize = 0;
-    
+  return breadcrumbs;
+}
+
+private getParentDirectory(folderPath?: string): string | undefined {
+  if (!folderPath) return undefined;
+  
+  const segments = folderPath.split('/');
+  segments.pop();
+  return segments.length > 0 ? segments.join('/') : '';
+}
+
+// Improved directory size calculation with hidden file option
+private async calculateDirectorySize(dirPath: string, includeHidden: boolean = false): Promise<number> {
+  let totalSize = 0;
+  
+  try {
     const items = await fsPromises.readdir(dirPath);
     
     for (const item of items) {
-      const itemPath = path.join(dirPath, item);
-      const stats = await fsPromises.stat(itemPath);
+      // Skip hidden files if not including them
+      if (!includeHidden && item.startsWith('.')) {
+        continue;
+      }
       
-      if (stats.isFile()) {
-        totalSize += stats.size;
-      } else if (stats.isDirectory()) {
-        totalSize += await this.calculateDirectorySize(itemPath);
+      const itemPath = path.join(dirPath, item);
+      
+      try {
+        const stats = await fsPromises.stat(itemPath);
+        
+        if (stats.isFile()) {
+          totalSize += stats.size;
+        } else if (stats.isDirectory()) {
+          totalSize += await this.calculateDirectorySize(itemPath, includeHidden);
+        }
+      } catch (err) {
+        // Skip files we can't access
+        this.logger.warn(`Error calculating size for ${itemPath}: ${(err as Error).message}`);
       }
     }
-    
-    return totalSize;
+  } catch (err) {
+    this.logger.warn(`Error reading directory ${dirPath}: ${(err as Error).message}`);
   }
-
+  
+  return totalSize;
+}
   async createDirectory(dirPath: string): Promise<DirectoryMetadata> {
     try {
       const fullPath = path.join(this.uploadDir, dirPath);

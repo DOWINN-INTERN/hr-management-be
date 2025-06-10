@@ -1,6 +1,6 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { Type } from 'class-transformer';
-import { IsBoolean, IsDateString, IsEnum, IsNumber, IsOptional, IsString, ValidateNested } from 'class-validator';
+import { Transform, Type } from 'class-transformer';
+import { IsBoolean, IsEnum, IsInt, IsNumber, IsOptional, IsString, IsUUID, Max, Min } from 'class-validator';
 
 export enum FileSortField {
   NAME = 'name',
@@ -15,119 +15,154 @@ export enum SortDirection {
   DESC = 'desc'
 }
 
-export class DateRangeFilter {
-  @ApiPropertyOptional({ description: 'Start date for range filter' })
+export class ScopeContext {
+  @ApiPropertyOptional({
+    description: 'Organization ID for filtering',
+    example: '123e4567-e89b-12d3-a456-426614174000',
+    type: String,
+    format: 'uuid'
+  })
   @IsOptional()
-  @IsDateString()
-  from?: string;
+  @IsString()
+  @IsUUID()
+  organizationId?: string;
 
-  @ApiPropertyOptional({ description: 'End date for range filter' })
+  @ApiPropertyOptional({
+    description: 'Branch ID for filtering',
+    example: '123e4567-e89b-12d3-a456-426614174000',
+    type: String,
+    format: 'uuid'
+  })
   @IsOptional()
-  @IsDateString()
-  to?: string;
+  @IsString()
+  @IsUUID()
+  branchId?: string;
+
+  @ApiPropertyOptional({ 
+    description: 'Department ID for filtering',
+    example: '123e4567-e89b-12d3-a456-426614174000',
+    type: String,
+    format: 'uuid'
+  })
+  @IsOptional()
+  @IsUUID()
+  @IsString()
+  departmentId?: string;
+
+  @ApiPropertyOptional({ 
+    description: 'User ID for filtering files owned by a specific user',
+    type: String,
+    example: '123e4567-e89b-12d3-a456-426614174000',
+    format: 'uuid'
+  })
+  @IsOptional()
+  @IsUUID()
+  @IsString()
+  userId?: string;
 }
 
-export class SizeRangeFilter {
-  @ApiPropertyOptional({ description: 'Minimum file size in bytes' })
+export class FileListOptionsDto {
+  @ApiPropertyOptional({
+    description: 'Scope context for filtering files',
+    type: ScopeContext
+  })
   @IsOptional()
-  @IsNumber()
-  @Type(() => Number)
-  min?: number;
+  @Type(() => ScopeContext)
+  scope?: ScopeContext;
 
-  @ApiPropertyOptional({ description: 'Maximum file size in bytes' })
+  @ApiPropertyOptional({
+    description: 'Additional folder path within the scope',
+    example: 'invoices/2023',
+    type: String
+  })
   @IsOptional()
-  @IsNumber()
+  @IsString()
+  folder?: string;
+
+  @ApiPropertyOptional({
+    description: 'Page number for pagination',
+    default: 1,
+    minimum: 1,
+  })
+  @IsOptional()
   @Type(() => Number)
-  max?: number;
-}
+  @IsInt()
+  @Min(1)
+  page?: number;
 
-export class FileListOptions {
-    @ApiPropertyOptional({ description: 'Directory path to list files from' })
-    @IsOptional()
-    @IsString()
-    prefix?: string;
+  @ApiPropertyOptional({ 
+    description: 'Maximum number of items to return (1-1000)',
+    minimum: 1,
+    maximum: 1000,
+    default: 50
+  })
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(1)
+  @Max(1000)
+  limit?: number;
 
-    @ApiPropertyOptional({ description: 'Maximum number of items to return' })
-    @IsOptional()
-    @IsNumber()
-    @Type(() => Number)
-    limit?: number;
+  @ApiPropertyOptional({ 
+    description: 'Include file URLs in response',
+    default: true
+  })
+  @IsOptional()
+  @Transform(({ value }) => {
+    if (typeof value === 'string') return value.toLowerCase() === 'true';
+    return Boolean(value);
+  })
+  @IsBoolean()
+  includeUrls?: boolean = true;
 
-    @ApiPropertyOptional({ description: 'Pagination marker/cursor' })
-    @IsOptional()
-    @IsString()
-    marker?: string;
+  @ApiPropertyOptional({ 
+    description: 'Include directories in results',
+    default: true
+  })
+  @IsOptional()
+  @Transform(({ value }) => {
+    if (typeof value === 'string') return value.toLowerCase() === 'true';
+    return Boolean(value);
+  })
+  @IsBoolean()
+  includeDirs?: boolean = true;
 
-    @ApiPropertyOptional({ description: 'Whether to include file URLs in response' })
-    @IsOptional()
-    @IsBoolean()
-    @Type(() => Boolean)
-    includeUrls?: boolean;
+  @ApiPropertyOptional({ 
+    enum: FileSortField,
+    description: 'Field to sort by',
+    default: FileSortField.NAME
+  })
+  @IsOptional()
+  @IsEnum(FileSortField)
+  sortBy?: FileSortField;
 
-    @ApiPropertyOptional({ description: 'Whether to include directories in results' })
-    @IsOptional()
-    @IsBoolean()
-    @Type(() => Boolean)
-    includeDirs?: boolean = true;
+  @ApiPropertyOptional({ 
+    enum: SortDirection,
+    description: 'Sort direction',
+    default: SortDirection.ASC
+  })
+  @IsOptional()
+  @IsEnum(SortDirection)
+  sortDirection?: SortDirection;
 
-    @ApiPropertyOptional({ description: 'Whether to include file sizes in response' })
-    @IsOptional()
-    @IsBoolean()
-    @Type(() => Boolean)
-    includeSizes?: boolean = true;
+  @ApiPropertyOptional({ 
+    description: 'Search term for filtering files by name',
+    example: 'contract'
+  })
+  @IsOptional()
+  @IsString()
+  @Transform(({ value }) => value?.trim())
+  searchTerm?: string;
 
-    @ApiPropertyOptional({ description: 'Whether to recursively traverse directories' })
-    @IsOptional()
-    @IsBoolean()
-    @Type(() => Boolean)
-    recursive?: boolean = false;
-
-    @ApiPropertyOptional({ 
-        enum: FileSortField,
-        description: 'Field to sort by' 
-    })
-    @IsOptional()
-    @IsEnum(FileSortField)
-    sortBy?: FileSortField;
-
-    @ApiPropertyOptional({ 
-        enum: SortDirection,
-        description: 'Sort direction' 
-    })
-    @IsOptional()
-    @IsEnum(SortDirection)
-    sortDirection?: SortDirection = SortDirection.ASC;
-
-    @ApiPropertyOptional({ description: 'Search term for filename' })
-    @IsOptional()
-    @IsString()
-    searchTerm?: string;
-
-    @ApiPropertyOptional({ description: 'File extensions to filter by (comma-separated)' })
-    @IsOptional()
-    @IsString()
-    extensions?: string;
-
-    @ApiPropertyOptional({ description: 'Filter by file size' })
-    @IsOptional()
-    @ValidateNested()
-    @Type(() => SizeRangeFilter)
-    size?: SizeRangeFilter;
-
-    @ApiPropertyOptional({ description: 'Filter by creation date' })
-    @IsOptional()
-    @ValidateNested()
-    @Type(() => DateRangeFilter)
-    createdAt?: DateRangeFilter;
-
-    @ApiPropertyOptional({ description: 'Filter by modification date' })
-    @IsOptional()
-    @ValidateNested()
-    @Type(() => DateRangeFilter)
-    modifiedAt?: DateRangeFilter;
-
-    @ApiPropertyOptional({ description: 'Filter by MIME type' })
-    @IsOptional()
-    @IsString()
-    mimeType?: string;
+  @ApiPropertyOptional({ 
+    description: 'Show hidden files (starting with .)',
+    default: false
+  })
+  @IsOptional()
+  @Transform(({ value }) => {
+    if (typeof value === 'string') return value.toLowerCase() === 'true';
+    return Boolean(value);
+  })
+  @IsBoolean()
+  showHidden?: boolean = false;
 }

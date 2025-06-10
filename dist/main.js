@@ -55,11 +55,11 @@ const compression_1 = __importDefault(__webpack_require__(10));
 const express_rate_limit_1 = __importDefault(__webpack_require__(11));
 const helmet_1 = __importDefault(__webpack_require__(12));
 const app_module_1 = __webpack_require__(13);
-const http_exception_filter_1 = __webpack_require__(437);
-const transform_interceptor_1 = __webpack_require__(438);
-const day_util_1 = __webpack_require__(172);
-const swagger_config_1 = __webpack_require__(439);
-const system_logger_service_1 = __webpack_require__(409);
+const http_exception_filter_1 = __webpack_require__(434);
+const transform_interceptor_1 = __webpack_require__(435);
+const day_util_1 = __webpack_require__(174);
+const swagger_config_1 = __webpack_require__(436);
+const system_logger_service_1 = __webpack_require__(407);
 // process.env.TZ = 'UTC';
 async function bootstrap() {
     const isDevelopment = process.env.NODE_ENV !== 'production';
@@ -73,7 +73,7 @@ async function bootstrap() {
     app.useLogger(logger);
     const configService = app.get(config_1.ConfigService);
     // Dynamically get all queues from the queues.config.ts
-    const { queues } = await Promise.resolve().then(() => __importStar(__webpack_require__(203)));
+    const { queues } = await Promise.resolve().then(() => __importStar(__webpack_require__(198)));
     // Set up Bull Board
     const serverAdapter = new express_1.ExpressAdapter();
     const bullAdapters = queues.map(queue => new bullAdapter_1.BullAdapter(app.get((0, bull_1.getQueueToken)(queue.name))));
@@ -249,22 +249,22 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.AppModule = void 0;
 const common_1 = __webpack_require__(5);
 const common_module_1 = __webpack_require__(14);
-const config_module_1 = __webpack_require__(201);
-const database_module_1 = __webpack_require__(207);
-const account_management_module_1 = __webpack_require__(208);
-const addresses_module_1 = __webpack_require__(253);
-const attendance_management_module_1 = __webpack_require__(255);
-const biometrics_module_1 = __webpack_require__(256);
-const compliance_management_module_1 = __webpack_require__(348);
-const documents_module_1 = __webpack_require__(312);
-const emails_module_1 = __webpack_require__(211);
+const config_module_1 = __webpack_require__(196);
+const database_module_1 = __webpack_require__(202);
+const account_management_module_1 = __webpack_require__(203);
+const addresses_module_1 = __webpack_require__(249);
+const attendance_management_module_1 = __webpack_require__(251);
+const biometrics_module_1 = __webpack_require__(252);
+const compliance_management_module_1 = __webpack_require__(345);
+const documents_module_1 = __webpack_require__(309);
+const emails_module_1 = __webpack_require__(206);
 const employee_management_module_1 = __webpack_require__(15);
-const files_module_1 = __webpack_require__(389);
-const logs_module_1 = __webpack_require__(403);
-const notifications_module_1 = __webpack_require__(413);
-const organization_management_module_1 = __webpack_require__(425);
-const payroll_management_module_1 = __webpack_require__(310);
-const shift_management_module_1 = __webpack_require__(157);
+const files_module_1 = __webpack_require__(386);
+const logs_module_1 = __webpack_require__(401);
+const notifications_module_1 = __webpack_require__(411);
+const organization_management_module_1 = __webpack_require__(422);
+const payroll_management_module_1 = __webpack_require__(307);
+const shift_management_module_1 = __webpack_require__(159);
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -310,14 +310,12 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.CommonModule = void 0;
 const employee_management_module_1 = __webpack_require__(15);
-const cutoffs_module_1 = __webpack_require__(152);
-const shift_management_module_1 = __webpack_require__(157);
+const cutoffs_module_1 = __webpack_require__(154);
+const shift_management_module_1 = __webpack_require__(159);
 const common_1 = __webpack_require__(5);
 const core_1 = __webpack_require__(7);
-const html_to_pdf_controller_1 = __webpack_require__(193);
-const employee_group_assignement_listener_1 = __webpack_require__(199);
-const common_service_1 = __webpack_require__(200);
-const html_to_pdf_service_1 = __webpack_require__(195);
+const employee_group_assignement_listener_1 = __webpack_require__(194);
+const common_service_1 = __webpack_require__(195);
 const transaction_service_1 = __webpack_require__(103);
 let CommonModule = class CommonModule {
 };
@@ -336,10 +334,8 @@ exports.CommonModule = CommonModule = __decorate([
         providers: [
             common_service_1.CommonService, transaction_service_1.TransactionService,
             employee_group_assignement_listener_1.EmployeeGroupAssignmentListener,
-            html_to_pdf_service_1.HtmlToPdfService,
         ],
-        controllers: [html_to_pdf_controller_1.PdfUtilsController],
-        exports: [common_service_1.CommonService, transaction_service_1.TransactionService, employee_group_assignement_listener_1.EmployeeGroupAssignmentListener, html_to_pdf_service_1.HtmlToPdfService],
+        exports: [common_service_1.CommonService, transaction_service_1.TransactionService, employee_group_assignement_listener_1.EmployeeGroupAssignmentListener],
     })
 ], CommonModule);
 
@@ -635,6 +631,10 @@ __decorate([
     }),
     __metadata("design:type", Number)
 ], PayrollItemType.prototype, "minAmount", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ default: false }),
+    __metadata("design:type", Boolean)
+], PayrollItemType.prototype, "isAddableToBaseCompensation", void 0);
 __decorate([
     (0, typeorm_1.Column)('decimal', {
         precision: 10,
@@ -2754,7 +2754,7 @@ let Payroll = class Payroll extends base_entity_1.BaseEntity {
 };
 exports.Payroll = Payroll;
 __decorate([
-    (0, typeorm_1.ManyToOne)(() => employee_entity_1.Employee, (employee) => employee.payrolls, { eager: true }),
+    (0, typeorm_1.ManyToOne)(() => employee_entity_1.Employee, (employee) => employee.payrolls),
     (0, typeorm_1.JoinColumn)({ name: 'employeeId' }),
     __metadata("design:type", typeof (_a = typeof employee_entity_1.Employee !== "undefined" && employee_entity_1.Employee) === "function" ? _a : Object)
 ], Payroll.prototype, "employee", void 0);
@@ -7108,7 +7108,12 @@ let BaseService = class BaseService {
         return response;
     }
     async save(entity) {
-        return await this.repository.save(entity);
+        if (Array.isArray(entity)) {
+            return await this.repository.save(entity);
+        }
+        else {
+            return await this.repository.save(entity);
+        }
     }
     // DONE
     async delete(id) {
@@ -10421,9 +10426,9 @@ const common_1 = __webpack_require__(5);
 const typeorm_1 = __webpack_require__(16);
 const roles_module_1 = __webpack_require__(130);
 const permission_entity_1 = __webpack_require__(70);
-const permissions_controller_1 = __webpack_require__(146);
+const permissions_controller_1 = __webpack_require__(148);
 const permissions_service_1 = __webpack_require__(105);
-const permission_seeder_service_1 = __webpack_require__(148);
+const permission_seeder_service_1 = __webpack_require__(150);
 let PermissionsModule = class PermissionsModule {
 };
 exports.PermissionsModule = PermissionsModule;
@@ -10456,7 +10461,7 @@ const users_module_1 = __webpack_require__(131);
 const common_1 = __webpack_require__(5);
 const typeorm_1 = __webpack_require__(16);
 const role_entity_1 = __webpack_require__(68);
-const roles_controller_1 = __webpack_require__(144);
+const roles_controller_1 = __webpack_require__(146);
 const roles_service_1 = __webpack_require__(106);
 let RolesModule = class RolesModule {
 };
@@ -10489,7 +10494,7 @@ const common_1 = __webpack_require__(5);
 const typeorm_1 = __webpack_require__(16);
 const user_entity_1 = __webpack_require__(27);
 const users_gateway_1 = __webpack_require__(132);
-const users_controller_1 = __webpack_require__(140);
+const users_controller_1 = __webpack_require__(142);
 const users_service_1 = __webpack_require__(97);
 let UsersModule = class UsersModule {
 };
@@ -10538,22 +10543,27 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.createGateway = createGateway;
 const jwt_service_1 = __webpack_require__(134);
 const users_service_1 = __webpack_require__(97);
+const user_connection_service_1 = __webpack_require__(137);
 const common_1 = __webpack_require__(5);
 const config_1 = __webpack_require__(6);
-const websockets_1 = __webpack_require__(137);
-const base_gateway_1 = __webpack_require__(138);
+const websockets_1 = __webpack_require__(139);
+const base_gateway_1 = __webpack_require__(140);
 function createGateway(namespace) {
-    var _a, _b, _c;
+    var _a, _b, _c, _d;
     let DynamicGateway = class DynamicGateway extends base_gateway_1.BaseGateway {
-        constructor(jwtService, usersService, configService) {
-            super(jwtService, usersService, configService);
+        constructor(userConnectionService, jwtService, usersService, configService) {
+            super(userConnectionService, jwtService, usersService, configService);
+            this.userConnectionService = userConnectionService;
+            this.jwtService = jwtService;
+            this.usersService = usersService;
+            this.configService = configService;
             this.namespace = namespace;
         }
     };
     DynamicGateway = __decorate([
         (0, websockets_1.WebSocketGateway)({ namespace }),
         (0, common_1.Injectable)(),
-        __metadata("design:paramtypes", [typeof (_a = typeof jwt_service_1.JwtService !== "undefined" && jwt_service_1.JwtService) === "function" ? _a : Object, typeof (_b = typeof users_service_1.UsersService !== "undefined" && users_service_1.UsersService) === "function" ? _b : Object, typeof (_c = typeof config_1.ConfigService !== "undefined" && config_1.ConfigService) === "function" ? _c : Object])
+        __metadata("design:paramtypes", [typeof (_a = typeof user_connection_service_1.UserConnectionService !== "undefined" && user_connection_service_1.UserConnectionService) === "function" ? _a : Object, typeof (_b = typeof jwt_service_1.JwtService !== "undefined" && jwt_service_1.JwtService) === "function" ? _b : Object, typeof (_c = typeof users_service_1.UsersService !== "undefined" && users_service_1.UsersService) === "function" ? _c : Object, typeof (_d = typeof config_1.ConfigService !== "undefined" && config_1.ConfigService) === "function" ? _d : Object])
     ], DynamicGateway);
     return DynamicGateway;
 }
@@ -10762,13 +10772,110 @@ module.exports = require("uuid");
 
 /***/ }),
 /* 137 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+"use strict";
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
+var UserConnectionService_1;
+var _a;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.UserConnectionService = void 0;
+const bull_1 = __webpack_require__(4);
+const common_1 = __webpack_require__(5);
+const bull_2 = __webpack_require__(138);
+let UserConnectionService = UserConnectionService_1 = class UserConnectionService {
+    constructor(notificationsQueue) {
+        this.notificationsQueue = notificationsQueue;
+        this.logger = new common_1.Logger(UserConnectionService_1.name);
+        // Track online users with connection timestamps
+        this.onlineUsers = new Map();
+    }
+    /**
+     * Mark a user as online
+     */
+    async userConnected(userId) {
+        const wasOffline = !this.onlineUsers.has(userId);
+        this.onlineUsers.set(userId, new Date());
+        if (wasOffline) {
+            this.logger.log(`User ${userId} came online`);
+            // Queue job to send unread notifications
+            await this.notificationsQueue.add('handleUserOnline', {
+                userId
+            }, {
+                delay: 1000 // small delay to ensure connection is stable
+            });
+        }
+    }
+    /**
+     * Mark a user as offline
+     */
+    userDisconnected(userId) {
+        if (this.onlineUsers.has(userId)) {
+            this.onlineUsers.delete(userId);
+            this.logger.log(`User ${userId} went offline`);
+        }
+    }
+    /**
+     * Check if user is online
+     */
+    isUserOnline(userId) {
+        return this.onlineUsers.has(userId);
+    }
+    /**
+     * Get all online users
+     */
+    getOnlineUsers() {
+        return Array.from(this.onlineUsers.keys());
+    }
+    /**
+     * Get user's last seen time (when they came online)
+     */
+    getUserLastSeen(userId) {
+        return this.onlineUsers.get(userId) || null;
+    }
+    /**
+     * Get online user count
+     */
+    getOnlineUserCount() {
+        return this.onlineUsers.size;
+    }
+};
+exports.UserConnectionService = UserConnectionService;
+exports.UserConnectionService = UserConnectionService = UserConnectionService_1 = __decorate([
+    (0, common_1.Injectable)(),
+    __param(0, (0, bull_1.InjectQueue)('notifications')),
+    __metadata("design:paramtypes", [typeof (_a = typeof bull_2.Queue !== "undefined" && bull_2.Queue) === "function" ? _a : Object])
+], UserConnectionService);
+
+
+/***/ }),
+/* 138 */
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("bull");
+
+/***/ }),
+/* 139 */
 /***/ ((module) => {
 
 "use strict";
 module.exports = require("@nestjs/websockets");
 
 /***/ }),
-/* 138 */
+/* 140 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -10786,17 +10893,17 @@ var _a;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.BaseGateway = void 0;
 const common_1 = __webpack_require__(5);
-const websockets_1 = __webpack_require__(137);
+const websockets_1 = __webpack_require__(139);
 const class_transformer_1 = __webpack_require__(54);
-const socket_io_1 = __webpack_require__(139);
+const socket_io_1 = __webpack_require__(141);
 const uuid_1 = __webpack_require__(136);
 class BaseGateway {
-    constructor(jwtService, usersService, configService) {
-        var _a, _b;
+    constructor(userConnectionService, jwtService, usersService, configService) {
+        this.userConnectionService = userConnectionService;
         this.jwtService = jwtService;
         this.usersService = usersService;
         this.configService = configService;
-        this.logger = new common_1.Logger(BaseGateway.name);
+        this.logger = new common_1.Logger(this.constructor.name);
         this.connections = new Map();
         // Organized client tracking
         this.connectedClients = new Map();
@@ -10817,13 +10924,6 @@ class BaseGateway {
             authFailures: 0,
             rateLimitHits: 0
         };
-        // Configure compression
-        const compressionThreshold = this.configService.get('websocket.compressionThreshold', 1024);
-        (_b = (_a = this.server) === null || _a === void 0 ? void 0 : _a.engine) === null || _b === void 0 ? void 0 : _b.on('connection', (socket) => {
-            socket.compress = (data) => {
-                return data.length > compressionThreshold;
-            };
-        });
     }
     // Lifecycle hooks
     onModuleInit() {
@@ -10838,10 +10938,18 @@ class BaseGateway {
         this.logger.log(`Gateway ${this.constructor.name} destroyed`);
     }
     afterInit(server) {
+        var _a, _b;
         if (!server || !server.engine) {
             // this.logger.warn('Server or server.engine not available in afterInit');
             return; // Exit early if server or server.engine is not available
         }
+        // Configure compression
+        const compressionThreshold = this.configService.get('websocket.compressionThreshold', 1024);
+        (_b = (_a = this.server) === null || _a === void 0 ? void 0 : _a.engine) === null || _b === void 0 ? void 0 : _b.on('connection', (socket) => {
+            socket.compress = (data) => {
+                return data.length > compressionThreshold;
+            };
+        });
         const corsConfig = {
             origin: this.configService.getOrThrow('CORS_ORIGINS'),
             credentials: true,
@@ -11268,14 +11376,14 @@ __decorate([
 
 
 /***/ }),
-/* 139 */
+/* 141 */
 /***/ ((module) => {
 
 "use strict";
 module.exports = require("socket.io");
 
 /***/ }),
-/* 140 */
+/* 142 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 "use strict";
@@ -11283,7 +11391,7 @@ module.exports = require("socket.io");
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.UsersController = void 0;
 const create_controller_factory_1 = __webpack_require__(87);
-const user_dto_1 = __webpack_require__(141);
+const user_dto_1 = __webpack_require__(143);
 const user_entity_1 = __webpack_require__(27);
 const users_service_1 = __webpack_require__(97);
 class UsersController extends (0, create_controller_factory_1.createController)(user_entity_1.User, users_service_1.UsersService, user_dto_1.GetUserDto, undefined, user_dto_1.UpdateUserDto) {
@@ -11298,7 +11406,7 @@ exports.UsersController = UsersController;
 
 
 /***/ }),
-/* 141 */
+/* 143 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -11319,7 +11427,7 @@ const create_get_dto_factory_1 = __webpack_require__(118);
 const swagger_1 = __webpack_require__(8);
 const class_transformer_1 = __webpack_require__(54);
 const class_validator_1 = __webpack_require__(92);
-const profile_dto_1 = __webpack_require__(142);
+const profile_dto_1 = __webpack_require__(144);
 class UserDto {
 }
 exports.UserDto = UserDto;
@@ -11441,7 +11549,7 @@ exports.GetUserDto = GetUserDto;
 
 
 /***/ }),
-/* 142 */
+/* 144 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -11462,7 +11570,7 @@ const create_get_dto_factory_1 = __webpack_require__(118);
 const swagger_1 = __webpack_require__(8);
 const class_transformer_1 = __webpack_require__(54);
 const class_validator_1 = __webpack_require__(92);
-const address_dto_1 = __webpack_require__(143);
+const address_dto_1 = __webpack_require__(145);
 class ProfileDto {
 }
 exports.ProfileDto = ProfileDto;
@@ -11567,7 +11675,7 @@ exports.GetProfileDto = GetProfileDto;
 
 
 /***/ }),
-/* 143 */
+/* 145 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -11658,7 +11766,7 @@ exports.GetAddressDto = GetAddressDto;
 
 
 /***/ }),
-/* 144 */
+/* 146 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 "use strict";
@@ -11666,7 +11774,7 @@ exports.GetAddressDto = GetAddressDto;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.RolesController = void 0;
 const create_controller_factory_1 = __webpack_require__(87);
-const role_dto_1 = __webpack_require__(145);
+const role_dto_1 = __webpack_require__(147);
 const role_entity_1 = __webpack_require__(68);
 const roles_service_1 = __webpack_require__(106);
 class RolesController extends (0, create_controller_factory_1.createController)(role_entity_1.Role, roles_service_1.RolesService, role_dto_1.GetRoleDto, role_dto_1.RoleDto, role_dto_1.UpdateRoleDto) {
@@ -11675,7 +11783,7 @@ exports.RolesController = RolesController;
 
 
 /***/ }),
-/* 145 */
+/* 147 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -11768,7 +11876,7 @@ exports.GetRoleDto = GetRoleDto;
 
 
 /***/ }),
-/* 146 */
+/* 148 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 "use strict";
@@ -11776,7 +11884,7 @@ exports.GetRoleDto = GetRoleDto;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.PermissionsController = void 0;
 const create_controller_factory_1 = __webpack_require__(87);
-const permission_dto_1 = __webpack_require__(147);
+const permission_dto_1 = __webpack_require__(149);
 const permission_entity_1 = __webpack_require__(70);
 const permissions_service_1 = __webpack_require__(105);
 class PermissionsController extends (0, create_controller_factory_1.createController)(permission_entity_1.Permission, permissions_service_1.PermissionsService, permission_dto_1.GetPermissionDto) {
@@ -11800,7 +11908,7 @@ exports.PermissionsController = PermissionsController;
 
 
 /***/ }),
-/* 147 */
+/* 149 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -11852,7 +11960,7 @@ exports.GetPermissionDto = GetPermissionDto;
 
 
 /***/ }),
-/* 148 */
+/* 150 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -11909,9 +12017,9 @@ exports.PermissionSeederService = void 0;
 const action_enum_1 = __webpack_require__(71);
 const common_1 = __webpack_require__(5);
 const typeorm_1 = __webpack_require__(16);
-const fs = __importStar(__webpack_require__(149));
-const glob_1 = __webpack_require__(150);
-const path = __importStar(__webpack_require__(151));
+const fs = __importStar(__webpack_require__(151));
+const glob_1 = __webpack_require__(152);
+const path = __importStar(__webpack_require__(153));
 const typeorm_2 = __webpack_require__(24);
 const permission_entity_1 = __webpack_require__(70);
 let PermissionSeederService = PermissionSeederService_1 = class PermissionSeederService {
@@ -12171,28 +12279,28 @@ exports.PermissionSeederService = PermissionSeederService = PermissionSeederServ
 
 
 /***/ }),
-/* 149 */
+/* 151 */
 /***/ ((module) => {
 
 "use strict";
 module.exports = require("fs");
 
 /***/ }),
-/* 150 */
+/* 152 */
 /***/ ((module) => {
 
 "use strict";
 module.exports = require("glob");
 
 /***/ }),
-/* 151 */
+/* 153 */
 /***/ ((module) => {
 
 "use strict";
 module.exports = require("path");
 
 /***/ }),
-/* 152 */
+/* 154 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -12207,8 +12315,8 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.CutoffsModule = void 0;
 const common_1 = __webpack_require__(5);
 const typeorm_1 = __webpack_require__(16);
-const cutoffs_controller_1 = __webpack_require__(153);
-const cutoffs_service_1 = __webpack_require__(154);
+const cutoffs_controller_1 = __webpack_require__(155);
+const cutoffs_service_1 = __webpack_require__(156);
 const cutoff_entity_1 = __webpack_require__(37);
 let CutoffsModule = class CutoffsModule {
 };
@@ -12226,7 +12334,7 @@ exports.CutoffsModule = CutoffsModule = __decorate([
 
 
 /***/ }),
-/* 153 */
+/* 155 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 "use strict";
@@ -12234,8 +12342,8 @@ exports.CutoffsModule = CutoffsModule = __decorate([
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.CutoffsController = void 0;
 const create_controller_factory_1 = __webpack_require__(87);
-const cutoffs_service_1 = __webpack_require__(154);
-const cutoff_dto_1 = __webpack_require__(156);
+const cutoffs_service_1 = __webpack_require__(156);
+const cutoff_dto_1 = __webpack_require__(158);
 const cutoff_entity_1 = __webpack_require__(37);
 class CutoffsController extends (0, create_controller_factory_1.createController)(cutoff_entity_1.Cutoff, cutoffs_service_1.CutoffsService, cutoff_dto_1.GetCutoffDto, cutoff_dto_1.CutoffDto, cutoff_dto_1.UpdateCutoffDto) {
 }
@@ -12243,7 +12351,7 @@ exports.CutoffsController = CutoffsController;
 
 
 /***/ }),
-/* 154 */
+/* 156 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -12270,7 +12378,7 @@ const utility_helper_1 = __webpack_require__(102);
 const base_service_1 = __webpack_require__(98);
 const users_service_1 = __webpack_require__(97);
 const common_1 = __webpack_require__(5);
-const schedule_1 = __webpack_require__(155);
+const schedule_1 = __webpack_require__(157);
 const typeorm_1 = __webpack_require__(16);
 const typeorm_2 = __webpack_require__(24);
 const cutoff_entity_1 = __webpack_require__(37);
@@ -12536,14 +12644,14 @@ exports.CutoffsService = CutoffsService = CutoffsService_1 = __decorate([
 
 
 /***/ }),
-/* 155 */
+/* 157 */
 /***/ ((module) => {
 
 "use strict";
 module.exports = require("@nestjs/schedule");
 
 /***/ }),
-/* 156 */
+/* 158 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -12635,7 +12743,7 @@ exports.GetCutoffDto = GetCutoffDto;
 
 
 /***/ }),
-/* 157 */
+/* 159 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -12651,17 +12759,17 @@ exports.ShiftManagementModule = void 0;
 const common_1 = __webpack_require__(5);
 const core_1 = __webpack_require__(7);
 const typeorm_1 = __webpack_require__(16);
-const cutoffs_module_1 = __webpack_require__(152);
+const cutoffs_module_1 = __webpack_require__(154);
 const shift_day_entity_1 = __webpack_require__(51);
 const shift_entity_1 = __webpack_require__(40);
-const groups_module_1 = __webpack_require__(158);
-const holidays_module_1 = __webpack_require__(164);
-const schedule_change_requests_module_1 = __webpack_require__(166);
-const schedule_change_responses_module_1 = __webpack_require__(177);
-const schedules_module_1 = __webpack_require__(165);
-const default_shift_seeder_service_1 = __webpack_require__(188);
-const shifts_controller_1 = __webpack_require__(190);
-const shifts_service_1 = __webpack_require__(189);
+const groups_module_1 = __webpack_require__(160);
+const holidays_module_1 = __webpack_require__(166);
+const schedule_change_requests_module_1 = __webpack_require__(168);
+const schedule_change_responses_module_1 = __webpack_require__(179);
+const schedules_module_1 = __webpack_require__(167);
+const default_shift_seeder_service_1 = __webpack_require__(189);
+const shifts_controller_1 = __webpack_require__(191);
+const shifts_service_1 = __webpack_require__(190);
 let ShiftManagementModule = class ShiftManagementModule {
 };
 exports.ShiftManagementModule = ShiftManagementModule;
@@ -12719,7 +12827,7 @@ exports.ShiftManagementModule = ShiftManagementModule = __decorate([
 
 
 /***/ }),
-/* 158 */
+/* 160 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -12736,8 +12844,8 @@ const employee_management_module_1 = __webpack_require__(15);
 const common_1 = __webpack_require__(5);
 const typeorm_1 = __webpack_require__(16);
 const group_entity_1 = __webpack_require__(41);
-const groups_controller_1 = __webpack_require__(159);
-const groups_service_1 = __webpack_require__(161);
+const groups_controller_1 = __webpack_require__(161);
+const groups_service_1 = __webpack_require__(163);
 let GroupsModule = class GroupsModule {
 };
 exports.GroupsModule = GroupsModule;
@@ -12755,7 +12863,7 @@ exports.GroupsModule = GroupsModule = __decorate([
 
 
 /***/ }),
-/* 159 */
+/* 161 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 "use strict";
@@ -12763,16 +12871,16 @@ exports.GroupsModule = GroupsModule = __decorate([
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.GroupsController = void 0;
 const create_controller_factory_1 = __webpack_require__(87);
-const group_dto_1 = __webpack_require__(160);
+const group_dto_1 = __webpack_require__(162);
 const group_entity_1 = __webpack_require__(41);
-const groups_service_1 = __webpack_require__(161);
+const groups_service_1 = __webpack_require__(163);
 class GroupsController extends (0, create_controller_factory_1.createController)(group_entity_1.Group, groups_service_1.GroupsService, group_dto_1.GetGroupDto, group_dto_1.GroupDto, group_dto_1.UpdateGroupDto) {
 }
 exports.GroupsController = GroupsController;
 
 
 /***/ }),
-/* 160 */
+/* 162 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -12848,7 +12956,7 @@ exports.GetGroupDto = GetGroupDto;
 
 
 /***/ }),
-/* 161 */
+/* 163 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -12869,12 +12977,12 @@ var GroupsService_1;
 var _a, _b, _c, _d;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.GroupsService = void 0;
-const employee_assigned_event_1 = __webpack_require__(162);
+const employee_assigned_event_1 = __webpack_require__(164);
 const base_service_1 = __webpack_require__(98);
 const users_service_1 = __webpack_require__(97);
 const employees_service_1 = __webpack_require__(128);
 const common_1 = __webpack_require__(5);
-const event_emitter_1 = __webpack_require__(163);
+const event_emitter_1 = __webpack_require__(165);
 const typeorm_1 = __webpack_require__(16);
 const typeorm_2 = __webpack_require__(24);
 const group_entity_1 = __webpack_require__(41);
@@ -12937,7 +13045,7 @@ exports.GroupsService = GroupsService = GroupsService_1 = __decorate([
 
 
 /***/ }),
-/* 162 */
+/* 164 */
 /***/ ((__unused_webpack_module, exports) => {
 
 "use strict";
@@ -12964,14 +13072,14 @@ exports.EmployeeAssignedEvent = EmployeeAssignedEvent;
 
 
 /***/ }),
-/* 163 */
+/* 165 */
 /***/ ((module) => {
 
 "use strict";
 module.exports = require("@nestjs/event-emitter");
 
 /***/ }),
-/* 164 */
+/* 166 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -12986,10 +13094,10 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.HolidaysModule = void 0;
 const common_1 = __webpack_require__(5);
 const typeorm_1 = __webpack_require__(16);
-const schedules_module_1 = __webpack_require__(165);
+const schedules_module_1 = __webpack_require__(167);
 const holiday_entity_1 = __webpack_require__(44);
-const holidays_controller_1 = __webpack_require__(186);
-const holidays_service_1 = __webpack_require__(174);
+const holidays_controller_1 = __webpack_require__(187);
+const holidays_service_1 = __webpack_require__(176);
 let HolidaysModule = class HolidaysModule {
 };
 exports.HolidaysModule = HolidaysModule;
@@ -13007,7 +13115,7 @@ exports.HolidaysModule = HolidaysModule = __decorate([
 
 
 /***/ }),
-/* 165 */
+/* 167 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -13020,19 +13128,19 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.SchedulesModule = void 0;
-const cutoffs_module_1 = __webpack_require__(152);
+const cutoffs_module_1 = __webpack_require__(154);
 const bull_1 = __webpack_require__(4);
 const common_1 = __webpack_require__(5);
 const typeorm_1 = __webpack_require__(16);
 const employee_management_module_1 = __webpack_require__(15);
-const groups_module_1 = __webpack_require__(158);
-const holidays_module_1 = __webpack_require__(164);
+const groups_module_1 = __webpack_require__(160);
+const holidays_module_1 = __webpack_require__(166);
 const schedule_entity_1 = __webpack_require__(42);
-const schedule_change_requests_module_1 = __webpack_require__(166);
-const schedule_change_responses_module_1 = __webpack_require__(177);
-const schedules_controller_1 = __webpack_require__(181);
-const schedules_service_1 = __webpack_require__(171);
-const schedule_generation_service_1 = __webpack_require__(184);
+const schedule_change_requests_module_1 = __webpack_require__(168);
+const schedule_change_responses_module_1 = __webpack_require__(179);
+const schedules_controller_1 = __webpack_require__(183);
+const schedules_service_1 = __webpack_require__(173);
+const schedule_generation_service_1 = __webpack_require__(186);
 let SchedulesModule = class SchedulesModule {
 };
 exports.SchedulesModule = SchedulesModule;
@@ -13064,7 +13172,7 @@ exports.SchedulesModule = SchedulesModule = __decorate([
 
 
 /***/ }),
-/* 166 */
+/* 168 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -13079,12 +13187,12 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ScheduleChangeRequestsModule = void 0;
 const common_1 = __webpack_require__(5);
 const typeorm_1 = __webpack_require__(16);
-const schedules_module_1 = __webpack_require__(165);
+const schedules_module_1 = __webpack_require__(167);
 const alternative_schedule_entity_1 = __webpack_require__(50);
 const schedule_change_request_entity_1 = __webpack_require__(47);
-const schedule_change_listener_1 = __webpack_require__(167);
-const schedule_change_requests_controller_1 = __webpack_require__(175);
-const schedule_change_requests_service_1 = __webpack_require__(170);
+const schedule_change_listener_1 = __webpack_require__(169);
+const schedule_change_requests_controller_1 = __webpack_require__(177);
+const schedule_change_requests_service_1 = __webpack_require__(172);
 let ScheduleChangeRequestsModule = class ScheduleChangeRequestsModule {
 };
 exports.ScheduleChangeRequestsModule = ScheduleChangeRequestsModule;
@@ -13104,7 +13212,7 @@ exports.ScheduleChangeRequestsModule = ScheduleChangeRequestsModule = __decorate
 
 
 /***/ }),
-/* 167 */
+/* 169 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -13123,11 +13231,11 @@ var _a, _b, _c;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ScheduleChangeListener = void 0;
 const request_status_enum_1 = __webpack_require__(31);
-const schedule_change_event_1 = __webpack_require__(168);
-const work_time_event_1 = __webpack_require__(169);
+const schedule_change_event_1 = __webpack_require__(170);
+const work_time_event_1 = __webpack_require__(171);
 const common_1 = __webpack_require__(5);
-const event_emitter_1 = __webpack_require__(163);
-const schedule_change_requests_service_1 = __webpack_require__(170);
+const event_emitter_1 = __webpack_require__(165);
+const schedule_change_requests_service_1 = __webpack_require__(172);
 let ScheduleChangeListener = ScheduleChangeListener_1 = class ScheduleChangeListener {
     constructor(scheduleChangeRequestsService) {
         this.scheduleChangeRequestsService = scheduleChangeRequestsService;
@@ -13171,7 +13279,7 @@ exports.ScheduleChangeListener = ScheduleChangeListener = ScheduleChangeListener
 
 
 /***/ }),
-/* 168 */
+/* 170 */
 /***/ ((__unused_webpack_module, exports) => {
 
 "use strict";
@@ -13193,7 +13301,7 @@ exports.ScheduleChangeRespondedEvent = ScheduleChangeRespondedEvent;
 
 
 /***/ }),
-/* 169 */
+/* 171 */
 /***/ ((__unused_webpack_module, exports) => {
 
 "use strict";
@@ -13215,7 +13323,7 @@ exports.WorkTimeRespondedEvent = WorkTimeRespondedEvent;
 
 
 /***/ }),
-/* 170 */
+/* 172 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -13244,7 +13352,7 @@ const common_1 = __webpack_require__(5);
 const typeorm_1 = __webpack_require__(16);
 const typeorm_2 = __webpack_require__(24);
 const schedule_entity_1 = __webpack_require__(42);
-const schedules_service_1 = __webpack_require__(171);
+const schedules_service_1 = __webpack_require__(173);
 const alternative_schedule_entity_1 = __webpack_require__(50);
 const schedule_change_request_entity_1 = __webpack_require__(47);
 let ScheduleChangeRequestsService = ScheduleChangeRequestsService_1 = class ScheduleChangeRequestsService extends base_service_1.BaseService {
@@ -13374,7 +13482,7 @@ exports.ScheduleChangeRequestsService = ScheduleChangeRequestsService = Schedule
 
 
 /***/ }),
-/* 171 */
+/* 173 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -13396,16 +13504,16 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.SchedulesService = void 0;
 const schedule_status_1 = __webpack_require__(43);
 const base_service_1 = __webpack_require__(98);
-const day_util_1 = __webpack_require__(172);
+const day_util_1 = __webpack_require__(174);
 const users_service_1 = __webpack_require__(97);
 const common_1 = __webpack_require__(5);
 const typeorm_1 = __webpack_require__(16);
-const date_fns_1 = __webpack_require__(173);
+const date_fns_1 = __webpack_require__(175);
 const typeorm_2 = __webpack_require__(24);
 const employees_service_1 = __webpack_require__(128);
-const cutoffs_service_1 = __webpack_require__(154);
-const groups_service_1 = __webpack_require__(161);
-const holidays_service_1 = __webpack_require__(174);
+const cutoffs_service_1 = __webpack_require__(156);
+const groups_service_1 = __webpack_require__(163);
+const holidays_service_1 = __webpack_require__(176);
 const schedule_entity_1 = __webpack_require__(42);
 let SchedulesService = class SchedulesService extends base_service_1.BaseService {
     constructor(schedulesRepository, usersService, groupsService, cutoffsService, holidaysService, employeesService) {
@@ -13549,7 +13657,7 @@ let SchedulesService = class SchedulesService extends base_service_1.BaseService
                 };
                 // If it's a holiday, associate it with the schedule
                 if (holiday) {
-                    scheduleEntry.holiday = { id: holiday.id };
+                    scheduleEntry.holiday = holiday;
                 }
                 schedules.push(scheduleEntry);
             }
@@ -13578,7 +13686,7 @@ exports.SchedulesService = SchedulesService = __decorate([
 
 
 /***/ }),
-/* 172 */
+/* 174 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 "use strict";
@@ -13605,14 +13713,14 @@ exports.getLogLevels = getLogLevels;
 
 
 /***/ }),
-/* 173 */
+/* 175 */
 /***/ ((module) => {
 
 "use strict";
 module.exports = require("date-fns");
 
 /***/ }),
-/* 174 */
+/* 176 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -13637,7 +13745,7 @@ const users_service_1 = __webpack_require__(97);
 const common_1 = __webpack_require__(5);
 const typeorm_1 = __webpack_require__(16);
 const typeorm_2 = __webpack_require__(24);
-const schedules_service_1 = __webpack_require__(171);
+const schedules_service_1 = __webpack_require__(173);
 const holiday_entity_1 = __webpack_require__(44);
 let HolidaysService = class HolidaysService extends base_service_1.BaseService {
     constructor(holidaysRepository, usersService, schedulesService) {
@@ -13714,7 +13822,7 @@ exports.HolidaysService = HolidaysService = __decorate([
 
 
 /***/ }),
-/* 175 */
+/* 177 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 "use strict";
@@ -13722,9 +13830,9 @@ exports.HolidaysService = HolidaysService = __decorate([
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ScheduleChangeRequestsController = void 0;
 const create_controller_factory_1 = __webpack_require__(87);
-const schedule_change_request_dto_1 = __webpack_require__(176);
+const schedule_change_request_dto_1 = __webpack_require__(178);
 const schedule_change_request_entity_1 = __webpack_require__(47);
-const schedule_change_requests_service_1 = __webpack_require__(170);
+const schedule_change_requests_service_1 = __webpack_require__(172);
 class ScheduleChangeRequestsController extends (0, create_controller_factory_1.createController)(schedule_change_request_entity_1.ScheduleChangeRequest, schedule_change_requests_service_1.ScheduleChangeRequestsService, schedule_change_request_dto_1.GetScheduleChangeRequestDto, schedule_change_request_dto_1.ScheduleChangeRequestDto, schedule_change_request_dto_1.UpdateScheduleChangeRequestDto) {
     async delete(id) {
         return await super.delete(id);
@@ -13734,7 +13842,7 @@ exports.ScheduleChangeRequestsController = ScheduleChangeRequestsController;
 
 
 /***/ }),
-/* 176 */
+/* 178 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -13886,7 +13994,7 @@ __decorate([
 
 
 /***/ }),
-/* 177 */
+/* 179 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -13902,9 +14010,9 @@ exports.ScheduleChangeResponsesModule = void 0;
 const common_1 = __webpack_require__(5);
 const typeorm_1 = __webpack_require__(16);
 const schedule_change_response_entity_1 = __webpack_require__(49);
-const schedule_change_responses_controller_1 = __webpack_require__(178);
-const schedule_change_responses_service_1 = __webpack_require__(180);
-const schedule_change_requests_module_1 = __webpack_require__(166);
+const schedule_change_responses_controller_1 = __webpack_require__(180);
+const schedule_change_responses_service_1 = __webpack_require__(182);
+const schedule_change_requests_module_1 = __webpack_require__(168);
 let ScheduleChangeResponsesModule = class ScheduleChangeResponsesModule {
 };
 exports.ScheduleChangeResponsesModule = ScheduleChangeResponsesModule;
@@ -13922,7 +14030,7 @@ exports.ScheduleChangeResponsesModule = ScheduleChangeResponsesModule = __decora
 
 
 /***/ }),
-/* 178 */
+/* 180 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 "use strict";
@@ -13930,9 +14038,9 @@ exports.ScheduleChangeResponsesModule = ScheduleChangeResponsesModule = __decora
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ScheduleChangeResponsesController = void 0;
 const create_controller_factory_1 = __webpack_require__(87);
-const schedule_change_response_dto_1 = __webpack_require__(179);
+const schedule_change_response_dto_1 = __webpack_require__(181);
 const schedule_change_response_entity_1 = __webpack_require__(49);
-const schedule_change_responses_service_1 = __webpack_require__(180);
+const schedule_change_responses_service_1 = __webpack_require__(182);
 class ScheduleChangeResponsesController extends (0, create_controller_factory_1.createController)(schedule_change_response_entity_1.ScheduleChangeResponse, schedule_change_responses_service_1.ScheduleChangeResponsesService, schedule_change_response_dto_1.GetScheduleChangeResponseDto, schedule_change_response_dto_1.ScheduleChangeResponseDto, schedule_change_response_dto_1.UpdateScheduleChangeResponseDto) {
     async delete(id) {
         return await super.delete(id);
@@ -13951,7 +14059,7 @@ exports.ScheduleChangeResponsesController = ScheduleChangeResponsesController;
 
 
 /***/ }),
-/* 179 */
+/* 181 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -14014,7 +14122,7 @@ exports.GetScheduleChangeResponseDto = GetScheduleChangeResponseDto;
 
 
 /***/ }),
-/* 180 */
+/* 182 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -14034,14 +14142,14 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 var _a, _b, _c, _d;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ScheduleChangeResponsesService = void 0;
-const schedule_change_event_1 = __webpack_require__(168);
+const schedule_change_event_1 = __webpack_require__(170);
 const base_service_1 = __webpack_require__(98);
 const users_service_1 = __webpack_require__(97);
 const common_1 = __webpack_require__(5);
-const event_emitter_1 = __webpack_require__(163);
+const event_emitter_1 = __webpack_require__(165);
 const typeorm_1 = __webpack_require__(16);
 const typeorm_2 = __webpack_require__(24);
-const schedule_change_requests_service_1 = __webpack_require__(170);
+const schedule_change_requests_service_1 = __webpack_require__(172);
 const schedule_change_response_entity_1 = __webpack_require__(49);
 let ScheduleChangeResponsesService = class ScheduleChangeResponsesService extends base_service_1.BaseService {
     constructor(scheduleChangeResponsesRepository, usersService, scheduleChangeRequestsService, eventEmitter) {
@@ -14082,7 +14190,7 @@ exports.ScheduleChangeResponsesService = ScheduleChangeResponsesService = __deco
 
 
 /***/ }),
-/* 181 */
+/* 183 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 "use strict";
@@ -14090,9 +14198,9 @@ exports.ScheduleChangeResponsesService = ScheduleChangeResponsesService = __deco
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.SchedulesController = void 0;
 const create_controller_factory_1 = __webpack_require__(87);
-const schedule_dto_1 = __webpack_require__(182);
+const schedule_dto_1 = __webpack_require__(184);
 const schedule_entity_1 = __webpack_require__(42);
-const schedules_service_1 = __webpack_require__(171);
+const schedules_service_1 = __webpack_require__(173);
 class SchedulesController extends (0, create_controller_factory_1.createController)(schedule_entity_1.Schedule, schedules_service_1.SchedulesService, schedule_dto_1.GetScheduleDto, schedule_dto_1.ScheduleDto, schedule_dto_1.UpdateScheduleDto) {
     async create(entityDto, createdById) {
         return super.create(entityDto, createdById);
@@ -14111,7 +14219,7 @@ exports.SchedulesController = SchedulesController;
 
 
 /***/ }),
-/* 182 */
+/* 184 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -14128,7 +14236,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var _a, _b, _c, _d, _e, _f, _g;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.GetScheduleDto = exports.UpdateScheduleDto = exports.ScheduleDto = void 0;
-const is_time_string_decorator_1 = __webpack_require__(183);
+const is_time_string_decorator_1 = __webpack_require__(185);
 const base_dto_1 = __webpack_require__(117);
 const reference_dto_1 = __webpack_require__(124);
 const schedule_status_1 = __webpack_require__(43);
@@ -14290,7 +14398,7 @@ __decorate([
 
 
 /***/ }),
-/* 183 */
+/* 185 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 "use strict";
@@ -14323,7 +14431,7 @@ function IsTimeString(validationOptions) {
 
 
 /***/ }),
-/* 184 */
+/* 186 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -14344,12 +14452,12 @@ var ScheduleGenerationService_1, ScheduleGenerationProcessor_1;
 var _a, _b, _c, _d, _e;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ScheduleGenerationProcessor = exports.ScheduleGenerationService = void 0;
-const employee_assigned_event_1 = __webpack_require__(162);
+const employee_assigned_event_1 = __webpack_require__(164);
 const bull_1 = __webpack_require__(4);
 const common_1 = __webpack_require__(5);
-const event_emitter_1 = __webpack_require__(163);
-const bull_2 = __webpack_require__(185);
-const schedules_service_1 = __webpack_require__(171);
+const event_emitter_1 = __webpack_require__(165);
+const bull_2 = __webpack_require__(138);
+const schedules_service_1 = __webpack_require__(173);
 let ScheduleGenerationService = ScheduleGenerationService_1 = class ScheduleGenerationService {
     constructor(scheduleQueue) {
         this.scheduleQueue = scheduleQueue;
@@ -14428,14 +14536,7 @@ exports.ScheduleGenerationProcessor = ScheduleGenerationProcessor = ScheduleGene
 
 
 /***/ }),
-/* 185 */
-/***/ ((module) => {
-
-"use strict";
-module.exports = require("bull");
-
-/***/ }),
-/* 186 */
+/* 187 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 "use strict";
@@ -14443,16 +14544,16 @@ module.exports = require("bull");
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.HolidaysController = void 0;
 const create_controller_factory_1 = __webpack_require__(87);
-const holiday_dto_1 = __webpack_require__(187);
+const holiday_dto_1 = __webpack_require__(188);
 const holiday_entity_1 = __webpack_require__(44);
-const holidays_service_1 = __webpack_require__(174);
+const holidays_service_1 = __webpack_require__(176);
 class HolidaysController extends (0, create_controller_factory_1.createController)(holiday_entity_1.Holiday, holidays_service_1.HolidaysService, holiday_dto_1.GetHolidayDto, holiday_dto_1.HolidayDto, holiday_dto_1.UpdateHolidayDto) {
 }
 exports.HolidaysController = HolidaysController;
 
 
 /***/ }),
-/* 187 */
+/* 188 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -14539,7 +14640,7 @@ exports.GetHolidayDto = GetHolidayDto;
 
 
 /***/ }),
-/* 188 */
+/* 189 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -14559,10 +14660,10 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.DefaultShiftsSeeder = void 0;
 const day_enum_1 = __webpack_require__(45);
 const cutoff_status_enum_1 = __webpack_require__(55);
-const cutoffs_service_1 = __webpack_require__(154);
+const cutoffs_service_1 = __webpack_require__(156);
 const common_1 = __webpack_require__(5);
-const groups_service_1 = __webpack_require__(161);
-const shifts_service_1 = __webpack_require__(189);
+const groups_service_1 = __webpack_require__(163);
+const shifts_service_1 = __webpack_require__(190);
 let DefaultShiftsSeeder = DefaultShiftsSeeder_1 = class DefaultShiftsSeeder {
     constructor(shiftsService, groupsService, cutoffsService) {
         this.shiftsService = shiftsService;
@@ -14775,7 +14876,7 @@ exports.DefaultShiftsSeeder = DefaultShiftsSeeder = DefaultShiftsSeeder_1 = __de
 
 
 /***/ }),
-/* 189 */
+/* 190 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -14817,7 +14918,7 @@ exports.ShiftsService = ShiftsService = __decorate([
 
 
 /***/ }),
-/* 190 */
+/* 191 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 "use strict";
@@ -14825,16 +14926,16 @@ exports.ShiftsService = ShiftsService = __decorate([
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ShiftsController = void 0;
 const create_controller_factory_1 = __webpack_require__(87);
-const shift_dto_1 = __webpack_require__(191);
+const shift_dto_1 = __webpack_require__(192);
 const shift_entity_1 = __webpack_require__(40);
-const shifts_service_1 = __webpack_require__(189);
+const shifts_service_1 = __webpack_require__(190);
 class ShiftsController extends (0, create_controller_factory_1.createController)(shift_entity_1.Shift, shifts_service_1.ShiftsService, shift_dto_1.GetShiftDto, shift_dto_1.ShiftDto, shift_dto_1.UpdateShiftDto) {
 }
 exports.ShiftsController = ShiftsController;
 
 
 /***/ }),
-/* 191 */
+/* 192 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -14850,13 +14951,13 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.GetShiftDto = exports.UpdateShiftDto = exports.ShiftDto = void 0;
-const is_time_string_decorator_1 = __webpack_require__(183);
+const is_time_string_decorator_1 = __webpack_require__(185);
 const base_dto_1 = __webpack_require__(117);
 const create_get_dto_factory_1 = __webpack_require__(118);
 const swagger_1 = __webpack_require__(8);
 const class_transformer_1 = __webpack_require__(54);
 const class_validator_1 = __webpack_require__(92);
-const shift_day_dto_1 = __webpack_require__(192);
+const shift_day_dto_1 = __webpack_require__(193);
 class ShiftDto extends (0, swagger_1.PartialType)(base_dto_1.BaseDto) {
     get defaultDuration() {
         if (!this.defaultStartTime || !this.defaultEndTime) {
@@ -14964,7 +15065,7 @@ exports.GetShiftDto = GetShiftDto;
 
 
 /***/ }),
-/* 192 */
+/* 193 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -14981,7 +15082,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var _a;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ShiftDayDto = void 0;
-const is_time_string_decorator_1 = __webpack_require__(183);
+const is_time_string_decorator_1 = __webpack_require__(185);
 const day_enum_1 = __webpack_require__(45);
 const swagger_1 = __webpack_require__(8);
 const class_transformer_1 = __webpack_require__(54);
@@ -15071,1055 +15172,7 @@ __decorate([
 
 
 /***/ }),
-/* 193 */
-/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
-
-"use strict";
-
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-var __metadata = (this && this.__metadata) || function (k, v) {
-    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
-};
-var __param = (this && this.__param) || function (paramIndex, decorator) {
-    return function (target, key) { decorator(target, key, paramIndex); }
-};
-var PdfUtilsController_1;
-var _a, _b, _c, _d;
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.PdfUtilsController = exports.TemplateToPdfDto = exports.UrlToPdfDto = exports.HtmlToPdfDto = exports.MarginOptions = void 0;
-const authorize_decorator_1 = __webpack_require__(93);
-const action_enum_1 = __webpack_require__(71);
-const common_1 = __webpack_require__(5);
-const swagger_1 = __webpack_require__(8);
-const class_transformer_1 = __webpack_require__(54);
-const class_validator_1 = __webpack_require__(92);
-const express_1 = __webpack_require__(194);
-const html_to_pdf_service_1 = __webpack_require__(195);
-class MarginOptions {
-}
-exports.MarginOptions = MarginOptions;
-__decorate([
-    (0, swagger_1.ApiPropertyOptional)({
-        description: 'Top margin (e.g., "10mm", "1cm", "1in")',
-        example: '10mm',
-        type: String,
-    }),
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsString)(),
-    __metadata("design:type", String)
-], MarginOptions.prototype, "top", void 0);
-__decorate([
-    (0, swagger_1.ApiPropertyOptional)({
-        description: 'Right margin (e.g., "10mm", "1cm", "1in")',
-        example: '10mm',
-        type: String,
-    }),
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsString)(),
-    __metadata("design:type", String)
-], MarginOptions.prototype, "right", void 0);
-__decorate([
-    (0, swagger_1.ApiPropertyOptional)({
-        description: 'Bottom margin (e.g., "10mm", "1cm", "1in")',
-        example: '10mm',
-        type: String,
-    }),
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsString)(),
-    __metadata("design:type", String)
-], MarginOptions.prototype, "bottom", void 0);
-__decorate([
-    (0, swagger_1.ApiPropertyOptional)({
-        description: 'Left margin (e.g., "10mm", "1cm", "1in")',
-        example: '10mm',
-        type: String,
-    }),
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsString)(),
-    __metadata("design:type", String)
-], MarginOptions.prototype, "left", void 0);
-class HtmlToPdfDto {
-}
-exports.HtmlToPdfDto = HtmlToPdfDto;
-__decorate([
-    (0, swagger_1.ApiProperty)({
-        description: 'HTML content to convert to PDF',
-        example: '<html><body><h1>Hello World</h1></body></html>',
-        type: String,
-    }),
-    (0, class_validator_1.IsString)(),
-    __metadata("design:type", String)
-], HtmlToPdfDto.prototype, "html", void 0);
-__decorate([
-    (0, swagger_1.ApiPropertyOptional)({
-        description: 'Name of the generated PDF file',
-        example: 'output.pdf',
-        type: String,
-    }),
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsString)(),
-    __metadata("design:type", String)
-], HtmlToPdfDto.prototype, "fileName", void 0);
-__decorate([
-    (0, swagger_1.ApiPropertyOptional)({
-        description: 'HTML template for the page header',
-        example: '<div style="text-align: center;">Page Header</div>',
-        type: String,
-    }),
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsString)(),
-    __metadata("design:type", String)
-], HtmlToPdfDto.prototype, "headerTemplate", void 0);
-__decorate([
-    (0, swagger_1.ApiPropertyOptional)({
-        description: 'HTML template for the page footer',
-        example: '<div style="text-align: center;">Page <span class="pageNumber"></span> of <span class="totalPages"></span></div>',
-        type: String,
-    }),
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsString)(),
-    __metadata("design:type", String)
-], HtmlToPdfDto.prototype, "footerTemplate", void 0);
-__decorate([
-    (0, swagger_1.ApiPropertyOptional)({
-        description: 'Page margin options',
-        type: MarginOptions,
-    }),
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.ValidateNested)(),
-    (0, class_transformer_1.Type)(() => MarginOptions),
-    __metadata("design:type", MarginOptions)
-], HtmlToPdfDto.prototype, "margins", void 0);
-__decorate([
-    (0, swagger_1.ApiPropertyOptional)({
-        description: 'Whether to generate PDF in landscape orientation',
-        example: false,
-        default: false,
-        type: Boolean,
-    }),
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsBoolean)(),
-    __metadata("design:type", Boolean)
-], HtmlToPdfDto.prototype, "landscape", void 0);
-class UrlToPdfDto {
-}
-exports.UrlToPdfDto = UrlToPdfDto;
-__decorate([
-    (0, swagger_1.ApiProperty)({
-        description: 'URL to convert to PDF',
-        example: 'https://example.com',
-        type: String,
-    }),
-    (0, class_validator_1.IsUrl)(),
-    __metadata("design:type", String)
-], UrlToPdfDto.prototype, "url", void 0);
-__decorate([
-    (0, swagger_1.ApiPropertyOptional)({
-        description: 'Name of the generated PDF file',
-        example: 'output.pdf',
-        type: String,
-    }),
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsString)(),
-    __metadata("design:type", String)
-], UrlToPdfDto.prototype, "fileName", void 0);
-__decorate([
-    (0, swagger_1.ApiPropertyOptional)({
-        description: 'Page margin options',
-        type: MarginOptions,
-    }),
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.ValidateNested)(),
-    (0, class_transformer_1.Type)(() => MarginOptions),
-    __metadata("design:type", MarginOptions)
-], UrlToPdfDto.prototype, "margins", void 0);
-__decorate([
-    (0, swagger_1.ApiPropertyOptional)({
-        description: 'Whether to generate PDF in landscape orientation',
-        example: false,
-        default: false,
-        type: Boolean,
-    }),
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsBoolean)(),
-    __metadata("design:type", Boolean)
-], UrlToPdfDto.prototype, "landscape", void 0);
-class TemplateToPdfDto {
-}
-exports.TemplateToPdfDto = TemplateToPdfDto;
-__decorate([
-    (0, swagger_1.ApiProperty)({
-        description: 'Template name or content to convert to PDF',
-        example: 'invoice-template',
-        type: String,
-    }),
-    (0, class_validator_1.IsString)(),
-    __metadata("design:type", String)
-], TemplateToPdfDto.prototype, "template", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({
-        description: 'Data to be injected into the template',
-        example: { name: 'John Doe', items: [{ name: 'Item 1', price: 10 }] },
-        type: Object,
-    }),
-    (0, class_validator_1.IsObject)(),
-    __metadata("design:type", typeof (_a = typeof Record !== "undefined" && Record) === "function" ? _a : Object)
-], TemplateToPdfDto.prototype, "data", void 0);
-__decorate([
-    (0, swagger_1.ApiPropertyOptional)({
-        description: 'Name of the generated PDF file',
-        example: 'output.pdf',
-        type: String,
-    }),
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsString)(),
-    __metadata("design:type", String)
-], TemplateToPdfDto.prototype, "fileName", void 0);
-__decorate([
-    (0, swagger_1.ApiPropertyOptional)({
-        description: 'HTML template for the page header',
-        example: '<div style="text-align: center;">Page Header</div>',
-        type: String,
-    }),
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsString)(),
-    __metadata("design:type", String)
-], TemplateToPdfDto.prototype, "headerTemplate", void 0);
-__decorate([
-    (0, swagger_1.ApiPropertyOptional)({
-        description: 'HTML template for the page footer',
-        example: '<div style="text-align: center;">Page <span class="pageNumber"></span> of <span class="totalPages"></span></div>',
-        type: String,
-    }),
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsString)(),
-    __metadata("design:type", String)
-], TemplateToPdfDto.prototype, "footerTemplate", void 0);
-__decorate([
-    (0, swagger_1.ApiPropertyOptional)({
-        description: 'Page margin options',
-        type: MarginOptions,
-    }),
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.ValidateNested)(),
-    (0, class_transformer_1.Type)(() => MarginOptions),
-    __metadata("design:type", MarginOptions)
-], TemplateToPdfDto.prototype, "margins", void 0);
-__decorate([
-    (0, swagger_1.ApiPropertyOptional)({
-        description: 'Whether to generate PDF in landscape orientation',
-        example: false,
-        default: false,
-        type: Boolean,
-    }),
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsBoolean)(),
-    __metadata("design:type", Boolean)
-], TemplateToPdfDto.prototype, "landscape", void 0);
-let PdfUtilsController = PdfUtilsController_1 = class PdfUtilsController {
-    constructor(htmlToPdfService) {
-        this.htmlToPdfService = htmlToPdfService;
-        this.logger = new common_1.Logger(PdfUtilsController_1.name);
-    }
-    // Fix for urlToPdf method - remove passthrough and handle response consistently
-    async urlToPdf(dto, res) {
-        let page = null;
-        try {
-            // Use Puppeteer to navigate to URL and generate PDF
-            const browser = await this.htmlToPdfService.getBrowser();
-            page = await browser.newPage();
-            await page.goto(dto.url, {
-                waitUntil: 'networkidle0',
-                timeout: 30000
-            });
-            const pdfBuffer = await page.pdf({
-                format: 'A4',
-                printBackground: true,
-                margin: dto.margins || {
-                    top: '30mm',
-                    right: '20mm',
-                    bottom: '30mm',
-                    left: '20mm'
-                },
-                landscape: dto.landscape || false
-            });
-            const filename = dto.fileName || `webpage_${Date.now()}.pdf`;
-            const safeFilename = encodeURIComponent(filename.replace(/\s/g, '_'));
-            // DON'T use return here - just send the response
-            res.set({
-                'Content-Type': 'application/pdf',
-                'Content-Disposition': `attachment; filename="${safeFilename}"`,
-                'Content-Length': pdfBuffer.length.toString(),
-            });
-            res.send(pdfBuffer);
-        }
-        catch (error) {
-            // Only send error if headers haven't been sent yet
-            if (!res.headersSent) {
-                this.logger.error(`URL to PDF error: ${error.message}`, error.stack);
-                res.status(common_1.HttpStatus.INTERNAL_SERVER_ERROR).json({
-                    message: `Failed to generate PDF from URL: ${error.message}`
-                });
-            }
-            else {
-                this.logger.error(`URL to PDF error after headers sent: ${error.message}`, error.stack);
-            }
-        }
-        finally {
-            // Ensure page is closed even if there's an error
-            if (page) {
-                await page.close().catch(e => this.logger.error(`Error closing page: ${e.message}`));
-            }
-        }
-    }
-    replacePlaceholders(template, data) {
-        let result = template;
-        // Replace simple placeholders like {{name}}
-        Object.entries(data).forEach(([key, value]) => {
-            const placeholder = new RegExp(`{{\\s*${key}\\s*}}`, 'g');
-            result = result.replace(placeholder, String(value !== null && value !== void 0 ? value : ''));
-        });
-        // Handle nested objects with dot notation (e.g., {{employee.firstName}})
-        const nestedPlaceholderRegex = /{{([^{}]+)}}/g;
-        let match;
-        while ((match = nestedPlaceholderRegex.exec(result)) !== null) {
-            const placeholder = match[0];
-            const path = match[1].trim();
-            try {
-                const value = path.split('.').reduce((obj, prop) => obj === null || obj === void 0 ? void 0 : obj[prop], data);
-                if (value !== undefined) {
-                    result = result.replace(placeholder, String(value));
-                }
-            }
-            catch (e) {
-                // Leave placeholder if path doesn't exist
-            }
-        }
-        return result;
-    }
-    // Fix for templateToPdf method - use consistent response handling
-    async templateToPdf(dto, res) {
-        try {
-            // Replace placeholders in template
-            const renderedHtml = this.replacePlaceholders(dto.template, dto.data);
-            const pdfBuffer = await this.htmlToPdfService.generatePdf(renderedHtml, {
-                fileName: dto.fileName,
-                headerTemplate: dto.headerTemplate,
-                footerTemplate: dto.footerTemplate,
-                margins: dto.margins,
-                landscape: dto.landscape
-            });
-            const filename = dto.fileName || `document_${Date.now()}.pdf`;
-            const safeFilename = encodeURIComponent(filename.replace(/\s/g, '_'));
-            // DON'T use return here
-            res.set({
-                'Content-Type': 'application/pdf',
-                'Content-Disposition': `attachment; filename="${safeFilename}"`,
-                'Content-Length': pdfBuffer.length.toString(),
-            });
-            res.send(pdfBuffer);
-        }
-        catch (error) {
-            // Only send error if headers haven't been sent yet
-            if (!res.headersSent) {
-                this.logger.error(`Template to PDF error: ${error.message}`, error.stack);
-                res.status(common_1.HttpStatus.INTERNAL_SERVER_ERROR).json({
-                    message: `Failed to generate PDF from template: ${error.message}`
-                });
-            }
-            else {
-                this.logger.error(`Template to PDF error after headers sent: ${error.message}`, error.stack);
-            }
-        }
-    }
-};
-exports.PdfUtilsController = PdfUtilsController;
-__decorate([
-    (0, common_1.Post)('from-url'),
-    (0, swagger_1.ApiOperation)({ summary: 'Convert a URL to PDF' }),
-    (0, swagger_1.ApiBody)({ type: UrlToPdfDto }),
-    (0, swagger_1.ApiResponse)({ status: 200, description: 'PDF file' }),
-    (0, swagger_1.ApiResponse)({ status: 400, description: 'Invalid input' }),
-    (0, swagger_1.ApiResponse)({ status: 500, description: 'PDF generation error' }),
-    (0, authorize_decorator_1.Authorize)({ endpointType: action_enum_1.Action.CREATE }),
-    __param(0, (0, common_1.Body)(common_1.ValidationPipe)),
-    __param(1, (0, common_1.Res)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [UrlToPdfDto, typeof (_c = typeof express_1.Response !== "undefined" && express_1.Response) === "function" ? _c : Object]),
-    __metadata("design:returntype", Promise)
-], PdfUtilsController.prototype, "urlToPdf", null);
-__decorate([
-    (0, common_1.Post)('from-template'),
-    (0, swagger_1.ApiOperation)({ summary: 'Convert a template with data to PDF' }),
-    (0, swagger_1.ApiBody)({ type: TemplateToPdfDto }),
-    (0, swagger_1.ApiResponse)({ status: 200, description: 'PDF file' }),
-    (0, swagger_1.ApiResponse)({ status: 400, description: 'Invalid input' }),
-    (0, swagger_1.ApiResponse)({ status: 500, description: 'PDF generation error' }),
-    (0, authorize_decorator_1.Authorize)({ endpointType: action_enum_1.Action.CREATE }),
-    __param(0, (0, common_1.Body)(common_1.ValidationPipe)),
-    __param(1, (0, common_1.Res)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [TemplateToPdfDto, typeof (_d = typeof express_1.Response !== "undefined" && express_1.Response) === "function" ? _d : Object]),
-    __metadata("design:returntype", Promise)
-], PdfUtilsController.prototype, "templateToPdf", null);
-exports.PdfUtilsController = PdfUtilsController = PdfUtilsController_1 = __decorate([
-    (0, swagger_1.ApiTags)('PDF Utilities'),
-    (0, common_1.Controller)('utils/pdf'),
-    __metadata("design:paramtypes", [typeof (_b = typeof html_to_pdf_service_1.HtmlToPdfService !== "undefined" && html_to_pdf_service_1.HtmlToPdfService) === "function" ? _b : Object])
-], PdfUtilsController);
-
-
-/***/ }),
 /* 194 */
-/***/ ((module) => {
-
-"use strict";
-module.exports = require("express");
-
-/***/ }),
-/* 195 */
-/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
-
-"use strict";
-
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-var __importStar = (this && this.__importStar) || (function () {
-    var ownKeys = function(o) {
-        ownKeys = Object.getOwnPropertyNames || function (o) {
-            var ar = [];
-            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
-            return ar;
-        };
-        return ownKeys(o);
-    };
-    return function (mod) {
-        if (mod && mod.__esModule) return mod;
-        var result = {};
-        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
-        __setModuleDefault(result, mod);
-        return result;
-    };
-})();
-var __metadata = (this && this.__metadata) || function (k, v) {
-    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
-};
-var HtmlToPdfService_1;
-var _a, _b, _c;
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.HtmlToPdfService = exports.PdfServiceEvent = void 0;
-const common_1 = __webpack_require__(5);
-const config_1 = __webpack_require__(6);
-const event_emitter_1 = __webpack_require__(163);
-const schedule_1 = __webpack_require__(155);
-const crypto = __importStar(__webpack_require__(196));
-const perf_hooks_1 = __webpack_require__(197);
-const puppeteer = __importStar(__webpack_require__(198));
-var PdfServiceEvent;
-(function (PdfServiceEvent) {
-    PdfServiceEvent["PDF_GENERATED"] = "pdf.generated";
-    PdfServiceEvent["PDF_ERROR"] = "pdf.error";
-    PdfServiceEvent["BROWSER_RESTARTED"] = "browser.restarted";
-    PdfServiceEvent["CACHE_HIT"] = "cache.hit";
-    PdfServiceEvent["CACHE_MISS"] = "cache.miss";
-})(PdfServiceEvent || (exports.PdfServiceEvent = PdfServiceEvent = {}));
-let HtmlToPdfService = HtmlToPdfService_1 = class HtmlToPdfService {
-    constructor(configService, schedulerRegistry, eventEmitter) {
-        this.configService = configService;
-        this.schedulerRegistry = schedulerRegistry;
-        this.eventEmitter = eventEmitter;
-        this.logger = new common_1.Logger(HtmlToPdfService_1.name);
-        this.browser = null;
-        this.browserPromise = null;
-        this.activePages = 0;
-        this.pageQueue = [];
-        // Performance tracking
-        this.generateTimes = [];
-        this.lastPerformanceReport = Date.now();
-        this.lastBrowserRestart = Date.now();
-        this.maxConcurrentPages = this.configService.get('PDF_MAX_CONCURRENT_PAGES', 10);
-        this.timeout = this.configService.get('PDF_GENERATION_TIMEOUT', 30000);
-        this.memoryLimit = this.configService.get('PDF_MEMORY_LIMIT', 512);
-        this.performanceMonitoring = this.configService.get('PDF_PERFORMANCE_MONITORING', true);
-        this.maxQueueAge = this.configService.get('PDF_MAX_QUEUE_AGE', 120000); // 2 minutes
-        this.browserRestartInterval = this.configService.get('PDF_BROWSER_RESTART_INTERVAL', 3600000); // 1 hour
-        this.useChromium = this.configService.get('PDF_USE_CHROMIUM', true);
-        if (this.performanceMonitoring) {
-            const obs = new perf_hooks_1.PerformanceObserver((items) => {
-                items.getEntries().forEach(entry => {
-                    if (entry.name.startsWith('pdf-generation')) {
-                        this.generateTimes.push(entry.duration);
-                    }
-                });
-                perf_hooks_1.performance.clearMarks();
-            });
-            obs.observe({ entryTypes: ['measure'] });
-        }
-    }
-    async onModuleInit() {
-        await this.getBrowser();
-        const healthInterval = setInterval(() => this.checkBrowserHealth(), 60000);
-        this.schedulerRegistry.addInterval('browserHealthCheck', healthInterval);
-        if (this.performanceMonitoring) {
-            const perfInterval = setInterval(() => this.reportPerformance(), 300000);
-            this.schedulerRegistry.addInterval('pdfPerformanceReport', perfInterval);
-        }
-        const queueInterval = setInterval(() => this.cleanStaleQueueItems(), 30000);
-        this.schedulerRegistry.addInterval('queueCleaner', queueInterval);
-        const restartInterval = setInterval(() => this.restartBrowserIfNeeded(), this.browserRestartInterval);
-        this.schedulerRegistry.addInterval('browserRestart', restartInterval);
-    }
-    async onModuleDestroy() {
-        if (this.browser) {
-            await this.browser.close().catch(err => {
-                this.logger.error(`Error closing browser: ${err.message}`);
-            });
-            this.browser = null;
-        }
-    }
-    async checkBrowserHealth() {
-        try {
-            if (!this.browser) {
-                this.logger.warn('Browser not found during health check, restarting');
-                await this.getBrowser();
-                return;
-            }
-            if (!this.browser.isConnected()) {
-                this.logger.warn('Browser is disconnected, restarting');
-                this.browser = null;
-                this.browserPromise = null;
-                await this.getBrowser();
-                return;
-            }
-            const pages = await this.browser.pages().catch(err => {
-                this.logger.error(`Error getting pages: ${err.message}`);
-                return [];
-            });
-            this.logger.debug(`Health check: ${pages.length} open pages, ${this.activePages} active pages, ${this.pageQueue.length} queued tasks`);
-            if (pages.length > this.activePages + 1) {
-                this.logger.warn(`Found ${pages.length - this.activePages - 1} zombie pages, cleaning up`);
-                await Promise.all(pages.slice(1).map(async (page) => {
-                    try {
-                        const url = await page.url();
-                        if (url === 'about:blank') {
-                            await page.close();
-                        }
-                    }
-                    catch (e) { }
-                }));
-            }
-            const metrics = await this.getProcessMetrics();
-            if (metrics.jsHeapSizeLimit - metrics.jsHeapSizeUsed < 50 * 1024 * 1024) {
-                this.logger.warn(`Low memory detected (${Math.round(metrics.jsHeapSizeUsed / 1024 / 1024)}MB used of ${Math.round(metrics.jsHeapSizeLimit / 1024 / 1024)}MB), restarting browser`);
-                await this.restartBrowser();
-            }
-        }
-        catch (err) {
-            this.logger.error(`Browser health check failed: ${err.message}`);
-            this.browser = null;
-            this.browserPromise = null;
-            await this.getBrowser();
-        }
-    }
-    async getProcessMetrics() {
-        if (!this.browser || !this.browser.isConnected()) {
-            return { jsHeapSizeUsed: 0, jsHeapSizeLimit: Infinity };
-        }
-        try {
-            const pages = await this.browser.pages();
-            if (pages.length === 0)
-                return { jsHeapSizeUsed: 0, jsHeapSizeLimit: Infinity };
-            const metrics = await pages[0].metrics();
-            return metrics;
-        }
-        catch (err) {
-            this.logger.error(`Failed to get metrics: ${err.message}`);
-            return { jsHeapSizeUsed: 0, jsHeapSizeLimit: Infinity };
-        }
-    }
-    async restartBrowserIfNeeded() {
-        const timeSinceRestart = Date.now() - this.lastBrowserRestart;
-        if (timeSinceRestart >= this.browserRestartInterval && this.browser) {
-            this.logger.log(`Scheduled browser restart after ${Math.round(timeSinceRestart / 1000 / 60)} minutes uptime`);
-            await this.restartBrowser();
-        }
-    }
-    async restartBrowser() {
-        if (!this.browser)
-            return;
-        try {
-            await this.processQueueWithTimeout(30000);
-            await this.browser.close().catch(err => {
-                this.logger.error(`Error closing browser during restart: ${err.message}`);
-            });
-        }
-        finally {
-            this.browser = null;
-            this.browserPromise = null;
-            if (global.gc) {
-                this.logger.debug('Forcing garbage collection');
-                global.gc();
-            }
-            await this.getBrowser();
-            this.lastBrowserRestart = Date.now();
-            this.eventEmitter.emit(PdfServiceEvent.BROWSER_RESTARTED);
-        }
-    }
-    cleanStaleQueueItems() {
-        const now = Date.now();
-        const originalLength = this.pageQueue.length;
-        this.pageQueue = this.pageQueue.filter(item => {
-            const age = now - item.timestamp;
-            if (age > this.maxQueueAge) {
-                item.reject(new Error(`Request timeout - waited in queue for ${Math.round(age / 1000)} seconds`));
-                return false;
-            }
-            return true;
-        });
-        if (originalLength !== this.pageQueue.length) {
-            this.logger.warn(`Removed ${originalLength - this.pageQueue.length} stale items from queue`);
-        }
-    }
-    async processQueueWithTimeout(timeout) {
-        if (this.pageQueue.length === 0)
-            return;
-        const startTime = Date.now();
-        this.logger.debug(`Processing ${this.pageQueue.length} queued items with ${timeout}ms timeout`);
-        while (this.pageQueue.length > 0) {
-            if (Date.now() - startTime > timeout) {
-                this.logger.warn(`Queue processing timed out after ${Math.round((Date.now() - startTime) / 1000)}s with ${this.pageQueue.length} items remaining`);
-                break;
-            }
-            const nextTask = this.pageQueue.shift();
-            if (nextTask) {
-                this.activePages++;
-                try {
-                    const page = await nextTask.task();
-                    nextTask.resolve(page);
-                }
-                catch (error) {
-                    this.activePages--;
-                    nextTask.reject(error);
-                }
-            }
-            await new Promise(resolve => setTimeout(resolve, 50));
-        }
-    }
-    reportPerformance() {
-        if (!this.performanceMonitoring || this.generateTimes.length === 0)
-            return;
-        const times = [...this.generateTimes];
-        this.generateTimes = [];
-        const avg = times.reduce((sum, time) => sum + time, 0) / times.length;
-        const min = Math.min(...times);
-        const max = Math.max(...times);
-        const p95 = times.sort((a, b) => a - b)[Math.floor(times.length * 0.95)];
-        this.logger.log(`PDF Performance: ${times.length} PDFs generated in the last ${Math.round((Date.now() - this.lastPerformanceReport) / 1000 / 60)}m`);
-        this.logger.log(`Avg: ${Math.round(avg)}ms, Min: ${Math.round(min)}ms, Max: ${Math.round(max)}ms, P95: ${Math.round(p95)}ms`);
-        this.lastPerformanceReport = Date.now();
-    }
-    async getBrowser() {
-        if (this.browser) {
-            return this.browser;
-        }
-        if (!this.browserPromise) {
-            const startTime = Date.now();
-            this.logger.log('Launching browser...');
-            this.browserPromise = puppeteer.launch({
-                headless: true,
-                executablePath: this.useChromium ? undefined : process.env.CHROME_BIN,
-                args: [
-                    '--no-sandbox',
-                    '--disable-setuid-sandbox',
-                    '--disable-dev-shm-usage',
-                    '--disable-gpu',
-                    '--disable-extensions',
-                    '--disable-accelerated-2d-canvas',
-                    '--no-first-run',
-                    '--no-zygote',
-                    '--single-process',
-                    `--max-old-space-size=${this.memoryLimit}`,
-                ],
-                timeout: this.timeout,
-                defaultViewport: { width: 1200, height: 1600, deviceScaleFactor: 1 },
-                protocolTimeout: this.timeout,
-            }).then(browser => {
-                this.logger.log(`Browser launched in ${Date.now() - startTime}ms`);
-                return browser;
-            }).catch(err => {
-                this.logger.error(`Failed to launch browser: ${err.message}`);
-                this.browserPromise = null;
-                throw err;
-            });
-            try {
-                this.browser = await this.browserPromise;
-                this.browser.on('disconnected', () => {
-                    this.logger.warn('Browser disconnected');
-                    this.browser = null;
-                    this.browserPromise = null;
-                    const queuedTasks = [...this.pageQueue];
-                    this.pageQueue = [];
-                    for (const task of queuedTasks) {
-                        task.reject(new Error('Browser disconnected'));
-                    }
-                });
-                this.lastBrowserRestart = Date.now();
-            }
-            catch (error) {
-                this.browserPromise = null;
-                throw error;
-            }
-        }
-        return this.browserPromise;
-    }
-    async acquirePage(priority = 0) {
-        if (this.activePages < this.maxConcurrentPages) {
-            this.activePages++;
-            try {
-                const browser = await this.getBrowser();
-                const page = await browser.newPage();
-                await page.setDefaultNavigationTimeout(this.timeout);
-                await page.setJavaScriptEnabled(true);
-                const session = await page.target().createCDPSession();
-                await session.send('Page.setDownloadBehavior', { behavior: 'deny' });
-                await session.send('Network.setBlockedURLs', { urls: ['*.mp4', '*.webm', '*.ogg', '*.mp3', '*.wav', '*.gif'] });
-                await page.setRequestInterception(true);
-                page.on('request', (request) => {
-                    const resourceType = request.resourceType();
-                    if (['image', 'media', 'font', 'websocket'].includes(resourceType)) {
-                        request.abort();
-                    }
-                    else {
-                        request.continue();
-                    }
-                });
-                return page;
-            }
-            catch (error) {
-                this.activePages--;
-                throw error;
-            }
-        }
-        return new Promise((resolve, reject) => {
-            this.pageQueue.push({
-                resolve,
-                reject,
-                priority,
-                timestamp: Date.now(),
-                task: async () => {
-                    try {
-                        const browser = await this.getBrowser();
-                        const page = await browser.newPage();
-                        await page.setDefaultNavigationTimeout(this.timeout);
-                        await page.setJavaScriptEnabled(true);
-                        const session = await page.target().createCDPSession();
-                        await session.send('Page.setDownloadBehavior', { behavior: 'deny' });
-                        await session.send('Network.setBlockedURLs', { urls: ['*.mp4', '*.webm', '*.ogg', '*.mp3', '*.wav', '*.gif'] });
-                        await page.setRequestInterception(true);
-                        page.on('request', (request) => {
-                            const resourceType = request.resourceType();
-                            if (['image', 'media', 'font', 'websocket'].includes(resourceType)) {
-                                request.abort();
-                            }
-                            else {
-                                request.continue();
-                            }
-                        });
-                        return page;
-                    }
-                    catch (error) {
-                        throw error;
-                    }
-                }
-            });
-            this.pageQueue.sort((a, b) => b.priority - a.priority);
-        });
-    }
-    async releasePage(page) {
-        try {
-            await page.close();
-        }
-        catch (e) {
-            this.logger.warn(`Error closing page: ${e.message}`);
-        }
-        this.activePages--;
-        if (this.pageQueue.length > 0) {
-            this.pageQueue.sort((a, b) => b.priority - a.priority);
-            const nextTask = this.pageQueue.shift();
-            if (nextTask) {
-                this.activePages++;
-                try {
-                    const page = await nextTask.task();
-                    nextTask.resolve(page);
-                }
-                catch (error) {
-                    this.activePages--;
-                    nextTask.reject(error);
-                }
-            }
-        }
-    }
-    async generatePdf(htmlContent, options, retryCount = 2) {
-        let markId;
-        if (this.performanceMonitoring) {
-            markId = `pdf-generation-${Date.now()}`;
-            perf_hooks_1.performance.mark(`${markId}-start`);
-        }
-        let page;
-        try {
-            const priority = retryCount === 2 ? 0 : retryCount === 1 ? 1 : 2;
-            page = await this.acquirePage(priority);
-            if (options === null || options === void 0 ? void 0 : options.watermark) {
-                htmlContent = this.addWatermark(htmlContent, options.watermark);
-            }
-            await Promise.race([
-                page.setContent(htmlContent, {
-                    waitUntil: ['load', 'domcontentloaded', 'networkidle0'],
-                    timeout: (options === null || options === void 0 ? void 0 : options.timeout) || this.timeout
-                }),
-                new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout setting page content')), (options === null || options === void 0 ? void 0 : options.timeout) || this.timeout))
-            ]);
-            await this.enhancePageForPdf(page);
-            const pdfBuffer = await Promise.race([
-                page.pdf({
-                    format: (options === null || options === void 0 ? void 0 : options.format) || 'A4',
-                    printBackground: (options === null || options === void 0 ? void 0 : options.printBackground) !== false,
-                    margin: (options === null || options === void 0 ? void 0 : options.margins) || {
-                        top: '30mm',
-                        right: '20mm',
-                        bottom: '30mm',
-                        left: '20mm'
-                    },
-                    displayHeaderFooter: !!((options === null || options === void 0 ? void 0 : options.headerTemplate) || (options === null || options === void 0 ? void 0 : options.footerTemplate)),
-                    headerTemplate: (options === null || options === void 0 ? void 0 : options.headerTemplate) || '<span></span>',
-                    footerTemplate: (options === null || options === void 0 ? void 0 : options.footerTemplate) || '<span></span>',
-                    path: options === null || options === void 0 ? void 0 : options.fileName,
-                    landscape: (options === null || options === void 0 ? void 0 : options.landscape) || false,
-                    scale: (options === null || options === void 0 ? void 0 : options.scale) || 1,
-                    preferCSSPageSize: (options === null || options === void 0 ? void 0 : options.preferCSSPageSize) || false,
-                    timeout: (options === null || options === void 0 ? void 0 : options.timeout) || this.timeout
-                }),
-                new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout generating PDF')), (options === null || options === void 0 ? void 0 : options.timeout) || this.timeout))
-            ]);
-            if (this.performanceMonitoring && markId) {
-                perf_hooks_1.performance.mark(`${markId}-end`);
-                perf_hooks_1.performance.measure(`pdf-generation`, `${markId}-start`, `${markId}-end`);
-            }
-            this.eventEmitter.emit(PdfServiceEvent.PDF_GENERATED, {
-                bytes: pdfBuffer.length,
-                cached: false,
-                options: {
-                    landscape: options === null || options === void 0 ? void 0 : options.landscape,
-                    hasHeader: !!(options === null || options === void 0 ? void 0 : options.headerTemplate),
-                    hasFooter: !!(options === null || options === void 0 ? void 0 : options.footerTemplate),
-                }
-            });
-            return pdfBuffer;
-        }
-        catch (error) {
-            this.logger.error(`Error generating PDF: ${error.message}`);
-            this.eventEmitter.emit(PdfServiceEvent.PDF_ERROR, {
-                error: error.message,
-                htmlLength: htmlContent.length,
-                retryCount
-            });
-            if ((error.message.includes('browser has disconnected') ||
-                error.message.includes('Target closed') ||
-                error.message.includes('Session closed')) &&
-                retryCount > 0) {
-                this.logger.warn(`Browser issue, attempting to recreate and retry (${retryCount} retries left)`);
-                if (page) {
-                    try {
-                        await page.close().catch(() => { });
-                        this.activePages--;
-                    }
-                    catch (_a) { }
-                }
-                this.browser = null;
-                this.browserPromise = null;
-                await new Promise(resolve => setTimeout(resolve, 1000));
-                return this.generatePdf(htmlContent, options, retryCount - 1);
-            }
-            throw error;
-        }
-        finally {
-            if (page) {
-                await this.releasePage(page);
-            }
-        }
-    }
-    async enhancePageForPdf(page) {
-        await page.evaluate(() => {
-            return new Promise((resolve) => {
-                if (document.fonts && document.fonts.ready) {
-                    document.fonts.ready.then(() => resolve());
-                }
-                else {
-                    setTimeout(resolve, 1000);
-                }
-            });
-        });
-        await page.evaluate(() => {
-            return new Promise((resolve) => {
-                const images = document.querySelectorAll('img');
-                if (images.length === 0) {
-                    resolve();
-                    return;
-                }
-                let loadedCount = 0;
-                const imageLoadListener = () => {
-                    loadedCount++;
-                    if (loadedCount === images.length) {
-                        resolve();
-                    }
-                };
-                images.forEach(img => {
-                    if (img.complete) {
-                        loadedCount++;
-                    }
-                    else {
-                        img.addEventListener('load', imageLoadListener);
-                        img.addEventListener('error', imageLoadListener);
-                    }
-                });
-                if (loadedCount === images.length) {
-                    resolve();
-                }
-                setTimeout(resolve, 2000);
-            });
-        });
-    }
-    addWatermark(html, watermarkText) {
-        const watermarkStyle = `
-            <style>
-                body {
-                    position: relative;
-                }
-                body::after {
-                    content: "${watermarkText}";
-                    position: fixed;
-                    top: 0;
-                    right: 0;
-                    bottom: 0;
-                    left: 0;
-                    z-index: 1000;
-                    display: flex;
-                    justify-content: center;
-                    align-items: center;
-                    font-size: 100px;
-                    color: rgba(200, 200, 200, 0.3);
-                    transform: rotate(-45deg);
-                    pointer-events: none;
-                }
-            </style>
-        `;
-        if (html.includes('</head>')) {
-            return html.replace('</head>', `${watermarkStyle}</head>`);
-        }
-        else {
-            return `<head>${watermarkStyle}</head>${html}`;
-        }
-    }
-    generateCacheKey(htmlContent, options) {
-        const cacheableOptions = {
-            margins: options === null || options === void 0 ? void 0 : options.margins,
-            landscape: options === null || options === void 0 ? void 0 : options.landscape,
-            scale: options === null || options === void 0 ? void 0 : options.scale,
-            headerTemplate: options === null || options === void 0 ? void 0 : options.headerTemplate,
-            footerTemplate: options === null || options === void 0 ? void 0 : options.footerTemplate,
-            format: options === null || options === void 0 ? void 0 : options.format,
-            printBackground: options === null || options === void 0 ? void 0 : options.printBackground,
-            preferCSSPageSize: options === null || options === void 0 ? void 0 : options.preferCSSPageSize,
-        };
-        const contentHash = crypto.createHash('sha256')
-            .update(htmlContent)
-            .digest('hex')
-            .substring(0, 10);
-        const optionsHash = crypto.createHash('sha256')
-            .update(JSON.stringify(cacheableOptions))
-            .digest('hex')
-            .substring(0, 8);
-        return `pdf-${contentHash}-${optionsHash}`;
-    }
-    async healthCheck() {
-        try {
-            const browser = await this.getBrowser();
-            const pages = await browser.pages().catch(() => []);
-            const metrics = {
-                activePages: this.activePages,
-                queueLength: this.pageQueue.length,
-                openPages: pages.length,
-                browserUptime: Math.round((Date.now() - this.lastBrowserRestart) / 1000 / 60) + ' minutes',
-                averageGenerationTime: this.generateTimes.length > 0
-                    ? Math.round(this.generateTimes.reduce((sum, time) => sum + time, 0) / this.generateTimes.length) + 'ms'
-                    : 'No data'
-            };
-            return { healthy: true, metrics };
-        }
-        catch (error) {
-            this.logger.error(`Health check failed: ${error.message}`);
-            return {
-                healthy: false,
-                metrics: { error: error.message }
-            };
-        }
-    }
-};
-exports.HtmlToPdfService = HtmlToPdfService;
-exports.HtmlToPdfService = HtmlToPdfService = HtmlToPdfService_1 = __decorate([
-    (0, common_1.Injectable)({ scope: common_1.Scope.DEFAULT }),
-    __metadata("design:paramtypes", [typeof (_a = typeof config_1.ConfigService !== "undefined" && config_1.ConfigService) === "function" ? _a : Object, typeof (_b = typeof schedule_1.SchedulerRegistry !== "undefined" && schedule_1.SchedulerRegistry) === "function" ? _b : Object, typeof (_c = typeof event_emitter_1.EventEmitter2 !== "undefined" && event_emitter_1.EventEmitter2) === "function" ? _c : Object])
-], HtmlToPdfService);
-
-
-/***/ }),
-/* 196 */
-/***/ ((module) => {
-
-"use strict";
-module.exports = require("crypto");
-
-/***/ }),
-/* 197 */
-/***/ ((module) => {
-
-"use strict";
-module.exports = require("perf_hooks");
-
-/***/ }),
-/* 198 */
-/***/ ((module) => {
-
-"use strict";
-module.exports = require("puppeteer");
-
-/***/ }),
-/* 199 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -16137,12 +15190,12 @@ var EmployeeGroupAssignmentListener_1;
 var _a, _b, _c, _d, _e, _f, _g;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.EmployeeGroupAssignmentListener = void 0;
-const cutoffs_service_1 = __webpack_require__(154);
-const schedules_service_1 = __webpack_require__(171);
-const schedule_generation_service_1 = __webpack_require__(184);
+const cutoffs_service_1 = __webpack_require__(156);
+const schedules_service_1 = __webpack_require__(173);
+const schedule_generation_service_1 = __webpack_require__(186);
 const common_1 = __webpack_require__(5);
-const event_emitter_1 = __webpack_require__(163);
-const employee_assigned_event_1 = __webpack_require__(162);
+const event_emitter_1 = __webpack_require__(165);
+const employee_assigned_event_1 = __webpack_require__(164);
 let EmployeeGroupAssignmentListener = EmployeeGroupAssignmentListener_1 = class EmployeeGroupAssignmentListener {
     constructor(cutoffsService, scheduleGenerationService, scheduleService) {
         this.cutoffsService = cutoffsService;
@@ -16235,7 +15288,7 @@ exports.EmployeeGroupAssignmentListener = EmployeeGroupAssignmentListener = Empl
 
 
 /***/ }),
-/* 200 */
+/* 195 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -16273,7 +15326,7 @@ exports.CommonService = CommonService = __decorate([
 
 
 /***/ }),
-/* 201 */
+/* 196 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -16286,12 +15339,12 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ConfigModule = void 0;
-const bull_module_1 = __webpack_require__(202);
+const bull_module_1 = __webpack_require__(197);
 const common_1 = __webpack_require__(5);
 const config_1 = __webpack_require__(6);
-const event_emitter_1 = __webpack_require__(163);
-const schedule_1 = __webpack_require__(155);
-const config_schema_1 = __webpack_require__(205);
+const event_emitter_1 = __webpack_require__(165);
+const schedule_1 = __webpack_require__(157);
+const config_schema_1 = __webpack_require__(200);
 let ConfigModule = class ConfigModule {
 };
 exports.ConfigModule = ConfigModule;
@@ -16313,7 +15366,7 @@ exports.ConfigModule = ConfigModule = __decorate([
 
 
 /***/ }),
-/* 202 */
+/* 197 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -16330,8 +15383,8 @@ exports.BullModule = void 0;
 const bull_1 = __webpack_require__(4);
 const common_1 = __webpack_require__(5);
 const config_1 = __webpack_require__(6);
-const queues_config_1 = __webpack_require__(203);
-const queue_factory_service_1 = __webpack_require__(204);
+const queues_config_1 = __webpack_require__(198);
+const queue_factory_service_1 = __webpack_require__(199);
 let BullModule = BullModule_1 = class BullModule {
     static forRoot() {
         return {
@@ -16371,7 +15424,7 @@ exports.BullModule = BullModule = BullModule_1 = __decorate([
 
 
 /***/ }),
-/* 203 */
+/* 198 */
 /***/ ((__unused_webpack_module, exports) => {
 
 "use strict";
@@ -16437,7 +15490,7 @@ exports.queues = [
 
 
 /***/ }),
-/* 204 */
+/* 199 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -16454,19 +15507,23 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-var _a, _b;
+var _a, _b, _c, _d;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.QueueFactoryService = void 0;
 const bull_1 = __webpack_require__(4);
 const common_1 = __webpack_require__(5);
-const bull_2 = __webpack_require__(185);
+const bull_2 = __webpack_require__(138);
 let QueueFactoryService = class QueueFactoryService {
-    constructor(notificationsQueue, scheduleQueue) {
+    constructor(notificationsQueue, scheduleQueue, payrollQueue, workHourQueue) {
         this.notificationsQueue = notificationsQueue;
         this.scheduleQueue = scheduleQueue;
+        this.payrollQueue = payrollQueue;
+        this.workHourQueue = workHourQueue;
         this.queues = new Map();
         this.queues.set('notifications', notificationsQueue);
         this.queues.set('schedule-generation', scheduleQueue);
+        this.queues.set('payroll-processing', payrollQueue);
+        this.queues.set('work-hour-calculation', workHourQueue);
     }
     getQueue(name) {
         return this.queues.get(name);
@@ -16484,12 +15541,14 @@ exports.QueueFactoryService = QueueFactoryService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, bull_1.InjectQueue)('notifications')),
     __param(1, (0, bull_1.InjectQueue)('schedule-generation')),
-    __metadata("design:paramtypes", [typeof (_a = typeof bull_2.Queue !== "undefined" && bull_2.Queue) === "function" ? _a : Object, typeof (_b = typeof bull_2.Queue !== "undefined" && bull_2.Queue) === "function" ? _b : Object])
+    __param(2, (0, bull_1.InjectQueue)('payroll-processing')),
+    __param(3, (0, bull_1.InjectQueue)('work-hour-calculation')),
+    __metadata("design:paramtypes", [typeof (_a = typeof bull_2.Queue !== "undefined" && bull_2.Queue) === "function" ? _a : Object, typeof (_b = typeof bull_2.Queue !== "undefined" && bull_2.Queue) === "function" ? _b : Object, typeof (_c = typeof bull_2.Queue !== "undefined" && bull_2.Queue) === "function" ? _c : Object, typeof (_d = typeof bull_2.Queue !== "undefined" && bull_2.Queue) === "function" ? _d : Object])
 ], QueueFactoryService);
 
 
 /***/ }),
-/* 205 */
+/* 200 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -16529,7 +15588,7 @@ var __importStar = (this && this.__importStar) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.configValidationSchema = void 0;
-const Joi = __importStar(__webpack_require__(206));
+const Joi = __importStar(__webpack_require__(201));
 exports.configValidationSchema = Joi.object({
     PORT: Joi.number().default(3000),
     NODE_ENV: Joi.string().default('development'),
@@ -16561,14 +15620,14 @@ exports.configValidationSchema = Joi.object({
 
 
 /***/ }),
-/* 206 */
+/* 201 */
 /***/ ((module) => {
 
 "use strict";
 module.exports = require("joi");
 
 /***/ }),
-/* 207 */
+/* 202 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -16602,7 +15661,7 @@ exports.DatabaseModule = DatabaseModule = __decorate([
 
 
 /***/ }),
-/* 208 */
+/* 203 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -16619,10 +15678,10 @@ const common_1 = __webpack_require__(5);
 const core_1 = __webpack_require__(7);
 const employee_management_module_1 = __webpack_require__(15);
 const roles_module_1 = __webpack_require__(130);
-const auth_module_1 = __webpack_require__(209);
-const profiles_module_1 = __webpack_require__(249);
-const user_seeder_service_1 = __webpack_require__(252);
-const sessions_module_1 = __webpack_require__(233);
+const auth_module_1 = __webpack_require__(204);
+const profiles_module_1 = __webpack_require__(245);
+const user_seeder_service_1 = __webpack_require__(248);
+const sessions_module_1 = __webpack_require__(228);
 const users_module_1 = __webpack_require__(131);
 let AccountManagementModule = class AccountManagementModule {
 };
@@ -16662,7 +15721,7 @@ exports.AccountManagementModule = AccountManagementModule = __decorate([
 
 
 /***/ }),
-/* 209 */
+/* 204 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -16675,8 +15734,8 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.AuthModule = void 0;
-const google_auth_guard_1 = __webpack_require__(210);
-const emails_module_1 = __webpack_require__(211);
+const google_auth_guard_1 = __webpack_require__(205);
+const emails_module_1 = __webpack_require__(206);
 const permissions_module_1 = __webpack_require__(129);
 const common_1 = __webpack_require__(5);
 const config_1 = __webpack_require__(6);
@@ -16685,12 +15744,12 @@ const passport_1 = __webpack_require__(95);
 const jwt_auth_guard_1 = __webpack_require__(94);
 const permissions_guard_1 = __webpack_require__(96);
 const roles_guard_1 = __webpack_require__(110);
-const sessions_module_1 = __webpack_require__(233);
-const auth_controller_1 = __webpack_require__(237);
-const auth_service_1 = __webpack_require__(239);
+const sessions_module_1 = __webpack_require__(228);
+const auth_controller_1 = __webpack_require__(232);
+const auth_service_1 = __webpack_require__(235);
 const jwt_service_1 = __webpack_require__(134);
-const access_token_strategy_1 = __webpack_require__(245);
-const google_strategy_1 = __webpack_require__(247);
+const access_token_strategy_1 = __webpack_require__(241);
+const google_strategy_1 = __webpack_require__(243);
 let AuthModule = class AuthModule {
 };
 exports.AuthModule = AuthModule;
@@ -16719,7 +15778,7 @@ exports.AuthModule = AuthModule = __decorate([
 
 
 /***/ }),
-/* 210 */
+/* 205 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -16743,7 +15802,7 @@ exports.GoogleAuthGuard = GoogleAuthGuard = __decorate([
 
 
 /***/ }),
-/* 211 */
+/* 206 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -16759,12 +15818,12 @@ exports.EmailsModule = void 0;
 const common_1 = __webpack_require__(5);
 const core_1 = __webpack_require__(7);
 const typeorm_1 = __webpack_require__(16);
-const email_configurations_module_1 = __webpack_require__(212);
-const email_templates_module_1 = __webpack_require__(223);
-const emails_controller_1 = __webpack_require__(229);
-const emails_service_1 = __webpack_require__(231);
-const email_entity_1 = __webpack_require__(219);
-const email_seeder_service_1 = __webpack_require__(232);
+const email_configurations_module_1 = __webpack_require__(207);
+const email_templates_module_1 = __webpack_require__(218);
+const emails_controller_1 = __webpack_require__(224);
+const emails_service_1 = __webpack_require__(226);
+const email_entity_1 = __webpack_require__(214);
+const email_seeder_service_1 = __webpack_require__(227);
 let EmailsModule = class EmailsModule {
 };
 exports.EmailsModule = EmailsModule;
@@ -16793,7 +15852,7 @@ exports.EmailsModule = EmailsModule = __decorate([
 
 
 /***/ }),
-/* 212 */
+/* 207 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -16806,13 +15865,13 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.EmailConfigurationsModule = void 0;
-const mailer_1 = __webpack_require__(213);
+const mailer_1 = __webpack_require__(208);
 const common_1 = __webpack_require__(5);
 const typeorm_1 = __webpack_require__(16);
-const email_configurations_controller_1 = __webpack_require__(214);
-const email_configurations_service_1 = __webpack_require__(216);
-const email_configuration_entity_1 = __webpack_require__(218);
-const dynamic_mailer_config_service_1 = __webpack_require__(221);
+const email_configurations_controller_1 = __webpack_require__(209);
+const email_configurations_service_1 = __webpack_require__(211);
+const email_configuration_entity_1 = __webpack_require__(213);
+const dynamic_mailer_config_service_1 = __webpack_require__(216);
 let EmailConfigurationsModule = class EmailConfigurationsModule {
 };
 exports.EmailConfigurationsModule = EmailConfigurationsModule;
@@ -16833,14 +15892,14 @@ exports.EmailConfigurationsModule = EmailConfigurationsModule = __decorate([
 
 
 /***/ }),
-/* 213 */
+/* 208 */
 /***/ ((module) => {
 
 "use strict";
 module.exports = require("@nestjs-modules/mailer");
 
 /***/ }),
-/* 214 */
+/* 209 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 "use strict";
@@ -16848,16 +15907,16 @@ module.exports = require("@nestjs-modules/mailer");
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.EmailConfigurationsController = void 0;
 const create_controller_factory_1 = __webpack_require__(87);
-const email_configuration_dto_1 = __webpack_require__(215);
-const email_configurations_service_1 = __webpack_require__(216);
-const email_configuration_entity_1 = __webpack_require__(218);
+const email_configuration_dto_1 = __webpack_require__(210);
+const email_configurations_service_1 = __webpack_require__(211);
+const email_configuration_entity_1 = __webpack_require__(213);
 class EmailConfigurationsController extends (0, create_controller_factory_1.createController)(email_configuration_entity_1.EmailConfiguration, email_configurations_service_1.EmailConfigurationsService, email_configuration_dto_1.GetEmailConfigurationDto, email_configuration_dto_1.EmailConfigurationDto, email_configuration_dto_1.UpdateEmailConfigurationDto) {
 }
 exports.EmailConfigurationsController = EmailConfigurationsController;
 
 
 /***/ }),
-/* 215 */
+/* 210 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -16982,7 +16041,7 @@ exports.GetEmailConfigurationDto = GetEmailConfigurationDto;
 
 
 /***/ }),
-/* 216 */
+/* 211 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -17040,9 +16099,9 @@ const users_service_1 = __webpack_require__(97);
 const common_1 = __webpack_require__(5);
 const config_1 = __webpack_require__(6);
 const typeorm_1 = __webpack_require__(16);
-const nodemailer = __importStar(__webpack_require__(217));
+const nodemailer = __importStar(__webpack_require__(212));
 const typeorm_2 = __webpack_require__(24);
-const email_configuration_entity_1 = __webpack_require__(218);
+const email_configuration_entity_1 = __webpack_require__(213);
 let EmailConfigurationsService = class EmailConfigurationsService extends base_service_1.BaseService {
     constructor(emailConfigurationsRepository, usersService, configService) {
         super(emailConfigurationsRepository, usersService);
@@ -17155,14 +16214,14 @@ exports.EmailConfigurationsService = EmailConfigurationsService = __decorate([
 
 
 /***/ }),
-/* 217 */
+/* 212 */
 /***/ ((module) => {
 
 "use strict";
 module.exports = require("nodemailer");
 
 /***/ }),
-/* 218 */
+/* 213 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -17180,7 +16239,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.EmailConfiguration = void 0;
 const base_entity_1 = __webpack_require__(23);
 const typeorm_1 = __webpack_require__(24);
-const email_entity_1 = __webpack_require__(219);
+const email_entity_1 = __webpack_require__(214);
 let EmailConfiguration = class EmailConfiguration extends base_entity_1.BaseEntity {
 };
 exports.EmailConfiguration = EmailConfiguration;
@@ -17234,7 +16293,7 @@ exports.EmailConfiguration = EmailConfiguration = __decorate([
 
 
 /***/ }),
-/* 219 */
+/* 214 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -17251,10 +16310,10 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var _a, _b, _c;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Email = void 0;
-const email_status_enum_1 = __webpack_require__(220);
+const email_status_enum_1 = __webpack_require__(215);
 const base_entity_1 = __webpack_require__(23);
 const typeorm_1 = __webpack_require__(24);
-const email_configuration_entity_1 = __webpack_require__(218);
+const email_configuration_entity_1 = __webpack_require__(213);
 let Email = class Email extends base_entity_1.BaseEntity {
 };
 exports.Email = Email;
@@ -17309,7 +16368,7 @@ exports.Email = Email = __decorate([
 
 
 /***/ }),
-/* 220 */
+/* 215 */
 /***/ ((__unused_webpack_module, exports) => {
 
 "use strict";
@@ -17336,7 +16395,7 @@ var EmailStatus;
 
 
 /***/ }),
-/* 221 */
+/* 216 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -17353,9 +16412,9 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var _a;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.DynamicMailerConfigService = void 0;
-const handlebars_adapter_1 = __webpack_require__(222);
+const handlebars_adapter_1 = __webpack_require__(217);
 const common_1 = __webpack_require__(5);
-const email_configurations_service_1 = __webpack_require__(216);
+const email_configurations_service_1 = __webpack_require__(211);
 let DynamicMailerConfigService = class DynamicMailerConfigService {
     constructor(emailConfigService) {
         this.emailConfigService = emailConfigService;
@@ -17401,14 +16460,14 @@ exports.DynamicMailerConfigService = DynamicMailerConfigService = __decorate([
 
 
 /***/ }),
-/* 222 */
+/* 217 */
 /***/ ((module) => {
 
 "use strict";
 module.exports = require("@nestjs-modules/mailer/dist/adapters/handlebars.adapter");
 
 /***/ }),
-/* 223 */
+/* 218 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -17423,9 +16482,9 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.EmailTemplatesModule = void 0;
 const common_1 = __webpack_require__(5);
 const typeorm_1 = __webpack_require__(16);
-const email_templates_controller_1 = __webpack_require__(224);
-const email_templates_service_1 = __webpack_require__(226);
-const email_template_entity_1 = __webpack_require__(228);
+const email_templates_controller_1 = __webpack_require__(219);
+const email_templates_service_1 = __webpack_require__(221);
+const email_template_entity_1 = __webpack_require__(223);
 let EmailTemplatesModule = class EmailTemplatesModule {
 };
 exports.EmailTemplatesModule = EmailTemplatesModule;
@@ -17442,7 +16501,7 @@ exports.EmailTemplatesModule = EmailTemplatesModule = __decorate([
 
 
 /***/ }),
-/* 224 */
+/* 219 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -17465,9 +16524,9 @@ exports.EmailTemplatesController = void 0;
 const create_controller_factory_1 = __webpack_require__(87);
 const common_1 = __webpack_require__(5);
 const swagger_1 = __webpack_require__(8);
-const email_template_dto_1 = __webpack_require__(225);
-const email_templates_service_1 = __webpack_require__(226);
-const email_template_entity_1 = __webpack_require__(228);
+const email_template_dto_1 = __webpack_require__(220);
+const email_templates_service_1 = __webpack_require__(221);
+const email_template_entity_1 = __webpack_require__(223);
 class EmailTemplatesController extends (0, create_controller_factory_1.createController)(email_template_entity_1.EmailTemplate, email_templates_service_1.EmailTemplatesService, email_template_dto_1.GetEmailTemplateDto, email_template_entity_1.EmailTemplate, email_template_dto_1.UpdateEmailTemplateDto) {
     async previewTemplate(body) {
         return this.baseService.renderTemplate(body.templateName, body.context, body.department);
@@ -17485,7 +16544,7 @@ __decorate([
 
 
 /***/ }),
-/* 225 */
+/* 220 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -17524,7 +16583,7 @@ exports.GetEmailTemplateDto = GetEmailTemplateDto;
 
 
 /***/ }),
-/* 226 */
+/* 221 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -17581,9 +16640,9 @@ const base_service_1 = __webpack_require__(98);
 const users_service_1 = __webpack_require__(97);
 const common_1 = __webpack_require__(5);
 const typeorm_1 = __webpack_require__(16);
-const Handlebars = __importStar(__webpack_require__(227));
+const Handlebars = __importStar(__webpack_require__(222));
 const typeorm_2 = __webpack_require__(24);
-const email_template_entity_1 = __webpack_require__(228);
+const email_template_entity_1 = __webpack_require__(223);
 let EmailTemplatesService = class EmailTemplatesService extends base_service_1.BaseService {
     constructor(emailTemplatesRepository, usersService) {
         super(emailTemplatesRepository, usersService);
@@ -17649,14 +16708,14 @@ exports.EmailTemplatesService = EmailTemplatesService = __decorate([
 
 
 /***/ }),
-/* 227 */
+/* 222 */
 /***/ ((module) => {
 
 "use strict";
 module.exports = require("handlebars");
 
 /***/ }),
-/* 228 */
+/* 223 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -17715,7 +16774,7 @@ exports.EmailTemplate = EmailTemplate = __decorate([
 
 
 /***/ }),
-/* 229 */
+/* 224 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -17738,9 +16797,9 @@ exports.EmailsController = void 0;
 const create_controller_factory_1 = __webpack_require__(87);
 const common_1 = __webpack_require__(5);
 const swagger_1 = __webpack_require__(8);
-const email_dto_1 = __webpack_require__(230);
-const emails_service_1 = __webpack_require__(231);
-const email_entity_1 = __webpack_require__(219);
+const email_dto_1 = __webpack_require__(225);
+const emails_service_1 = __webpack_require__(226);
+const email_entity_1 = __webpack_require__(214);
 class EmailsController extends (0, create_controller_factory_1.createController)(email_entity_1.Email, emails_service_1.EmailsService, email_dto_1.GetEmailDto, email_dto_1.EmailDto, email_dto_1.UpdateEmailDto) {
     // // Email sending endpoints
     // @Post('send')
@@ -17785,7 +16844,7 @@ __decorate([
 
 
 /***/ }),
-/* 230 */
+/* 225 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -17824,7 +16883,7 @@ exports.GetEmailDto = GetEmailDto;
 
 
 /***/ }),
-/* 231 */
+/* 226 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -17844,16 +16903,16 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 var _a, _b, _c, _d, _e;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.EmailsService = void 0;
-const email_status_enum_1 = __webpack_require__(220);
+const email_status_enum_1 = __webpack_require__(215);
 const base_service_1 = __webpack_require__(98);
 const users_service_1 = __webpack_require__(97);
-const mailer_1 = __webpack_require__(213);
+const mailer_1 = __webpack_require__(208);
 const common_1 = __webpack_require__(5);
 const typeorm_1 = __webpack_require__(16);
 const typeorm_2 = __webpack_require__(24);
-const email_configurations_service_1 = __webpack_require__(216);
-const email_templates_service_1 = __webpack_require__(226);
-const email_entity_1 = __webpack_require__(219);
+const email_configurations_service_1 = __webpack_require__(211);
+const email_templates_service_1 = __webpack_require__(221);
+const email_entity_1 = __webpack_require__(214);
 let EmailsService = class EmailsService extends base_service_1.BaseService {
     constructor(emailsRepository, usersService, emailConfigService, emailTemplateService, mailerService) {
         super(emailsRepository, usersService);
@@ -18054,7 +17113,7 @@ exports.EmailsService = EmailsService = __decorate([
 
 
 /***/ }),
-/* 232 */
+/* 227 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -18074,8 +17133,8 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.EmailSeederService = void 0;
 const common_1 = __webpack_require__(5);
 const config_1 = __webpack_require__(6);
-const email_configurations_service_1 = __webpack_require__(216);
-const email_templates_service_1 = __webpack_require__(226);
+const email_configurations_service_1 = __webpack_require__(211);
+const email_templates_service_1 = __webpack_require__(221);
 let EmailSeederService = EmailSeederService_1 = class EmailSeederService {
     constructor(emailConfigService, emailTemplatesService, configService) {
         this.emailConfigService = emailConfigService;
@@ -18274,7 +17333,7 @@ exports.EmailSeederService = EmailSeederService = EmailSeederService_1 = __decor
 
 
 /***/ }),
-/* 233 */
+/* 228 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -18290,8 +17349,8 @@ exports.SessionsModule = void 0;
 const common_1 = __webpack_require__(5);
 const typeorm_1 = __webpack_require__(16);
 const session_entity_1 = __webpack_require__(84);
-const sessions_controller_1 = __webpack_require__(234);
-const sessions_service_1 = __webpack_require__(236);
+const sessions_controller_1 = __webpack_require__(229);
+const sessions_service_1 = __webpack_require__(231);
 let SessionsModule = class SessionsModule {
 };
 exports.SessionsModule = SessionsModule;
@@ -18306,7 +17365,7 @@ exports.SessionsModule = SessionsModule = __decorate([
 
 
 /***/ }),
-/* 234 */
+/* 229 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 "use strict";
@@ -18314,9 +17373,9 @@ exports.SessionsModule = SessionsModule = __decorate([
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.SessionsController = void 0;
 const create_controller_factory_1 = __webpack_require__(87);
-const session_dto_1 = __webpack_require__(235);
+const session_dto_1 = __webpack_require__(230);
 const session_entity_1 = __webpack_require__(84);
-const sessions_service_1 = __webpack_require__(236);
+const sessions_service_1 = __webpack_require__(231);
 class SessionsController extends (0, create_controller_factory_1.createController)(session_entity_1.Session, sessions_service_1.SessionsService, session_dto_1.GetSessionDto, undefined, session_dto_1.UpdateSessionDto) {
     async create(entityDto, createdById) {
         return await super.create(entityDto, createdById);
@@ -18329,7 +17388,7 @@ exports.SessionsController = SessionsController;
 
 
 /***/ }),
-/* 235 */
+/* 230 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -18373,7 +17432,7 @@ exports.GetSessionDto = GetSessionDto;
 
 
 /***/ }),
-/* 236 */
+/* 231 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -18415,7 +17474,7 @@ exports.SessionsService = SessionsService = __decorate([
 
 
 /***/ }),
-/* 237 */
+/* 232 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -18439,20 +17498,20 @@ exports.AuthController = void 0;
 const authorize_decorator_1 = __webpack_require__(93);
 const current_user_decorator_1 = __webpack_require__(113);
 const generalresponse_dto_1 = __webpack_require__(101);
-const jwt_payload_interface_1 = __webpack_require__(238);
+const jwt_payload_interface_1 = __webpack_require__(233);
 const common_1 = __webpack_require__(5);
 const config_1 = __webpack_require__(6);
 const swagger_1 = __webpack_require__(8);
 const class_transformer_1 = __webpack_require__(54);
-const express_1 = __webpack_require__(194);
-const google_auth_guard_1 = __webpack_require__(210);
-const user_dto_1 = __webpack_require__(141);
+const express_1 = __webpack_require__(234);
+const google_auth_guard_1 = __webpack_require__(205);
+const user_dto_1 = __webpack_require__(143);
 const users_service_1 = __webpack_require__(97);
-const auth_service_1 = __webpack_require__(239);
-const login_response_dto_1 = __webpack_require__(241);
-const login_user_dto_1 = __webpack_require__(242);
-const register_user_dto_1 = __webpack_require__(243);
-const token_dto_1 = __webpack_require__(244);
+const auth_service_1 = __webpack_require__(235);
+const login_response_dto_1 = __webpack_require__(237);
+const login_user_dto_1 = __webpack_require__(238);
+const register_user_dto_1 = __webpack_require__(239);
+const token_dto_1 = __webpack_require__(240);
 let AuthController = AuthController_1 = class AuthController {
     constructor(authService, configService, usersService) {
         this.authService = authService;
@@ -18774,7 +17833,7 @@ exports.AuthController = AuthController = AuthController_1 = __decorate([
 
 
 /***/ }),
-/* 238 */
+/* 233 */
 /***/ ((__unused_webpack_module, exports) => {
 
 "use strict";
@@ -18783,7 +17842,14 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 
 
 /***/ }),
-/* 239 */
+/* 234 */
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("express");
+
+/***/ }),
+/* 235 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -18835,13 +17901,13 @@ var _a, _b, _c, _d, _e, _f;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.AuthService = void 0;
 const utility_helper_1 = __webpack_require__(102);
-const common_service_1 = __webpack_require__(200);
-const emails_service_1 = __webpack_require__(231);
+const common_service_1 = __webpack_require__(195);
+const emails_service_1 = __webpack_require__(226);
 const common_1 = __webpack_require__(5);
 const config_1 = __webpack_require__(6);
-const bcrypt = __importStar(__webpack_require__(240));
+const bcrypt = __importStar(__webpack_require__(236));
 const uuid_1 = __webpack_require__(136);
-const sessions_service_1 = __webpack_require__(236);
+const sessions_service_1 = __webpack_require__(231);
 const users_service_1 = __webpack_require__(97);
 const jwt_service_1 = __webpack_require__(134);
 let AuthService = AuthService_1 = class AuthService {
@@ -19239,14 +18305,14 @@ exports.AuthService = AuthService = AuthService_1 = __decorate([
 
 
 /***/ }),
-/* 240 */
+/* 236 */
 /***/ ((module) => {
 
 "use strict";
 module.exports = require("bcrypt");
 
 /***/ }),
-/* 241 */
+/* 237 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -19276,7 +18342,7 @@ __decorate([
 
 
 /***/ }),
-/* 242 */
+/* 238 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -19313,7 +18379,7 @@ __decorate([
 
 
 /***/ }),
-/* 243 */
+/* 239 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -19333,7 +18399,7 @@ exports.RegisterUserDto = void 0;
 const swagger_1 = __webpack_require__(8);
 const class_transformer_1 = __webpack_require__(54);
 const class_validator_1 = __webpack_require__(92);
-const profile_dto_1 = __webpack_require__(142);
+const profile_dto_1 = __webpack_require__(144);
 class RegisterUserDto {
 }
 exports.RegisterUserDto = RegisterUserDto;
@@ -19348,7 +18414,7 @@ __decorate([
     (0, swagger_1.ApiProperty)({ example: 'user', description: 'The username of the user' }),
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.IsNotEmpty)(),
-    (0, class_validator_1.Matches)(/^[a-z0-9]+$/, { message: 'Username must contain only lowercase letters and numbers' }),
+    (0, class_validator_1.Matches)(/^[a-z0-9.]+$/, { message: 'Username must contain only lowercase letters, numbers, and dots' }),
     (0, class_validator_1.MinLength)(5, { message: 'Username must be at least 5 characters long' }),
     (0, class_transformer_1.Expose)(),
     __metadata("design:type", String)
@@ -19379,7 +18445,7 @@ __decorate([
 
 
 /***/ }),
-/* 244 */
+/* 240 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -19414,7 +18480,7 @@ __decorate([
 
 
 /***/ }),
-/* 245 */
+/* 241 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -19435,7 +18501,7 @@ const users_service_1 = __webpack_require__(97);
 const common_1 = __webpack_require__(5);
 const config_1 = __webpack_require__(6);
 const passport_1 = __webpack_require__(95);
-const passport_jwt_1 = __webpack_require__(246);
+const passport_jwt_1 = __webpack_require__(242);
 const jwt_service_1 = __webpack_require__(134);
 let AccessTokenStrategy = class AccessTokenStrategy extends (0, passport_1.PassportStrategy)(passport_jwt_1.Strategy, 'jwt') {
     constructor(configService, jwtService, userService) {
@@ -19476,14 +18542,14 @@ exports.AccessTokenStrategy = AccessTokenStrategy = __decorate([
 
 
 /***/ }),
-/* 246 */
+/* 242 */
 /***/ ((module) => {
 
 "use strict";
 module.exports = require("passport-jwt");
 
 /***/ }),
-/* 247 */
+/* 243 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -19504,8 +18570,8 @@ exports.GoogleStrategy = void 0;
 const common_1 = __webpack_require__(5);
 const config_1 = __webpack_require__(6);
 const passport_1 = __webpack_require__(95);
-const passport_google_oauth20_1 = __webpack_require__(248);
-const auth_service_1 = __webpack_require__(239);
+const passport_google_oauth20_1 = __webpack_require__(244);
+const auth_service_1 = __webpack_require__(235);
 let GoogleStrategy = GoogleStrategy_1 = class GoogleStrategy extends (0, passport_1.PassportStrategy)(passport_google_oauth20_1.Strategy, 'google-auth') {
     constructor(configService, authService) {
         super({
@@ -19573,14 +18639,14 @@ exports.GoogleStrategy = GoogleStrategy = GoogleStrategy_1 = __decorate([
 
 
 /***/ }),
-/* 248 */
+/* 244 */
 /***/ ((module) => {
 
 "use strict";
 module.exports = require("passport-google-oauth20");
 
 /***/ }),
-/* 249 */
+/* 245 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -19596,8 +18662,8 @@ exports.ProfilesModule = void 0;
 const common_1 = __webpack_require__(5);
 const typeorm_1 = __webpack_require__(16);
 const profile_entity_1 = __webpack_require__(77);
-const profiles_controller_1 = __webpack_require__(250);
-const profiles_service_1 = __webpack_require__(251);
+const profiles_controller_1 = __webpack_require__(246);
+const profiles_service_1 = __webpack_require__(247);
 let ProfilesModule = class ProfilesModule {
 };
 exports.ProfilesModule = ProfilesModule;
@@ -19612,7 +18678,7 @@ exports.ProfilesModule = ProfilesModule = __decorate([
 
 
 /***/ }),
-/* 250 */
+/* 246 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 "use strict";
@@ -19620,9 +18686,9 @@ exports.ProfilesModule = ProfilesModule = __decorate([
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ProfilesController = void 0;
 const create_controller_factory_1 = __webpack_require__(87);
-const profile_dto_1 = __webpack_require__(142);
+const profile_dto_1 = __webpack_require__(144);
 const profile_entity_1 = __webpack_require__(77);
-const profiles_service_1 = __webpack_require__(251);
+const profiles_service_1 = __webpack_require__(247);
 class ProfilesController extends (0, create_controller_factory_1.createController)(profile_entity_1.Profile, profiles_service_1.ProfilesService, profile_dto_1.GetProfileDto, profile_dto_1.ProfileDto, profile_dto_1.UpdateProfileDto) {
     findAllAdvanced(paginationDto) {
         return super.findAllAdvanced(paginationDto);
@@ -19644,7 +18710,7 @@ exports.ProfilesController = ProfilesController;
 
 
 /***/ }),
-/* 251 */
+/* 247 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -19686,7 +18752,7 @@ exports.ProfilesService = ProfilesService = __decorate([
 
 
 /***/ }),
-/* 252 */
+/* 248 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -19742,12 +18808,12 @@ const employment_status_enum_1 = __webpack_require__(34);
 const employment_type_enum_1 = __webpack_require__(35);
 const role_scope_type_enum_1 = __webpack_require__(69);
 const role_enum_1 = __webpack_require__(109);
-const auth_service_1 = __webpack_require__(239);
+const auth_service_1 = __webpack_require__(235);
 const employees_service_1 = __webpack_require__(128);
 const roles_service_1 = __webpack_require__(106);
 const common_1 = __webpack_require__(5);
 const config_1 = __webpack_require__(6);
-const bcrypt = __importStar(__webpack_require__(240));
+const bcrypt = __importStar(__webpack_require__(236));
 const users_service_1 = __webpack_require__(97);
 let UserSeederService = UserSeederService_1 = class UserSeederService {
     constructor(usersService, authService, rolesService, employeesService, configService) {
@@ -19768,7 +18834,19 @@ let UserSeederService = UserSeederService_1 = class UserSeederService {
         // this.logger.log('Checking if super admin role exists...');
         const superAdminRole = await this.seedSuperAdminRole();
         const employeeRole = await this.seedEmployeeRole();
-        let superAdminEmployee = await this.seedSuperAdminEmployee();
+        let superAdmin = await this.usersService.findOneBy({ email: superAdminEmail });
+        // this.logger.log('Checking if super admin employee exists...');
+        if (!superAdmin) {
+            this.logger.warn('Super admin user does not exist');
+            // create
+            superAdmin = await this.usersService.create({
+                email: superAdminEmail,
+                emailVerified: true,
+                password: await bcrypt.hash(superAdminPassword, 10),
+                userName: superAdminEmail,
+            });
+        }
+        let superAdminEmployee = await this.seedSuperAdminEmployee(superAdmin);
         // check if super admin employee has the super admin and employee role
         const hasSuperAdminAndEmployeeRole = ((_a = superAdminEmployee.roles) === null || _a === void 0 ? void 0 : _a.some(role => role.name === role_enum_1.Role.SUPERADMIN)) &&
             ((_b = superAdminEmployee.roles) === null || _b === void 0 ? void 0 : _b.some(role => role.name === role_enum_1.Role.EMPLOYEE));
@@ -19797,6 +18875,7 @@ let UserSeederService = UserSeederService_1 = class UserSeederService {
                     email: superAdminEmail,
                     password: await bcrypt.hash(superAdminPassword, 10),
                     userName: superAdminEmail,
+                    emailVerified: true,
                     employee: superAdminEmployee
                 });
                 // this.logger.log('Super admin user created successfully');
@@ -19879,7 +18958,7 @@ let UserSeederService = UserSeederService_1 = class UserSeederService {
         }
         return employeeRole;
     }
-    async seedSuperAdminEmployee() {
+    async seedSuperAdminEmployee(user) {
         // Check if super admin employee exists
         let superAdminEmployee = await this.employeesService.findOneBy({ employeeNumber: 1 }, { relations: { roles: true } });
         // Create super admin employee if it doesn't exist
@@ -19890,6 +18969,8 @@ let UserSeederService = UserSeederService_1 = class UserSeederService {
                 employmentCondition: employment_condition_enum_1.EmploymentCondition.REGULAR,
                 employmentType: employment_type_enum_1.EmploymentType.FULL_TIME,
                 commencementDate: new Date(),
+                user,
+                userId: user.id,
                 employeeNumber: 1,
             });
             // this.logger.log('SuperAdmin employee created successfully');
@@ -19908,7 +18989,7 @@ exports.UserSeederService = UserSeederService = UserSeederService_1 = __decorate
 
 
 /***/ }),
-/* 253 */
+/* 249 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -19923,7 +19004,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.AddressesModule = void 0;
 const common_1 = __webpack_require__(5);
 const typeorm_1 = __webpack_require__(16);
-const addresses_service_1 = __webpack_require__(254);
+const addresses_service_1 = __webpack_require__(250);
 const address_entity_1 = __webpack_require__(73);
 let AddressesModule = class AddressesModule {
 };
@@ -19938,7 +19019,7 @@ exports.AddressesModule = AddressesModule = __decorate([
 
 
 /***/ }),
-/* 254 */
+/* 250 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -19980,7 +19061,7 @@ exports.AddressesService = AddressesService = __decorate([
 
 
 /***/ }),
-/* 255 */
+/* 251 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -19996,20 +19077,20 @@ exports.AttendanceManagementModule = void 0;
 const common_1 = __webpack_require__(5);
 const core_1 = __webpack_require__(7);
 const typeorm_1 = __webpack_require__(16);
-const biometrics_module_1 = __webpack_require__(256);
+const biometrics_module_1 = __webpack_require__(252);
 const employee_management_module_1 = __webpack_require__(15);
-const schedules_module_1 = __webpack_require__(165);
-const attendance_configurations_module_1 = __webpack_require__(291);
-const attendance_punches_module_1 = __webpack_require__(296);
-const attendances_controller_1 = __webpack_require__(300);
-const attendances_service_1 = __webpack_require__(301);
+const schedules_module_1 = __webpack_require__(167);
+const attendance_configurations_module_1 = __webpack_require__(288);
+const attendance_punches_module_1 = __webpack_require__(293);
+const attendances_controller_1 = __webpack_require__(297);
+const attendances_service_1 = __webpack_require__(298);
 const attendance_entity_1 = __webpack_require__(36);
-const final_work_hours_module_1 = __webpack_require__(309);
-const attendances_gateway_1 = __webpack_require__(304);
-const attendance_listener_1 = __webpack_require__(346);
-const attendance_data_seeder_service_1 = __webpack_require__(347);
-const work_time_requests_module_1 = __webpack_require__(311);
-const work_time_responses_module_1 = __webpack_require__(324);
+const final_work_hours_module_1 = __webpack_require__(306);
+const attendances_gateway_1 = __webpack_require__(301);
+const attendance_listener_1 = __webpack_require__(343);
+const attendance_data_seeder_service_1 = __webpack_require__(344);
+const work_time_requests_module_1 = __webpack_require__(308);
+const work_time_responses_module_1 = __webpack_require__(321);
 let AttendanceManagementModule = class AttendanceManagementModule {
 };
 exports.AttendanceManagementModule = AttendanceManagementModule;
@@ -20069,7 +19150,7 @@ exports.AttendanceManagementModule = AttendanceManagementModule = __decorate([
 
 
 /***/ }),
-/* 256 */
+/* 252 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -20086,17 +19167,17 @@ const attendance_punch_entity_1 = __webpack_require__(56);
 const common_1 = __webpack_require__(5);
 const core_1 = __webpack_require__(7);
 const typeorm_1 = __webpack_require__(16);
-const biometric_devices_controller_1 = __webpack_require__(257);
-const biometrics_controller_1 = __webpack_require__(264);
+const biometric_devices_controller_1 = __webpack_require__(253);
+const biometrics_controller_1 = __webpack_require__(260);
 const biometric_device_entity_1 = __webpack_require__(59);
-const biometric_template_entity_1 = __webpack_require__(269);
-const biometrics_gateway_1 = __webpack_require__(270);
-const timeout_interceptor_1 = __webpack_require__(266);
-const anvis_biometrics_service_1 = __webpack_require__(271);
-const biometric_devices_service_1 = __webpack_require__(261);
-const biometrics_factory_service_1 = __webpack_require__(262);
-const biometrics_polling_service_1 = __webpack_require__(288);
-const zkteco_biometrics_service_1 = __webpack_require__(289);
+const biometric_template_entity_1 = __webpack_require__(266);
+const biometrics_gateway_1 = __webpack_require__(267);
+const timeout_interceptor_1 = __webpack_require__(262);
+const anvis_biometrics_service_1 = __webpack_require__(268);
+const biometric_devices_service_1 = __webpack_require__(257);
+const biometrics_factory_service_1 = __webpack_require__(258);
+const biometrics_polling_service_1 = __webpack_require__(285);
+const zkteco_biometrics_service_1 = __webpack_require__(286);
 let BiometricsModule = class BiometricsModule {
 };
 exports.BiometricsModule = BiometricsModule;
@@ -20147,7 +19228,7 @@ exports.BiometricsModule = BiometricsModule = __decorate([
 
 
 /***/ }),
-/* 257 */
+/* 253 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -20171,12 +19252,12 @@ const generalresponse_dto_1 = __webpack_require__(101);
 const create_controller_factory_1 = __webpack_require__(87);
 const common_1 = __webpack_require__(5);
 const swagger_1 = __webpack_require__(8);
-const bson_typings_1 = __webpack_require__(258);
-const biometric_device_dto_1 = __webpack_require__(259);
-const connect_device_dto_1 = __webpack_require__(260);
+const bson_typings_1 = __webpack_require__(254);
+const biometric_device_dto_1 = __webpack_require__(255);
+const connect_device_dto_1 = __webpack_require__(256);
 const biometric_device_entity_1 = __webpack_require__(59);
-const biometric_devices_service_1 = __webpack_require__(261);
-const biometrics_factory_service_1 = __webpack_require__(262);
+const biometric_devices_service_1 = __webpack_require__(257);
+const biometrics_factory_service_1 = __webpack_require__(258);
 let BiometricDevicesController = class BiometricDevicesController extends (0, create_controller_factory_1.createController)(biometric_device_entity_1.BiometricDevice, biometric_devices_service_1.BiometricDevicesService, biometric_device_dto_1.GetBiometricDeviceDto, undefined, biometric_device_dto_1.UpdateBiometricDeviceDto) {
     constructor(biometricsFactory, biometricDevicesService) {
         super(biometricDevicesService);
@@ -20267,14 +19348,14 @@ exports.BiometricDevicesController = BiometricDevicesController = __decorate([
 
 
 /***/ }),
-/* 258 */
+/* 254 */
 /***/ ((module) => {
 
 "use strict";
 module.exports = require("typeorm/driver/mongodb/bson.typings");
 
 /***/ }),
-/* 259 */
+/* 255 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -20454,7 +19535,7 @@ exports.GetBiometricDeviceDto = GetBiometricDeviceDto;
 
 
 /***/ }),
-/* 260 */
+/* 256 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -20513,7 +19594,7 @@ __decorate([
 
 
 /***/ }),
-/* 261 */
+/* 257 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -20555,7 +19636,7 @@ exports.BiometricDevicesService = BiometricDevicesService = __decorate([
 
 
 /***/ }),
-/* 262 */
+/* 258 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -20576,8 +19657,8 @@ var _a, _b, _c;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.BiometricsFactoryService = void 0;
 const common_1 = __webpack_require__(5);
-const biometric_interface_1 = __webpack_require__(263);
-const biometric_devices_service_1 = __webpack_require__(261);
+const biometric_interface_1 = __webpack_require__(259);
+const biometric_devices_service_1 = __webpack_require__(257);
 let BiometricsFactoryService = class BiometricsFactoryService {
     constructor(zktecoService, anvizService, biometricDevicesService) {
         this.zktecoService = zktecoService;
@@ -20618,7 +19699,7 @@ exports.BiometricsFactoryService = BiometricsFactoryService = __decorate([
 
 
 /***/ }),
-/* 263 */
+/* 259 */
 /***/ ((__unused_webpack_module, exports) => {
 
 "use strict";
@@ -20627,7 +19708,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 
 
 /***/ }),
-/* 264 */
+/* 260 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -20644,66 +19725,17 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r, _s, _t;
+var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r, _s, _t, _u;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.BiometricsController = void 0;
 const common_1 = __webpack_require__(5);
 const swagger_1 = __webpack_require__(8);
 const class_validator_1 = __webpack_require__(92);
-const error_response_dto_1 = __webpack_require__(265);
-const timeout_interceptor_1 = __webpack_require__(266);
-const biometric_devices_service_1 = __webpack_require__(261);
-const biometrics_factory_service_1 = __webpack_require__(262);
-class SetUserDto {
-}
-__decorate([
-    (0, swagger_1.ApiProperty)({
-        description: 'Device ID to register user on',
-        example: '192.168.1.100:4370'
-    }),
-    __metadata("design:type", String)
-], SetUserDto.prototype, "deviceId", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({
-        description: 'User ID',
-        example: '1001'
-    }),
-    __metadata("design:type", String)
-], SetUserDto.prototype, "userId", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({
-        description: 'User name',
-        example: 'John Doe'
-    }),
-    __metadata("design:type", String)
-], SetUserDto.prototype, "name", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({
-        description: 'User password',
-        example: '1234',
-        required: false
-    }),
-    (0, class_validator_1.IsOptional)(),
-    __metadata("design:type", String)
-], SetUserDto.prototype, "password", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({
-        description: 'User card number',
-        example: '8987656789',
-        required: false
-    }),
-    (0, class_validator_1.IsOptional)(),
-    __metadata("design:type", String)
-], SetUserDto.prototype, "cardNumber", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({
-        description: 'User role (0=normal, 14=admin)',
-        example: 0,
-        required: false
-    }),
-    (0, class_validator_1.IsOptional)(),
-    __metadata("design:type", Number)
-], SetUserDto.prototype, "role", void 0);
+const error_response_dto_1 = __webpack_require__(261);
+const timeout_interceptor_1 = __webpack_require__(262);
+const biometric_devices_service_1 = __webpack_require__(257);
+const biometrics_factory_service_1 = __webpack_require__(258);
+const set_user_dto_1 = __webpack_require__(265);
 class GetFingerprintDto {
     constructor() {
         this.fingerId = 0;
@@ -21077,8 +20109,8 @@ __decorate([
     (0, common_1.Post)('users/register'),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [SetUserDto]),
-    __metadata("design:returntype", typeof (_d = typeof Promise !== "undefined" && Promise) === "function" ? _d : Object)
+    __metadata("design:paramtypes", [typeof (_d = typeof set_user_dto_1.SetUserDto !== "undefined" && set_user_dto_1.SetUserDto) === "function" ? _d : Object]),
+    __metadata("design:returntype", typeof (_e = typeof Promise !== "undefined" && Promise) === "function" ? _e : Object)
 ], BiometricsController.prototype, "registerUser", null);
 __decorate([
     (0, swagger_1.ApiOperation)({ summary: 'Set device time' }),
@@ -21104,7 +20136,7 @@ __decorate([
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, Object]),
-    __metadata("design:returntype", typeof (_e = typeof Promise !== "undefined" && Promise) === "function" ? _e : Object)
+    __metadata("design:returntype", typeof (_f = typeof Promise !== "undefined" && Promise) === "function" ? _f : Object)
 ], BiometricsController.prototype, "setTime", null);
 __decorate([
     (0, swagger_1.ApiOperation)({ summary: 'Delete a user from a device' }),
@@ -21131,7 +20163,7 @@ __decorate([
     __param(1, (0, common_1.Param)('userId')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, String]),
-    __metadata("design:returntype", typeof (_f = typeof Promise !== "undefined" && Promise) === "function" ? _f : Object)
+    __metadata("design:returntype", typeof (_g = typeof Promise !== "undefined" && Promise) === "function" ? _g : Object)
 ], BiometricsController.prototype, "deleteUser", null);
 __decorate([
     (0, swagger_1.ApiOperation)({ summary: 'Get users registered on a device' }),
@@ -21155,7 +20187,7 @@ __decorate([
     __param(0, (0, common_1.Param)('deviceId')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
-    __metadata("design:returntype", typeof (_g = typeof Promise !== "undefined" && Promise) === "function" ? _g : Object)
+    __metadata("design:returntype", typeof (_h = typeof Promise !== "undefined" && Promise) === "function" ? _h : Object)
 ], BiometricsController.prototype, "getUsers", null);
 __decorate([
     (0, swagger_1.ApiOperation)({ summary: 'Get attendance records from a device' }),
@@ -21183,7 +20215,7 @@ __decorate([
     __param(2, (0, common_1.Query)('endDate')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, String, String]),
-    __metadata("design:returntype", typeof (_h = typeof Promise !== "undefined" && Promise) === "function" ? _h : Object)
+    __metadata("design:returntype", typeof (_j = typeof Promise !== "undefined" && Promise) === "function" ? _j : Object)
 ], BiometricsController.prototype, "getAttendanceRecords", null);
 __decorate([
     (0, swagger_1.ApiOperation)({ summary: 'Get attendance records size' }),
@@ -21207,7 +20239,7 @@ __decorate([
     __param(0, (0, common_1.Param)('deviceId')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
-    __metadata("design:returntype", typeof (_j = typeof Promise !== "undefined" && Promise) === "function" ? _j : Object)
+    __metadata("design:returntype", typeof (_k = typeof Promise !== "undefined" && Promise) === "function" ? _k : Object)
 ], BiometricsController.prototype, "getAttendanceSize", null);
 __decorate([
     (0, swagger_1.ApiOperation)({ summary: 'Clear attendance records from a device' }),
@@ -21227,7 +20259,7 @@ __decorate([
     __param(0, (0, common_1.Param)('deviceId')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
-    __metadata("design:returntype", typeof (_k = typeof Promise !== "undefined" && Promise) === "function" ? _k : Object)
+    __metadata("design:returntype", typeof (_l = typeof Promise !== "undefined" && Promise) === "function" ? _l : Object)
 ], BiometricsController.prototype, "clearAttendanceRecords", null);
 __decorate([
     (0, swagger_1.ApiOperation)({ summary: 'Get device time' }),
@@ -21257,7 +20289,7 @@ __decorate([
     __param(0, (0, common_1.Param)('deviceId')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
-    __metadata("design:returntype", typeof (_l = typeof Promise !== "undefined" && Promise) === "function" ? _l : Object)
+    __metadata("design:returntype", typeof (_m = typeof Promise !== "undefined" && Promise) === "function" ? _m : Object)
 ], BiometricsController.prototype, "getTime", null);
 __decorate([
     (0, swagger_1.ApiOperation)({ summary: 'Get device serial number' }),
@@ -21282,7 +20314,7 @@ __decorate([
     __param(0, (0, common_1.Param)('deviceId')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
-    __metadata("design:returntype", typeof (_m = typeof Promise !== "undefined" && Promise) === "function" ? _m : Object)
+    __metadata("design:returntype", typeof (_o = typeof Promise !== "undefined" && Promise) === "function" ? _o : Object)
 ], BiometricsController.prototype, "getSerialNumber", null);
 __decorate([
     (0, swagger_1.ApiOperation)({ summary: 'Get device firmware version' }),
@@ -21307,7 +20339,7 @@ __decorate([
     __param(0, (0, common_1.Param)('deviceId')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
-    __metadata("design:returntype", typeof (_o = typeof Promise !== "undefined" && Promise) === "function" ? _o : Object)
+    __metadata("design:returntype", typeof (_p = typeof Promise !== "undefined" && Promise) === "function" ? _p : Object)
 ], BiometricsController.prototype, "getFirmwareVersion", null);
 __decorate([
     (0, swagger_1.ApiOperation)({ summary: 'Restart device' }),
@@ -21337,7 +20369,7 @@ __decorate([
     __param(0, (0, common_1.Param)('deviceId')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
-    __metadata("design:returntype", typeof (_p = typeof Promise !== "undefined" && Promise) === "function" ? _p : Object)
+    __metadata("design:returntype", typeof (_q = typeof Promise !== "undefined" && Promise) === "function" ? _q : Object)
 ], BiometricsController.prototype, "restartDevice", null);
 __decorate([
     (0, swagger_1.ApiOperation)({ summary: 'Unlock device door' }),
@@ -21368,7 +20400,7 @@ __decorate([
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, UnlockDoorDto]),
-    __metadata("design:returntype", typeof (_q = typeof Promise !== "undefined" && Promise) === "function" ? _q : Object)
+    __metadata("design:returntype", typeof (_r = typeof Promise !== "undefined" && Promise) === "function" ? _r : Object)
 ], BiometricsController.prototype, "unlockDoor", null);
 __decorate([
     (0, swagger_1.ApiOperation)({ summary: 'Sync users between devices' }),
@@ -21398,7 +20430,7 @@ __decorate([
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [SyncUsersDto]),
-    __metadata("design:returntype", typeof (_r = typeof Promise !== "undefined" && Promise) === "function" ? _r : Object)
+    __metadata("design:returntype", typeof (_s = typeof Promise !== "undefined" && Promise) === "function" ? _s : Object)
 ], BiometricsController.prototype, "syncUsers", null);
 __decorate([
     (0, swagger_1.ApiOperation)({ summary: 'Execute custom command on device' }),
@@ -21435,7 +20467,7 @@ __decorate([
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, ExecuteCommandDto]),
-    __metadata("design:returntype", typeof (_s = typeof Promise !== "undefined" && Promise) === "function" ? _s : Object)
+    __metadata("design:returntype", typeof (_t = typeof Promise !== "undefined" && Promise) === "function" ? _t : Object)
 ], BiometricsController.prototype, "executeCommand", null);
 __decorate([
     (0, swagger_1.ApiOperation)({ summary: 'Get user details including fingerprint info' }),
@@ -21459,7 +20491,7 @@ __decorate([
     __param(0, (0, common_1.Param)('deviceId')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
-    __metadata("design:returntype", typeof (_t = typeof Promise !== "undefined" && Promise) === "function" ? _t : Object)
+    __metadata("design:returntype", typeof (_u = typeof Promise !== "undefined" && Promise) === "function" ? _u : Object)
 ], BiometricsController.prototype, "getUserDetails", null);
 exports.BiometricsController = BiometricsController = __decorate([
     (0, swagger_1.ApiTags)('Biometrics'),
@@ -21470,7 +20502,7 @@ exports.BiometricsController = BiometricsController = __decorate([
 
 
 /***/ }),
-/* 265 */
+/* 261 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -21532,7 +20564,7 @@ __decorate([
 
 
 /***/ }),
-/* 266 */
+/* 262 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -21549,8 +20581,8 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.TimeoutInterceptor = void 0;
 const common_1 = __webpack_require__(5);
-const rxjs_1 = __webpack_require__(267);
-const operators_1 = __webpack_require__(268);
+const rxjs_1 = __webpack_require__(263);
+const operators_1 = __webpack_require__(264);
 let TimeoutInterceptor = class TimeoutInterceptor {
     constructor(timeoutSeconds = 30) {
         this.timeoutSeconds = timeoutSeconds;
@@ -21572,21 +20604,90 @@ exports.TimeoutInterceptor = TimeoutInterceptor = __decorate([
 
 
 /***/ }),
-/* 267 */
+/* 263 */
 /***/ ((module) => {
 
 "use strict";
 module.exports = require("rxjs");
 
 /***/ }),
-/* 268 */
+/* 264 */
 /***/ ((module) => {
 
 "use strict";
 module.exports = require("rxjs/operators");
 
 /***/ }),
-/* 269 */
+/* 265 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+"use strict";
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.SetUserDto = void 0;
+const swagger_1 = __webpack_require__(8);
+const class_validator_1 = __webpack_require__(92);
+class SetUserDto {
+}
+exports.SetUserDto = SetUserDto;
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'Target device ID', example: '10.10.10.110:5010' }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsNotEmpty)(),
+    __metadata("design:type", String)
+], SetUserDto.prototype, "deviceId", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'User ID', example: '1001' }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsNotEmpty)(),
+    __metadata("design:type", String)
+], SetUserDto.prototype, "userId", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({ description: 'User name', example: 'John Doe' }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.Length)(1, 24, { message: 'Name must be between 1 and 24 characters' }),
+    __metadata("design:type", String)
+], SetUserDto.prototype, "name", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ description: 'User password (max 8 characters)', example: '1234' }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.Length)(0, 8, { message: 'Password must be less than 8 characters' }),
+    __metadata("design:type", String)
+], SetUserDto.prototype, "password", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({ description: 'Card number', example: '7654321' }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], SetUserDto.prototype, "cardNumber", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'User role (0 = normal user, 14 = admin)',
+        example: 0,
+        minimum: 0,
+        maximum: 14
+    }),
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.Min)(0),
+    (0, class_validator_1.Max)(14),
+    __metadata("design:type", Number)
+], SetUserDto.prototype, "role", void 0);
+
+
+/***/ }),
+/* 266 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -21630,7 +20731,7 @@ exports.BiometricTemplate = BiometricTemplate = __decorate([
 
 
 /***/ }),
-/* 270 */
+/* 267 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 "use strict";
@@ -21644,7 +20745,7 @@ exports.BiometricsGateway = BiometricsGateway;
 
 
 /***/ }),
-/* 271 */
+/* 268 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -21668,17 +20769,17 @@ exports.AnvizBiometricsService = void 0;
 const biometrics_device_type_enum_1 = __webpack_require__(60);
 const punch_method_enum_1 = __webpack_require__(57);
 const punch_type_enum_1 = __webpack_require__(58);
-const attendance_event_1 = __webpack_require__(272);
+const attendance_event_1 = __webpack_require__(269);
 const common_1 = __webpack_require__(5);
-const event_emitter_1 = __webpack_require__(163);
+const event_emitter_1 = __webpack_require__(165);
 const typeorm_1 = __webpack_require__(16);
 const typeorm_2 = __webpack_require__(24);
 const biometric_device_entity_1 = __webpack_require__(59);
-const biometric_template_entity_1 = __webpack_require__(269);
-const biometrics_gateway_1 = __webpack_require__(270);
-const base_biometrics_service_1 = __webpack_require__(273);
+const biometric_template_entity_1 = __webpack_require__(266);
+const biometrics_gateway_1 = __webpack_require__(267);
+const base_biometrics_service_1 = __webpack_require__(270);
 // Import the Anviz protocol library
-const { Device, Record, RecordInformation, DeviceInfo1, DeviceInfo2 } = __webpack_require__(274);
+const { Device, Record, RecordInformation, DeviceInfo1, DeviceInfo2 } = __webpack_require__(271);
 let AnvizBiometricsService = AnvizBiometricsService_1 = class AnvizBiometricsService extends base_biometrics_service_1.BaseBiometricsService {
     constructor(templateRepository, deviceRepository, eventEmitter, biometricsGateway) {
         super(deviceRepository, eventEmitter, biometricsGateway);
@@ -22785,7 +21886,7 @@ exports.AnvizBiometricsService = AnvizBiometricsService = AnvizBiometricsService
 
 
 /***/ }),
-/* 272 */
+/* 269 */
 /***/ ((__unused_webpack_module, exports) => {
 
 "use strict";
@@ -22831,7 +21932,7 @@ exports.RecalculateFinalWorkHoursEvent = RecalculateFinalWorkHoursEvent;
 
 
 /***/ }),
-/* 273 */
+/* 270 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 "use strict";
@@ -23027,19 +22128,19 @@ exports.BaseBiometricsService = BaseBiometricsService;
 
 
 /***/ }),
-/* 274 */
+/* 271 */
 /***/ ((module, __unused_webpack_exports, __webpack_require__) => {
 
-const { Device } = __webpack_require__(275);
-const { Record } = __webpack_require__(279);
-const { RecordInformation } = __webpack_require__(286);
-const { DeviceInfo1 } = __webpack_require__(284);
-const { DeviceInfo2 } = __webpack_require__(285);
+const { Device } = __webpack_require__(272);
+const { Record } = __webpack_require__(276);
+const { RecordInformation } = __webpack_require__(283);
+const { DeviceInfo1 } = __webpack_require__(281);
+const { DeviceInfo2 } = __webpack_require__(282);
 
 module.exports = { Device, Record, RecordInformation, DeviceInfo1, DeviceInfo2 };
 
 /***/ }),
-/* 275 */
+/* 272 */
 /***/ ((module, __unused_webpack_exports, __webpack_require__) => {
 
 /*
@@ -23072,14 +22173,14 @@ module.exports = { Device, Record, RecordInformation, DeviceInfo1, DeviceInfo2 }
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-const { Connection } = __webpack_require__(276);
-const { Message } = __webpack_require__(278);
-const { DeviceInfo1 } = __webpack_require__(284);
-const { DeviceInfo2 } = __webpack_require__(285);
-const { Record } = __webpack_require__(279);
-const { RecordInformation } = __webpack_require__(286);
-const { UserInfo } = __webpack_require__(287);
-const { setInt32BigEndian, setLong40BigEndian } = __webpack_require__(280);
+const { Connection } = __webpack_require__(273);
+const { Message } = __webpack_require__(275);
+const { DeviceInfo1 } = __webpack_require__(281);
+const { DeviceInfo2 } = __webpack_require__(282);
+const { Record } = __webpack_require__(276);
+const { RecordInformation } = __webpack_require__(283);
+const { UserInfo } = __webpack_require__(284);
+const { setInt32BigEndian, setLong40BigEndian } = __webpack_require__(277);
 
 class Device extends Connection {
 
@@ -23449,7 +22550,7 @@ class Device extends Connection {
 module.exports = { Device };
 
 /***/ }),
-/* 276 */
+/* 273 */
 /***/ ((module, __unused_webpack_exports, __webpack_require__) => {
 
 /*
@@ -23482,13 +22583,13 @@ module.exports = { Device };
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-const net = __webpack_require__(277);
-const { Message } = __webpack_require__(278);
-const { Record } = __webpack_require__(279);
-const { getInt16BigEndian, getInt32BigEndian, getInt16LittleEndian, setInt32BigEndian, setInt16BigEndian, setInt16LittleEndian } = __webpack_require__(280);
-const { calculateChecksum } = __webpack_require__(281);
-const {toString} = __webpack_require__(282);
-const { connected } = __webpack_require__(283);
+const net = __webpack_require__(274);
+const { Message } = __webpack_require__(275);
+const { Record } = __webpack_require__(276);
+const { getInt16BigEndian, getInt32BigEndian, getInt16LittleEndian, setInt32BigEndian, setInt16BigEndian, setInt16LittleEndian } = __webpack_require__(277);
+const { calculateChecksum } = __webpack_require__(278);
+const {toString} = __webpack_require__(279);
+const { connected } = __webpack_require__(280);
 
 class Connection {
 
@@ -23670,14 +22771,14 @@ module.exports = { Connection };
 
 
 /***/ }),
-/* 277 */
+/* 274 */
 /***/ ((module) => {
 
 "use strict";
 module.exports = require("net");
 
 /***/ }),
-/* 278 */
+/* 275 */
 /***/ ((module) => {
 
 /*
@@ -23749,7 +22850,7 @@ class Message {
 module.exports = { Message };
 
 /***/ }),
-/* 279 */
+/* 276 */
 /***/ ((module, __unused_webpack_exports, __webpack_require__) => {
 
 /*
@@ -23782,7 +22883,7 @@ module.exports = { Message };
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-const { getInt32BigEndian, getLong40BigEndian } = __webpack_require__(280);
+const { getInt32BigEndian, getLong40BigEndian } = __webpack_require__(277);
 
 class Record {
 
@@ -23808,7 +22909,7 @@ class Record {
 module.exports = {Record};
 
 /***/ }),
-/* 280 */
+/* 277 */
 /***/ ((module) => {
 
 /*
@@ -23904,7 +23005,7 @@ const setInt16LittleEndian = (data, offset, value) => {
 module.exports = {getLong40BigEndian, setLong40BigEndian, getInt32BigEndian, setInt32BigEndian, getInt24BigEndian, setInt24BigEndian, getInt16BigEndian, setInt16BigEndian, getInt16LittleEndian, setInt16LittleEndian};
 
 /***/ }),
-/* 281 */
+/* 278 */
 /***/ ((module) => {
 
 const table = [];
@@ -23929,7 +23030,7 @@ const calculateChecksum = (data, len) => {
 module.exports = {calculateChecksum};
 
 /***/ }),
-/* 282 */
+/* 279 */
 /***/ ((module) => {
 
 /*
@@ -23976,14 +23077,14 @@ const toString = (data, start, end) => {
 module.exports = {toString};
 
 /***/ }),
-/* 283 */
+/* 280 */
 /***/ ((module) => {
 
 "use strict";
 module.exports = require("process");
 
 /***/ }),
-/* 284 */
+/* 281 */
 /***/ ((module, __unused_webpack_exports, __webpack_require__) => {
 
 /*
@@ -24016,7 +23117,7 @@ module.exports = require("process");
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-const { getInt16BigEndian } = __webpack_require__(280);
+const { getInt16BigEndian } = __webpack_require__(277);
 
 class DeviceInfo1 {
 
@@ -24055,7 +23156,7 @@ class DeviceInfo1 {
 module.exports = {DeviceInfo1};
 
 /***/ }),
-/* 285 */
+/* 282 */
 /***/ ((module, __unused_webpack_exports, __webpack_require__) => {
 
 /*
@@ -24088,7 +23189,7 @@ module.exports = {DeviceInfo1};
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-const { getInt24BigEndian, setInt24BigEndian } = __webpack_require__(280);
+const { getInt24BigEndian, setInt24BigEndian } = __webpack_require__(277);
 
 class DeviceInfo2 {
 
@@ -24131,7 +23232,7 @@ class DeviceInfo2 {
 module.exports = { DeviceInfo2 };
 
 /***/ }),
-/* 286 */
+/* 283 */
 /***/ ((module, __unused_webpack_exports, __webpack_require__) => {
 
 /*
@@ -24164,7 +23265,7 @@ module.exports = { DeviceInfo2 };
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-const { getInt24BigEndian } = __webpack_require__(280);
+const { getInt24BigEndian } = __webpack_require__(277);
 
 class RecordInformation {
 
@@ -24184,7 +23285,7 @@ class RecordInformation {
 module.exports = {RecordInformation};
 
 /***/ }),
-/* 287 */
+/* 284 */
 /***/ ((module, __unused_webpack_exports, __webpack_require__) => {
 
 /*
@@ -24217,8 +23318,8 @@ module.exports = {RecordInformation};
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
 
-const { getInt16BigEndian, getInt32BigEndian, getLong40BigEndian, setInt16BigEndian, setInt32BigEndian, setLong40BigEndian } = __webpack_require__(280);
-const { toString } = __webpack_require__(282);
+const { getInt16BigEndian, getInt32BigEndian, getLong40BigEndian, setInt16BigEndian, setInt32BigEndian, setLong40BigEndian } = __webpack_require__(277);
+const { toString } = __webpack_require__(279);
 
 class UserInfo {
 
@@ -24297,7 +23398,7 @@ class UserInfo {
 module.exports = {UserInfo};
 
 /***/ }),
-/* 288 */
+/* 285 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -24317,10 +23418,10 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.BiometricsPollingService = void 0;
 const biometrics_device_type_enum_1 = __webpack_require__(60);
 const punch_method_enum_1 = __webpack_require__(57);
-const attendance_event_1 = __webpack_require__(272);
+const attendance_event_1 = __webpack_require__(269);
 const common_1 = __webpack_require__(5);
 const config_1 = __webpack_require__(6);
-const event_emitter_1 = __webpack_require__(163);
+const event_emitter_1 = __webpack_require__(165);
 let BiometricsPollingService = BiometricsPollingService_1 = class BiometricsPollingService {
     constructor(configService, eventEmitter) {
         this.configService = configService;
@@ -24486,7 +23587,7 @@ exports.BiometricsPollingService = BiometricsPollingService = BiometricsPollingS
 
 
 /***/ }),
-/* 289 */
+/* 286 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -24509,16 +23610,16 @@ exports.ZKTecoBiometricsService = void 0;
 const common_1 = __webpack_require__(5);
 const config_1 = __webpack_require__(6);
 const typeorm_1 = __webpack_require__(16);
-const ZKLib = __webpack_require__(290);
+const ZKLib = __webpack_require__(287);
 const biometrics_device_type_enum_1 = __webpack_require__(60);
 const punch_method_enum_1 = __webpack_require__(57);
-const event_emitter_1 = __webpack_require__(163);
+const event_emitter_1 = __webpack_require__(165);
 const typeorm_2 = __webpack_require__(24);
 const biometric_device_entity_1 = __webpack_require__(59);
-const biometric_template_entity_1 = __webpack_require__(269);
-const biometrics_gateway_1 = __webpack_require__(270);
-const base_biometrics_service_1 = __webpack_require__(273);
-const biometrics_polling_service_1 = __webpack_require__(288);
+const biometric_template_entity_1 = __webpack_require__(266);
+const biometrics_gateway_1 = __webpack_require__(267);
+const base_biometrics_service_1 = __webpack_require__(270);
+const biometrics_polling_service_1 = __webpack_require__(285);
 /**
  * ZKTeco implementation of the biometric service
  * Handles communication with ZKTeco biometric devices
@@ -25451,14 +24552,14 @@ exports.ZKTecoBiometricsService = ZKTecoBiometricsService = __decorate([
 
 
 /***/ }),
-/* 290 */
+/* 287 */
 /***/ ((module) => {
 
 "use strict";
 module.exports = require("zkteco-js");
 
 /***/ }),
-/* 291 */
+/* 288 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -25473,10 +24574,10 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.AttendanceConfigurationsModule = void 0;
 const common_1 = __webpack_require__(5);
 const typeorm_1 = __webpack_require__(16);
-const attendance_configurations_controller_1 = __webpack_require__(292);
-const attendance_configurations_service_1 = __webpack_require__(294);
+const attendance_configurations_controller_1 = __webpack_require__(289);
+const attendance_configurations_service_1 = __webpack_require__(290);
 const attendance_configuration_entity_1 = __webpack_require__(76);
-const attendance_configuration_seeder_service_1 = __webpack_require__(295);
+const attendance_configuration_seeder_service_1 = __webpack_require__(292);
 let AttendanceConfigurationsModule = class AttendanceConfigurationsModule {
 };
 exports.AttendanceConfigurationsModule = AttendanceConfigurationsModule;
@@ -25493,28 +24594,242 @@ exports.AttendanceConfigurationsModule = AttendanceConfigurationsModule = __deco
 
 
 /***/ }),
-/* 292 */
-/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+/* 289 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
 
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
+var _a, _b, _c, _d, _e, _f;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.AttendanceConfigurationsController = void 0;
+const authorize_decorator_1 = __webpack_require__(93);
+const current_user_decorator_1 = __webpack_require__(113);
+const action_enum_1 = __webpack_require__(71);
 const create_controller_factory_1 = __webpack_require__(87);
-const attendance_configuration_dto_1 = __webpack_require__(293);
-const attendance_configurations_service_1 = __webpack_require__(294);
+const organization_entity_1 = __webpack_require__(75);
+const common_1 = __webpack_require__(5);
+const swagger_1 = __webpack_require__(8);
+const class_transformer_1 = __webpack_require__(54);
+const attendance_configurations_service_1 = __webpack_require__(290);
+const attendance_configuration_dto_1 = __webpack_require__(291);
 const attendance_configuration_entity_1 = __webpack_require__(76);
 class AttendanceConfigurationsController extends (0, create_controller_factory_1.createController)(attendance_configuration_entity_1.AttendanceConfiguration, // Entity name for Swagger documentation
 attendance_configurations_service_1.AttendanceConfigurationsService, // The service handling AttendanceConfiguration-related operations
 attendance_configuration_dto_1.GetAttendanceConfigurationDto, // DTO for retrieving AttendanceConfigurations
 attendance_configuration_dto_1.AttendanceConfigurationDto, // DTO for creating AttendanceConfigurations
 attendance_configuration_dto_1.UpdateAttendanceConfigurationDto) {
+    async create(entityDto, createdById) {
+        return await super.create(entityDto, createdById);
+    }
+    async update(id, entityDto, updatedById) {
+        return await super.update(id, entityDto, updatedById);
+    }
+    async softDelete(id, deletedBy) {
+        return await super.softDelete(id, deletedBy);
+    }
+    async delete(id) {
+        return await super.delete(id);
+    }
+    async findOne(fieldsString, relations, select) {
+        return await super.findOne(fieldsString, relations, select);
+    }
+    async findById(id, relations, select) {
+        return await super.findById(id, relations, select);
+    }
+    async getOrganizationConfiguration(organizationId) {
+        const config = await this.baseService.getOrganizationAttendanceConfiguration(organizationId);
+        return (0, class_transformer_1.plainToInstance)(this.getDtoClass, config);
+    }
+    async getGlobalConfiguration() {
+        const config = await this.baseService.getGlobalAttendanceConfiguration();
+        return (0, class_transformer_1.plainToInstance)(this.getDtoClass, config);
+    }
+    async createOrUpdateOrganizationConfiguration(organizationId, configDto, userId) {
+        // Check if organization already has a configuration
+        const existingConfig = await this.baseService.findOneBy({ organization: new organization_entity_1.Organization({ id: organizationId }) }, { relations: { organization: true } });
+        let savedConfig;
+        if (existingConfig) {
+            // Update existing configuration
+            savedConfig = await this.baseService.update(existingConfig.id, Object.assign(Object.assign({}, configDto), { organization: new organization_entity_1.Organization({ id: organizationId }) }), userId);
+        }
+        else {
+            // Create new configuration for organization
+            savedConfig = await this.baseService.create(Object.assign(Object.assign({}, configDto), { organization: new organization_entity_1.Organization({ id: organizationId }) }), userId);
+        }
+        return (0, class_transformer_1.plainToInstance)(this.getDtoClass, savedConfig);
+    }
+    async updateGlobalConfiguration(configDto, userId) {
+        const updatedConfig = await this.baseService.updateGlobalAttendanceConfiguration(configDto);
+        return (0, class_transformer_1.plainToInstance)(this.getDtoClass, updatedConfig);
+    }
 }
 exports.AttendanceConfigurationsController = AttendanceConfigurationsController;
+__decorate([
+    (0, common_1.Get)('organization/:organizationId'),
+    (0, authorize_decorator_1.Authorize)({ endpointType: action_enum_1.Action.READ }),
+    (0, swagger_1.ApiOperation)({
+        summary: 'Get attendance configuration for organization',
+        description: 'Returns organization-specific configuration or global default if none exists'
+    }),
+    (0, swagger_1.ApiParam)({ name: 'organizationId', description: 'Organization ID' }),
+    (0, swagger_1.ApiResponse)({
+        status: common_1.HttpStatus.OK,
+        description: 'Attendance configuration retrieved successfully',
+        type: attendance_configuration_dto_1.GetAttendanceConfigurationDto
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: common_1.HttpStatus.INTERNAL_SERVER_ERROR,
+        description: 'Error retrieving attendance configuration',
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: common_1.HttpStatus.UNAUTHORIZED,
+        description: 'Unauthorized access',
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: common_1.HttpStatus.FORBIDDEN,
+        description: 'Forbidden access to this resource',
+    }),
+    __param(0, (0, common_1.Param)('organizationId', common_1.ParseUUIDPipe)),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", typeof (_a = typeof Promise !== "undefined" && Promise) === "function" ? _a : Object)
+], AttendanceConfigurationsController.prototype, "getOrganizationConfiguration", null);
+__decorate([
+    (0, common_1.Get)('global'),
+    (0, authorize_decorator_1.Authorize)({ endpointType: action_enum_1.Action.READ }),
+    (0, swagger_1.ApiOperation)({
+        summary: 'Get global attendance configuration',
+        description: 'Returns the global default attendance configuration'
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: 200,
+        description: 'Global attendance configuration retrieved successfully',
+        type: attendance_configuration_dto_1.GetAttendanceConfigurationDto
+    }),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", typeof (_b = typeof Promise !== "undefined" && Promise) === "function" ? _b : Object)
+], AttendanceConfigurationsController.prototype, "getGlobalConfiguration", null);
+__decorate([
+    (0, common_1.Post)('organization/:organizationId'),
+    (0, common_1.Put)('organization/:organizationId'),
+    (0, authorize_decorator_1.Authorize)({ endpointType: action_enum_1.Action.MANAGE }),
+    (0, swagger_1.ApiOperation)({
+        summary: 'Create or update organization attendance configuration',
+        description: 'Creates new configuration or updates existing one for the organization'
+    }),
+    (0, swagger_1.ApiParam)({ name: 'organizationId', description: 'Organization ID' }),
+    (0, swagger_1.ApiBody)({
+        type: attendance_configuration_dto_1.AttendanceConfigurationDto,
+        description: 'Attendance configuration data for the organization'
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: 200,
+        description: 'Organization attendance configuration saved successfully',
+        type: attendance_configuration_dto_1.GetAttendanceConfigurationDto
+    }),
+    __param(0, (0, common_1.Param)('organizationId', common_1.ParseUUIDPipe)),
+    __param(1, (0, common_1.Body)()),
+    __param(2, (0, current_user_decorator_1.CurrentUser)('sub')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, typeof (_c = typeof attendance_configuration_dto_1.AttendanceConfigurationDto !== "undefined" && attendance_configuration_dto_1.AttendanceConfigurationDto) === "function" ? _c : Object, String]),
+    __metadata("design:returntype", typeof (_d = typeof Promise !== "undefined" && Promise) === "function" ? _d : Object)
+], AttendanceConfigurationsController.prototype, "createOrUpdateOrganizationConfiguration", null);
+__decorate([
+    (0, common_1.Put)('global'),
+    (0, authorize_decorator_1.Authorize)({ endpointType: action_enum_1.Action.UPDATE }),
+    (0, swagger_1.ApiOperation)({
+        summary: 'Update global attendance configuration',
+        description: 'Updates the global default attendance configuration'
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: 200,
+        description: 'Global attendance configuration updated successfully',
+        type: attendance_configuration_dto_1.GetAttendanceConfigurationDto
+    }),
+    __param(0, (0, common_1.Body)()),
+    __param(1, (0, current_user_decorator_1.CurrentUser)('sub')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [typeof (_e = typeof attendance_configuration_dto_1.UpdateAttendanceConfigurationDto !== "undefined" && attendance_configuration_dto_1.UpdateAttendanceConfigurationDto) === "function" ? _e : Object, String]),
+    __metadata("design:returntype", typeof (_f = typeof Promise !== "undefined" && Promise) === "function" ? _f : Object)
+], AttendanceConfigurationsController.prototype, "updateGlobalConfiguration", null);
 
 
 /***/ }),
-/* 293 */
+/* 290 */
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+"use strict";
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
+var _a, _b;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.AttendanceConfigurationsService = void 0;
+const base_service_1 = __webpack_require__(98);
+const users_service_1 = __webpack_require__(97);
+const organization_entity_1 = __webpack_require__(75);
+const common_1 = __webpack_require__(5);
+const typeorm_1 = __webpack_require__(16);
+const typeorm_2 = __webpack_require__(24);
+const attendance_configuration_entity_1 = __webpack_require__(76);
+let AttendanceConfigurationsService = class AttendanceConfigurationsService extends base_service_1.BaseService {
+    constructor(attendanceConfigurationsRepository, usersService) {
+        super(attendanceConfigurationsRepository, usersService);
+        this.attendanceConfigurationsRepository = attendanceConfigurationsRepository;
+        this.usersService = usersService;
+    }
+    async getGlobalAttendanceConfiguration() {
+        const globalConfig = await this.findOneBy({ organization: undefined }, { relations: { organization: true } });
+        if (!globalConfig) {
+            return this.create({});
+        }
+        return globalConfig;
+    }
+    async getOrganizationAttendanceConfiguration(organizationId) {
+        const organizationConfig = await this.findOneBy({ organization: new organization_entity_1.Organization({ id: organizationId }) }, { relations: { organization: true } });
+        if (!organizationConfig) {
+            return await this.getGlobalAttendanceConfiguration();
+        }
+        return organizationConfig;
+    }
+    async updateGlobalAttendanceConfiguration(data) {
+        const globalConfig = await this.getGlobalAttendanceConfiguration();
+        return this.update(globalConfig.id, data);
+    }
+};
+exports.AttendanceConfigurationsService = AttendanceConfigurationsService;
+exports.AttendanceConfigurationsService = AttendanceConfigurationsService = __decorate([
+    (0, common_1.Injectable)(),
+    __param(0, (0, typeorm_1.InjectRepository)(attendance_configuration_entity_1.AttendanceConfiguration)),
+    __metadata("design:paramtypes", [typeof (_a = typeof typeorm_2.Repository !== "undefined" && typeorm_2.Repository) === "function" ? _a : Object, typeof (_b = typeof users_service_1.UsersService !== "undefined" && users_service_1.UsersService) === "function" ? _b : Object])
+], AttendanceConfigurationsService);
+
+
+/***/ }),
+/* 291 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -25709,15 +25024,6 @@ __decorate([
 ], AttendanceConfigurationDto.prototype, "roundUpOvertimeMinutes", void 0);
 __decorate([
     (0, swagger_1.ApiPropertyOptional)({
-        description: 'Consider early time as over time',
-        example: false,
-    }),
-    (0, class_validator_1.IsBoolean)(),
-    (0, class_validator_1.IsOptional)(),
-    __metadata("design:type", Boolean)
-], AttendanceConfigurationDto.prototype, "considerEarlyTimeAsOvertime", void 0);
-__decorate([
-    (0, swagger_1.ApiPropertyOptional)({
         description: 'Apply deduction for missing time in',
         example: true,
     }),
@@ -25765,68 +25071,7 @@ exports.GetAttendanceConfigurationDto = GetAttendanceConfigurationDto;
 
 
 /***/ }),
-/* 294 */
-/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
-
-"use strict";
-
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-var __metadata = (this && this.__metadata) || function (k, v) {
-    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
-};
-var __param = (this && this.__param) || function (paramIndex, decorator) {
-    return function (target, key) { decorator(target, key, paramIndex); }
-};
-var _a, _b;
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.AttendanceConfigurationsService = void 0;
-const base_service_1 = __webpack_require__(98);
-const users_service_1 = __webpack_require__(97);
-const organization_entity_1 = __webpack_require__(75);
-const common_1 = __webpack_require__(5);
-const typeorm_1 = __webpack_require__(16);
-const typeorm_2 = __webpack_require__(24);
-const attendance_configuration_entity_1 = __webpack_require__(76);
-let AttendanceConfigurationsService = class AttendanceConfigurationsService extends base_service_1.BaseService {
-    constructor(attendanceConfigurationsRepository, usersService) {
-        super(attendanceConfigurationsRepository, usersService);
-        this.attendanceConfigurationsRepository = attendanceConfigurationsRepository;
-        this.usersService = usersService;
-    }
-    async getGlobalAttendanceConfiguration() {
-        const globalConfig = await this.findOneBy({ organization: undefined }, { relations: { organization: true } });
-        if (!globalConfig) {
-            return this.create({});
-        }
-        return globalConfig;
-    }
-    async getOrganizationAttendanceConfiguration(organizationId) {
-        const organizationConfig = await this.findOneBy({ organization: new organization_entity_1.Organization({ id: organizationId }) }, { relations: { organization: true } });
-        if (!organizationConfig) {
-            return await this.getGlobalAttendanceConfiguration();
-        }
-        return organizationConfig;
-    }
-    async updateGlobalAttendanceConfiguration(data) {
-        const globalConfig = await this.getGlobalAttendanceConfiguration();
-        return this.update(globalConfig.id, data);
-    }
-};
-exports.AttendanceConfigurationsService = AttendanceConfigurationsService;
-exports.AttendanceConfigurationsService = AttendanceConfigurationsService = __decorate([
-    (0, common_1.Injectable)(),
-    __param(0, (0, typeorm_1.InjectRepository)(attendance_configuration_entity_1.AttendanceConfiguration)),
-    __metadata("design:paramtypes", [typeof (_a = typeof typeorm_2.Repository !== "undefined" && typeorm_2.Repository) === "function" ? _a : Object, typeof (_b = typeof users_service_1.UsersService !== "undefined" && users_service_1.UsersService) === "function" ? _b : Object])
-], AttendanceConfigurationsService);
-
-
-/***/ }),
-/* 295 */
+/* 292 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -25845,7 +25090,7 @@ var _a;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.AttendanceConfigurationSeederService = void 0;
 const common_1 = __webpack_require__(5);
-const attendance_configurations_service_1 = __webpack_require__(294);
+const attendance_configurations_service_1 = __webpack_require__(290);
 let AttendanceConfigurationSeederService = AttendanceConfigurationSeederService_1 = class AttendanceConfigurationSeederService {
     constructor(attendanceConfigurationsService) {
         this.attendanceConfigurationsService = attendanceConfigurationsService;
@@ -25879,7 +25124,7 @@ exports.AttendanceConfigurationSeederService = AttendanceConfigurationSeederServ
 
 
 /***/ }),
-/* 296 */
+/* 293 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -25894,8 +25139,8 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.AttendancePunchesModule = void 0;
 const common_1 = __webpack_require__(5);
 const typeorm_1 = __webpack_require__(16);
-const attendance_punches_controller_1 = __webpack_require__(297);
-const attendance_punches_service_1 = __webpack_require__(298);
+const attendance_punches_controller_1 = __webpack_require__(294);
+const attendance_punches_service_1 = __webpack_require__(295);
 const attendance_punch_entity_1 = __webpack_require__(56);
 let AttendancePunchesModule = class AttendancePunchesModule {
 };
@@ -25911,7 +25156,7 @@ exports.AttendancePunchesModule = AttendancePunchesModule = __decorate([
 
 
 /***/ }),
-/* 297 */
+/* 294 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 "use strict";
@@ -25919,8 +25164,8 @@ exports.AttendancePunchesModule = AttendancePunchesModule = __decorate([
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.AttendancePunchesController = void 0;
 const create_controller_factory_1 = __webpack_require__(87);
-const attendance_punches_service_1 = __webpack_require__(298);
-const attendance_punch_dto_1 = __webpack_require__(299);
+const attendance_punches_service_1 = __webpack_require__(295);
+const attendance_punch_dto_1 = __webpack_require__(296);
 const attendance_punch_entity_1 = __webpack_require__(56);
 class AttendancePunchesController extends (0, create_controller_factory_1.createController)(attendance_punch_entity_1.AttendancePunch, attendance_punches_service_1.AttendancePunchesService, attendance_punch_dto_1.GetAttendancePunchDto) {
     async create(entityDto, createdById) {
@@ -25946,7 +25191,7 @@ exports.AttendancePunchesController = AttendancePunchesController;
 
 
 /***/ }),
-/* 298 */
+/* 295 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -25988,7 +25233,7 @@ exports.AttendancePunchesService = AttendancePunchesService = __decorate([
 
 
 /***/ }),
-/* 299 */
+/* 296 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -26086,7 +25331,7 @@ exports.GetAttendancePunchDto = GetAttendancePunchDto;
 
 
 /***/ }),
-/* 300 */
+/* 297 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -26113,8 +25358,8 @@ const action_enum_1 = __webpack_require__(71);
 const create_controller_factory_1 = __webpack_require__(87);
 const common_1 = __webpack_require__(5);
 const swagger_1 = __webpack_require__(8);
-const attendances_service_1 = __webpack_require__(301);
-const attendance_dto_1 = __webpack_require__(308);
+const attendances_service_1 = __webpack_require__(298);
+const attendance_dto_1 = __webpack_require__(305);
 const attendance_entity_1 = __webpack_require__(36);
 class AttendancesController extends (0, create_controller_factory_1.createController)(attendance_entity_1.Attendance, attendances_service_1.AttendancesService, attendance_dto_1.GetAttendanceDto, undefined, undefined) {
     async create(entityDto, createdById) {
@@ -26180,7 +25425,7 @@ __decorate([
 
 
 /***/ }),
-/* 301 */
+/* 298 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -26204,24 +25449,24 @@ const attendance_status_enum_1 = __webpack_require__(30);
 const holiday_type_enum_1 = __webpack_require__(46);
 const notification_type_enum_1 = __webpack_require__(83);
 const request_status_enum_1 = __webpack_require__(31);
-const attendance_event_1 = __webpack_require__(272);
+const attendance_event_1 = __webpack_require__(269);
 const base_service_1 = __webpack_require__(98);
 const users_service_1 = __webpack_require__(97);
 const common_1 = __webpack_require__(5);
-const event_emitter_1 = __webpack_require__(163);
-const schedule_1 = __webpack_require__(155);
+const event_emitter_1 = __webpack_require__(165);
+const schedule_1 = __webpack_require__(157);
 const typeorm_1 = __webpack_require__(16);
-const date_fns_1 = __webpack_require__(173);
+const date_fns_1 = __webpack_require__(175);
 const typeorm_2 = __webpack_require__(24);
 const employees_service_1 = __webpack_require__(128);
-const notifications_service_1 = __webpack_require__(302);
-const schedules_service_1 = __webpack_require__(171);
-const attendance_configurations_service_1 = __webpack_require__(294);
+const notifications_service_1 = __webpack_require__(299);
+const schedules_service_1 = __webpack_require__(173);
+const attendance_configurations_service_1 = __webpack_require__(290);
 const attendance_entity_1 = __webpack_require__(36);
 const final_work_hour_entity_1 = __webpack_require__(39);
-const attendances_gateway_1 = __webpack_require__(304);
+const attendances_gateway_1 = __webpack_require__(301);
 const work_time_request_entity_1 = __webpack_require__(29);
-const work_time_requests_service_1 = __webpack_require__(305);
+const work_time_requests_service_1 = __webpack_require__(302);
 let AttendancesService = class AttendancesService extends base_service_1.BaseService {
     constructor(attendancesRepository, usersService, workTimeRequestsService, notificationsService, employeesService, schedulesService, eventEmitter, attendancesGateway, attendanceConfigurationsService) {
         super(attendancesRepository, usersService);
@@ -26263,7 +25508,6 @@ let AttendancesService = class AttendancesService extends base_service_1.BaseSer
         // Get all attendance records for the day that has no final work hours yet
         const attendances = await this.attendancesRepository.find({
             where: {
-                isProcessed: false,
                 schedule: {
                     date: (0, typeorm_2.LessThan)(today),
                 }
@@ -26297,7 +25541,15 @@ let AttendancesService = class AttendancesService extends base_service_1.BaseSer
             attendance.processedBy = processedBy;
             attendance.processedAt = new Date();
         }
-        await this.attendancesRepository.save(attendances);
+        await this.save(attendances);
+        // notification
+        await this.notificationsService.create({
+            title: 'Attendance Processed',
+            message: `Attendance records for ${attendances.length} employees have been processed successfully.`,
+            type: notification_type_enum_1.NotificationType.INFO,
+            category: 'ATTENDANCE',
+            user: { id: processedBy },
+        });
         // log attendance processing
         this.logger.log(`Attendance records processed successfully`);
         // Emit event for attendance processing
@@ -26347,7 +25599,11 @@ let AttendancesService = class AttendancesService extends base_service_1.BaseSer
                         date: attendance.schedule.date,
                         dayType: attendance.dayType,
                         createdBy: attendance.employee.id,
-                        employee: attendance.employee
+                        employee: attendance.employee,
+                        organizationId: attendance.employee.organizationId,
+                        branchId: attendance.employee.branchId,
+                        departmentId: attendance.employee.departmentId,
+                        userId: attendance.employee.userId
                     });
                     await this.workTimeRequestsService.save(workTimeRequest);
                     await this.notificationsService.create({
@@ -26420,7 +25676,11 @@ let AttendancesService = class AttendancesService extends base_service_1.BaseSer
                         date: attendance.schedule.date,
                         dayType: attendance.dayType,
                         createdBy: attendance.employee.id,
-                        employee: attendance.employee
+                        employee: attendance.employee,
+                        organizationId: attendance.employee.organizationId,
+                        branchId: attendance.employee.branchId,
+                        departmentId: attendance.employee.departmentId,
+                        userId: attendance.employee.userId
                     });
                     await this.workTimeRequestsService.save(workTimeRequest);
                     await this.notificationsService.create({
@@ -26493,7 +25753,11 @@ let AttendancesService = class AttendancesService extends base_service_1.BaseSer
                         date: attendance.schedule.date,
                         dayType: attendance.dayType,
                         createdBy: attendance.employee.id,
-                        employee: attendance.employee
+                        employee: attendance.employee,
+                        organizationId: attendance.employee.organizationId,
+                        branchId: attendance.employee.branchId,
+                        departmentId: attendance.employee.departmentId,
+                        userId: attendance.employee.userId
                     });
                     await this.workTimeRequestsService.save(workTimeRequest);
                     await this.notificationsService.create({
@@ -26565,7 +25829,11 @@ let AttendancesService = class AttendancesService extends base_service_1.BaseSer
                         dayType: attendance.dayType,
                         cutoff: attendance.cutoff,
                         createdBy: attendance.employee.id,
-                        employee: attendance.employee
+                        employee: attendance.employee,
+                        organizationId: attendance.employee.organizationId,
+                        branchId: attendance.employee.branchId,
+                        departmentId: attendance.employee.departmentId,
+                        userId: attendance.employee.userId
                     });
                     await this.workTimeRequestsService.save(workTimeRequest);
                     await this.notificationsService.create({
@@ -26632,6 +25900,10 @@ let AttendancesService = class AttendancesService extends base_service_1.BaseSer
                         date: attendance.schedule.date,
                         createdBy: attendance.employee.id,
                         employee: { id: attendance.employee.id },
+                        organizationId: attendance.employee.organizationId,
+                        branchId: attendance.employee.branchId,
+                        departmentId: attendance.employee.departmentId,
+                        userId: attendance.employee.userId
                     });
                     await this.notificationsService.create({
                         title: 'Missing Check-Out Alert',
@@ -26684,6 +25956,10 @@ let AttendancesService = class AttendancesService extends base_service_1.BaseSer
                         date: attendance.schedule.date,
                         createdBy: attendance.employee.id,
                         employee: { id: attendance.employee.id },
+                        organizationId: attendance.employee.organizationId,
+                        branchId: attendance.employee.branchId,
+                        departmentId: attendance.employee.departmentId,
+                        userId: attendance.employee.userId
                     });
                     await this.notificationsService.create({
                         title: 'Missing Check-In Alert',
@@ -26778,6 +26054,10 @@ let AttendancesService = class AttendancesService extends base_service_1.BaseSer
                             date: attendance.schedule.date,
                             status: request_status_enum_1.RequestStatus.PENDING,
                             employee: { id: attendance.employee.id },
+                            organizationId: attendance.employee.organizationId,
+                            branchId: attendance.employee.branchId,
+                            departmentId: attendance.employee.departmentId,
+                            userId: attendance.employee.userId
                         });
                     }
                     else {
@@ -26816,7 +26096,7 @@ let AttendancesService = class AttendancesService extends base_service_1.BaseSer
         // First resolve all attendance checks with Promise.all
         const schedulesWithAbsenceInfo = await Promise.all(previousSchedules.map(async (schedule) => {
             const attendance = await this.attendancesRepository.findOne({
-                where: { schedule: { id: schedule.id }, isProcessed: false },
+                where: { schedule: { id: schedule.id } },
                 relations: { schedule: { employee: true } }
             });
             const isAbsent = attendance &&
@@ -26896,6 +26176,10 @@ let AttendancesService = class AttendancesService extends base_service_1.BaseSer
                     workTimeRequest.cutoff = schedule.cutoff;
                     workTimeRequest.dayType = dayType;
                     workTimeRequest.createdBy = schedule.employee.id;
+                    workTimeRequest.organizationId = schedule.employee.organizationId;
+                    workTimeRequest.branchId = schedule.employee.branchId;
+                    workTimeRequest.departmentId = schedule.employee.departmentId;
+                    workTimeRequest.userId = schedule.employee.userId;
                     await this.workTimeRequestsService.save(workTimeRequest);
                 }
             }
@@ -26920,7 +26204,7 @@ exports.AttendancesService = AttendancesService = __decorate([
 
 
 /***/ }),
-/* 302 */
+/* 299 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -26938,7 +26222,7 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
 var NotificationsService_1;
-var _a, _b, _c, _d;
+var _a, _b, _c, _d, _e;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.NotificationsService = void 0;
 const base_service_1 = __webpack_require__(98);
@@ -26946,22 +26230,26 @@ const users_service_1 = __webpack_require__(97);
 const bull_1 = __webpack_require__(4);
 const common_1 = __webpack_require__(5);
 const typeorm_1 = __webpack_require__(16);
-const bull_2 = __webpack_require__(185);
+const bull_2 = __webpack_require__(138);
 const typeorm_2 = __webpack_require__(24);
 const notification_entity_1 = __webpack_require__(82);
-const notifications_gateway_1 = __webpack_require__(303);
+const notifications_gateway_1 = __webpack_require__(300);
+const user_connection_service_1 = __webpack_require__(137);
 let NotificationsService = NotificationsService_1 = class NotificationsService extends base_service_1.BaseService {
-    constructor(notificationRepo, usersService, notificationsGateway, notificationsQueue) {
+    constructor(notificationRepo, usersService, notificationsGateway, userConnectionService, notificationsQueue) {
         super(notificationRepo, usersService);
         this.notificationRepo = notificationRepo;
         this.usersService = usersService;
         this.notificationsGateway = notificationsGateway;
+        this.userConnectionService = userConnectionService;
         this.notificationsQueue = notificationsQueue;
         this.notificationLogger = new common_1.Logger(NotificationsService_1.name);
     }
     async create(createDto, createdBy) {
         const notification = await super.create(createDto, createdBy);
-        this.notificationsGateway.emitToUser(notification, notification.user.id);
+        if (this.userConnectionService.isUserOnline(notification.user.id)) {
+            this.notificationsGateway.emitToUser(notification, notification.user.id);
+        }
         // Queue for processing instead of immediate sending
         await this.notificationsQueue.add('processNotification', {
             notificationId: notification.id,
@@ -26981,7 +26269,9 @@ let NotificationsService = NotificationsService_1 = class NotificationsService e
         }
         else {
             // Just emit read status update via WebSocket
-            this.notificationsGateway.emitToUser(notification, notification.user.id);
+            if (this.userConnectionService.isUserOnline(notification.user.id)) {
+                this.notificationsGateway.emitToUser(notification, notification.user.id);
+            }
         }
         return notification;
     }
@@ -26995,15 +26285,15 @@ let NotificationsService = NotificationsService_1 = class NotificationsService e
     }
     async createBulkNotifications(dto, createdBy) {
         const notifications = dto.recipients.map(recipient => {
-            // Log a warning if recipient.id is missing
             if (!recipient.id) {
                 this.notificationLogger.warn(`Recipient id is missing for recipient: ${JSON.stringify(recipient)}`);
             }
             return this.notificationRepo.create(Object.assign(Object.assign({}, dto), { user: { id: recipient.id }, read: false, createdBy }));
         });
-        // Save all to database
         const savedNotifications = await this.notificationRepo.save(notifications);
-        // Group by user
+        // Separate online and offline users for different processing
+        const onlineNotifications = [];
+        const offlineNotifications = [];
         const notificationsByUser = new Map();
         savedNotifications.forEach(notification => {
             const userId = notification.user.id;
@@ -27011,14 +26301,24 @@ let NotificationsService = NotificationsService_1 = class NotificationsService e
                 notificationsByUser.set(userId, []);
             }
             notificationsByUser.get(userId).push(notification.id);
+            // Check if user is online and emit immediately
+            if (this.userConnectionService.isUserOnline(userId)) {
+                this.notificationsGateway.emitToUser(notification, userId);
+                onlineNotifications.push(notification.id);
+            }
+            else {
+                offlineNotifications.push(notification.id);
+            }
         });
         // Queue batch processing jobs
         for (const [userId, notificationIds] of notificationsByUser.entries()) {
             await this.notificationsQueue.add('processBatch', {
                 notificationIds,
-                userId
+                userId,
+                isUserOnline: this.userConnectionService.isUserOnline(userId)
             });
         }
+        this.notificationLogger.log(`Processed ${onlineNotifications.length} online users, ${offlineNotifications.length} offline users`);
         return savedNotifications;
     }
     async getUnreadCount(userId) {
@@ -27050,13 +26350,13 @@ exports.NotificationsService = NotificationsService;
 exports.NotificationsService = NotificationsService = NotificationsService_1 = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, typeorm_1.InjectRepository)(notification_entity_1.Notification)),
-    __param(3, (0, bull_1.InjectQueue)('notifications')),
-    __metadata("design:paramtypes", [typeof (_a = typeof typeorm_2.Repository !== "undefined" && typeorm_2.Repository) === "function" ? _a : Object, typeof (_b = typeof users_service_1.UsersService !== "undefined" && users_service_1.UsersService) === "function" ? _b : Object, typeof (_c = typeof notifications_gateway_1.NotificationsGateway !== "undefined" && notifications_gateway_1.NotificationsGateway) === "function" ? _c : Object, typeof (_d = typeof bull_2.Queue !== "undefined" && bull_2.Queue) === "function" ? _d : Object])
+    __param(4, (0, bull_1.InjectQueue)('notifications')),
+    __metadata("design:paramtypes", [typeof (_a = typeof typeorm_2.Repository !== "undefined" && typeorm_2.Repository) === "function" ? _a : Object, typeof (_b = typeof users_service_1.UsersService !== "undefined" && users_service_1.UsersService) === "function" ? _b : Object, typeof (_c = typeof notifications_gateway_1.NotificationsGateway !== "undefined" && notifications_gateway_1.NotificationsGateway) === "function" ? _c : Object, typeof (_d = typeof user_connection_service_1.UserConnectionService !== "undefined" && user_connection_service_1.UserConnectionService) === "function" ? _d : Object, typeof (_e = typeof bull_2.Queue !== "undefined" && bull_2.Queue) === "function" ? _e : Object])
 ], NotificationsService);
 
 
 /***/ }),
-/* 303 */
+/* 300 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 "use strict";
@@ -27065,12 +26365,42 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.NotificationsGateway = void 0;
 const create_gateway_factory_1 = __webpack_require__(133);
 class NotificationsGateway extends (0, create_gateway_factory_1.createGateway)('notifications') {
+    afterConnect(client) {
+        var _a;
+        super.afterConnect(client);
+        if ((_a = client.user) === null || _a === void 0 ? void 0 : _a.sub) {
+            // Notify UserConnectionService that user is online
+            this.userConnectionService.userConnected(client.user.sub);
+        }
+    }
+    afterDisconnect(client) {
+        var _a;
+        super.afterDisconnect(client);
+        if ((_a = client.user) === null || _a === void 0 ? void 0 : _a.sub) {
+            // Notify UserConnectionService that user is offline
+            this.userConnectionService.userDisconnected(client.user.sub);
+        }
+    }
+    // Override emitToUser to check if user is online first
+    emitToUser(data, userId) {
+        if (!userId) {
+            this.logger.warn('No userId provided for emitToUser');
+            return;
+        }
+        // Only emit if user is actually connected
+        if (this.userConnectionService.isUserOnline(userId)) {
+            super.emitToUser(data, userId);
+        }
+        else {
+            this.logger.debug(`User ${userId} is offline, skipping WebSocket emission`);
+        }
+    }
 }
 exports.NotificationsGateway = NotificationsGateway;
 
 
 /***/ }),
-/* 304 */
+/* 301 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 "use strict";
@@ -27084,7 +26414,7 @@ exports.AttendancesGateway = AttendancesGateway;
 
 
 /***/ }),
-/* 305 */
+/* 302 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -27109,18 +26439,18 @@ const notification_type_enum_1 = __webpack_require__(83);
 const request_status_enum_1 = __webpack_require__(31);
 const base_service_1 = __webpack_require__(98);
 const users_service_1 = __webpack_require__(97);
-const documents_service_1 = __webpack_require__(306);
+const documents_service_1 = __webpack_require__(303);
 const employees_service_1 = __webpack_require__(128);
 const employee_entity_1 = __webpack_require__(32);
-const notifications_service_1 = __webpack_require__(302);
-const groups_service_1 = __webpack_require__(161);
-const schedules_service_1 = __webpack_require__(171);
+const notifications_service_1 = __webpack_require__(299);
+const groups_service_1 = __webpack_require__(163);
+const schedules_service_1 = __webpack_require__(173);
 const common_1 = __webpack_require__(5);
 const typeorm_1 = __webpack_require__(16);
 const typeorm_2 = __webpack_require__(24);
-const attendance_configurations_service_1 = __webpack_require__(294);
+const attendance_configurations_service_1 = __webpack_require__(290);
 const work_time_request_entity_1 = __webpack_require__(29);
-const work_time_responses_service_1 = __webpack_require__(307);
+const work_time_responses_service_1 = __webpack_require__(304);
 let WorkTimeRequestsService = class WorkTimeRequestsService extends base_service_1.BaseService {
     constructor(workTimeRequestsRepository, usersService, documentsService, employeesService, schedulesService, groupsService, attendanceConfigurationsService, notificationsService, workTimeResponsesService) {
         super(workTimeRequestsRepository, usersService);
@@ -27321,7 +26651,7 @@ exports.WorkTimeRequestsService = WorkTimeRequestsService = __decorate([
 
 
 /***/ }),
-/* 306 */
+/* 303 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -27363,7 +26693,7 @@ exports.DocumentsService = DocumentsService = __decorate([
 
 
 /***/ }),
-/* 307 */
+/* 304 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -27383,14 +26713,14 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 var _a, _b, _c, _d;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.WorkTimeResponsesService = void 0;
-const work_time_event_1 = __webpack_require__(169);
+const work_time_event_1 = __webpack_require__(171);
 const base_service_1 = __webpack_require__(98);
 const users_service_1 = __webpack_require__(97);
 const common_1 = __webpack_require__(5);
-const event_emitter_1 = __webpack_require__(163);
+const event_emitter_1 = __webpack_require__(165);
 const typeorm_1 = __webpack_require__(16);
 const typeorm_2 = __webpack_require__(24);
-const work_time_requests_service_1 = __webpack_require__(305);
+const work_time_requests_service_1 = __webpack_require__(302);
 const work_time_response_entity_1 = __webpack_require__(78);
 let WorkTimeResponsesService = class WorkTimeResponsesService extends base_service_1.BaseService {
     constructor(workTimeResponsesRepository, usersService, workTimeRequestsService, eventEmitter) {
@@ -27433,7 +26763,7 @@ exports.WorkTimeResponsesService = WorkTimeResponsesService = __decorate([
 
 
 /***/ }),
-/* 308 */
+/* 305 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -27536,7 +26866,7 @@ exports.GetAttendanceDto = GetAttendanceDto;
 
 
 /***/ }),
-/* 309 */
+/* 306 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -27549,17 +26879,17 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.FinalWorkHoursModule = void 0;
-const cutoffs_module_1 = __webpack_require__(152);
-const payroll_management_module_1 = __webpack_require__(310);
+const cutoffs_module_1 = __webpack_require__(154);
+const payroll_management_module_1 = __webpack_require__(307);
 const bull_1 = __webpack_require__(4);
 const common_1 = __webpack_require__(5);
 const typeorm_1 = __webpack_require__(16);
-const attendance_configurations_module_1 = __webpack_require__(291);
-const attendance_management_module_1 = __webpack_require__(255);
+const attendance_configurations_module_1 = __webpack_require__(288);
+const attendance_management_module_1 = __webpack_require__(251);
 const final_work_hour_entity_1 = __webpack_require__(39);
-const final_work_hours_controller_1 = __webpack_require__(343);
-const final_work_hours_service_1 = __webpack_require__(320);
-const work_hour_calculation_service_1 = __webpack_require__(345);
+const final_work_hours_controller_1 = __webpack_require__(340);
+const final_work_hours_service_1 = __webpack_require__(317);
+const work_hour_calculation_service_1 = __webpack_require__(342);
 let FinalWorkHoursModule = class FinalWorkHoursModule {
 };
 exports.FinalWorkHoursModule = FinalWorkHoursModule;
@@ -27583,7 +26913,7 @@ exports.FinalWorkHoursModule = FinalWorkHoursModule = __decorate([
 
 
 /***/ }),
-/* 310 */
+/* 307 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -27600,18 +26930,18 @@ const bull_1 = __webpack_require__(4);
 const common_1 = __webpack_require__(5);
 const core_1 = __webpack_require__(7);
 const typeorm_1 = __webpack_require__(16);
-const final_work_hours_module_1 = __webpack_require__(309);
-const work_time_requests_module_1 = __webpack_require__(311);
+const final_work_hours_module_1 = __webpack_require__(306);
+const work_time_requests_module_1 = __webpack_require__(308);
 const employee_management_module_1 = __webpack_require__(15);
-const cutoffs_module_1 = __webpack_require__(152);
+const cutoffs_module_1 = __webpack_require__(154);
 const payroll_entity_1 = __webpack_require__(52);
 const payroll_item_types_module_1 = __webpack_require__(18);
-const payroll_items_module_1 = __webpack_require__(327);
-const payrolls_controller_1 = __webpack_require__(330);
-const payrolls_service_1 = __webpack_require__(335);
-const payroll_metrics_service_1 = __webpack_require__(340);
-const payroll_processor_service_1 = __webpack_require__(342);
-const payroll_state_machine_service_1 = __webpack_require__(337);
+const payroll_items_module_1 = __webpack_require__(324);
+const payrolls_controller_1 = __webpack_require__(327);
+const payrolls_service_1 = __webpack_require__(332);
+const payroll_metrics_service_1 = __webpack_require__(337);
+const payroll_processor_service_1 = __webpack_require__(339);
+const payroll_state_machine_service_1 = __webpack_require__(334);
 let PayrollManagementModule = class PayrollManagementModule {
 };
 exports.PayrollManagementModule = PayrollManagementModule;
@@ -27662,7 +26992,7 @@ exports.PayrollManagementModule = PayrollManagementModule = __decorate([
 
 
 /***/ }),
-/* 311 */
+/* 308 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -27675,18 +27005,18 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.WorkTimeRequestsModule = void 0;
-const documents_module_1 = __webpack_require__(312);
+const documents_module_1 = __webpack_require__(309);
 const employee_management_module_1 = __webpack_require__(15);
-const shift_management_module_1 = __webpack_require__(157);
+const shift_management_module_1 = __webpack_require__(159);
 const common_1 = __webpack_require__(5);
 const typeorm_1 = __webpack_require__(16);
-const attendance_configurations_module_1 = __webpack_require__(291);
-const final_work_hours_module_1 = __webpack_require__(309);
+const attendance_configurations_module_1 = __webpack_require__(288);
+const final_work_hours_module_1 = __webpack_require__(306);
 const work_time_request_entity_1 = __webpack_require__(29);
-const work_time_listener_1 = __webpack_require__(319);
-const work_time_requests_controller_1 = __webpack_require__(321);
-const work_time_requests_service_1 = __webpack_require__(305);
-const work_time_responses_module_1 = __webpack_require__(324);
+const work_time_listener_1 = __webpack_require__(316);
+const work_time_requests_controller_1 = __webpack_require__(318);
+const work_time_requests_service_1 = __webpack_require__(302);
+const work_time_responses_module_1 = __webpack_require__(321);
 let WorkTimeRequestsModule = class WorkTimeRequestsModule {
 };
 exports.WorkTimeRequestsModule = WorkTimeRequestsModule;
@@ -27712,7 +27042,7 @@ exports.WorkTimeRequestsModule = WorkTimeRequestsModule = __decorate([
 
 
 /***/ }),
-/* 312 */
+/* 309 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -27728,9 +27058,9 @@ exports.DocumentsModule = void 0;
 const common_1 = __webpack_require__(5);
 const core_1 = __webpack_require__(7);
 const typeorm_1 = __webpack_require__(16);
-const document_types_module_1 = __webpack_require__(313);
-const documents_controller_1 = __webpack_require__(317);
-const documents_service_1 = __webpack_require__(306);
+const document_types_module_1 = __webpack_require__(310);
+const documents_controller_1 = __webpack_require__(314);
+const documents_service_1 = __webpack_require__(303);
 const document_entity_1 = __webpack_require__(28);
 let DocumentsModule = class DocumentsModule {
 };
@@ -27759,7 +27089,7 @@ exports.DocumentsModule = DocumentsModule = __decorate([
 
 
 /***/ }),
-/* 313 */
+/* 310 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -27774,8 +27104,8 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.DocumentTypesModule = void 0;
 const common_1 = __webpack_require__(5);
 const typeorm_1 = __webpack_require__(16);
-const document_types_controller_1 = __webpack_require__(314);
-const document_types_service_1 = __webpack_require__(315);
+const document_types_controller_1 = __webpack_require__(311);
+const document_types_service_1 = __webpack_require__(312);
 const document_type_entity_1 = __webpack_require__(79);
 let DocumentTypesModule = class DocumentTypesModule {
 };
@@ -27791,7 +27121,7 @@ exports.DocumentTypesModule = DocumentTypesModule = __decorate([
 
 
 /***/ }),
-/* 314 */
+/* 311 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 "use strict";
@@ -27799,8 +27129,8 @@ exports.DocumentTypesModule = DocumentTypesModule = __decorate([
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.DocumentTypesController = void 0;
 const create_controller_factory_1 = __webpack_require__(87);
-const document_types_service_1 = __webpack_require__(315);
-const document_type_dto_1 = __webpack_require__(316);
+const document_types_service_1 = __webpack_require__(312);
+const document_type_dto_1 = __webpack_require__(313);
 const document_type_entity_1 = __webpack_require__(79);
 class DocumentTypesController extends (0, create_controller_factory_1.createController)(document_type_entity_1.DocumentType, document_types_service_1.DocumentTypesService, document_type_dto_1.GetDocumentTypeDto, document_type_dto_1.DocumentTypeDto, document_type_dto_1.UpdateDocumentTypeDto) {
 }
@@ -27808,7 +27138,7 @@ exports.DocumentTypesController = DocumentTypesController;
 
 
 /***/ }),
-/* 315 */
+/* 312 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -27850,7 +27180,7 @@ exports.DocumentTypesService = DocumentTypesService = __decorate([
 
 
 /***/ }),
-/* 316 */
+/* 313 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -27921,7 +27251,7 @@ exports.GetDocumentTypeDto = GetDocumentTypeDto;
 
 
 /***/ }),
-/* 317 */
+/* 314 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 "use strict";
@@ -27929,8 +27259,8 @@ exports.GetDocumentTypeDto = GetDocumentTypeDto;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.DocumentsController = void 0;
 const create_controller_factory_1 = __webpack_require__(87);
-const documents_service_1 = __webpack_require__(306);
-const document_dto_1 = __webpack_require__(318);
+const documents_service_1 = __webpack_require__(303);
+const document_dto_1 = __webpack_require__(315);
 const document_entity_1 = __webpack_require__(28);
 class DocumentsController extends (0, create_controller_factory_1.createController)(document_entity_1.Document, documents_service_1.DocumentsService, document_dto_1.GetDocumentDto, document_dto_1.DocumentDto, document_dto_1.UpdateDocumentDto) {
 }
@@ -27938,7 +27268,7 @@ exports.DocumentsController = DocumentsController;
 
 
 /***/ }),
-/* 318 */
+/* 315 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -28012,7 +27342,7 @@ exports.GetDocumentDto = GetDocumentDto;
 
 
 /***/ }),
-/* 319 */
+/* 316 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -28031,11 +27361,11 @@ var _a, _b, _c, _d;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.WorkTimeListener = void 0;
 const request_status_enum_1 = __webpack_require__(31);
-const work_time_event_1 = __webpack_require__(169);
+const work_time_event_1 = __webpack_require__(171);
 const common_1 = __webpack_require__(5);
-const event_emitter_1 = __webpack_require__(163);
-const final_work_hours_service_1 = __webpack_require__(320);
-const work_time_requests_service_1 = __webpack_require__(305);
+const event_emitter_1 = __webpack_require__(165);
+const final_work_hours_service_1 = __webpack_require__(317);
+const work_time_requests_service_1 = __webpack_require__(302);
 let WorkTimeListener = WorkTimeListener_1 = class WorkTimeListener {
     constructor(workTimeRequestsService, finalWorkHoursService) {
         this.workTimeRequestsService = workTimeRequestsService;
@@ -28075,7 +27405,7 @@ exports.WorkTimeListener = WorkTimeListener = WorkTimeListener_1 = __decorate([
 
 
 /***/ }),
-/* 320 */
+/* 317 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -28097,16 +27427,16 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.FinalWorkHoursService = void 0;
 const attendance_status_enum_1 = __webpack_require__(30);
 const holiday_type_enum_1 = __webpack_require__(46);
-const attendance_event_1 = __webpack_require__(272);
+const attendance_event_1 = __webpack_require__(269);
 const base_service_1 = __webpack_require__(98);
 const users_service_1 = __webpack_require__(97);
-const cutoffs_service_1 = __webpack_require__(154);
+const cutoffs_service_1 = __webpack_require__(156);
 const common_1 = __webpack_require__(5);
-const event_emitter_1 = __webpack_require__(163);
+const event_emitter_1 = __webpack_require__(165);
 const typeorm_1 = __webpack_require__(16);
-const date_fns_1 = __webpack_require__(173);
+const date_fns_1 = __webpack_require__(175);
 const typeorm_2 = __webpack_require__(24);
-const attendances_service_1 = __webpack_require__(301);
+const attendances_service_1 = __webpack_require__(298);
 const final_work_hour_entity_1 = __webpack_require__(39);
 let FinalWorkHoursService = class FinalWorkHoursService extends base_service_1.BaseService {
     constructor(finalWorkHoursRepository, usersService, eventEmitter, cutoffsService, attendancesService) {
@@ -28346,7 +27676,7 @@ exports.FinalWorkHoursService = FinalWorkHoursService = __decorate([
 
 
 /***/ }),
-/* 321 */
+/* 318 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -28373,10 +27703,10 @@ const action_enum_1 = __webpack_require__(71);
 const create_controller_factory_1 = __webpack_require__(87);
 const common_1 = __webpack_require__(5);
 const swagger_1 = __webpack_require__(8);
-const management_work_time_request_dto_1 = __webpack_require__(322);
-const work_time_request_dto_1 = __webpack_require__(323);
+const management_work_time_request_dto_1 = __webpack_require__(319);
+const work_time_request_dto_1 = __webpack_require__(320);
 const work_time_request_entity_1 = __webpack_require__(29);
-const work_time_requests_service_1 = __webpack_require__(305);
+const work_time_requests_service_1 = __webpack_require__(302);
 class WorkTimeRequestsController extends (0, create_controller_factory_1.createController)(work_time_request_entity_1.WorkTimeRequest, work_time_requests_service_1.WorkTimeRequestsService, work_time_request_dto_1.GetWorkTimeRequestDto, work_time_request_dto_1.WorkTimeRequestDto, work_time_request_dto_1.UpdateWorkTimeRequestDto) {
     async delete(id) {
         return await super.delete(id);
@@ -28415,7 +27745,7 @@ __decorate([
 
 
 /***/ }),
-/* 322 */
+/* 319 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -28512,7 +27842,7 @@ __decorate([
 
 
 /***/ }),
-/* 323 */
+/* 320 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -28661,7 +27991,7 @@ __decorate([
 
 
 /***/ }),
-/* 324 */
+/* 321 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -28676,10 +28006,10 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.WorkTimeResponsesModule = void 0;
 const common_1 = __webpack_require__(5);
 const typeorm_1 = __webpack_require__(16);
-const work_time_requests_module_1 = __webpack_require__(311);
+const work_time_requests_module_1 = __webpack_require__(308);
 const work_time_response_entity_1 = __webpack_require__(78);
-const work_time_responses_controller_1 = __webpack_require__(325);
-const work_time_responses_service_1 = __webpack_require__(307);
+const work_time_responses_controller_1 = __webpack_require__(322);
+const work_time_responses_service_1 = __webpack_require__(304);
 let WorkTimeResponsesModule = class WorkTimeResponsesModule {
 };
 exports.WorkTimeResponsesModule = WorkTimeResponsesModule;
@@ -28697,7 +28027,7 @@ exports.WorkTimeResponsesModule = WorkTimeResponsesModule = __decorate([
 
 
 /***/ }),
-/* 325 */
+/* 322 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 "use strict";
@@ -28705,9 +28035,9 @@ exports.WorkTimeResponsesModule = WorkTimeResponsesModule = __decorate([
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.WorkTimeResponsesController = void 0;
 const create_controller_factory_1 = __webpack_require__(87);
-const work_time_response_dto_1 = __webpack_require__(326);
+const work_time_response_dto_1 = __webpack_require__(323);
 const work_time_response_entity_1 = __webpack_require__(78);
-const work_time_responses_service_1 = __webpack_require__(307);
+const work_time_responses_service_1 = __webpack_require__(304);
 class WorkTimeResponsesController extends (0, create_controller_factory_1.createController)(work_time_response_entity_1.WorkTimeResponse, work_time_responses_service_1.WorkTimeResponsesService, work_time_response_dto_1.GetWorkTimeResponseDto, work_time_response_dto_1.WorkTimeResponseDto, work_time_response_dto_1.UpdateWorkTimeResponseDto) {
     async delete(id) {
         return await super.delete(id);
@@ -28726,7 +28056,7 @@ exports.WorkTimeResponsesController = WorkTimeResponsesController;
 
 
 /***/ }),
-/* 326 */
+/* 323 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -28789,7 +28119,7 @@ exports.GetWorkTimeResponseDto = GetWorkTimeResponseDto;
 
 
 /***/ }),
-/* 327 */
+/* 324 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -28806,8 +28136,8 @@ const common_1 = __webpack_require__(5);
 const typeorm_1 = __webpack_require__(16);
 const payroll_item_types_module_1 = __webpack_require__(18);
 const payroll_item_entity_1 = __webpack_require__(26);
-const payroll_items_controller_1 = __webpack_require__(328);
-const payroll_items_service_1 = __webpack_require__(329);
+const payroll_items_controller_1 = __webpack_require__(325);
+const payroll_items_service_1 = __webpack_require__(326);
 let PayrollItemsModule = class PayrollItemsModule {
 };
 exports.PayrollItemsModule = PayrollItemsModule;
@@ -28825,7 +28155,7 @@ exports.PayrollItemsModule = PayrollItemsModule = __decorate([
 
 
 /***/ }),
-/* 328 */
+/* 325 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 "use strict";
@@ -28835,7 +28165,7 @@ exports.PayrollItemsController = void 0;
 const create_controller_factory_1 = __webpack_require__(87);
 const payroll_item_dto_1 = __webpack_require__(121);
 const payroll_item_entity_1 = __webpack_require__(26);
-const payroll_items_service_1 = __webpack_require__(329);
+const payroll_items_service_1 = __webpack_require__(326);
 class PayrollItemsController extends (0, create_controller_factory_1.createController)(payroll_item_entity_1.PayrollItem, payroll_items_service_1.PayrollItemsService, payroll_item_dto_1.GetPayrollItemDto, payroll_item_dto_1.PayrollItemDto, payroll_item_dto_1.UpdatePayrollItemDto) {
     async deleteMany(ids, hardDelete) {
         return super.deleteMany(ids, hardDelete);
@@ -28854,7 +28184,7 @@ exports.PayrollItemsController = PayrollItemsController;
 
 
 /***/ }),
-/* 329 */
+/* 326 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -28898,7 +28228,7 @@ exports.PayrollItemsService = PayrollItemsService = __decorate([
 
 
 /***/ }),
-/* 330 */
+/* 327 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -28927,15 +28257,15 @@ const utility_helper_1 = __webpack_require__(102);
 const bull_1 = __webpack_require__(4);
 const common_1 = __webpack_require__(5);
 const swagger_1 = __webpack_require__(8);
-const bull_2 = __webpack_require__(185);
-const express_1 = __webpack_require__(194);
-const payroll_batch_process_dto_1 = __webpack_require__(331);
-const payroll_dto_1 = __webpack_require__(332);
-const recalculate_options_dto_1 = __webpack_require__(333);
-const release_payroll_dto_1 = __webpack_require__(334);
+const bull_2 = __webpack_require__(138);
+const express_1 = __webpack_require__(234);
+const payroll_batch_process_dto_1 = __webpack_require__(328);
+const payroll_dto_1 = __webpack_require__(329);
+const recalculate_options_dto_1 = __webpack_require__(330);
+const release_payroll_dto_1 = __webpack_require__(331);
 const payroll_entity_1 = __webpack_require__(52);
-const payrolls_service_1 = __webpack_require__(335);
-const payslip_pdf_generator_1 = __webpack_require__(338);
+const payrolls_service_1 = __webpack_require__(332);
+const payslip_pdf_generator_1 = __webpack_require__(335);
 let PayrollsController = class PayrollsController extends (0, create_controller_factory_1.createController)(payroll_entity_1.Payroll, payrolls_service_1.PayrollsService, payroll_dto_1.GetPayrollDto, payroll_dto_1.PayrollDto, payroll_dto_1.UpdatePayrollDto) {
     constructor(baseService, payrollQueue) {
         super(baseService);
@@ -29021,7 +28351,7 @@ let PayrollsController = class PayrollsController extends (0, create_controller_
         const payslipData = await this.baseService.generatePayslipData(id);
         // log
         // Generate PDF using the custom generator
-        const pdfBuffer = await (0, payslip_pdf_generator_1.generateMiniPayslipPdf)(payslipData);
+        const pdfBuffer = await (0, payslip_pdf_generator_1.generatePayslipPdf)(payslipData);
         const fileName = `Payslip_${employee.employeeNumber}_${utility_helper_1.UtilityHelper.ensureDate(payroll.cutoff.startDate).toISOString().slice(0, 10)}.pdf`;
         // Set appropriate headers for PDF download
         res.setHeader('Content-Type', 'application/pdf');
@@ -29664,7 +28994,7 @@ exports.PayrollsController = PayrollsController = __decorate([
 
 
 /***/ }),
-/* 331 */
+/* 328 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -29777,7 +29107,7 @@ __decorate([
 
 
 /***/ }),
-/* 332 */
+/* 329 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -30316,7 +29646,7 @@ __decorate([
 
 
 /***/ }),
-/* 333 */
+/* 330 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -30370,7 +29700,7 @@ __decorate([
 
 
 /***/ }),
-/* 334 */
+/* 331 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -30441,7 +29771,7 @@ __decorate([
 
 
 /***/ }),
-/* 335 */
+/* 332 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -30472,20 +29802,20 @@ const utility_helper_1 = __webpack_require__(102);
 const base_service_1 = __webpack_require__(98);
 const transaction_service_1 = __webpack_require__(103);
 const users_service_1 = __webpack_require__(97);
-const final_work_hours_service_1 = __webpack_require__(320);
+const final_work_hours_service_1 = __webpack_require__(317);
 const common_1 = __webpack_require__(5);
-const event_emitter_1 = __webpack_require__(163);
+const event_emitter_1 = __webpack_require__(165);
 const typeorm_1 = __webpack_require__(16);
-const os_1 = __webpack_require__(336);
+const os_1 = __webpack_require__(333);
 const typeorm_2 = __webpack_require__(24);
-const work_time_requests_service_1 = __webpack_require__(305);
+const work_time_requests_service_1 = __webpack_require__(302);
 const employee_payroll_item_types_service_1 = __webpack_require__(125);
 const employees_service_1 = __webpack_require__(128);
-const cutoffs_service_1 = __webpack_require__(154);
+const cutoffs_service_1 = __webpack_require__(156);
 const payroll_entity_1 = __webpack_require__(52);
 const payroll_item_types_service_1 = __webpack_require__(119);
 const payroll_item_entity_1 = __webpack_require__(26);
-const payroll_state_machine_service_1 = __webpack_require__(337);
+const payroll_state_machine_service_1 = __webpack_require__(334);
 let PayrollsService = PayrollsService_1 = class PayrollsService extends base_service_1.BaseService {
     constructor(payrollsRepository, employeesService, cutoffsService, finalWorkHoursService, employeePayrollItemTypesService, payrollItemTypesService, usersService, workTimeRequestsService, stateMachine, eventEmitter, transactionService) {
         super(payrollsRepository, usersService);
@@ -30604,38 +29934,48 @@ let PayrollsService = PayrollsService_1 = class PayrollsService extends base_ser
      */
     // Function to calculate withholding tax based on 2025 tax brackets
     calculateWithholdingTax(monthlyTaxableIncome) {
-        // Compute annual taxable income from monthly
+        // Convert monthly to annual taxable income
         const annualTaxableIncome = monthlyTaxableIncome * 12;
-        // Apply 2025 tax table
+        // Apply 2025 TRAIN Law tax brackets (accurate rates and thresholds)
         let annualTax = 0;
         if (annualTaxableIncome <= 250000) {
-            annualTax = 0; // Exempt
+            // First bracket: 0% for income up to ₱250,000
+            annualTax = 0;
         }
         else if (annualTaxableIncome <= 400000) {
-            annualTax = (annualTaxableIncome - 250000) * 0.15; // 15% of excess over 250,000
+            // Second bracket: 15% of excess over ₱250,000
+            annualTax = (annualTaxableIncome - 250000) * 0.15;
         }
         else if (annualTaxableIncome <= 800000) {
-            annualTax = 22500 + (annualTaxableIncome - 400000) * 0.2; // 22,500 + 20% of excess over 400,000
+            // Third bracket: ₱22,500 + 20% of excess over ₱400,000
+            annualTax = 22500 + (annualTaxableIncome - 400000) * 0.20;
         }
         else if (annualTaxableIncome <= 2000000) {
-            annualTax = 102500 + (annualTaxableIncome - 800000) * 0.25; // 102,500 + 25% of excess over 800,000
+            // Fourth bracket: ₱102,500 + 25% of excess over ₱800,000
+            annualTax = 102500 + (annualTaxableIncome - 800000) * 0.25;
         }
         else if (annualTaxableIncome <= 8000000) {
-            annualTax = 402500 + (annualTaxableIncome - 2000000) * 0.3; // 402,500 + 30% of excess over 2,000,000
+            // Fifth bracket: ₱402,500 + 30% of excess over ₱2,000,000
+            annualTax = 402500 + (annualTaxableIncome - 2000000) * 0.30;
         }
         else {
-            annualTax = 2202500 + (annualTaxableIncome - 8000000) * 0.35; // 2,202,500 + 35% of excess over 8,000,000
+            // Sixth bracket: ₱2,202,500 + 35% of excess over ₱8,000,000
+            annualTax = 2202500 + (annualTaxableIncome - 8000000) * 0.35;
         }
-        // Get monthly tax
-        const calculatedAmount = parseFloat((annualTax / 12).toFixed(2));
+        // Calculate monthly withholding tax
+        // Round to 2 decimal places to avoid floating point precision issues
+        const monthlyTax = Math.round((annualTax / 12) * 100) / 100;
         const calculationDetail = {
             calculationType: 'WITHHOLDING_TAX',
             monthlyTaxableIncome: monthlyTaxableIncome,
             annualTaxableIncome: annualTaxableIncome,
-            annualTax: annualTax,
-            monthlyTax: calculatedAmount
+            annualTax: Math.round(annualTax * 100) / 100, // Round annual tax too
+            monthlyTax: monthlyTax
         };
-        return { calculatedAmount, calculationDetail };
+        return {
+            calculatedAmount: monthlyTax,
+            calculationDetail
+        };
     }
     /**
      * Calculates PhilHealth contributions based on 2025 rates
@@ -30798,6 +30138,7 @@ let PayrollsService = PayrollsService_1 = class PayrollsService extends base_ser
         payroll.noTimeOut = payroll.totalNoTimeOutHours * payroll.hourlyRate;
         payroll.totalBasicDeductions = payroll.absences + payroll.tardiness + payroll.undertime
             + payroll.noTimeIn + payroll.noTimeOut;
+        payroll.totalDeductions = payroll.totalBasicDeductions;
         // 10. Initial gross pay from basic components
         payroll.grossPay = payroll.basicPay + payroll.restDayPay + payroll.holidayPay
             + payroll.specialHolidayPay + payroll.overtimePay
@@ -30811,7 +30152,7 @@ let PayrollsService = PayrollsService_1 = class PayrollsService extends base_ser
         // 12. Initial taxable income (will be adjusted for non-taxable items)
         payroll.taxableIncome = payroll.grossPay;
         // 13. Initial net pay
-        payroll.netPay = payroll.grossPay;
+        payroll.netPay = payroll.grossPay - payroll.totalDeductions;
     }
     /**
      * Process all payroll items for an employee
@@ -30843,6 +30184,8 @@ let PayrollsService = PayrollsService_1 = class PayrollsService extends base_ser
         let combinedGrossPay = payroll.grossPay;
         let combinedTaxableIncome = payroll.taxableIncome;
         if (cutoff.cutoffPlace === 2) {
+            // log 
+            this.logger.log(`Processing second cutoff payroll for employee ${payroll.employee.id} with gross pay ${payroll.grossPay} and taxable income ${payroll.taxableIncome}`);
             // Find the first cutoff payroll in the same month
             const firstCutoffDate = new Date(cutoff.startDate);
             firstCutoffDate.setDate(1); // Set to first day of month
@@ -30894,9 +30237,13 @@ let PayrollsService = PayrollsService_1 = class PayrollsService extends base_ser
             for (const itemType of categoryItemTypes) {
                 // Check if this employee has a specific configuration for this item type
                 const employeeItemConfig = employeePayrollItemMap.get(itemType.id);
+                // log
+                this.logger.log(`Processing payroll item type: ${itemType.name} for employee ${payroll.employee.id} in category ${category}`);
                 // Skip if not applicable for this employee
                 // Only process required items or items that have employee-specific configuration
-                if (!employeeItemConfig || employeeItemConfig.isApplicable || (itemType.processEvery && cutoff.cutoffPlace !== itemType.processEvery)) {
+                if (!employeeItemConfig || !employeeItemConfig.isApplicable || (itemType.processEvery && cutoff.cutoffPlace !== itemType.processEvery)) {
+                    // log
+                    this.logger.log(`Skipping payroll item type: ${itemType.name} for employee ${payroll.employee.id} as it is not applicable or not configured.`);
                     continue;
                 }
                 // Create new payroll item
@@ -31214,14 +30561,18 @@ let PayrollsService = PayrollsService_1 = class PayrollsService extends base_ser
      * Generate payslip data for a specific payroll
      */
     async generatePayslipData(payrollId) {
-        var _a, _b, _c, _d, _e, _f;
+        var _a, _b, _c, _d, _e, _f, _g;
         const payroll = await this.findOneByOrFail({ id: payrollId }, {
             relations: {
                 employee: {
+                    roles: {
+                        organization: true,
+                        department: true,
+                        branch: true
+                    },
                     user: {
                         profile: true
                     },
-                    roles: true
                 },
                 cutoff: true,
                 payrollItems: {
@@ -31233,8 +30584,12 @@ let PayrollsService = PayrollsService_1 = class PayrollsService extends base_ser
         if (![payroll_state_enum_1.PayrollState.APPROVED, payroll_state_enum_1.PayrollState.PAID, payroll_state_enum_1.PayrollState.ARCHIVED].includes(payroll.state)) {
             throw new common_1.BadRequestException('Payroll must be approved, released, paid or archived to generate payslips');
         }
+        // log employee roles
+        this.logger.log(`Generating payslip for employee ${payroll.employee.id} with roles: ${(_a = payroll.employee.roles) === null || _a === void 0 ? void 0 : _a.map(role => role.name).join(', ')}`);
         // Get the employee's highest scope role
         const highestRole = utility_helper_1.UtilityHelper.determineEffectiveScope(payroll.employee.roles || []);
+        // log highest role
+        this.logger.log(`Highest role for employee ${payroll.employee.id}: ${highestRole.name}`);
         // Group payroll items by category for organized display
         const itemsByCategory = {};
         for (const item of payroll.payrollItems || []) {
@@ -31250,16 +30605,16 @@ let PayrollsService = PayrollsService_1 = class PayrollsService extends base_ser
         // Format dates
         const startDate = utility_helper_1.UtilityHelper.ensureDate(payroll.cutoff.startDate).toLocaleDateString();
         const endDate = utility_helper_1.UtilityHelper.ensureDate(payroll.cutoff.endDate).toLocaleDateString();
-        const name = ((_a = payroll.employee.user.profile) === null || _a === void 0 ? void 0 : _a.fullName) || payroll.employee.user.userName || payroll.employee.user.email;
+        const name = ((_b = payroll.employee.user.profile) === null || _b === void 0 ? void 0 : _b.fullName) || payroll.employee.user.userName || payroll.employee.user.email;
         // Build payslip data
         return {
             employee: {
                 name,
                 employeeNumber: payroll.employee.employeeNumber,
                 position: highestRole.name,
-                department: ((_b = highestRole === null || highestRole === void 0 ? void 0 : highestRole.department) === null || _b === void 0 ? void 0 : _b.name) || 'N/A',
-                branch: ((_c = highestRole === null || highestRole === void 0 ? void 0 : highestRole.branch) === null || _c === void 0 ? void 0 : _c.name) || 'N/A',
-                organization: ((_d = highestRole === null || highestRole === void 0 ? void 0 : highestRole.organization) === null || _d === void 0 ? void 0 : _d.name) || 'N/A',
+                department: ((_c = highestRole === null || highestRole === void 0 ? void 0 : highestRole.department) === null || _c === void 0 ? void 0 : _c.name) || 'N/A',
+                branch: ((_d = highestRole === null || highestRole === void 0 ? void 0 : highestRole.branch) === null || _d === void 0 ? void 0 : _d.name) || 'N/A',
+                organization: ((_e = highestRole === null || highestRole === void 0 ? void 0 : highestRole.organization) === null || _e === void 0 ? void 0 : _e.name) || 'N/A',
             },
             cutoffPeriod: `${startDate} - ${endDate}`,
             rates: {
@@ -31291,7 +30646,7 @@ let PayrollsService = PayrollsService_1 = class PayrollsService extends base_ser
                 nightDifferentialPay: payroll.nightDifferentialPay,
                 nightDifferentialOvertimePay: payroll.nightDifferentialOvertimePay,
                 adjustments: itemsByCategory[payroll_item_category_enum_1.PayrollItemCategory.ADJUSTMENT] || [],
-                others: ((_e = itemsByCategory[payroll_item_category_enum_1.PayrollItemCategory.COMPENSATION]) === null || _e === void 0 ? void 0 : _e.filter((item) => !item.includeInPayrollItemsProcessing)) || []
+                others: ((_f = itemsByCategory[payroll_item_category_enum_1.PayrollItemCategory.COMPENSATION]) === null || _f === void 0 ? void 0 : _f.filter((item) => !item.includeInPayrollItemsProcessing)) || []
             },
             benefits: itemsByCategory[payroll_item_category_enum_1.PayrollItemCategory.BENEFIT] || [],
             deductions: {
@@ -31309,7 +30664,7 @@ let PayrollsService = PayrollsService_1 = class PayrollsService extends base_ser
                     pagIbig: payroll.pagIbigContribution.employee,
                     withholdingTax: payroll.withholdingTax
                 },
-                others: ((_f = itemsByCategory[payroll_item_category_enum_1.PayrollItemCategory.DEDUCTION]) === null || _f === void 0 ? void 0 : _f.filter((item) => item.governmentMandatedType)) || []
+                others: ((_g = itemsByCategory[payroll_item_category_enum_1.PayrollItemCategory.DEDUCTION]) === null || _g === void 0 ? void 0 : _g.filter((item) => item.governmentMandatedType)) || []
             },
             allowances: itemsByCategory[payroll_item_category_enum_1.PayrollItemCategory.ALLOWANCE] || [],
             totals: {
@@ -31631,7 +30986,7 @@ let PayrollsService = PayrollsService_1 = class PayrollsService extends base_ser
             });
         }
         // Recalculate the payroll items
-        await this.processPayrollItems(payroll, userId);
+        const payrollItems = await this.processPayrollItems(payroll, userId);
         // Restore original state if preserving
         if (options.preserveState) {
             payroll.state = originalState;
@@ -31649,6 +31004,11 @@ let PayrollsService = PayrollsService_1 = class PayrollsService extends base_ser
         // Update processed information
         payroll.processedAt = new Date();
         payroll.processedBy = userId;
+        payroll.payrollItems = payrollItems;
+        payroll.organizationId = payroll.employee.organizationId;
+        payroll.branchId = payroll.employee.branchId;
+        payroll.departmentId = payroll.employee.departmentId;
+        payroll.userId = payroll.employee.userId;
         // Save the updated payroll
         return await this.repository.save(payroll);
     }
@@ -31697,14 +31057,14 @@ exports.PayrollsService = PayrollsService = PayrollsService_1 = __decorate([
 
 
 /***/ }),
-/* 336 */
+/* 333 */
 /***/ ((module) => {
 
 "use strict";
 module.exports = require("os");
 
 /***/ }),
-/* 337 */
+/* 334 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -31921,7 +31281,7 @@ exports.PayrollStateMachine = PayrollStateMachine = PayrollStateMachine_1 = __de
 
 
 /***/ }),
-/* 338 */
+/* 335 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -31932,7 +31292,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.generatePayslipPdf = generatePayslipPdf;
 exports.generateMiniPayslipPdf = generateMiniPayslipPdf;
-const pdfkit_1 = __importDefault(__webpack_require__(339));
+const pdfkit_1 = __importDefault(__webpack_require__(336));
 async function generatePayslipPdf(payslipData) {
     return new Promise((resolve, reject) => {
         try {
@@ -32599,19 +31959,19 @@ function formatCurrency(amount) {
         maximumFractionDigits: 2
     });
     // Then add the peso symbol manually
-    return `\u20B1${formatter.format(value)}`;
+    return `₱${formatter.format(value)}`;
 }
 
 
 /***/ }),
-/* 339 */
+/* 336 */
 /***/ ((module) => {
 
 "use strict";
 module.exports = require("pdfkit");
 
 /***/ }),
-/* 340 */
+/* 337 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -32634,9 +31994,9 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.PayrollMetricsService = void 0;
 const payroll_state_enum_1 = __webpack_require__(53);
 const common_1 = __webpack_require__(5);
-const schedule_1 = __webpack_require__(155);
+const schedule_1 = __webpack_require__(157);
 const typeorm_1 = __webpack_require__(16);
-const prom_client_1 = __webpack_require__(341);
+const prom_client_1 = __webpack_require__(338);
 const typeorm_2 = __webpack_require__(24);
 const payroll_entity_1 = __webpack_require__(52);
 let PayrollMetricsService = PayrollMetricsService_1 = class PayrollMetricsService {
@@ -32706,14 +32066,14 @@ exports.PayrollMetricsService = PayrollMetricsService = PayrollMetricsService_1 
 
 
 /***/ }),
-/* 341 */
+/* 338 */
 /***/ ((module) => {
 
 "use strict";
 module.exports = require("prom-client");
 
 /***/ }),
-/* 342 */
+/* 339 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -32733,9 +32093,9 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.PayrollProcessorService = void 0;
 const bull_1 = __webpack_require__(4);
 const common_1 = __webpack_require__(5);
-const event_emitter_1 = __webpack_require__(163);
-const bull_2 = __webpack_require__(185);
-const payrolls_service_1 = __webpack_require__(335);
+const event_emitter_1 = __webpack_require__(165);
+const bull_2 = __webpack_require__(138);
+const payrolls_service_1 = __webpack_require__(332);
 let PayrollProcessorService = PayrollProcessorService_1 = class PayrollProcessorService {
     constructor(payrollsService, eventEmitter) {
         this.payrollsService = payrollsService;
@@ -32815,7 +32175,7 @@ exports.PayrollProcessorService = PayrollProcessorService = PayrollProcessorServ
 
 
 /***/ }),
-/* 343 */
+/* 340 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -32842,9 +32202,9 @@ const action_enum_1 = __webpack_require__(71);
 const create_controller_factory_1 = __webpack_require__(87);
 const common_1 = __webpack_require__(5);
 const swagger_1 = __webpack_require__(8);
-const final_work_hour_dto_1 = __webpack_require__(344);
+const final_work_hour_dto_1 = __webpack_require__(341);
 const final_work_hour_entity_1 = __webpack_require__(39);
-const final_work_hours_service_1 = __webpack_require__(320);
+const final_work_hours_service_1 = __webpack_require__(317);
 class FinalWorkHoursController extends (0, create_controller_factory_1.createController)(final_work_hour_entity_1.FinalWorkHour, final_work_hours_service_1.FinalWorkHoursService, final_work_hour_dto_1.GetFinalWorkHourDto, undefined, final_work_hour_dto_1.UpdateFinalWorkHourDto) {
     async create(entityDto, createdById) {
         return await super.create(entityDto, createdById);
@@ -32895,7 +32255,7 @@ __decorate([
 
 
 /***/ }),
-/* 344 */
+/* 341 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -33148,7 +32508,7 @@ __decorate([
 
 
 /***/ }),
-/* 345 */
+/* 342 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -33171,19 +32531,19 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.WorkHourCalculationProcessor = exports.WorkHourCalculationService = void 0;
 const attendance_status_enum_1 = __webpack_require__(30);
 const payroll_state_enum_1 = __webpack_require__(53);
-const payrolls_service_1 = __webpack_require__(335);
+const payrolls_service_1 = __webpack_require__(332);
 const bull_1 = __webpack_require__(4);
 const common_1 = __webpack_require__(5);
-const bull_2 = __webpack_require__(185);
-const date_fns_1 = __webpack_require__(173);
+const bull_2 = __webpack_require__(138);
+const date_fns_1 = __webpack_require__(175);
 const typeorm_1 = __webpack_require__(24);
 const uuid_1 = __webpack_require__(136);
-const attendance_configurations_service_1 = __webpack_require__(294);
-const attendances_service_1 = __webpack_require__(301);
+const attendance_configurations_service_1 = __webpack_require__(290);
+const attendances_service_1 = __webpack_require__(298);
 const attendance_entity_1 = __webpack_require__(36);
-const work_time_requests_service_1 = __webpack_require__(305);
+const work_time_requests_service_1 = __webpack_require__(302);
 const final_work_hour_entity_1 = __webpack_require__(39);
-const final_work_hours_service_1 = __webpack_require__(320);
+const final_work_hours_service_1 = __webpack_require__(317);
 let WorkHourCalculationService = WorkHourCalculationService_1 = class WorkHourCalculationService {
     constructor(workHourQueue) {
         this.workHourQueue = workHourQueue;
@@ -33418,10 +32778,10 @@ let WorkHourCalculationProcessor = WorkHourCalculationProcessor_1 = class WorkHo
                 overTimeOut,
                 noTimeInHours,
                 noTimeOutHours,
-                organizationId: attendance.organizationId,
-                branchId: attendance.branchId,
-                departmentId: attendance.departmentId,
-                userId: attendance.employee.user.id,
+                organizationId: attendance.employee.organizationId,
+                branchId: attendance.employee.branchId,
+                departmentId: attendance.employee.departmentId,
+                userId: attendance.employee.userId,
                 dayType: attendance.dayType,
                 workDate: attendance.schedule.date,
                 createdBy: finalWorkHour.id ? finalWorkHour.createdBy : processedBy,
@@ -33460,7 +32820,7 @@ exports.WorkHourCalculationProcessor = WorkHourCalculationProcessor = WorkHourCa
 
 
 /***/ }),
-/* 346 */
+/* 343 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -33483,22 +32843,22 @@ const holiday_type_enum_1 = __webpack_require__(46);
 const notification_type_enum_1 = __webpack_require__(83);
 const request_status_enum_1 = __webpack_require__(31);
 const schedule_status_1 = __webpack_require__(43);
-const attendance_event_1 = __webpack_require__(272);
-const attendance_punches_service_1 = __webpack_require__(298);
-const attendances_service_1 = __webpack_require__(301);
-const biometric_devices_service_1 = __webpack_require__(261);
+const attendance_event_1 = __webpack_require__(269);
+const attendance_punches_service_1 = __webpack_require__(295);
+const attendances_service_1 = __webpack_require__(298);
+const biometric_devices_service_1 = __webpack_require__(257);
 const employees_service_1 = __webpack_require__(128);
 const employee_entity_1 = __webpack_require__(32);
-const notifications_service_1 = __webpack_require__(302);
+const notifications_service_1 = __webpack_require__(299);
 const schedule_entity_1 = __webpack_require__(42);
-const schedules_service_1 = __webpack_require__(171);
+const schedules_service_1 = __webpack_require__(173);
 const common_1 = __webpack_require__(5);
-const event_emitter_1 = __webpack_require__(163);
-const date_fns_1 = __webpack_require__(173);
-const attendance_configurations_service_1 = __webpack_require__(294);
+const event_emitter_1 = __webpack_require__(165);
+const date_fns_1 = __webpack_require__(175);
+const attendance_configurations_service_1 = __webpack_require__(290);
 const final_work_hour_entity_1 = __webpack_require__(39);
-const work_hour_calculation_service_1 = __webpack_require__(345);
-const work_time_requests_service_1 = __webpack_require__(305);
+const work_hour_calculation_service_1 = __webpack_require__(342);
+const work_time_requests_service_1 = __webpack_require__(302);
 let AttendanceListener = AttendanceListener_1 = class AttendanceListener {
     constructor(attendancesService, attendancePunchesService, employeesService, schedulesService, biometricDevicesService, notificationsService, workTimeRequestsService, workHourCalculationService, attendanceConfigurationsService) {
         this.attendancesService = attendancesService;
@@ -33885,6 +33245,10 @@ let AttendanceListener = AttendanceListener_1 = class AttendanceListener {
                 status: request_status_enum_1.RequestStatus.PENDING,
                 createdBy: employeeId,
                 employee: { id: employeeId },
+                organizationId: attendance.organizationId,
+                departmentId: attendance.departmentId,
+                branchId: attendance.branchId,
+                userId: attendance.userId,
             });
             this.logger.log(`Created work time request for employee ${employeeId} for type ${type}`);
         }
@@ -33919,7 +33283,7 @@ exports.AttendanceListener = AttendanceListener = AttendanceListener_1 = __decor
 
 
 /***/ }),
-/* 347 */
+/* 344 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -33941,15 +33305,15 @@ const attendance_status_enum_1 = __webpack_require__(30);
 const holiday_type_enum_1 = __webpack_require__(46);
 const punch_method_enum_1 = __webpack_require__(57);
 const punch_type_enum_1 = __webpack_require__(58);
-const biometric_devices_service_1 = __webpack_require__(261);
-const schedules_service_1 = __webpack_require__(171);
+const biometric_devices_service_1 = __webpack_require__(257);
+const schedules_service_1 = __webpack_require__(173);
 const common_1 = __webpack_require__(5);
 const config_1 = __webpack_require__(6);
-const date_fns_1 = __webpack_require__(173);
+const date_fns_1 = __webpack_require__(175);
 const typeorm_1 = __webpack_require__(24);
-const attendance_punches_service_1 = __webpack_require__(298);
+const attendance_punches_service_1 = __webpack_require__(295);
 const attendance_punch_entity_1 = __webpack_require__(56);
-const attendances_service_1 = __webpack_require__(301);
+const attendances_service_1 = __webpack_require__(298);
 const attendance_entity_1 = __webpack_require__(36);
 const final_work_hour_entity_1 = __webpack_require__(39);
 let AttendanceDataSeederService = AttendanceDataSeederService_1 = class AttendanceDataSeederService {
@@ -34231,12 +33595,12 @@ let AttendanceDataSeederService = AttendanceDataSeederService_1 = class Attendan
         attendance.dayType = dayType;
         attendance.date = schedule.date;
         attendance.cutoff = schedule.cutoff;
-        attendance.organizationId = schedule.organizationId;
-        attendance.departmentId = schedule.departmentId;
-        attendance.branchId = schedule.branchId;
-        attendance.userId = schedule.userId;
+        attendance.organizationId = schedule.employee.organizationId;
+        attendance.departmentId = schedule.employee.departmentId;
+        attendance.branchId = schedule.employee.branchId;
+        attendance.userId = schedule.employee.userId;
         // Save the attendance record to get an ID
-        const savedAttendance = await this.attendancesService.save(attendance);
+        const savedAttendance = (await this.attendancesService.save(attendance));
         // Create attendance punches if applicable
         const punches = [];
         if (scenario.timeIn) {
@@ -34374,7 +33738,7 @@ exports.AttendanceDataSeederService = AttendanceDataSeederService = AttendanceDa
 
 
 /***/ }),
-/* 348 */
+/* 345 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -34390,16 +33754,16 @@ exports.ComplianceManagementModule = void 0;
 const common_1 = __webpack_require__(5);
 const core_1 = __webpack_require__(7);
 const typeorm_1 = __webpack_require__(16);
-const compliances_controller_1 = __webpack_require__(349);
-const compliances_service_1 = __webpack_require__(351);
-const compliance_entity_1 = __webpack_require__(352);
-const memorandum_flows_module_1 = __webpack_require__(353);
-const memorandum_recipients_module_1 = __webpack_require__(357);
-const memorandum_templates_module_1 = __webpack_require__(361);
-const memorandums_module_1 = __webpack_require__(365);
-const policies_module_1 = __webpack_require__(369);
-const rules_module_1 = __webpack_require__(378);
-const violations_module_1 = __webpack_require__(382);
+const compliances_controller_1 = __webpack_require__(346);
+const compliances_service_1 = __webpack_require__(348);
+const compliance_entity_1 = __webpack_require__(349);
+const memorandum_flows_module_1 = __webpack_require__(350);
+const memorandum_recipients_module_1 = __webpack_require__(354);
+const memorandum_templates_module_1 = __webpack_require__(358);
+const memorandums_module_1 = __webpack_require__(362);
+const policies_module_1 = __webpack_require__(366);
+const rules_module_1 = __webpack_require__(375);
+const violations_module_1 = __webpack_require__(379);
 let ComplianceManagementModule = class ComplianceManagementModule {
 };
 exports.ComplianceManagementModule = ComplianceManagementModule;
@@ -34469,7 +33833,7 @@ exports.ComplianceManagementModule = ComplianceManagementModule = __decorate([
 
 
 /***/ }),
-/* 349 */
+/* 346 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 "use strict";
@@ -34477,9 +33841,9 @@ exports.ComplianceManagementModule = ComplianceManagementModule = __decorate([
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.CompliancesController = void 0;
 const create_controller_factory_1 = __webpack_require__(87);
-const compliance_dto_1 = __webpack_require__(350);
-const compliances_service_1 = __webpack_require__(351);
-const compliance_entity_1 = __webpack_require__(352);
+const compliance_dto_1 = __webpack_require__(347);
+const compliances_service_1 = __webpack_require__(348);
+const compliance_entity_1 = __webpack_require__(349);
 class CompliancesController extends (0, create_controller_factory_1.createController)(compliance_entity_1.Compliance, // Entity name for Swagger documentation
 compliances_service_1.CompliancesService, // The service handling Compliance-related operations
 compliance_dto_1.GetComplianceDto, // DTO for retrieving Compliances
@@ -34490,7 +33854,7 @@ exports.CompliancesController = CompliancesController;
 
 
 /***/ }),
-/* 350 */
+/* 347 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -34529,7 +33893,7 @@ exports.GetComplianceDto = GetComplianceDto;
 
 
 /***/ }),
-/* 351 */
+/* 348 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -34554,7 +33918,7 @@ const users_service_1 = __webpack_require__(97);
 const common_1 = __webpack_require__(5);
 const typeorm_1 = __webpack_require__(16);
 const typeorm_2 = __webpack_require__(24);
-const compliance_entity_1 = __webpack_require__(352);
+const compliance_entity_1 = __webpack_require__(349);
 let CompliancesService = class CompliancesService extends base_service_1.BaseService {
     constructor(compliancesRepository, usersService) {
         super(compliancesRepository, usersService);
@@ -34571,7 +33935,7 @@ exports.CompliancesService = CompliancesService = __decorate([
 
 
 /***/ }),
-/* 352 */
+/* 349 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -34602,7 +33966,7 @@ exports.Compliance = Compliance = __decorate([
 
 
 /***/ }),
-/* 353 */
+/* 350 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -34618,8 +33982,8 @@ exports.MemorandumFlowsModule = void 0;
 const common_1 = __webpack_require__(5);
 const typeorm_1 = __webpack_require__(16);
 const memorandum_flow_entity_1 = __webpack_require__(64);
-const memorandum_flows_controller_1 = __webpack_require__(354);
-const memorandum_flows_service_1 = __webpack_require__(356);
+const memorandum_flows_controller_1 = __webpack_require__(351);
+const memorandum_flows_service_1 = __webpack_require__(353);
 let MemorandumFlowsModule = class MemorandumFlowsModule {
 };
 exports.MemorandumFlowsModule = MemorandumFlowsModule;
@@ -34636,7 +34000,7 @@ exports.MemorandumFlowsModule = MemorandumFlowsModule = __decorate([
 
 
 /***/ }),
-/* 354 */
+/* 351 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 "use strict";
@@ -34644,8 +34008,8 @@ exports.MemorandumFlowsModule = MemorandumFlowsModule = __decorate([
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.MemorandumFlowsController = void 0;
 const create_controller_factory_1 = __webpack_require__(87);
-const memorandum_flow_dto_1 = __webpack_require__(355);
-const memorandum_flows_service_1 = __webpack_require__(356);
+const memorandum_flow_dto_1 = __webpack_require__(352);
+const memorandum_flows_service_1 = __webpack_require__(353);
 const memorandum_flow_entity_1 = __webpack_require__(64);
 class MemorandumFlowsController extends (0, create_controller_factory_1.createController)(memorandum_flow_entity_1.MemorandumFlow, // Entity name for Swagger documentation
 memorandum_flows_service_1.MemorandumFlowsService, // The service handling MemorandumFlow-related operations
@@ -34657,7 +34021,7 @@ exports.MemorandumFlowsController = MemorandumFlowsController;
 
 
 /***/ }),
-/* 355 */
+/* 352 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -34696,7 +34060,7 @@ exports.GetMemorandumFlowDto = GetMemorandumFlowDto;
 
 
 /***/ }),
-/* 356 */
+/* 353 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -34738,7 +34102,7 @@ exports.MemorandumFlowsService = MemorandumFlowsService = __decorate([
 
 
 /***/ }),
-/* 357 */
+/* 354 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -34754,8 +34118,8 @@ exports.MemorandumRecipientsModule = void 0;
 const common_1 = __webpack_require__(5);
 const typeorm_1 = __webpack_require__(16);
 const memorandum_recipient_entity_1 = __webpack_require__(66);
-const memorandum_recipients_controller_1 = __webpack_require__(358);
-const memorandum_recipients_service_1 = __webpack_require__(360);
+const memorandum_recipients_controller_1 = __webpack_require__(355);
+const memorandum_recipients_service_1 = __webpack_require__(357);
 let MemorandumRecipientsModule = class MemorandumRecipientsModule {
 };
 exports.MemorandumRecipientsModule = MemorandumRecipientsModule;
@@ -34772,7 +34136,7 @@ exports.MemorandumRecipientsModule = MemorandumRecipientsModule = __decorate([
 
 
 /***/ }),
-/* 358 */
+/* 355 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 "use strict";
@@ -34780,8 +34144,8 @@ exports.MemorandumRecipientsModule = MemorandumRecipientsModule = __decorate([
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.MemorandumRecipientsController = void 0;
 const create_controller_factory_1 = __webpack_require__(87);
-const memorandum_recipient_dto_1 = __webpack_require__(359);
-const memorandum_recipients_service_1 = __webpack_require__(360);
+const memorandum_recipient_dto_1 = __webpack_require__(356);
+const memorandum_recipients_service_1 = __webpack_require__(357);
 const memorandum_recipient_entity_1 = __webpack_require__(66);
 class MemorandumRecipientsController extends (0, create_controller_factory_1.createController)(memorandum_recipient_entity_1.MemorandumRecipient, // Entity name for Swagger documentation
 memorandum_recipients_service_1.MemorandumRecipientsService, // The service handling MemorandumRecipient-related operations
@@ -34793,7 +34157,7 @@ exports.MemorandumRecipientsController = MemorandumRecipientsController;
 
 
 /***/ }),
-/* 359 */
+/* 356 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -34832,7 +34196,7 @@ exports.GetMemorandumRecipientDto = GetMemorandumRecipientDto;
 
 
 /***/ }),
-/* 360 */
+/* 357 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -34874,7 +34238,7 @@ exports.MemorandumRecipientsService = MemorandumRecipientsService = __decorate([
 
 
 /***/ }),
-/* 361 */
+/* 358 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -34890,8 +34254,8 @@ exports.MemorandumTemplatesModule = void 0;
 const common_1 = __webpack_require__(5);
 const typeorm_1 = __webpack_require__(16);
 const memorandum_template_entity_1 = __webpack_require__(67);
-const memorandum_templates_controller_1 = __webpack_require__(362);
-const memorandum_templates_service_1 = __webpack_require__(364);
+const memorandum_templates_controller_1 = __webpack_require__(359);
+const memorandum_templates_service_1 = __webpack_require__(361);
 let MemorandumTemplatesModule = class MemorandumTemplatesModule {
 };
 exports.MemorandumTemplatesModule = MemorandumTemplatesModule;
@@ -34908,7 +34272,7 @@ exports.MemorandumTemplatesModule = MemorandumTemplatesModule = __decorate([
 
 
 /***/ }),
-/* 362 */
+/* 359 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 "use strict";
@@ -34916,8 +34280,8 @@ exports.MemorandumTemplatesModule = MemorandumTemplatesModule = __decorate([
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.MemorandumTemplatesController = void 0;
 const create_controller_factory_1 = __webpack_require__(87);
-const memorandum_template_dto_1 = __webpack_require__(363);
-const memorandum_templates_service_1 = __webpack_require__(364);
+const memorandum_template_dto_1 = __webpack_require__(360);
+const memorandum_templates_service_1 = __webpack_require__(361);
 const memorandum_template_entity_1 = __webpack_require__(67);
 class MemorandumTemplatesController extends (0, create_controller_factory_1.createController)(memorandum_template_entity_1.MemorandumTemplate, // Entity name for Swagger documentation
 memorandum_templates_service_1.MemorandumTemplatesService, // The service handling MemorandumTemplate-related operations
@@ -34929,7 +34293,7 @@ exports.MemorandumTemplatesController = MemorandumTemplatesController;
 
 
 /***/ }),
-/* 363 */
+/* 360 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -34968,7 +34332,7 @@ exports.GetMemorandumTemplateDto = GetMemorandumTemplateDto;
 
 
 /***/ }),
-/* 364 */
+/* 361 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -35010,7 +34374,7 @@ exports.MemorandumTemplatesService = MemorandumTemplatesService = __decorate([
 
 
 /***/ }),
-/* 365 */
+/* 362 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -35026,8 +34390,8 @@ exports.MemorandumsModule = void 0;
 const common_1 = __webpack_require__(5);
 const typeorm_1 = __webpack_require__(16);
 const memorandum_entity_1 = __webpack_require__(61);
-const memorandums_controller_1 = __webpack_require__(366);
-const memorandums_service_1 = __webpack_require__(368);
+const memorandums_controller_1 = __webpack_require__(363);
+const memorandums_service_1 = __webpack_require__(365);
 let MemorandumsModule = class MemorandumsModule {
 };
 exports.MemorandumsModule = MemorandumsModule;
@@ -35046,7 +34410,7 @@ exports.MemorandumsModule = MemorandumsModule = __decorate([
 
 
 /***/ }),
-/* 366 */
+/* 363 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 "use strict";
@@ -35054,8 +34418,8 @@ exports.MemorandumsModule = MemorandumsModule = __decorate([
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.MemorandumsController = void 0;
 const create_controller_factory_1 = __webpack_require__(87);
-const memorandum_dto_1 = __webpack_require__(367);
-const memorandums_service_1 = __webpack_require__(368);
+const memorandum_dto_1 = __webpack_require__(364);
+const memorandums_service_1 = __webpack_require__(365);
 const memorandum_entity_1 = __webpack_require__(61);
 class MemorandumsController extends (0, create_controller_factory_1.createController)(memorandum_entity_1.Memorandum, // Entity name for Swagger documentation
 memorandums_service_1.MemorandumsService, // The service handling Memorandum-related operations
@@ -35067,7 +34431,7 @@ exports.MemorandumsController = MemorandumsController;
 
 
 /***/ }),
-/* 367 */
+/* 364 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -35196,7 +34560,7 @@ __decorate([
 
 
 /***/ }),
-/* 368 */
+/* 365 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -35238,7 +34602,7 @@ exports.MemorandumsService = MemorandumsService = __decorate([
 
 
 /***/ }),
-/* 369 */
+/* 366 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -35253,9 +34617,9 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.PoliciesModule = void 0;
 const common_1 = __webpack_require__(5);
 const typeorm_1 = __webpack_require__(16);
-const policy_entity_1 = __webpack_require__(370);
-const policies_controller_1 = __webpack_require__(375);
-const policies_service_1 = __webpack_require__(377);
+const policy_entity_1 = __webpack_require__(367);
+const policies_controller_1 = __webpack_require__(372);
+const policies_service_1 = __webpack_require__(374);
 let PoliciesModule = class PoliciesModule {
 };
 exports.PoliciesModule = PoliciesModule;
@@ -35272,7 +34636,7 @@ exports.PoliciesModule = PoliciesModule = __decorate([
 
 
 /***/ }),
-/* 370 */
+/* 367 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -35289,12 +34653,12 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var _a, _b, _c;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Policy = void 0;
-const policy_category_enum_1 = __webpack_require__(371);
+const policy_category_enum_1 = __webpack_require__(368);
 const memo_type_enum_1 = __webpack_require__(63);
 const base_entity_1 = __webpack_require__(23);
 const typeorm_1 = __webpack_require__(24);
 const memorandum_template_entity_1 = __webpack_require__(67);
-const rule_entity_1 = __webpack_require__(372);
+const rule_entity_1 = __webpack_require__(369);
 let Policy = class Policy extends base_entity_1.BaseEntity {
 };
 exports.Policy = Policy;
@@ -35348,7 +34712,7 @@ exports.Policy = Policy = __decorate([
 
 
 /***/ }),
-/* 371 */
+/* 368 */
 /***/ ((__unused_webpack_module, exports) => {
 
 "use strict";
@@ -35367,7 +34731,7 @@ var PolicyCategory;
 
 
 /***/ }),
-/* 372 */
+/* 369 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -35384,11 +34748,11 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var _a, _b, _c;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Rule = void 0;
-const rule_operator_enum_1 = __webpack_require__(373);
-const data_source_enum_1 = __webpack_require__(374);
+const rule_operator_enum_1 = __webpack_require__(370);
+const data_source_enum_1 = __webpack_require__(371);
 const base_entity_1 = __webpack_require__(23);
 const typeorm_1 = __webpack_require__(24);
-const policy_entity_1 = __webpack_require__(370);
+const policy_entity_1 = __webpack_require__(367);
 let Rule = class Rule extends base_entity_1.BaseEntity {
 };
 exports.Rule = Rule;
@@ -35434,7 +34798,7 @@ exports.Rule = Rule = __decorate([
 
 
 /***/ }),
-/* 373 */
+/* 370 */
 /***/ ((__unused_webpack_module, exports) => {
 
 "use strict";
@@ -35457,7 +34821,7 @@ var RuleOperator;
 
 
 /***/ }),
-/* 374 */
+/* 371 */
 /***/ ((__unused_webpack_module, exports) => {
 
 "use strict";
@@ -35474,7 +34838,7 @@ var DataSource;
 
 
 /***/ }),
-/* 375 */
+/* 372 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 "use strict";
@@ -35482,9 +34846,9 @@ var DataSource;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.PoliciesController = void 0;
 const create_controller_factory_1 = __webpack_require__(87);
-const policy_dto_1 = __webpack_require__(376);
-const policy_entity_1 = __webpack_require__(370);
-const policies_service_1 = __webpack_require__(377);
+const policy_dto_1 = __webpack_require__(373);
+const policy_entity_1 = __webpack_require__(367);
+const policies_service_1 = __webpack_require__(374);
 class PoliciesController extends (0, create_controller_factory_1.createController)(policy_entity_1.Policy, // Entity name for Swagger documentation
 policies_service_1.PoliciesService, // The service handling Policy-related operations
 policy_dto_1.GetPolicyDto, // DTO for retrieving Policies
@@ -35495,7 +34859,7 @@ exports.PoliciesController = PoliciesController;
 
 
 /***/ }),
-/* 376 */
+/* 373 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -35533,7 +34897,7 @@ exports.GetPolicyDto = GetPolicyDto;
 
 
 /***/ }),
-/* 377 */
+/* 374 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -35558,7 +34922,7 @@ const users_service_1 = __webpack_require__(97);
 const common_1 = __webpack_require__(5);
 const typeorm_1 = __webpack_require__(16);
 const typeorm_2 = __webpack_require__(24);
-const policy_entity_1 = __webpack_require__(370);
+const policy_entity_1 = __webpack_require__(367);
 let PoliciesService = class PoliciesService extends base_service_1.BaseService {
     constructor(policiesRepository, usersService) {
         super(policiesRepository, usersService);
@@ -35575,7 +34939,7 @@ exports.PoliciesService = PoliciesService = __decorate([
 
 
 /***/ }),
-/* 378 */
+/* 375 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -35590,9 +34954,9 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.RulesModule = void 0;
 const common_1 = __webpack_require__(5);
 const typeorm_1 = __webpack_require__(16);
-const rules_controller_1 = __webpack_require__(379);
-const rules_service_1 = __webpack_require__(381);
-const rule_entity_1 = __webpack_require__(372);
+const rules_controller_1 = __webpack_require__(376);
+const rules_service_1 = __webpack_require__(378);
+const rule_entity_1 = __webpack_require__(369);
 let RulesModule = class RulesModule {
 };
 exports.RulesModule = RulesModule;
@@ -35609,7 +34973,7 @@ exports.RulesModule = RulesModule = __decorate([
 
 
 /***/ }),
-/* 379 */
+/* 376 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 "use strict";
@@ -35617,9 +34981,9 @@ exports.RulesModule = RulesModule = __decorate([
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.RulesController = void 0;
 const create_controller_factory_1 = __webpack_require__(87);
-const rule_dto_1 = __webpack_require__(380);
-const rules_service_1 = __webpack_require__(381);
-const rule_entity_1 = __webpack_require__(372);
+const rule_dto_1 = __webpack_require__(377);
+const rules_service_1 = __webpack_require__(378);
+const rule_entity_1 = __webpack_require__(369);
 class RulesController extends (0, create_controller_factory_1.createController)(rule_entity_1.Rule, // Entity name for Swagger documentation
 rules_service_1.RulesService, // The service handling Rule-related operations
 rule_dto_1.GetRuleDto, // DTO for retrieving Rules
@@ -35630,7 +34994,7 @@ exports.RulesController = RulesController;
 
 
 /***/ }),
-/* 380 */
+/* 377 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -35669,7 +35033,7 @@ exports.GetRuleDto = GetRuleDto;
 
 
 /***/ }),
-/* 381 */
+/* 378 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -35694,7 +35058,7 @@ const users_service_1 = __webpack_require__(97);
 const common_1 = __webpack_require__(5);
 const typeorm_1 = __webpack_require__(16);
 const typeorm_2 = __webpack_require__(24);
-const rule_entity_1 = __webpack_require__(372);
+const rule_entity_1 = __webpack_require__(369);
 let RulesService = class RulesService extends base_service_1.BaseService {
     constructor(rulesRepository, usersService) {
         super(rulesRepository, usersService);
@@ -35711,7 +35075,7 @@ exports.RulesService = RulesService = __decorate([
 
 
 /***/ }),
-/* 382 */
+/* 379 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -35726,9 +35090,9 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ViolationsModule = void 0;
 const common_1 = __webpack_require__(5);
 const typeorm_1 = __webpack_require__(16);
-const violations_controller_1 = __webpack_require__(383);
-const violations_service_1 = __webpack_require__(385);
-const violation_entity_1 = __webpack_require__(386);
+const violations_controller_1 = __webpack_require__(380);
+const violations_service_1 = __webpack_require__(382);
+const violation_entity_1 = __webpack_require__(383);
 let ViolationsModule = class ViolationsModule {
 };
 exports.ViolationsModule = ViolationsModule;
@@ -35745,7 +35109,7 @@ exports.ViolationsModule = ViolationsModule = __decorate([
 
 
 /***/ }),
-/* 383 */
+/* 380 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 "use strict";
@@ -35753,9 +35117,9 @@ exports.ViolationsModule = ViolationsModule = __decorate([
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ViolationsController = void 0;
 const create_controller_factory_1 = __webpack_require__(87);
-const violation_dto_1 = __webpack_require__(384);
-const violations_service_1 = __webpack_require__(385);
-const violation_entity_1 = __webpack_require__(386);
+const violation_dto_1 = __webpack_require__(381);
+const violations_service_1 = __webpack_require__(382);
+const violation_entity_1 = __webpack_require__(383);
 class ViolationsController extends (0, create_controller_factory_1.createController)(violation_entity_1.Violation, // Entity name for Swagger documentation
 violations_service_1.ViolationsService, // The service handling Violation-related operations
 violation_dto_1.GetViolationDto, // DTO for retrieving Violations
@@ -35766,7 +35130,7 @@ exports.ViolationsController = ViolationsController;
 
 
 /***/ }),
-/* 384 */
+/* 381 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -35805,7 +35169,7 @@ exports.GetViolationDto = GetViolationDto;
 
 
 /***/ }),
-/* 385 */
+/* 382 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -35830,7 +35194,7 @@ const users_service_1 = __webpack_require__(97);
 const common_1 = __webpack_require__(5);
 const typeorm_1 = __webpack_require__(16);
 const typeorm_2 = __webpack_require__(24);
-const violation_entity_1 = __webpack_require__(386);
+const violation_entity_1 = __webpack_require__(383);
 let ViolationsService = class ViolationsService extends base_service_1.BaseService {
     constructor(violationsRepository, usersService) {
         super(violationsRepository, usersService);
@@ -35847,7 +35211,7 @@ exports.ViolationsService = ViolationsService = __decorate([
 
 
 /***/ }),
-/* 386 */
+/* 383 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -35864,13 +35228,13 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var _a, _b, _c, _d, _e, _f;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Violation = void 0;
-const violation_severity_enum_1 = __webpack_require__(387);
-const violation_status_enum_1 = __webpack_require__(388);
+const violation_severity_enum_1 = __webpack_require__(384);
+const violation_status_enum_1 = __webpack_require__(385);
 const base_entity_1 = __webpack_require__(23);
 const employee_entity_1 = __webpack_require__(32);
 const typeorm_1 = __webpack_require__(24);
 const memorandum_entity_1 = __webpack_require__(61);
-const policy_entity_1 = __webpack_require__(370);
+const policy_entity_1 = __webpack_require__(367);
 let Violation = class Violation extends base_entity_1.BaseEntity {
 };
 exports.Violation = Violation;
@@ -35915,7 +35279,7 @@ exports.Violation = Violation = __decorate([
 
 
 /***/ }),
-/* 387 */
+/* 384 */
 /***/ ((__unused_webpack_module, exports) => {
 
 "use strict";
@@ -35932,7 +35296,7 @@ var ViolationSeverity;
 
 
 /***/ }),
-/* 388 */
+/* 385 */
 /***/ ((__unused_webpack_module, exports) => {
 
 "use strict";
@@ -35951,7 +35315,7 @@ var ViolationStatus;
 
 
 /***/ }),
-/* 389 */
+/* 386 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -35965,8 +35329,8 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.FilesModule = void 0;
 const common_1 = __webpack_require__(5);
-const file_provider_config_1 = __webpack_require__(390);
-const files_controller_1 = __webpack_require__(397);
+const file_provider_config_1 = __webpack_require__(387);
+const files_controller_1 = __webpack_require__(395);
 let FilesModule = class FilesModule {
 };
 exports.FilesModule = FilesModule;
@@ -35979,7 +35343,7 @@ exports.FilesModule = FilesModule = __decorate([
 
 
 /***/ }),
-/* 390 */
+/* 387 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 "use strict";
@@ -35987,7 +35351,7 @@ exports.FilesModule = FilesModule = __decorate([
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.fileProviders = exports.fileProviderConfig = exports.FILE_SERVICE = void 0;
 const config_1 = __webpack_require__(6);
-const local_file_service_1 = __webpack_require__(391);
+const local_file_service_1 = __webpack_require__(388);
 exports.FILE_SERVICE = 'FILE_SERVICE';
 exports.fileProviderConfig = {
     provide: exports.FILE_SERVICE,
@@ -36014,7 +35378,7 @@ exports.fileProviders = [exports.fileProviderConfig, local_file_service_1.LocalF
 
 
 /***/ }),
-/* 391 */
+/* 388 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -36069,12 +35433,12 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.LocalFileService = void 0;
 const common_1 = __webpack_require__(5);
 const config_1 = __webpack_require__(6);
-const fs = __importStar(__webpack_require__(149));
-const fs_1 = __webpack_require__(149);
-const mime = __importStar(__webpack_require__(392));
-const path_1 = __importDefault(__webpack_require__(151));
-const file_list_options_dto_1 = __webpack_require__(393);
-const base_file_service_1 = __webpack_require__(394);
+const fs = __importStar(__webpack_require__(151));
+const fs_1 = __webpack_require__(151);
+const mime = __importStar(__webpack_require__(389));
+const path_1 = __importDefault(__webpack_require__(153));
+const file_list_options_dto_1 = __webpack_require__(390);
+const base_file_service_1 = __webpack_require__(391);
 let LocalFileService = class LocalFileService extends base_file_service_1.BaseFileService {
     constructor(configService) {
         const uploadDir = configService.getOrThrow('FILE_DIRECTORY');
@@ -36322,22 +35686,33 @@ let LocalFileService = class LocalFileService extends base_file_service_1.BaseFi
         }
     }
     async listFiles(options, authorization) {
+        var _a, _b, _c;
         try {
-            // Set default options
-            const opts = Object.assign({ limit: 100, includeDirs: true, recursive: false, sortDirection: 'asc' }, options);
-            // Resolve base directory
-            const baseDir = opts.prefix
-                ? path_1.default.join(this.uploadDir, opts.prefix)
+            // Set default options with proper typing
+            const opts = Object.assign({ page: (options === null || options === void 0 ? void 0 : options.page) || 1, limit: (options === null || options === void 0 ? void 0 : options.limit) || 50, folder: options === null || options === void 0 ? void 0 : options.folder, includeDirs: (_a = options === null || options === void 0 ? void 0 : options.includeDirs) !== null && _a !== void 0 ? _a : true, includeUrls: (_b = options === null || options === void 0 ? void 0 : options.includeUrls) !== null && _b !== void 0 ? _b : true, sortBy: (options === null || options === void 0 ? void 0 : options.sortBy) || file_list_options_dto_1.FileSortField.NAME, sortDirection: (options === null || options === void 0 ? void 0 : options.sortDirection) || file_list_options_dto_1.SortDirection.ASC, searchTerm: options === null || options === void 0 ? void 0 : options.searchTerm, showHidden: (_c = options === null || options === void 0 ? void 0 : options.showHidden) !== null && _c !== void 0 ? _c : false, scope: options === null || options === void 0 ? void 0 : options.scope }, options);
+            // Resolve base directory using 'folder' instead of 'prefix'
+            const baseDir = opts.folder
+                ? path_1.default.join(this.uploadDir, opts.folder)
                 : this.uploadDir;
             // Check if directory exists
             if (!fs.existsSync(baseDir)) {
                 return {
                     files: [],
                     directories: [],
-                    count: 0,
-                    prefix: opts.prefix,
-                    hasMore: false,
-                    totalSize: 0,
+                    pagination: {
+                        page: opts.page,
+                        limit: opts.limit,
+                        totalCount: 0,
+                        totalPages: 0,
+                        hasNextPage: false,
+                        hasPreviousPage: false,
+                        nextPage: undefined,
+                        previousPage: undefined,
+                        itemsPerPage: opts.limit
+                    },
+                    breadcrumbs: this.generateBreadcrumbs(opts.folder),
+                    parentDir: this.getParentDirectory(opts.folder),
+                    scope: opts.scope
                 };
             }
             // Initialize result containers
@@ -36345,201 +35720,165 @@ let LocalFileService = class LocalFileService extends base_file_service_1.BaseFi
             const directories = [];
             let totalSize = 0;
             // Helper function to check if file matches filters
-            const matchesFilters = async (filePath, stats) => {
-                // Extension filter
-                if (opts.extensions) {
-                    const fileExt = path_1.default.extname(filePath).toLowerCase().replace('.', '');
-                    const allowedExts = opts.extensions.split(',').map(e => e.trim().toLowerCase());
-                    if (!allowedExts.includes(fileExt))
-                        return false;
-                }
-                // Size filter
-                if (opts.size) {
-                    if (opts.size.min !== undefined && stats.size < opts.size.min)
-                        return false;
-                    if (opts.size.max !== undefined && stats.size > opts.size.max)
-                        return false;
-                }
-                // Create date filter
-                if (opts.createdAt) {
-                    const createTime = stats.birthtime.getTime();
-                    if (opts.createdAt.from && createTime < new Date(opts.createdAt.from).getTime())
-                        return false;
-                    if (opts.createdAt.to && createTime > new Date(opts.createdAt.to).getTime())
-                        return false;
-                }
-                // Modified date filter
-                if (opts.modifiedAt) {
-                    const modTime = stats.mtime.getTime();
-                    if (opts.modifiedAt.from && modTime < new Date(opts.modifiedAt.from).getTime())
-                        return false;
-                    if (opts.modifiedAt.to && modTime > new Date(opts.modifiedAt.to).getTime())
-                        return false;
-                }
-                // MIME type filter
-                if (opts.mimeType) {
-                    const fileMime = mime.lookup(filePath) || 'application/octet-stream';
-                    if (!fileMime.includes(opts.mimeType))
-                        return false;
+            const matchesFilters = async (filePath, stats, fileName) => {
+                // Skip hidden files unless showHidden is true
+                if (!opts.showHidden && fileName.startsWith('.')) {
+                    return false;
                 }
                 // Text search filter
                 if (opts.searchTerm) {
-                    const fileName = path_1.default.basename(filePath).toLowerCase();
-                    if (!fileName.includes(opts.searchTerm.toLowerCase()))
+                    const lowerFileName = fileName.toLowerCase();
+                    const searchTerm = opts.searchTerm.toLowerCase();
+                    if (!lowerFileName.includes(searchTerm))
                         return false;
                 }
                 return true;
             };
             // Function to process directory content
             const processDirectory = async (dirPath, relPath = '') => {
+                // Read directory contents
                 const items = await fs_1.promises.readdir(dirPath);
                 // Process directories first
                 if (opts.includeDirs) {
                     for (const item of items) {
+                        // Skip hidden items if not showing hidden
+                        if (!opts.showHidden && item.startsWith('.')) {
+                            continue;
+                        }
                         const itemPath = path_1.default.join(dirPath, item);
-                        const stats = await fs_1.promises.stat(itemPath);
-                        if (stats.isDirectory()) {
-                            const dirRelPath = relPath ? `${relPath}/${item}` : item;
-                            const dirKey = opts.prefix ? `${opts.prefix}/${dirRelPath}` : dirRelPath;
-                            // Skip if this is the root of a recursive search
-                            if (dirPath === baseDir) {
-                                // Calculate directory size and item count (can be expensive for large dirs)
-                                let dirSize = 0;
-                                let itemCount = 0;
-                                try {
-                                    const dirItems = await fs_1.promises.readdir(itemPath);
-                                    itemCount = dirItems.length;
-                                    // Optionally calculate directory size
-                                    // This can be expensive, so we might want to make it optional
-                                    if (opts.includeSizes) {
-                                        dirSize = await this.calculateDirectorySize(itemPath);
+                        try {
+                            const stats = await fs_1.promises.stat(itemPath);
+                            if (stats.isDirectory()) {
+                                const dirRelPath = relPath ? `${relPath}/${item}` : item;
+                                const dirKey = opts.folder ? `${opts.folder}/${dirRelPath}` : dirRelPath;
+                                // Only include directories at the current level (not recursive)
+                                if (dirPath === baseDir) {
+                                    // Calculate directory size and item count
+                                    let dirSize = 0;
+                                    let itemCount = 0;
+                                    try {
+                                        const dirItems = await fs_1.promises.readdir(itemPath);
+                                        itemCount = dirItems.length;
+                                        dirSize = await this.calculateDirectorySize(itemPath, opts.showHidden);
                                     }
+                                    catch (err) {
+                                        const error = err;
+                                        this.logger.warn(`Error reading directory ${dirKey}: ${error.message}`);
+                                    }
+                                    directories.push({
+                                        key: dirKey,
+                                        name: item,
+                                        createdAt: stats.birthtime,
+                                        lastModified: stats.mtime,
+                                        itemCount,
+                                        size: dirSize
+                                    });
                                 }
-                                catch (err) {
-                                    const error = err;
-                                    this.logger.warn(`Error reading directory ${dirKey}: ${error.message}`);
-                                }
-                                directories.push({
-                                    key: dirKey,
-                                    name: item,
-                                    createdAt: stats.birthtime,
-                                    lastModified: stats.mtime,
-                                    itemCount,
-                                    size: dirSize
-                                });
                             }
-                            // If recursive, process subdirectories
-                            if (opts.recursive) {
-                                await processDirectory(itemPath, dirRelPath);
-                            }
+                        }
+                        catch (err) {
+                            // Skip directories we can't access
+                            this.logger.warn(`Error processing directory ${itemPath}: ${err.message}`);
                         }
                     }
                 }
                 // Process files
                 for (const item of items) {
                     const itemPath = path_1.default.join(dirPath, item);
-                    const stats = await fs_1.promises.stat(itemPath);
-                    if (stats.isFile()) {
-                        const fileRelPath = relPath ? `${relPath}/${item}` : item;
-                        const fileKey = opts.prefix ? `${opts.prefix}/${fileRelPath}` : fileRelPath;
-                        // Apply filters
-                        if (await matchesFilters(itemPath, stats)) {
-                            totalSize += stats.size;
-                            files.push({
-                                key: fileKey,
-                                originalName: item,
-                                size: stats.size,
-                                mimeType: mime.lookup(itemPath) || 'application/octet-stream',
-                                url: opts.includeUrls ? await this.getFileUrl(fileKey) : undefined,
-                                createdAt: stats.birthtime,
-                                lastModified: stats.mtime,
-                            });
+                    try {
+                        const stats = await fs_1.promises.stat(itemPath);
+                        if (stats.isFile()) {
+                            const fileRelPath = relPath ? `${relPath}/${item}` : item;
+                            const fileKey = opts.folder ? `${opts.folder}/${fileRelPath}` : fileRelPath;
+                            // Apply filters
+                            if (await matchesFilters(itemPath, stats, item)) {
+                                totalSize += stats.size;
+                                files.push({
+                                    key: fileKey,
+                                    originalName: item,
+                                    size: stats.size,
+                                    mimeType: mime.lookup(itemPath) || 'application/octet-stream',
+                                    url: opts.includeUrls ? await this.getFileUrl(fileKey, authorization) : undefined,
+                                    createdAt: stats.birthtime,
+                                    lastModified: stats.mtime,
+                                });
+                            }
                         }
+                    }
+                    catch (err) {
+                        // Skip files we can't access
+                        this.logger.warn(`Error processing file ${itemPath}: ${err.message}`);
                     }
                 }
             };
-            // Process main directory and all subdirectories if recursive
+            // Process main directory
             await processDirectory(baseDir);
-            // Generate breadcrumbs
-            const breadcrumbs = [];
-            if (opts.prefix) {
-                const segments = opts.prefix.split('/');
-                let currentPath = '';
-                breadcrumbs.push({ name: 'Home', path: '' });
-                for (let i = 0; i < segments.length; i++) {
-                    currentPath = currentPath ? `${currentPath}/${segments[i]}` : segments[i];
-                    breadcrumbs.push({
-                        name: segments[i],
-                        path: currentPath
-                    });
-                }
-            }
-            // Calculate parent directory
-            let parentDir = undefined;
-            if (opts.prefix) {
-                const segments = opts.prefix.split('/');
-                segments.pop();
-                parentDir = segments.join('/');
-            }
-            // Apply sorting
+            // Apply sorting with directories first
             const sortItems = (a, b) => {
-                var _a, _b, _c, _d, _e, _f;
+                var _a, _b, _c, _d;
+                // Always sort directories before files
+                const aIsDir = !('originalName' in a);
+                const bIsDir = !('originalName' in b);
+                if (aIsDir && !bIsDir)
+                    return -1;
+                if (!aIsDir && bIsDir)
+                    return 1;
                 const direction = opts.sortDirection === file_list_options_dto_1.SortDirection.DESC ? -1 : 1;
                 switch (opts.sortBy) {
                     case file_list_options_dto_1.FileSortField.NAME:
-                        return ((_a = a.originalName) === null || _a === void 0 ? void 0 : _a.localeCompare(b.originalName || b.name)) * direction;
+                        return (a.originalName || a.name).localeCompare(b.originalName || b.name) * direction;
                     case file_list_options_dto_1.FileSortField.SIZE:
                         return ((a.size || 0) - (b.size || 0)) * direction;
                     case file_list_options_dto_1.FileSortField.DATE_CREATED:
-                        return (((_b = a.createdAt) === null || _b === void 0 ? void 0 : _b.getTime()) - ((_c = b.createdAt) === null || _c === void 0 ? void 0 : _c.getTime())) * direction;
+                        return (((_a = a.createdAt) === null || _a === void 0 ? void 0 : _a.getTime()) - ((_b = b.createdAt) === null || _b === void 0 ? void 0 : _b.getTime())) * direction;
                     case file_list_options_dto_1.FileSortField.DATE_MODIFIED:
-                        return (((_d = a.lastModified) === null || _d === void 0 ? void 0 : _d.getTime()) - ((_e = b.lastModified) === null || _e === void 0 ? void 0 : _e.getTime())) * direction;
+                        return (((_c = a.lastModified) === null || _c === void 0 ? void 0 : _c.getTime()) - ((_d = b.lastModified) === null || _d === void 0 ? void 0 : _d.getTime())) * direction;
                     case file_list_options_dto_1.FileSortField.TYPE:
                         const aType = a.mimeType || '';
                         const bType = b.mimeType || '';
                         return aType.localeCompare(bType) * direction;
                     default:
-                        return ((_f = a.originalName) === null || _f === void 0 ? void 0 : _f.localeCompare(b.originalName || b.name)) * direction;
+                        return (a.originalName || a.name).localeCompare(b.originalName || b.name) * direction;
                 }
             };
             // Sort files and directories
             files.sort(sortItems);
             directories.sort(sortItems);
-            // Apply pagination
-            let hasMore = false;
-            let nextMarker = undefined;
-            // Calculate actual limit considering marker-based pagination
-            let startIdx = 0;
+            // Generate combined results for pagination
             const combinedItems = [...directories, ...files];
-            if (opts.marker) {
-                // Find the index after the marker
-                startIdx = combinedItems.findIndex(item => (item.key || '') === opts.marker) + 1;
-                if (startIdx <= 0)
-                    startIdx = 0;
-            }
-            // Slice the results based on pagination
-            const endIdx = opts.limit ? startIdx + opts.limit : combinedItems.length;
+            const totalItems = combinedItems.length;
+            // Calculate pagination
+            const page = opts.page;
+            const limit = opts.limit;
+            const totalPages = Math.ceil(totalItems / limit);
+            const startIdx = (page - 1) * limit;
+            const endIdx = Math.min(startIdx + limit, totalItems);
+            // Slice the array based on pagination parameters
             const paginatedItems = combinedItems.slice(startIdx, endIdx);
-            // Calculate if there are more results and next marker
-            hasMore = endIdx < combinedItems.length;
-            if (hasMore && paginatedItems.length > 0) {
-                nextMarker = paginatedItems[paginatedItems.length - 1].key;
-            }
             // Separate files and directories again
             const paginatedFiles = paginatedItems
                 .filter(item => 'originalName' in item);
             const paginatedDirs = paginatedItems
                 .filter(item => !('originalName' in item));
+            // Build pagination response
+            const pagination = {
+                page,
+                limit,
+                totalCount: totalItems,
+                totalPages,
+                hasNextPage: page < totalPages,
+                hasPreviousPage: page > 1,
+                nextPage: page < totalPages ? page + 1 : undefined,
+                previousPage: page > 1 ? page - 1 : undefined,
+                itemsPerPage: limit
+            };
             return {
                 files: paginatedFiles,
-                directories: opts.includeDirs ? paginatedDirs : undefined,
-                count: paginatedFiles.length + ((paginatedDirs === null || paginatedDirs === void 0 ? void 0 : paginatedDirs.length) || 0),
-                prefix: opts.prefix,
-                hasMore,
-                nextMarker,
-                totalSize,
-                parentDir,
-                breadcrumbs: breadcrumbs.length > 0 ? breadcrumbs : undefined
+                directories: paginatedDirs,
+                pagination,
+                parentDir: this.getParentDirectory(opts.folder),
+                breadcrumbs: this.generateBreadcrumbs(opts.folder),
+                scope: opts.scope
             };
         }
         catch (error) {
@@ -36548,19 +35887,57 @@ let LocalFileService = class LocalFileService extends base_file_service_1.BaseFi
             throw error;
         }
     }
-    // Helper method to calculate directory size
-    async calculateDirectorySize(dirPath) {
+    // Helper methods
+    generateBreadcrumbs(folderPath) {
+        const breadcrumbs = [{ name: 'Home', path: '' }];
+        if (folderPath) {
+            const segments = folderPath.split('/');
+            let currentPath = '';
+            for (let i = 0; i < segments.length; i++) {
+                currentPath = currentPath ? `${currentPath}/${segments[i]}` : segments[i];
+                breadcrumbs.push({
+                    name: segments[i],
+                    path: currentPath
+                });
+            }
+        }
+        return breadcrumbs;
+    }
+    getParentDirectory(folderPath) {
+        if (!folderPath)
+            return undefined;
+        const segments = folderPath.split('/');
+        segments.pop();
+        return segments.length > 0 ? segments.join('/') : '';
+    }
+    // Improved directory size calculation with hidden file option
+    async calculateDirectorySize(dirPath, includeHidden = false) {
         let totalSize = 0;
-        const items = await fs_1.promises.readdir(dirPath);
-        for (const item of items) {
-            const itemPath = path_1.default.join(dirPath, item);
-            const stats = await fs_1.promises.stat(itemPath);
-            if (stats.isFile()) {
-                totalSize += stats.size;
+        try {
+            const items = await fs_1.promises.readdir(dirPath);
+            for (const item of items) {
+                // Skip hidden files if not including them
+                if (!includeHidden && item.startsWith('.')) {
+                    continue;
+                }
+                const itemPath = path_1.default.join(dirPath, item);
+                try {
+                    const stats = await fs_1.promises.stat(itemPath);
+                    if (stats.isFile()) {
+                        totalSize += stats.size;
+                    }
+                    else if (stats.isDirectory()) {
+                        totalSize += await this.calculateDirectorySize(itemPath, includeHidden);
+                    }
+                }
+                catch (err) {
+                    // Skip files we can't access
+                    this.logger.warn(`Error calculating size for ${itemPath}: ${err.message}`);
+                }
             }
-            else if (stats.isDirectory()) {
-                totalSize += await this.calculateDirectorySize(itemPath);
-            }
+        }
+        catch (err) {
+            this.logger.warn(`Error reading directory ${dirPath}: ${err.message}`);
         }
         return totalSize;
     }
@@ -36677,14 +36054,14 @@ exports.LocalFileService = LocalFileService = __decorate([
 
 
 /***/ }),
-/* 392 */
+/* 389 */
 /***/ ((module) => {
 
 "use strict";
 module.exports = require("mime-types");
 
 /***/ }),
-/* 393 */
+/* 390 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -36699,7 +36076,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.FileListOptions = exports.SizeRangeFilter = exports.DateRangeFilter = exports.SortDirection = exports.FileSortField = void 0;
+exports.FileListOptionsDto = exports.ScopeContext = exports.SortDirection = exports.FileSortField = void 0;
 const swagger_1 = __webpack_require__(8);
 const class_transformer_1 = __webpack_require__(54);
 const class_validator_1 = __webpack_require__(92);
@@ -36716,155 +36093,186 @@ var SortDirection;
     SortDirection["ASC"] = "asc";
     SortDirection["DESC"] = "desc";
 })(SortDirection || (exports.SortDirection = SortDirection = {}));
-class DateRangeFilter {
+class ScopeContext {
 }
-exports.DateRangeFilter = DateRangeFilter;
+exports.ScopeContext = ScopeContext;
 __decorate([
-    (0, swagger_1.ApiPropertyOptional)({ description: 'Start date for range filter' }),
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'Organization ID for filtering',
+        example: '123e4567-e89b-12d3-a456-426614174000',
+        type: String,
+        format: 'uuid'
+    }),
     (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsDateString)(),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsUUID)(),
     __metadata("design:type", String)
-], DateRangeFilter.prototype, "from", void 0);
+], ScopeContext.prototype, "organizationId", void 0);
 __decorate([
-    (0, swagger_1.ApiPropertyOptional)({ description: 'End date for range filter' }),
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'Branch ID for filtering',
+        example: '123e4567-e89b-12d3-a456-426614174000',
+        type: String,
+        format: 'uuid'
+    }),
     (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsDateString)(),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsUUID)(),
     __metadata("design:type", String)
-], DateRangeFilter.prototype, "to", void 0);
-class SizeRangeFilter {
-}
-exports.SizeRangeFilter = SizeRangeFilter;
+], ScopeContext.prototype, "branchId", void 0);
 __decorate([
-    (0, swagger_1.ApiPropertyOptional)({ description: 'Minimum file size in bytes' }),
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'Department ID for filtering',
+        example: '123e4567-e89b-12d3-a456-426614174000',
+        type: String,
+        format: 'uuid'
+    }),
     (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsNumber)(),
-    (0, class_transformer_1.Type)(() => Number),
-    __metadata("design:type", Number)
-], SizeRangeFilter.prototype, "min", void 0);
+    (0, class_validator_1.IsUUID)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], ScopeContext.prototype, "departmentId", void 0);
 __decorate([
-    (0, swagger_1.ApiPropertyOptional)({ description: 'Maximum file size in bytes' }),
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'User ID for filtering files owned by a specific user',
+        type: String,
+        example: '123e4567-e89b-12d3-a456-426614174000',
+        format: 'uuid'
+    }),
     (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsNumber)(),
-    (0, class_transformer_1.Type)(() => Number),
-    __metadata("design:type", Number)
-], SizeRangeFilter.prototype, "max", void 0);
-class FileListOptions {
+    (0, class_validator_1.IsUUID)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], ScopeContext.prototype, "userId", void 0);
+class FileListOptionsDto {
     constructor() {
+        this.includeUrls = true;
         this.includeDirs = true;
-        this.includeSizes = true;
-        this.recursive = false;
-        this.sortDirection = SortDirection.ASC;
+        this.showHidden = false;
     }
 }
-exports.FileListOptions = FileListOptions;
+exports.FileListOptionsDto = FileListOptionsDto;
 __decorate([
-    (0, swagger_1.ApiPropertyOptional)({ description: 'Directory path to list files from' }),
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'Scope context for filtering files',
+        type: ScopeContext
+    }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_transformer_1.Type)(() => ScopeContext),
+    __metadata("design:type", ScopeContext)
+], FileListOptionsDto.prototype, "scope", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'Additional folder path within the scope',
+        example: 'invoices/2023',
+        type: String
+    }),
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
-], FileListOptions.prototype, "prefix", void 0);
+], FileListOptionsDto.prototype, "folder", void 0);
 __decorate([
-    (0, swagger_1.ApiPropertyOptional)({ description: 'Maximum number of items to return' }),
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'Page number for pagination',
+        default: 1,
+        minimum: 1,
+    }),
     (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsNumber)(),
     (0, class_transformer_1.Type)(() => Number),
+    (0, class_validator_1.IsInt)(),
+    (0, class_validator_1.Min)(1),
     __metadata("design:type", Number)
-], FileListOptions.prototype, "limit", void 0);
+], FileListOptionsDto.prototype, "page", void 0);
 __decorate([
-    (0, swagger_1.ApiPropertyOptional)({ description: 'Pagination marker/cursor' }),
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'Maximum number of items to return (1-1000)',
+        minimum: 1,
+        maximum: 1000,
+        default: 50
+    }),
     (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsString)(),
-    __metadata("design:type", String)
-], FileListOptions.prototype, "marker", void 0);
+    (0, class_transformer_1.Type)(() => Number),
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.Min)(1),
+    (0, class_validator_1.Max)(1000),
+    __metadata("design:type", Number)
+], FileListOptionsDto.prototype, "limit", void 0);
 __decorate([
-    (0, swagger_1.ApiPropertyOptional)({ description: 'Whether to include file URLs in response' }),
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'Include file URLs in response',
+        default: true
+    }),
     (0, class_validator_1.IsOptional)(),
+    (0, class_transformer_1.Transform)(({ value }) => {
+        if (typeof value === 'string')
+            return value.toLowerCase() === 'true';
+        return Boolean(value);
+    }),
     (0, class_validator_1.IsBoolean)(),
-    (0, class_transformer_1.Type)(() => Boolean),
     __metadata("design:type", Boolean)
-], FileListOptions.prototype, "includeUrls", void 0);
+], FileListOptionsDto.prototype, "includeUrls", void 0);
 __decorate([
-    (0, swagger_1.ApiPropertyOptional)({ description: 'Whether to include directories in results' }),
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'Include directories in results',
+        default: true
+    }),
     (0, class_validator_1.IsOptional)(),
+    (0, class_transformer_1.Transform)(({ value }) => {
+        if (typeof value === 'string')
+            return value.toLowerCase() === 'true';
+        return Boolean(value);
+    }),
     (0, class_validator_1.IsBoolean)(),
-    (0, class_transformer_1.Type)(() => Boolean),
     __metadata("design:type", Boolean)
-], FileListOptions.prototype, "includeDirs", void 0);
-__decorate([
-    (0, swagger_1.ApiPropertyOptional)({ description: 'Whether to include file sizes in response' }),
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsBoolean)(),
-    (0, class_transformer_1.Type)(() => Boolean),
-    __metadata("design:type", Boolean)
-], FileListOptions.prototype, "includeSizes", void 0);
-__decorate([
-    (0, swagger_1.ApiPropertyOptional)({ description: 'Whether to recursively traverse directories' }),
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsBoolean)(),
-    (0, class_transformer_1.Type)(() => Boolean),
-    __metadata("design:type", Boolean)
-], FileListOptions.prototype, "recursive", void 0);
+], FileListOptionsDto.prototype, "includeDirs", void 0);
 __decorate([
     (0, swagger_1.ApiPropertyOptional)({
         enum: FileSortField,
-        description: 'Field to sort by'
+        description: 'Field to sort by',
+        default: FileSortField.NAME
     }),
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsEnum)(FileSortField),
     __metadata("design:type", String)
-], FileListOptions.prototype, "sortBy", void 0);
+], FileListOptionsDto.prototype, "sortBy", void 0);
 __decorate([
     (0, swagger_1.ApiPropertyOptional)({
         enum: SortDirection,
-        description: 'Sort direction'
+        description: 'Sort direction',
+        default: SortDirection.ASC
     }),
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsEnum)(SortDirection),
     __metadata("design:type", String)
-], FileListOptions.prototype, "sortDirection", void 0);
+], FileListOptionsDto.prototype, "sortDirection", void 0);
 __decorate([
-    (0, swagger_1.ApiPropertyOptional)({ description: 'Search term for filename' }),
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'Search term for filtering files by name',
+        example: 'contract'
+    }),
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
+    (0, class_transformer_1.Transform)(({ value }) => value === null || value === void 0 ? void 0 : value.trim()),
     __metadata("design:type", String)
-], FileListOptions.prototype, "searchTerm", void 0);
+], FileListOptionsDto.prototype, "searchTerm", void 0);
 __decorate([
-    (0, swagger_1.ApiPropertyOptional)({ description: 'File extensions to filter by (comma-separated)' }),
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'Show hidden files (starting with .)',
+        default: false
+    }),
     (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsString)(),
-    __metadata("design:type", String)
-], FileListOptions.prototype, "extensions", void 0);
-__decorate([
-    (0, swagger_1.ApiPropertyOptional)({ description: 'Filter by file size' }),
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.ValidateNested)(),
-    (0, class_transformer_1.Type)(() => SizeRangeFilter),
-    __metadata("design:type", SizeRangeFilter)
-], FileListOptions.prototype, "size", void 0);
-__decorate([
-    (0, swagger_1.ApiPropertyOptional)({ description: 'Filter by creation date' }),
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.ValidateNested)(),
-    (0, class_transformer_1.Type)(() => DateRangeFilter),
-    __metadata("design:type", DateRangeFilter)
-], FileListOptions.prototype, "createdAt", void 0);
-__decorate([
-    (0, swagger_1.ApiPropertyOptional)({ description: 'Filter by modification date' }),
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.ValidateNested)(),
-    (0, class_transformer_1.Type)(() => DateRangeFilter),
-    __metadata("design:type", DateRangeFilter)
-], FileListOptions.prototype, "modifiedAt", void 0);
-__decorate([
-    (0, swagger_1.ApiPropertyOptional)({ description: 'Filter by MIME type' }),
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsString)(),
-    __metadata("design:type", String)
-], FileListOptions.prototype, "mimeType", void 0);
+    (0, class_transformer_1.Transform)(({ value }) => {
+        if (typeof value === 'string')
+            return value.toLowerCase() === 'true';
+        return Boolean(value);
+    }),
+    (0, class_validator_1.IsBoolean)(),
+    __metadata("design:type", Boolean)
+], FileListOptionsDto.prototype, "showHidden", void 0);
 
 
 /***/ }),
-/* 394 */
+/* 391 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -36917,12 +36325,12 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.BaseFileService = void 0;
 const common_1 = __webpack_require__(5);
-const crypto = __importStar(__webpack_require__(196));
-const csv_writer_1 = __webpack_require__(395);
-const ExcelJS = __importStar(__webpack_require__(396));
-const fs = __importStar(__webpack_require__(149));
-const path = __importStar(__webpack_require__(151));
-const pdfkit_1 = __importDefault(__webpack_require__(339));
+const crypto = __importStar(__webpack_require__(392));
+const csv_writer_1 = __webpack_require__(393);
+const ExcelJS = __importStar(__webpack_require__(394));
+const fs = __importStar(__webpack_require__(151));
+const path = __importStar(__webpack_require__(153));
+const pdfkit_1 = __importDefault(__webpack_require__(336));
 let BaseFileService = class BaseFileService {
     constructor(uploadDir, baseUrl) {
         this.logger = new common_1.Logger(this.constructor.name);
@@ -37157,21 +36565,28 @@ exports.BaseFileService = BaseFileService = __decorate([
 
 
 /***/ }),
-/* 395 */
+/* 392 */
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("crypto");
+
+/***/ }),
+/* 393 */
 /***/ ((module) => {
 
 "use strict";
 module.exports = require("csv-writer");
 
 /***/ }),
-/* 396 */
+/* 394 */
 /***/ ((module) => {
 
 "use strict";
 module.exports = require("exceljs");
 
 /***/ }),
-/* 397 */
+/* 395 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -37189,36 +36604,150 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
 var FilesController_1;
-var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r, _s, _t, _u, _v, _w, _x;
+var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r, _s, _t, _u, _v, _w, _x, _y, _z, _0;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.FilesController = void 0;
 const authorize_decorator_1 = __webpack_require__(93);
 const current_user_decorator_1 = __webpack_require__(113);
+const action_enum_1 = __webpack_require__(71);
+const role_scope_type_enum_1 = __webpack_require__(69);
+const jwt_payload_interface_1 = __webpack_require__(233);
 const common_1 = __webpack_require__(5);
-const platform_express_1 = __webpack_require__(398);
+const platform_express_1 = __webpack_require__(396);
 const swagger_1 = __webpack_require__(8);
-const express_1 = __webpack_require__(194);
-const file_provider_config_1 = __webpack_require__(390);
-const directory_metadata_dto_1 = __webpack_require__(399);
-const file_list_response_dto_1 = __webpack_require__(400);
-const file_meta_data_dto_1 = __webpack_require__(401);
-const file_service_interface_1 = __webpack_require__(402);
+const express_1 = __webpack_require__(234);
+const file_provider_config_1 = __webpack_require__(387);
+const directory_metadata_dto_1 = __webpack_require__(397);
+const file_list_options_dto_1 = __webpack_require__(390);
+const file_list_response_dto_1 = __webpack_require__(398);
+const file_meta_data_dto_1 = __webpack_require__(399);
+const file_service_interface_1 = __webpack_require__(400);
 let FilesController = FilesController_1 = class FilesController {
     constructor(fileService) {
         this.fileService = fileService;
         this.logger = new common_1.Logger(FilesController_1.name);
     }
-    async uploadFile(file, req, folder, userId) {
+    buildTenantFolder(organizationId, branchId, departmentId, additionalPath) {
+        const parts = [];
+        if (organizationId) {
+            parts.push('organizations', organizationId);
+            if (branchId) {
+                parts.push('branches', branchId);
+                if (departmentId) {
+                    parts.push('departments', departmentId);
+                }
+            }
+        }
+        if (additionalPath) {
+            parts.push(additionalPath);
+        }
+        return parts.join('/');
+    }
+    validateTenantAccess(resourceScope, organizationId, branchId, departmentId) {
+        var _a, _b, _c, _d, _e, _f;
+        switch (resourceScope.type) {
+            case role_scope_type_enum_1.RoleScopeType.GLOBAL:
+                // Global scope can access any tenant
+                return;
+            case role_scope_type_enum_1.RoleScopeType.ORGANIZATION:
+                if (organizationId && !((_a = resourceScope.organizations) === null || _a === void 0 ? void 0 : _a.includes(organizationId))) {
+                    throw new common_1.ForbiddenException(`Access denied to organization ${organizationId}`);
+                }
+                break;
+            case role_scope_type_enum_1.RoleScopeType.BRANCH:
+                if (branchId && !((_b = resourceScope.branches) === null || _b === void 0 ? void 0 : _b.includes(branchId))) {
+                    throw new common_1.ForbiddenException(`Access denied to branch ${branchId}`);
+                }
+                if (organizationId && !((_c = resourceScope.organizations) === null || _c === void 0 ? void 0 : _c.includes(organizationId))) {
+                    throw new common_1.ForbiddenException(`Access denied to organization ${organizationId}`);
+                }
+                break;
+            case role_scope_type_enum_1.RoleScopeType.DEPARTMENT:
+                if (departmentId && !((_d = resourceScope.departments) === null || _d === void 0 ? void 0 : _d.includes(departmentId))) {
+                    throw new common_1.ForbiddenException(`Access denied to department ${departmentId}`);
+                }
+                if (branchId && !((_e = resourceScope.branches) === null || _e === void 0 ? void 0 : _e.includes(branchId))) {
+                    throw new common_1.ForbiddenException(`Access denied to branch ${branchId}`);
+                }
+                if (organizationId && !((_f = resourceScope.organizations) === null || _f === void 0 ? void 0 : _f.includes(organizationId))) {
+                    throw new common_1.ForbiddenException(`Access denied to organization ${organizationId}`);
+                }
+                break;
+            case role_scope_type_enum_1.RoleScopeType.OWNED:
+                // For owned scope, they can only access their own files
+                // This will be handled by file-level permissions
+                break;
+        }
+    }
+    getEffectiveTenantContext(resourceScope, requestedOrgId, requestedBranchId, requestedDeptId) {
+        var _a, _b, _c, _d, _e, _f;
+        switch (resourceScope.type) {
+            case role_scope_type_enum_1.RoleScopeType.GLOBAL:
+                return {
+                    organizationId: requestedOrgId,
+                    branchId: requestedBranchId,
+                    departmentId: requestedDeptId
+                };
+            case role_scope_type_enum_1.RoleScopeType.ORGANIZATION:
+                return {
+                    organizationId: requestedOrgId || ((_a = resourceScope.organizations) === null || _a === void 0 ? void 0 : _a[0]),
+                    branchId: requestedBranchId,
+                    departmentId: requestedDeptId
+                };
+            case role_scope_type_enum_1.RoleScopeType.BRANCH:
+                return {
+                    organizationId: requestedOrgId || ((_b = resourceScope.organizations) === null || _b === void 0 ? void 0 : _b[0]),
+                    branchId: requestedBranchId || ((_c = resourceScope.branches) === null || _c === void 0 ? void 0 : _c[0]),
+                    departmentId: requestedDeptId
+                };
+            case role_scope_type_enum_1.RoleScopeType.DEPARTMENT:
+                return {
+                    organizationId: requestedOrgId || ((_d = resourceScope.organizations) === null || _d === void 0 ? void 0 : _d[0]),
+                    branchId: requestedBranchId || ((_e = resourceScope.branches) === null || _e === void 0 ? void 0 : _e[0]),
+                    departmentId: requestedDeptId || ((_f = resourceScope.departments) === null || _f === void 0 ? void 0 : _f[0])
+                };
+            case role_scope_type_enum_1.RoleScopeType.OWNED:
+                return {
+                    organizationId: requestedOrgId,
+                    branchId: requestedBranchId,
+                    departmentId: requestedDeptId
+                };
+            default:
+                return {};
+        }
+    }
+    async uploadFile(file, req, organizationId, branchId, departmentId, folder, user) {
         if (!file) {
             throw new common_1.BadRequestException('No file provided');
         }
+        const resourceScope = req.resourceScope;
+        if (!resourceScope) {
+            throw new common_1.ForbiddenException('Access scope not determined');
+        }
+        // Validate tenant access
+        this.validateTenantAccess(resourceScope, organizationId, branchId, departmentId);
+        // Get effective tenant context based on user's scope
+        const effectiveContext = this.getEffectiveTenantContext(resourceScope, organizationId, branchId, departmentId);
+        // Build tenant-aware folder structure
+        const tenantFolder = this.buildTenantFolder(effectiveContext.organizationId, effectiveContext.branchId, effectiveContext.departmentId, folder);
         try {
             const authorization = req.headers.authorization;
-            this.logger.debug(`Authorization header: ${authorization}`);
             return await this.fileService.uploadFile(file, {
-                folder,
+                folder: tenantFolder,
                 token: authorization,
-                metadata: { uploadedBy: userId || 'anonymous' }
+                organizationId: effectiveContext.organizationId,
+                branchId: effectiveContext.branchId,
+                departmentId: effectiveContext.departmentId,
+                userId: user === null || user === void 0 ? void 0 : user.sub,
+                scope: resourceScope.type,
+                metadata: {
+                    uploadedBy: (user === null || user === void 0 ? void 0 : user.sub) || 'anonymous',
+                    organizationId: effectiveContext.organizationId,
+                    branchId: effectiveContext.branchId,
+                    departmentId: effectiveContext.departmentId,
+                    scope: resourceScope.type,
+                    uploadedAt: new Date().toISOString()
+                }
             });
         }
         catch (error) {
@@ -37256,7 +36785,69 @@ let FilesController = FilesController_1 = class FilesController {
             throw new common_1.NotFoundException(`File not found: ${key}`);
         }
     }
-    async downloadFile(key, res) {
+    async validateFileAccess(fileKey, resourceScope, userId, action = 'read') {
+        var _a, _b, _c;
+        // Extract tenant information from file path
+        const pathParts = fileKey.split('/');
+        if (pathParts.length < 2) {
+            // If it's not in a tenant-specific path, only allow if it's owned scope and matches user
+            if (resourceScope.type === role_scope_type_enum_1.RoleScopeType.OWNED) {
+                // For owned scope, we'd need to check file metadata to see if user owns it
+                // This would require extending the file service to include ownership info
+                return;
+            }
+            else if (resourceScope.type === role_scope_type_enum_1.RoleScopeType.GLOBAL) {
+                return; // Global scope can access any file
+            }
+            throw new common_1.ForbiddenException('Access denied to this file');
+        }
+        // Parse tenant path structure: organizations/orgId/branches/branchId/departments/deptId/...
+        const tenantInfo = this.parseTenantPath(fileKey);
+        // Validate access based on scope
+        switch (resourceScope.type) {
+            case role_scope_type_enum_1.RoleScopeType.GLOBAL:
+                return; // Global scope can access any file
+            case role_scope_type_enum_1.RoleScopeType.ORGANIZATION:
+                if (tenantInfo.organizationId && !((_a = resourceScope.organizations) === null || _a === void 0 ? void 0 : _a.includes(tenantInfo.organizationId))) {
+                    throw new common_1.ForbiddenException('Access denied to this organization\'s files');
+                }
+                break;
+            case role_scope_type_enum_1.RoleScopeType.BRANCH:
+                if (tenantInfo.branchId && !((_b = resourceScope.branches) === null || _b === void 0 ? void 0 : _b.includes(tenantInfo.branchId))) {
+                    throw new common_1.ForbiddenException('Access denied to this branch\'s files');
+                }
+                break;
+            case role_scope_type_enum_1.RoleScopeType.DEPARTMENT:
+                if (tenantInfo.departmentId && !((_c = resourceScope.departments) === null || _c === void 0 ? void 0 : _c.includes(tenantInfo.departmentId))) {
+                    throw new common_1.ForbiddenException('Access denied to this department\'s files');
+                }
+                break;
+            case role_scope_type_enum_1.RoleScopeType.OWNED:
+                // For owned scope, would need to check file metadata for actual ownership
+                // This is a simplified check based on path structure
+                break;
+        }
+    }
+    parseTenantPath(filePath) {
+        const parts = filePath.split('/');
+        const result = {};
+        for (let i = 0; i < parts.length - 1; i++) {
+            if (parts[i] === 'organizations' && parts[i + 1]) {
+                result.organizationId = parts[i + 1];
+            }
+            else if (parts[i] === 'branches' && parts[i + 1]) {
+                result.branchId = parts[i + 1];
+            }
+            else if (parts[i] === 'departments' && parts[i + 1]) {
+                result.departmentId = parts[i + 1];
+            }
+        }
+        return result;
+    }
+    async downloadFile(key, req, res, user) {
+        const resourceScope = req.resourceScope;
+        // Check if user has access to this file based on the file path and their scope
+        await this.validateFileAccess(key, resourceScope, user === null || user === void 0 ? void 0 : user.sub);
         try {
             await this.fileService.downloadFile(key, res);
         }
@@ -37291,61 +36882,170 @@ let FilesController = FilesController_1 = class FilesController {
             throw new common_1.NotFoundException(`File not found: ${key}`);
         }
     }
-    async listFiles(req, prefix, limit, marker, includeUrls, includeDirs, includeSizes, recursive, sortBy, sortDirection, searchTerm, extensions) {
-        var _a, _b;
-        // Transform boolean strings to actual booleans
-        const boolFromString = (val) => {
-            if (val === 'true')
-                return true;
-            if (val === 'false')
-                return false;
-            return val === true;
-        };
-        const options = {
-            prefix,
-            limit: limit ? parseInt(String(limit), 10) : undefined,
-            marker,
-            includeUrls: boolFromString(includeUrls),
-            includeDirs: includeDirs !== undefined ? boolFromString(includeDirs) : true,
-            recursive: boolFromString(recursive),
-            sortBy: sortBy,
-            sortDirection: sortDirection || 'asc',
-            searchTerm,
-            extensions
-        };
-        try {
-            const authorization = req.headers.authorization;
-            const result = await this.fileService.listFiles(options, authorization);
-            // If the result is already in the correct format, return it directly
-            if ('directories' in result) {
-                return result;
-            }
-            // Otherwise, build the response in the correct format
-            // This is for backward compatibility with implementations that don't return directories
-            return {
-                files: Array.isArray(result) ? result : (result.files || []),
-                directories: result.directories || [],
-                count: Array.isArray(result) ? result.length : (result.count || ((_a = result.files) === null || _a === void 0 ? void 0 : _a.length) || 0),
-                prefix: options.prefix,
-                hasMore: Array.isArray(result)
-                    ? result.length === options.limit
-                    : (result.hasMore || (((_b = result.files) === null || _b === void 0 ? void 0 : _b.length) === options.limit)),
-                nextMarker: result.nextMarker,
-                totalSize: result.totalSize,
-                parentDir: result.parentDir,
-                breadcrumbs: result.breadcrumbs
-            };
-        }
-        catch (error) {
-            if (error instanceof Error) {
-                throw new common_1.BadRequestException(`Failed to list files: ${error.message}`);
-            }
-            throw new common_1.BadRequestException('Failed to list files');
-        }
-    }
-    async deleteFile(key) {
+    async deleteFile(key, req, user) {
+        const resourceScope = req.resourceScope;
+        // Check if user has delete access to this file
+        await this.validateFileAccess(key, resourceScope, user === null || user === void 0 ? void 0 : user.sub, 'delete');
         const success = await this.fileService.deleteFile(key);
         return { success };
+    }
+    async listFiles(queryDto, req, user) {
+        var _a, _b, _c;
+        const resourceScope = req.resourceScope;
+        if (!resourceScope) {
+            throw new common_1.ForbiddenException('Access scope not determined');
+        }
+        try {
+            // Validate tenant access for the requested scope context
+            if (queryDto.scope) {
+                this.validateTenantAccess(resourceScope, queryDto.scope.organizationId, queryDto.scope.branchId, queryDto.scope.departmentId);
+            }
+            // Get effective tenant context based on user's scope and request
+            const effectiveContext = this.getEffectiveTenantContext(resourceScope, (_a = queryDto.scope) === null || _a === void 0 ? void 0 : _a.organizationId, (_b = queryDto.scope) === null || _b === void 0 ? void 0 : _b.branchId, (_c = queryDto.scope) === null || _c === void 0 ? void 0 : _c.departmentId);
+            // Build the folder path for file listing
+            const folderPath = this.buildTenantFolder(effectiveContext.organizationId, effectiveContext.branchId, effectiveContext.departmentId, queryDto.folder);
+            const authorization = req.headers.authorization;
+            // Convert DTO to service options format with proper folder path
+            const listOptions = this.convertToServiceOptions(queryDto, folderPath);
+            // Get files and directories from the file service
+            const serviceResult = await this.fileService.listFiles(listOptions, authorization);
+            // Filter files based on user's actual permissions
+            const filteredFiles = await this.filterFilesByUserScope(serviceResult.files || [], resourceScope, user === null || user === void 0 ? void 0 : user.sub);
+            // The service now returns the proper pagination format, so we use it directly
+            const response = {
+                files: filteredFiles,
+                directories: serviceResult.directories,
+                pagination: serviceResult.pagination,
+                parentDir: serviceResult.parentDir,
+                breadcrumbs: serviceResult.breadcrumbs,
+                scope: {
+                    organizationId: effectiveContext.organizationId,
+                    branchId: effectiveContext.branchId,
+                    departmentId: effectiveContext.departmentId,
+                    userId: resourceScope.type === role_scope_type_enum_1.RoleScopeType.OWNED ? user === null || user === void 0 ? void 0 : user.sub : undefined
+                }
+            };
+            return response;
+        }
+        catch (error) {
+            this.logger.error(`Error listing files for user ${user === null || user === void 0 ? void 0 : user.sub}:`, error);
+            // More specific error handling
+            if (error instanceof common_1.ForbiddenException) {
+                throw error;
+            }
+            else if (error instanceof Error) {
+                throw new common_1.BadRequestException(`Failed to list files: ${error.message}`);
+            }
+            throw new common_1.BadRequestException('Failed to list files: Unknown error');
+        }
+    }
+    /**
+     * Converts DTO options to service-compatible options
+     */
+    convertToServiceOptions(queryDto, folderPath) {
+        var _a, _b, _c;
+        return {
+            folder: folderPath || queryDto.folder,
+            page: queryDto.page || 1,
+            limit: queryDto.limit || 50,
+            includeDirs: (_a = queryDto.includeDirs) !== null && _a !== void 0 ? _a : true,
+            includeUrls: (_b = queryDto.includeUrls) !== null && _b !== void 0 ? _b : true,
+            sortBy: queryDto.sortBy || file_list_options_dto_1.FileSortField.NAME,
+            sortDirection: queryDto.sortDirection || file_list_options_dto_1.SortDirection.ASC,
+            searchTerm: queryDto.searchTerm,
+            showHidden: (_c = queryDto.showHidden) !== null && _c !== void 0 ? _c : false,
+            scope: queryDto.scope
+        };
+    }
+    /**
+     * Filters files based on user's scope and permissions
+     */
+    async filterFilesByUserScope(files, resourceScope, userId) {
+        if (resourceScope.type === role_scope_type_enum_1.RoleScopeType.GLOBAL) {
+            return files; // Global scope can see all files
+        }
+        return files.filter(file => {
+            var _a, _b, _c, _d, _e;
+            try {
+                // For owned scope, filter files by user ownership
+                if (resourceScope.type === role_scope_type_enum_1.RoleScopeType.OWNED) {
+                    return ((_a = file.metadata) === null || _a === void 0 ? void 0 : _a.uploadedBy) === userId ||
+                        ((_b = file.metadata) === null || _b === void 0 ? void 0 : _b.userId) === userId;
+                }
+                // For other scopes, validate based on file metadata and path
+                const tenantInfo = this.parseTenantPath(file.key);
+                // Check organization access
+                if (resourceScope.type === role_scope_type_enum_1.RoleScopeType.ORGANIZATION ||
+                    resourceScope.type === role_scope_type_enum_1.RoleScopeType.BRANCH ||
+                    resourceScope.type === role_scope_type_enum_1.RoleScopeType.DEPARTMENT) {
+                    const fileOrgId = ((_c = file.metadata) === null || _c === void 0 ? void 0 : _c.organizationId) || tenantInfo.organizationId;
+                    if (fileOrgId && resourceScope.organizations &&
+                        !resourceScope.organizations.includes(fileOrgId)) {
+                        return false;
+                    }
+                }
+                // Check branch access
+                if (resourceScope.type === role_scope_type_enum_1.RoleScopeType.BRANCH ||
+                    resourceScope.type === role_scope_type_enum_1.RoleScopeType.DEPARTMENT) {
+                    const fileBranchId = ((_d = file.metadata) === null || _d === void 0 ? void 0 : _d.branchId) || tenantInfo.branchId;
+                    if (fileBranchId && resourceScope.branches &&
+                        !resourceScope.branches.includes(fileBranchId)) {
+                        return false;
+                    }
+                }
+                // Check department access
+                if (resourceScope.type === role_scope_type_enum_1.RoleScopeType.DEPARTMENT) {
+                    const fileDeptId = ((_e = file.metadata) === null || _e === void 0 ? void 0 : _e.departmentId) || tenantInfo.departmentId;
+                    if (fileDeptId && resourceScope.departments &&
+                        !resourceScope.departments.includes(fileDeptId)) {
+                        return false;
+                    }
+                }
+                return true;
+            }
+            catch (error) {
+                this.logger.warn(`Error filtering file ${file.key}:`, error);
+                return false; // When in doubt, filter out
+            }
+        });
+    }
+    /**
+     * Builds breadcrumb navigation for the current path
+     */
+    buildBreadcrumbs(organizationId, branchId, departmentId, additionalFolder) {
+        const breadcrumbs = [
+            { name: 'Home', path: '/' }
+        ];
+        if (organizationId) {
+            breadcrumbs.push({
+                name: `Org: ${organizationId}`,
+                path: `/organizations/${organizationId}`
+            });
+            if (branchId) {
+                breadcrumbs.push({
+                    name: `Branch: ${branchId}`,
+                    path: `/organizations/${organizationId}/branches/${branchId}`
+                });
+                if (departmentId) {
+                    breadcrumbs.push({
+                        name: `Dept: ${departmentId}`,
+                        path: `/organizations/${organizationId}/branches/${branchId}/departments/${departmentId}`
+                    });
+                }
+            }
+        }
+        if (additionalFolder) {
+            const folderParts = additionalFolder.split('/');
+            let currentPath = breadcrumbs[breadcrumbs.length - 1].path;
+            folderParts.forEach(part => {
+                currentPath += `/${part}`;
+                breadcrumbs.push({
+                    name: part,
+                    path: currentPath
+                });
+            });
+        }
+        return breadcrumbs;
     }
     async fileExists(key) {
         const exists = await this.fileService.fileExists(key);
@@ -37395,7 +37095,7 @@ let FilesController = FilesController_1 = class FilesController {
 exports.FilesController = FilesController;
 __decorate([
     (0, common_1.Post)('upload'),
-    (0, authorize_decorator_1.Authorize)(),
+    (0, authorize_decorator_1.Authorize)({ endpointType: action_enum_1.Action.CREATE }),
     (0, swagger_1.ApiOperation)({ summary: 'Upload a single file' }),
     (0, swagger_1.ApiConsumes)('multipart/form-data'),
     (0, swagger_1.ApiBody)({
@@ -37410,18 +37110,51 @@ __decorate([
             }
         }
     }),
+    (0, swagger_1.ApiQuery)({
+        name: 'organizationId',
+        type: String,
+        required: false,
+        description: 'Organization ID for multi-tenant context'
+    }),
+    (0, swagger_1.ApiQuery)({
+        name: 'branchId',
+        required: false,
+        type: String,
+        description: 'Branch ID for multi-tenant context'
+    }),
+    (0, swagger_1.ApiQuery)({
+        name: 'departmentId',
+        type: String,
+        required: false,
+        description: 'Department ID for multi-tenant context'
+    }),
+    (0, swagger_1.ApiQuery)({
+        name: 'folder',
+        required: false,
+        type: String,
+        description: 'Folder path to upload the file to'
+    }),
+    (0, swagger_1.ApiQuery)({
+        name: 'userId',
+        required: false,
+        type: String,
+        description: 'User ID of the uploader (for metadata purposes)'
+    }),
     (0, swagger_1.ApiResponse)({
-        status: 201,
+        status: common_1.HttpStatus.CREATED,
         description: 'File uploaded successfully',
         type: file_meta_data_dto_1.FileMetadata
     }),
     (0, common_1.UseInterceptors)((0, platform_express_1.FileInterceptor)('file')),
     __param(0, (0, common_1.UploadedFile)()),
     __param(1, (0, common_1.Req)()),
-    __param(2, (0, common_1.Query)('folder')),
-    __param(3, (0, current_user_decorator_1.CurrentUser)('sub')),
+    __param(2, (0, common_1.Query)('organizationId', common_1.ParseUUIDPipe)),
+    __param(3, (0, common_1.Query)('branchId', common_1.ParseUUIDPipe)),
+    __param(4, (0, common_1.Query)('departmentId', common_1.ParseUUIDPipe)),
+    __param(5, (0, common_1.Query)('folder', common_1.ParseUUIDPipe)),
+    __param(6, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [typeof (_c = typeof Express !== "undefined" && (_b = Express.Multer) !== void 0 && _b.File) === "function" ? _c : Object, typeof (_d = typeof express_1.Request !== "undefined" && express_1.Request) === "function" ? _d : Object, String, String]),
+    __metadata("design:paramtypes", [typeof (_c = typeof Express !== "undefined" && (_b = Express.Multer) !== void 0 && _b.File) === "function" ? _c : Object, Object, String, String, String, String, typeof (_d = typeof jwt_payload_interface_1.IJwtPayload !== "undefined" && jwt_payload_interface_1.IJwtPayload) === "function" ? _d : Object]),
     __metadata("design:returntype", typeof (_e = typeof Promise !== "undefined" && Promise) === "function" ? _e : Object)
 ], FilesController.prototype, "uploadFile", null);
 __decorate([
@@ -37476,17 +37209,20 @@ __decorate([
     __metadata("design:returntype", typeof (_j = typeof Promise !== "undefined" && Promise) === "function" ? _j : Object)
 ], FilesController.prototype, "getFileMetadata", null);
 __decorate([
-    (0, common_1.Get)('download/:key'),
-    (0, authorize_decorator_1.Authorize)(),
-    (0, swagger_1.ApiOperation)({ summary: 'Download a file' }),
+    (0, common_1.Get)('download/:key(*)'),
+    (0, authorize_decorator_1.Authorize)({ endpointType: action_enum_1.Action.READ }),
+    (0, swagger_1.ApiOperation)({ summary: 'Download a file with access control' }),
     (0, swagger_1.ApiParam)({ name: 'key', description: 'File key' }),
     (0, swagger_1.ApiResponse)({ status: 200, description: 'File download' }),
     (0, swagger_1.ApiResponse)({ status: 404, description: 'File not found' }),
+    (0, swagger_1.ApiResponse)({ status: 403, description: 'Access denied' }),
     __param(0, (0, common_1.Param)('key')),
-    __param(1, (0, common_1.Res)()),
+    __param(1, (0, common_1.Req)()),
+    __param(2, (0, common_1.Res)()),
+    __param(3, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, typeof (_k = typeof express_1.Response !== "undefined" && express_1.Response) === "function" ? _k : Object]),
-    __metadata("design:returntype", typeof (_l = typeof Promise !== "undefined" && Promise) === "function" ? _l : Object)
+    __metadata("design:paramtypes", [String, Object, typeof (_k = typeof express_1.Response !== "undefined" && express_1.Response) === "function" ? _k : Object, typeof (_l = typeof jwt_payload_interface_1.IJwtPayload !== "undefined" && jwt_payload_interface_1.IJwtPayload) === "function" ? _l : Object]),
+    __metadata("design:returntype", typeof (_m = typeof Promise !== "undefined" && Promise) === "function" ? _m : Object)
 ], FilesController.prototype, "downloadFile", null);
 __decorate([
     (0, common_1.Get)('stream/:key'),
@@ -37504,8 +37240,8 @@ __decorate([
     __param(0, (0, common_1.Param)('key')),
     __param(1, (0, common_1.Res)({ passthrough: false })),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, typeof (_m = typeof express_1.Response !== "undefined" && express_1.Response) === "function" ? _m : Object]),
-    __metadata("design:returntype", typeof (_o = typeof Promise !== "undefined" && Promise) === "function" ? _o : Object)
+    __metadata("design:paramtypes", [String, typeof (_o = typeof express_1.Response !== "undefined" && express_1.Response) === "function" ? _o : Object]),
+    __metadata("design:returntype", typeof (_p = typeof Promise !== "undefined" && Promise) === "function" ? _p : Object)
 ], FilesController.prototype, "streamFile", null);
 __decorate([
     (0, common_1.Get)('url/:key'),
@@ -37525,99 +37261,13 @@ __decorate([
     __param(0, (0, common_1.Param)('key')),
     __param(1, (0, common_1.Req)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, typeof (_p = typeof express_1.Request !== "undefined" && express_1.Request) === "function" ? _p : Object]),
-    __metadata("design:returntype", typeof (_q = typeof Promise !== "undefined" && Promise) === "function" ? _q : Object)
+    __metadata("design:paramtypes", [String, typeof (_q = typeof express_1.Request !== "undefined" && express_1.Request) === "function" ? _q : Object]),
+    __metadata("design:returntype", typeof (_r = typeof Promise !== "undefined" && Promise) === "function" ? _r : Object)
 ], FilesController.prototype, "getFileUrl", null);
 __decorate([
-    (0, common_1.Get)('list'),
-    (0, authorize_decorator_1.Authorize)(),
-    (0, swagger_1.ApiOperation)({ summary: 'List files and directories' }),
-    (0, swagger_1.ApiQuery)({
-        name: 'prefix',
-        required: false,
-        description: 'Directory path to list files from'
-    }),
-    (0, swagger_1.ApiQuery)({
-        name: 'limit',
-        required: false,
-        description: 'Maximum number of items to return'
-    }),
-    (0, swagger_1.ApiQuery)({
-        name: 'marker',
-        required: false,
-        description: 'Pagination marker/cursor for fetching next page'
-    }),
-    (0, swagger_1.ApiQuery)({
-        name: 'includeUrls',
-        required: false,
-        type: Boolean,
-        description: 'Whether to include file URLs in response'
-    }),
-    (0, swagger_1.ApiQuery)({
-        name: 'includeDirs',
-        required: false,
-        type: Boolean,
-        description: 'Whether to include directories in results'
-    }),
-    (0, swagger_1.ApiQuery)({
-        name: 'includeSizes',
-        required: false,
-        type: Boolean,
-        description: 'Whether to include file sizes in response'
-    }),
-    (0, swagger_1.ApiQuery)({
-        name: 'recursive',
-        required: false,
-        type: Boolean,
-        description: 'Whether to recursively list files in subdirectories'
-    }),
-    (0, swagger_1.ApiQuery)({
-        name: 'sortBy',
-        required: false,
-        enum: ['name', 'size', 'createdAt', 'lastModified', 'mimeType'],
-        description: 'Field to sort by'
-    }),
-    (0, swagger_1.ApiQuery)({
-        name: 'sortDirection',
-        required: false,
-        enum: ['asc', 'desc'],
-        description: 'Sort direction (asc or desc)'
-    }),
-    (0, swagger_1.ApiQuery)({
-        name: 'searchTerm',
-        required: false,
-        description: 'Filter files by filename search term'
-    }),
-    (0, swagger_1.ApiQuery)({
-        name: 'extensions',
-        required: false,
-        description: 'Filter by file extensions (comma-separated)'
-    }),
-    (0, swagger_1.ApiResponse)({
-        status: 200,
-        description: 'Files and directories listed successfully',
-        type: file_list_response_dto_1.FileListResponseDto
-    }),
-    __param(0, (0, common_1.Req)()),
-    __param(1, (0, common_1.Query)('prefix')),
-    __param(2, (0, common_1.Query)('limit')),
-    __param(3, (0, common_1.Query)('marker')),
-    __param(4, (0, common_1.Query)('includeUrls')),
-    __param(5, (0, common_1.Query)('includeDirs')),
-    __param(6, (0, common_1.Query)('includeSizes')),
-    __param(7, (0, common_1.Query)('recursive')),
-    __param(8, (0, common_1.Query)('sortBy')),
-    __param(9, (0, common_1.Query)('sortDirection')),
-    __param(10, (0, common_1.Query)('searchTerm')),
-    __param(11, (0, common_1.Query)('extensions')),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [typeof (_r = typeof express_1.Request !== "undefined" && express_1.Request) === "function" ? _r : Object, String, Number, String, Boolean, Boolean, Boolean, Boolean, String, String, String, String]),
-    __metadata("design:returntype", typeof (_s = typeof Promise !== "undefined" && Promise) === "function" ? _s : Object)
-], FilesController.prototype, "listFiles", null);
-__decorate([
-    (0, common_1.Delete)(':key'),
-    (0, authorize_decorator_1.Authorize)(),
-    (0, swagger_1.ApiOperation)({ summary: 'Delete a file' }),
+    (0, common_1.Delete)(':key(*)'),
+    (0, authorize_decorator_1.Authorize)({ endpointType: action_enum_1.Action.DELETE }),
+    (0, swagger_1.ApiOperation)({ summary: 'Delete a file with access control' }),
     (0, swagger_1.ApiParam)({ name: 'key', description: 'File key' }),
     (0, swagger_1.ApiResponse)({
         status: 200,
@@ -37630,10 +37280,83 @@ __decorate([
         }
     }),
     __param(0, (0, common_1.Param)('key')),
+    __param(1, (0, common_1.Req)()),
+    __param(2, (0, current_user_decorator_1.CurrentUser)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
+    __metadata("design:paramtypes", [String, Object, typeof (_s = typeof jwt_payload_interface_1.IJwtPayload !== "undefined" && jwt_payload_interface_1.IJwtPayload) === "function" ? _s : Object]),
     __metadata("design:returntype", typeof (_t = typeof Promise !== "undefined" && Promise) === "function" ? _t : Object)
 ], FilesController.prototype, "deleteFile", null);
+__decorate([
+    (0, common_1.Get)('list'),
+    (0, authorize_decorator_1.Authorize)({ endpointType: action_enum_1.Action.READ }),
+    (0, swagger_1.ApiOperation)({ summary: 'List files with scope-based access control' }),
+    (0, swagger_1.ApiQuery)({
+        name: 'page',
+        required: false,
+        type: Number,
+        description: 'Page number for pagination'
+    }),
+    (0, swagger_1.ApiQuery)({
+        name: 'limit',
+        required: false,
+        type: Number,
+        description: 'Number of items per page (max 1000)'
+    }),
+    (0, swagger_1.ApiQuery)({
+        name: 'folder',
+        required: false,
+        type: String,
+        description: 'Folder path to list files from'
+    }),
+    (0, swagger_1.ApiQuery)({
+        name: 'includeUrls',
+        required: false,
+        type: Boolean,
+        description: 'Include downloadable URLs in response'
+    }),
+    (0, swagger_1.ApiQuery)({
+        name: 'includeDirs',
+        required: false,
+        type: Boolean,
+        description: 'Include directories in results'
+    }),
+    (0, swagger_1.ApiQuery)({
+        name: 'sortBy',
+        required: false,
+        enum: file_list_options_dto_1.FileSortField,
+        description: 'Field to sort by (name, size, createdAt, lastModified, mimeType)'
+    }),
+    (0, swagger_1.ApiQuery)({
+        name: 'sortDirection',
+        required: false,
+        enum: file_list_options_dto_1.SortDirection,
+        description: 'Sort direction (asc, desc)'
+    }),
+    (0, swagger_1.ApiQuery)({
+        name: 'searchTerm',
+        required: false,
+        type: String,
+        description: 'Search term for filtering files by name'
+    }),
+    (0, swagger_1.ApiQuery)({
+        name: 'showHidden',
+        required: false,
+        type: Boolean,
+        description: 'Include hidden files (starting with .)'
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: 200,
+        description: 'Files listed successfully',
+        type: file_list_response_dto_1.FileListResponseDto
+    }),
+    (0, swagger_1.ApiResponse)({ status: 403, description: 'Access denied' }),
+    __param(0, (0, common_1.Query)()),
+    __param(1, (0, common_1.Req)()),
+    __param(2, (0, current_user_decorator_1.CurrentUser)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [typeof (_u = typeof file_list_options_dto_1.FileListOptionsDto !== "undefined" && file_list_options_dto_1.FileListOptionsDto) === "function" ? _u : Object, Object, typeof (_v = typeof jwt_payload_interface_1.IJwtPayload !== "undefined" && jwt_payload_interface_1.IJwtPayload) === "function" ? _v : Object]),
+    __metadata("design:returntype", typeof (_w = typeof Promise !== "undefined" && Promise) === "function" ? _w : Object)
+], FilesController.prototype, "listFiles", null);
 __decorate([
     (0, common_1.Get)('validate/:key'),
     (0, authorize_decorator_1.Authorize)(),
@@ -37652,7 +37375,7 @@ __decorate([
     __param(0, (0, common_1.Param)('key')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
-    __metadata("design:returntype", typeof (_u = typeof Promise !== "undefined" && Promise) === "function" ? _u : Object)
+    __metadata("design:returntype", typeof (_x = typeof Promise !== "undefined" && Promise) === "function" ? _x : Object)
 ], FilesController.prototype, "fileExists", null);
 __decorate([
     (0, common_1.Post)('directories'),
@@ -37678,7 +37401,7 @@ __decorate([
     __param(1, (0, current_user_decorator_1.CurrentUser)('sub')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, String]),
-    __metadata("design:returntype", typeof (_v = typeof Promise !== "undefined" && Promise) === "function" ? _v : Object)
+    __metadata("design:returntype", typeof (_y = typeof Promise !== "undefined" && Promise) === "function" ? _y : Object)
 ], FilesController.prototype, "createDirectory", null);
 __decorate([
     (0, common_1.Delete)('directories/:path(*)'),
@@ -37705,7 +37428,7 @@ __decorate([
     __param(2, (0, current_user_decorator_1.CurrentUser)('sub')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, Boolean, String]),
-    __metadata("design:returntype", typeof (_w = typeof Promise !== "undefined" && Promise) === "function" ? _w : Object)
+    __metadata("design:returntype", typeof (_z = typeof Promise !== "undefined" && Promise) === "function" ? _z : Object)
 ], FilesController.prototype, "deleteDirectory", null);
 __decorate([
     (0, common_1.Put)('directories/:path(*)'),
@@ -37733,7 +37456,7 @@ __decorate([
     __param(2, (0, current_user_decorator_1.CurrentUser)('sub')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, String, String]),
-    __metadata("design:returntype", typeof (_x = typeof Promise !== "undefined" && Promise) === "function" ? _x : Object)
+    __metadata("design:returntype", typeof (_0 = typeof Promise !== "undefined" && Promise) === "function" ? _0 : Object)
 ], FilesController.prototype, "renameDirectory", null);
 exports.FilesController = FilesController = FilesController_1 = __decorate([
     (0, swagger_1.ApiTags)('Files'),
@@ -37744,14 +37467,14 @@ exports.FilesController = FilesController = FilesController_1 = __decorate([
 
 
 /***/ }),
-/* 398 */
+/* 396 */
 /***/ ((module) => {
 
 "use strict";
 module.exports = require("@nestjs/platform-express");
 
 /***/ }),
-/* 399 */
+/* 397 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -37803,7 +37526,7 @@ __decorate([
 
 
 /***/ }),
-/* 400 */
+/* 398 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -37817,12 +37540,123 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
-var _a;
+var _a, _b;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.FileListResponseDto = void 0;
+exports.FileListResponseDto = exports.FilePaginationDto = void 0;
 const swagger_1 = __webpack_require__(8);
-const directory_metadata_dto_1 = __webpack_require__(399);
-const file_meta_data_dto_1 = __webpack_require__(401);
+const class_transformer_1 = __webpack_require__(54);
+const class_validator_1 = __webpack_require__(92);
+const directory_metadata_dto_1 = __webpack_require__(397);
+const file_list_options_dto_1 = __webpack_require__(390);
+const file_meta_data_dto_1 = __webpack_require__(399);
+class FilePaginationDto {
+}
+exports.FilePaginationDto = FilePaginationDto;
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Current page number',
+        example: 1,
+        minimum: 1
+    }),
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.Min)(1),
+    (0, class_transformer_1.Type)(() => Number),
+    __metadata("design:type", Number)
+], FilePaginationDto.prototype, "page", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Number of items per page',
+        example: 10,
+        minimum: 1,
+        maximum: 100
+    }),
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.Min)(1),
+    (0, class_validator_1.Max)(100),
+    (0, class_transformer_1.Type)(() => Number),
+    __metadata("design:type", Number)
+], FilePaginationDto.prototype, "limit", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Total number of items',
+        example: 150,
+        minimum: 0
+    }),
+    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.Min)(0),
+    (0, class_transformer_1.Type)(() => Number),
+    __metadata("design:type", Number)
+], FilePaginationDto.prototype, "totalCount", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Total number of pages',
+        example: 15,
+        minimum: 0
+    }),
+    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.Min)(0),
+    (0, class_transformer_1.Type)(() => Number),
+    __metadata("design:type", Number)
+], FilePaginationDto.prototype, "totalPages", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Whether there is a next page available',
+        example: true
+    }),
+    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsBoolean)(),
+    __metadata("design:type", Boolean)
+], FilePaginationDto.prototype, "hasNextPage", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Whether there is a previous page available',
+        example: false
+    }),
+    (0, class_validator_1.IsBoolean)(),
+    (0, class_validator_1.IsNotEmpty)(),
+    __metadata("design:type", Boolean)
+], FilePaginationDto.prototype, "hasPreviousPage", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'Next page number if available',
+        example: 2,
+        minimum: 1
+    }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.Min)(1),
+    (0, class_transformer_1.Type)(() => Number),
+    __metadata("design:type", Number)
+], FilePaginationDto.prototype, "nextPage", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'Previous page number if available',
+        example: null,
+        minimum: 1
+    }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.Min)(1),
+    (0, class_transformer_1.Type)(() => Number),
+    __metadata("design:type", Number)
+], FilePaginationDto.prototype, "previousPage", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Items per page (alias for limit)',
+        example: 10,
+        minimum: 1,
+        maximum: 100
+    }),
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.Min)(1),
+    (0, class_validator_1.Max)(100),
+    (0, class_transformer_1.Type)(() => Number),
+    __metadata("design:type", Number)
+], FilePaginationDto.prototype, "itemsPerPage", void 0);
 class FileListResponseDto {
 }
 exports.FileListResponseDto = FileListResponseDto;
@@ -37835,37 +37669,37 @@ __decorate([
     __metadata("design:type", Array)
 ], FileListResponseDto.prototype, "directories", void 0);
 __decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Total count of files in result' }),
-    __metadata("design:type", Number)
-], FileListResponseDto.prototype, "count", void 0);
-__decorate([
-    (0, swagger_1.ApiPropertyOptional)({ description: 'Current directory/prefix' }),
-    __metadata("design:type", String)
-], FileListResponseDto.prototype, "prefix", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({ description: 'Whether there are more results available' }),
-    __metadata("design:type", Boolean)
-], FileListResponseDto.prototype, "hasMore", void 0);
-__decorate([
-    (0, swagger_1.ApiPropertyOptional)({ description: 'Pagination marker for next page' }),
-    __metadata("design:type", String)
-], FileListResponseDto.prototype, "nextMarker", void 0);
-__decorate([
-    (0, swagger_1.ApiPropertyOptional)({ description: 'Total size of all files in bytes' }),
-    __metadata("design:type", Number)
-], FileListResponseDto.prototype, "totalSize", void 0);
+    (0, swagger_1.ApiProperty)({
+        description: 'Pagination information',
+        type: FilePaginationDto
+    }),
+    __metadata("design:type", FilePaginationDto)
+], FileListResponseDto.prototype, "pagination", void 0);
 __decorate([
     (0, swagger_1.ApiPropertyOptional)({ description: 'Parent directory path' }),
     __metadata("design:type", String)
 ], FileListResponseDto.prototype, "parentDir", void 0);
 __decorate([
-    (0, swagger_1.ApiPropertyOptional)({ description: 'Breadcrumb navigation path segments' }),
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'Breadcrumb navigation path segments',
+        type: [Object],
+        example: [{ name: 'Home', path: '/' }, { name: 'Documents', path: '/documents' }]
+    }),
     __metadata("design:type", typeof (_a = typeof Array !== "undefined" && Array) === "function" ? _a : Object)
 ], FileListResponseDto.prototype, "breadcrumbs", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'Scope context for filtering files',
+        type: file_list_options_dto_1.ScopeContext
+    }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_transformer_1.Type)(() => file_list_options_dto_1.ScopeContext),
+    __metadata("design:type", typeof (_b = typeof file_list_options_dto_1.ScopeContext !== "undefined" && file_list_options_dto_1.ScopeContext) === "function" ? _b : Object)
+], FileListResponseDto.prototype, "scope", void 0);
 
 
 /***/ }),
-/* 401 */
+/* 399 */
 /***/ ((__unused_webpack_module, exports) => {
 
 "use strict";
@@ -37878,7 +37712,7 @@ exports.FileMetadata = FileMetadata;
 
 
 /***/ }),
-/* 402 */
+/* 400 */
 /***/ ((__unused_webpack_module, exports) => {
 
 "use strict";
@@ -37887,7 +37721,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 
 
 /***/ }),
-/* 403 */
+/* 401 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -37902,8 +37736,8 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.LogsModule = void 0;
 const common_1 = __webpack_require__(5);
 const core_1 = __webpack_require__(7);
-const activity_logs_module_1 = __webpack_require__(404);
-const system_logs_module_1 = __webpack_require__(407);
+const activity_logs_module_1 = __webpack_require__(402);
+const system_logs_module_1 = __webpack_require__(405);
 let LogsModule = class LogsModule {
 };
 exports.LogsModule = LogsModule;
@@ -37936,7 +37770,7 @@ exports.LogsModule = LogsModule = __decorate([
 
 
 /***/ }),
-/* 404 */
+/* 402 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -37951,7 +37785,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ActivityLogsModule = void 0;
 const common_1 = __webpack_require__(5);
 const typeorm_1 = __webpack_require__(16);
-const activity_logs_controller_1 = __webpack_require__(405);
+const activity_logs_controller_1 = __webpack_require__(403);
 const activity_logs_service_1 = __webpack_require__(107);
 const activity_log_entity_1 = __webpack_require__(80);
 let ActivityLogsModule = class ActivityLogsModule {
@@ -37970,7 +37804,7 @@ exports.ActivityLogsModule = ActivityLogsModule = __decorate([
 
 
 /***/ }),
-/* 405 */
+/* 403 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 "use strict";
@@ -37979,7 +37813,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ActivityLogsController = void 0;
 const create_controller_factory_1 = __webpack_require__(87);
 const activity_logs_service_1 = __webpack_require__(107);
-const activity_log_dto_1 = __webpack_require__(406);
+const activity_log_dto_1 = __webpack_require__(404);
 const activity_log_entity_1 = __webpack_require__(80);
 class ActivityLogsController extends (0, create_controller_factory_1.createController)(activity_log_entity_1.ActivityLog, activity_logs_service_1.ActivityLogsService, activity_log_dto_1.GetActivityLogDto) {
     async create(entityDto, createdById) {
@@ -38005,7 +37839,7 @@ exports.ActivityLogsController = ActivityLogsController;
 
 
 /***/ }),
-/* 406 */
+/* 404 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -38097,7 +37931,7 @@ exports.GetActivityLogDto = GetActivityLogDto;
 
 
 /***/ }),
-/* 407 */
+/* 405 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -38112,10 +37946,10 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.SystemLogsModule = void 0;
 const common_1 = __webpack_require__(5);
 const typeorm_1 = __webpack_require__(16);
-const system_log_entity_1 = __webpack_require__(408);
-const system_logger_service_1 = __webpack_require__(409);
-const system_logs_controller_1 = __webpack_require__(411);
-const system_logs_service_1 = __webpack_require__(410);
+const system_log_entity_1 = __webpack_require__(406);
+const system_logger_service_1 = __webpack_require__(407);
+const system_logs_controller_1 = __webpack_require__(409);
+const system_logs_service_1 = __webpack_require__(408);
 let SystemLogsModule = class SystemLogsModule {
 };
 exports.SystemLogsModule = SystemLogsModule;
@@ -38132,7 +37966,7 @@ exports.SystemLogsModule = SystemLogsModule = __decorate([
 
 
 /***/ }),
-/* 408 */
+/* 406 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -38186,7 +38020,7 @@ exports.SystemLog = SystemLog = __decorate([
 
 
 /***/ }),
-/* 409 */
+/* 407 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -38205,7 +38039,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.SystemLogger = void 0;
 const log_level_enum_1 = __webpack_require__(81);
 const common_1 = __webpack_require__(5);
-const system_logs_service_1 = __webpack_require__(410);
+const system_logs_service_1 = __webpack_require__(408);
 let SystemLogger = class SystemLogger extends common_1.ConsoleLogger {
     constructor(systemLogsService) {
         super();
@@ -38219,6 +38053,7 @@ let SystemLogger = class SystemLogger extends common_1.ConsoleLogger {
             { context: 'RouterExplorer' },
             { context: 'RoutesResolver' },
             { context: 'InstanceLoader' },
+            // { context: 'BaseGateway' },
         ];
     }
     // Helper method to check if a log should be ignored
@@ -38314,7 +38149,7 @@ exports.SystemLogger = SystemLogger = __decorate([
 
 
 /***/ }),
-/* 410 */
+/* 408 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -38337,10 +38172,10 @@ exports.SystemLogsService = void 0;
 const base_service_1 = __webpack_require__(98);
 const users_service_1 = __webpack_require__(97);
 const common_1 = __webpack_require__(5);
-const schedule_1 = __webpack_require__(155);
+const schedule_1 = __webpack_require__(157);
 const typeorm_1 = __webpack_require__(16);
 const typeorm_2 = __webpack_require__(24);
-const system_log_entity_1 = __webpack_require__(408);
+const system_log_entity_1 = __webpack_require__(406);
 let SystemLogsService = class SystemLogsService extends base_service_1.BaseService {
     constructor(systemLogsRepository, usersService) {
         super(systemLogsRepository, usersService);
@@ -38384,7 +38219,7 @@ exports.SystemLogsService = SystemLogsService = __decorate([
 
 
 /***/ }),
-/* 411 */
+/* 409 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 "use strict";
@@ -38392,9 +38227,9 @@ exports.SystemLogsService = SystemLogsService = __decorate([
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.SystemLogsController = void 0;
 const create_controller_factory_1 = __webpack_require__(87);
-const system_log_dto_1 = __webpack_require__(412);
-const system_log_entity_1 = __webpack_require__(408);
-const system_logs_service_1 = __webpack_require__(410);
+const system_log_dto_1 = __webpack_require__(410);
+const system_log_entity_1 = __webpack_require__(406);
+const system_logs_service_1 = __webpack_require__(408);
 class SystemLogsController extends (0, create_controller_factory_1.createController)(system_log_entity_1.SystemLog, system_logs_service_1.SystemLogsService, system_log_dto_1.GetSystemLogDto) {
     async create(entityDto, createdById) {
         return await super.create(entityDto, createdById);
@@ -38419,7 +38254,7 @@ exports.SystemLogsController = SystemLogsController;
 
 
 /***/ }),
-/* 412 */
+/* 410 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -38484,7 +38319,7 @@ exports.GetSystemLogDto = GetSystemLogDto;
 
 
 /***/ }),
-/* 413 */
+/* 411 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -38501,14 +38336,15 @@ const bull_1 = __webpack_require__(4);
 const common_1 = __webpack_require__(5);
 const core_1 = __webpack_require__(7);
 const typeorm_1 = __webpack_require__(16);
+const account_management_module_1 = __webpack_require__(203);
 const notification_entity_1 = __webpack_require__(82);
-const notifications_gateway_1 = __webpack_require__(303);
-const notifications_controller_1 = __webpack_require__(414);
-const notifications_service_1 = __webpack_require__(302);
-const notifications_processor_1 = __webpack_require__(416);
-const push_subscriptions_module_1 = __webpack_require__(422);
-const user_connection_service_1 = __webpack_require__(419);
-const web_push_service_1 = __webpack_require__(420);
+const notifications_gateway_1 = __webpack_require__(300);
+const notifications_controller_1 = __webpack_require__(412);
+const notifications_service_1 = __webpack_require__(299);
+const notifications_processor_1 = __webpack_require__(414);
+const push_subscriptions_module_1 = __webpack_require__(419);
+const user_connection_service_1 = __webpack_require__(137);
+const web_push_service_1 = __webpack_require__(417);
 let NotificationsModule = class NotificationsModule {
 };
 exports.NotificationsModule = NotificationsModule;
@@ -38533,6 +38369,7 @@ exports.NotificationsModule = NotificationsModule = __decorate([
                     ]
                 },
             ]),
+            account_management_module_1.AccountManagementModule,
         ],
         providers: [
             notifications_service_1.NotificationsService,
@@ -38554,7 +38391,7 @@ exports.NotificationsModule = NotificationsModule = __decorate([
 
 
 /***/ }),
-/* 414 */
+/* 412 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -38583,9 +38420,9 @@ const create_controller_factory_1 = __webpack_require__(87);
 const common_1 = __webpack_require__(5);
 const swagger_1 = __webpack_require__(8);
 const class_transformer_1 = __webpack_require__(54);
-const notification_dto_1 = __webpack_require__(415);
+const notification_dto_1 = __webpack_require__(413);
 const notification_entity_1 = __webpack_require__(82);
-const notifications_service_1 = __webpack_require__(302);
+const notifications_service_1 = __webpack_require__(299);
 class NotificationsController extends (0, create_controller_factory_1.createController)(notification_entity_1.Notification, notifications_service_1.NotificationsService, notification_dto_1.GetNotificationDto, notification_dto_1.NotificationDto, notification_dto_1.UpdateNotificationDto) {
     constructor(notificationsService, notificationsGateway) {
         super(notificationsService);
@@ -38795,7 +38632,7 @@ __decorate([
 
 
 /***/ }),
-/* 415 */
+/* 413 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -38918,7 +38755,7 @@ exports.GetNotificationDto = GetNotificationDto;
 
 
 /***/ }),
-/* 416 */
+/* 414 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -38933,17 +38770,17 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 var NotificationsProcessor_1;
-var _a, _b, _c, _d, _e, _f, _g;
+var _a, _b, _c, _d, _e, _f, _g, _h;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.NotificationsProcessor = void 0;
 const bull_1 = __webpack_require__(4);
 const common_1 = __webpack_require__(5);
-const bull_2 = __webpack_require__(185);
-const notifications_gateway_1 = __webpack_require__(303);
-const notifications_service_1 = __webpack_require__(302);
-const push_subscriptions_service_1 = __webpack_require__(417);
-const user_connection_service_1 = __webpack_require__(419);
-const web_push_service_1 = __webpack_require__(420);
+const bull_2 = __webpack_require__(138);
+const notifications_gateway_1 = __webpack_require__(300);
+const notifications_service_1 = __webpack_require__(299);
+const push_subscriptions_service_1 = __webpack_require__(415);
+const user_connection_service_1 = __webpack_require__(137);
+const web_push_service_1 = __webpack_require__(417);
 let NotificationsProcessor = NotificationsProcessor_1 = class NotificationsProcessor {
     constructor(notificationsService, notificationsGateway, webPushService, pushSubscriptionService, userConnectionService) {
         this.notificationsService = notificationsService;
@@ -38956,6 +38793,11 @@ let NotificationsProcessor = NotificationsProcessor_1 = class NotificationsProce
         this.userRateLimits = new Map();
         // Maximum notifications per minute
         this.MAX_NOTIFICATIONS_PER_MINUTE = 10;
+    }
+    async handleUserOnline(job) {
+        const { userId } = job.data;
+        // Send accumulated notifications to newly online user
+        // This is where you'd fetch and send unread notifications
     }
     async handleProcessNotification(job) {
         const { notificationId, userId, isUpdate } = job.data;
@@ -39004,13 +38846,13 @@ let NotificationsProcessor = NotificationsProcessor_1 = class NotificationsProce
             if (isUserOnline) {
                 // Send via WebSocket
                 this.notificationsGateway.pingUser(userId);
-                this.logger.debug(`Sent batch of ${notifications.length} notifications via WebSocket`);
             }
             else {
                 // User is offline, send as grouped push notification if possible
                 if (notifications.length === 1) {
                     // Single notification
                     await this.sendPushNotification(userId, notifications[0]);
+                    this.notificationsGateway.emitToUser(notifications[0], userId);
                 }
                 else {
                     // Group notifications
@@ -39252,15 +39094,21 @@ let NotificationsProcessor = NotificationsProcessor_1 = class NotificationsProce
 };
 exports.NotificationsProcessor = NotificationsProcessor;
 __decorate([
-    (0, bull_1.Process)('processNotification'),
+    (0, bull_1.Process)('handleUserOnline'),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [typeof (_f = typeof bull_2.Job !== "undefined" && bull_2.Job) === "function" ? _f : Object]),
+    __metadata("design:returntype", Promise)
+], NotificationsProcessor.prototype, "handleUserOnline", null);
+__decorate([
+    (0, bull_1.Process)('processNotification'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [typeof (_g = typeof bull_2.Job !== "undefined" && bull_2.Job) === "function" ? _g : Object]),
     __metadata("design:returntype", Promise)
 ], NotificationsProcessor.prototype, "handleProcessNotification", null);
 __decorate([
     (0, bull_1.Process)('processBatch'),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [typeof (_g = typeof bull_2.Job !== "undefined" && bull_2.Job) === "function" ? _g : Object]),
+    __metadata("design:paramtypes", [typeof (_h = typeof bull_2.Job !== "undefined" && bull_2.Job) === "function" ? _h : Object]),
     __metadata("design:returntype", Promise)
 ], NotificationsProcessor.prototype, "handleProcessBatch", null);
 exports.NotificationsProcessor = NotificationsProcessor = NotificationsProcessor_1 = __decorate([
@@ -39271,7 +39119,7 @@ exports.NotificationsProcessor = NotificationsProcessor = NotificationsProcessor
 
 
 /***/ }),
-/* 417 */
+/* 415 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -39296,7 +39144,7 @@ const users_service_1 = __webpack_require__(97);
 const common_1 = __webpack_require__(5);
 const typeorm_1 = __webpack_require__(16);
 const typeorm_2 = __webpack_require__(24);
-const push_subscription_entity_1 = __webpack_require__(418);
+const push_subscription_entity_1 = __webpack_require__(416);
 let PushSubscriptionsService = class PushSubscriptionsService extends base_service_1.BaseService {
     constructor(pushSubscriptionsRepository, usersService) {
         super(pushSubscriptionsRepository, usersService);
@@ -39363,7 +39211,7 @@ exports.PushSubscriptionsService = PushSubscriptionsService = __decorate([
 
 
 /***/ }),
-/* 418 */
+/* 416 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -39402,72 +39250,7 @@ exports.PushSubscription = PushSubscription = __decorate([
 
 
 /***/ }),
-/* 419 */
-/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
-
-"use strict";
-
-var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
-    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-    return c > 3 && r && Object.defineProperty(target, key, r), r;
-};
-var __metadata = (this && this.__metadata) || function (k, v) {
-    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
-};
-var __param = (this && this.__param) || function (paramIndex, decorator) {
-    return function (target, key) { decorator(target, key, paramIndex); }
-};
-var _a;
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.UserConnectionService = void 0;
-const bull_1 = __webpack_require__(4);
-const common_1 = __webpack_require__(5);
-const bull_2 = __webpack_require__(185);
-let UserConnectionService = class UserConnectionService {
-    constructor(notificationsQueue) {
-        this.notificationsQueue = notificationsQueue;
-        // Track online users
-        this.onlineUsers = new Set();
-    }
-    /**
-     * Mark a user as online
-     */
-    async userConnected(userId) {
-        if (!this.onlineUsers.has(userId)) {
-            this.onlineUsers.add(userId);
-            // Queue job to send unread notifications
-            await this.notificationsQueue.add('handleUserOnline', {
-                userId
-            }, {
-                delay: 1000 // small delay to ensure connection is stable
-            });
-        }
-    }
-    /**
-     * Mark a user as offline
-     */
-    userDisconnected(userId) {
-        this.onlineUsers.delete(userId);
-    }
-    /**
-     * Check if user is online
-     */
-    isUserOnline(userId) {
-        return this.onlineUsers.has(userId);
-    }
-};
-exports.UserConnectionService = UserConnectionService;
-exports.UserConnectionService = UserConnectionService = __decorate([
-    (0, common_1.Injectable)(),
-    __param(0, (0, bull_1.InjectQueue)('notifications')),
-    __metadata("design:paramtypes", [typeof (_a = typeof bull_2.Queue !== "undefined" && bull_2.Queue) === "function" ? _a : Object])
-], UserConnectionService);
-
-
-/***/ }),
-/* 420 */
+/* 417 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -39520,7 +39303,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.WebPushService = void 0;
 const common_1 = __webpack_require__(5);
 const config_1 = __webpack_require__(6);
-const webPush = __importStar(__webpack_require__(421));
+const webPush = __importStar(__webpack_require__(418));
 let WebPushService = WebPushService_1 = class WebPushService {
     constructor(configService) {
         this.configService = configService;
@@ -39589,14 +39372,14 @@ exports.WebPushService = WebPushService = WebPushService_1 = __decorate([
 
 
 /***/ }),
-/* 421 */
+/* 418 */
 /***/ ((module) => {
 
 "use strict";
 module.exports = require("web-push");
 
 /***/ }),
-/* 422 */
+/* 419 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -39611,9 +39394,9 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.PushSubscriptionsModule = void 0;
 const common_1 = __webpack_require__(5);
 const typeorm_1 = __webpack_require__(16);
-const push_subscriptions_controller_1 = __webpack_require__(423);
-const push_subscriptions_service_1 = __webpack_require__(417);
-const push_subscription_entity_1 = __webpack_require__(418);
+const push_subscriptions_controller_1 = __webpack_require__(420);
+const push_subscriptions_service_1 = __webpack_require__(415);
+const push_subscription_entity_1 = __webpack_require__(416);
 let PushSubscriptionsModule = class PushSubscriptionsModule {
 };
 exports.PushSubscriptionsModule = PushSubscriptionsModule;
@@ -39630,7 +39413,7 @@ exports.PushSubscriptionsModule = PushSubscriptionsModule = __decorate([
 
 
 /***/ }),
-/* 423 */
+/* 420 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -39655,9 +39438,9 @@ const current_user_decorator_1 = __webpack_require__(113);
 const create_controller_factory_1 = __webpack_require__(87);
 const common_1 = __webpack_require__(5);
 const swagger_1 = __webpack_require__(8);
-const push_subscription_dto_1 = __webpack_require__(424);
-const push_subscription_entity_1 = __webpack_require__(418);
-const push_subscriptions_service_1 = __webpack_require__(417);
+const push_subscription_dto_1 = __webpack_require__(421);
+const push_subscription_entity_1 = __webpack_require__(416);
+const push_subscriptions_service_1 = __webpack_require__(415);
 class PushSubscriptionsController extends (0, create_controller_factory_1.createController)(push_subscription_entity_1.PushSubscription, // Entity name for Swagger documentation
 push_subscriptions_service_1.PushSubscriptionsService, // The service handling PushSubscription-related operations
 push_subscription_dto_1.GetPushSubscriptionDto) {
@@ -39743,7 +39526,7 @@ __decorate([
 
 
 /***/ }),
-/* 424 */
+/* 421 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -39781,7 +39564,7 @@ exports.GetPushSubscriptionDto = GetPushSubscriptionDto;
 
 
 /***/ }),
-/* 425 */
+/* 422 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -39797,11 +39580,11 @@ exports.OrganizationManagementModule = void 0;
 const common_1 = __webpack_require__(5);
 const core_1 = __webpack_require__(7);
 const typeorm_1 = __webpack_require__(16);
-const branches_module_1 = __webpack_require__(426);
-const departments_module_1 = __webpack_require__(430);
+const branches_module_1 = __webpack_require__(423);
+const departments_module_1 = __webpack_require__(427);
 const organization_entity_1 = __webpack_require__(75);
-const organizations_controller_1 = __webpack_require__(434);
-const organizations_service_1 = __webpack_require__(436);
+const organizations_controller_1 = __webpack_require__(431);
+const organizations_service_1 = __webpack_require__(433);
 let OrganizationManagementModule = class OrganizationManagementModule {
 };
 exports.OrganizationManagementModule = OrganizationManagementModule;
@@ -39841,7 +39624,7 @@ exports.OrganizationManagementModule = OrganizationManagementModule = __decorate
 
 
 /***/ }),
-/* 426 */
+/* 423 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -39856,9 +39639,9 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.BranchesModule = void 0;
 const common_1 = __webpack_require__(5);
 const typeorm_1 = __webpack_require__(16);
-const branches_controller_1 = __webpack_require__(427);
-const branches_service_1 = __webpack_require__(428);
-const departments_module_1 = __webpack_require__(430);
+const branches_controller_1 = __webpack_require__(424);
+const branches_service_1 = __webpack_require__(425);
+const departments_module_1 = __webpack_require__(427);
 const branch_entity_1 = __webpack_require__(74);
 let BranchesModule = class BranchesModule {
 };
@@ -39875,7 +39658,7 @@ exports.BranchesModule = BranchesModule = __decorate([
 
 
 /***/ }),
-/* 427 */
+/* 424 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 "use strict";
@@ -39883,8 +39666,8 @@ exports.BranchesModule = BranchesModule = __decorate([
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.BranchesController = void 0;
 const create_controller_factory_1 = __webpack_require__(87);
-const branches_service_1 = __webpack_require__(428);
-const branch_dto_1 = __webpack_require__(429);
+const branches_service_1 = __webpack_require__(425);
+const branch_dto_1 = __webpack_require__(426);
 const branch_entity_1 = __webpack_require__(74);
 class BranchesController extends (0, create_controller_factory_1.createController)(branch_entity_1.Branch, branches_service_1.BranchesService, branch_dto_1.GetBranchDto, branch_dto_1.BranchDto, branch_dto_1.UpdateBranchDto) {
 }
@@ -39892,7 +39675,7 @@ exports.BranchesController = BranchesController;
 
 
 /***/ }),
-/* 428 */
+/* 425 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -39934,7 +39717,7 @@ exports.BranchesService = BranchesService = __decorate([
 
 
 /***/ }),
-/* 429 */
+/* 426 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -39952,7 +39735,7 @@ var _a;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.GetBranchDto = exports.UpdateBranchDto = exports.BranchDto = void 0;
 const create_get_dto_factory_1 = __webpack_require__(118);
-const address_dto_1 = __webpack_require__(143);
+const address_dto_1 = __webpack_require__(145);
 const swagger_1 = __webpack_require__(8);
 const class_transformer_1 = __webpack_require__(54);
 const class_validator_1 = __webpack_require__(92);
@@ -40020,7 +39803,7 @@ exports.GetBranchDto = GetBranchDto;
 
 
 /***/ }),
-/* 430 */
+/* 427 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -40035,8 +39818,8 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.DepartmentsModule = void 0;
 const common_1 = __webpack_require__(5);
 const typeorm_1 = __webpack_require__(16);
-const departments_controller_1 = __webpack_require__(431);
-const departments_service_1 = __webpack_require__(432);
+const departments_controller_1 = __webpack_require__(428);
+const departments_service_1 = __webpack_require__(429);
 const department_entity_1 = __webpack_require__(72);
 let DepartmentsModule = class DepartmentsModule {
 };
@@ -40054,7 +39837,7 @@ exports.DepartmentsModule = DepartmentsModule = __decorate([
 
 
 /***/ }),
-/* 431 */
+/* 428 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 "use strict";
@@ -40062,8 +39845,8 @@ exports.DepartmentsModule = DepartmentsModule = __decorate([
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.DepartmentsController = void 0;
 const create_controller_factory_1 = __webpack_require__(87);
-const departments_service_1 = __webpack_require__(432);
-const department_dto_1 = __webpack_require__(433);
+const departments_service_1 = __webpack_require__(429);
+const department_dto_1 = __webpack_require__(430);
 const department_entity_1 = __webpack_require__(72);
 class DepartmentsController extends (0, create_controller_factory_1.createController)(department_entity_1.Department, departments_service_1.DepartmentsService, department_dto_1.GetDepartmentDto, department_dto_1.DepartmentDto, department_dto_1.UpdateDepartmentDto) {
 }
@@ -40071,7 +39854,7 @@ exports.DepartmentsController = DepartmentsController;
 
 
 /***/ }),
-/* 432 */
+/* 429 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -40113,7 +39896,7 @@ exports.DepartmentsService = DepartmentsService = __decorate([
 
 
 /***/ }),
-/* 433 */
+/* 430 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -40131,7 +39914,7 @@ var _a;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.GetDepartmentDto = exports.UpdateDepartmentDto = exports.DepartmentDto = void 0;
 const create_get_dto_factory_1 = __webpack_require__(118);
-const address_dto_1 = __webpack_require__(143);
+const address_dto_1 = __webpack_require__(145);
 const swagger_1 = __webpack_require__(8);
 const class_transformer_1 = __webpack_require__(54);
 const class_validator_1 = __webpack_require__(92);
@@ -40199,7 +39982,7 @@ exports.GetDepartmentDto = GetDepartmentDto;
 
 
 /***/ }),
-/* 434 */
+/* 431 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 "use strict";
@@ -40207,16 +39990,16 @@ exports.GetDepartmentDto = GetDepartmentDto;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.OrganizationsController = void 0;
 const create_controller_factory_1 = __webpack_require__(87);
-const organization_dto_1 = __webpack_require__(435);
+const organization_dto_1 = __webpack_require__(432);
 const organization_entity_1 = __webpack_require__(75);
-const organizations_service_1 = __webpack_require__(436);
+const organizations_service_1 = __webpack_require__(433);
 class OrganizationsController extends (0, create_controller_factory_1.createController)(organization_entity_1.Organization, organizations_service_1.OrganizationsService, organization_dto_1.GetOrganizationDto, organization_dto_1.OrganizationDto, organization_dto_1.UpdateOrganizationDto) {
 }
 exports.OrganizationsController = OrganizationsController;
 
 
 /***/ }),
-/* 435 */
+/* 432 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -40234,7 +40017,7 @@ var _a;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.GetOrganizationDto = exports.UpdateOrganizationDto = exports.OrganizationDto = void 0;
 const create_get_dto_factory_1 = __webpack_require__(118);
-const address_dto_1 = __webpack_require__(143);
+const address_dto_1 = __webpack_require__(145);
 const swagger_1 = __webpack_require__(8);
 const class_transformer_1 = __webpack_require__(54);
 const class_validator_1 = __webpack_require__(92);
@@ -40296,7 +40079,7 @@ exports.GetOrganizationDto = GetOrganizationDto;
 
 
 /***/ }),
-/* 436 */
+/* 433 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -40338,7 +40121,7 @@ exports.OrganizationsService = OrganizationsService = __decorate([
 
 
 /***/ }),
-/* 437 */
+/* 434 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -40386,7 +40169,7 @@ var HttpExceptionFilter_1;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.HttpExceptionFilter = void 0;
 const common_1 = __webpack_require__(5);
-const crypto = __importStar(__webpack_require__(196));
+const crypto = __importStar(__webpack_require__(392));
 /**
  * HttpExceptionFilter is a global filter that handles all exceptions thrown in the application.
  * It logs the error details, sanitizes sensitive information, and sends a user-friendly response to the client.
@@ -40537,7 +40320,7 @@ exports.HttpExceptionFilter = HttpExceptionFilter = HttpExceptionFilter_1 = __de
 
 
 /***/ }),
-/* 438 */
+/* 435 */
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
@@ -40552,7 +40335,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.TransformInterceptor = void 0;
 const common_1 = __webpack_require__(5);
 const class_transformer_1 = __webpack_require__(54);
-const operators_1 = __webpack_require__(268);
+const operators_1 = __webpack_require__(264);
 /**
  * A NestJS interceptor that transforms the response data.
  *
@@ -40584,7 +40367,7 @@ exports.TransformInterceptor = TransformInterceptor = __decorate([
 
 
 /***/ }),
-/* 439 */
+/* 436 */
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 "use strict";
@@ -40593,7 +40376,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.swaggerCustomOptions = exports.swaggerConfig = exports.getLocalIpAddress = void 0;
 const config_1 = __webpack_require__(6);
 const swagger_1 = __webpack_require__(8);
-const os_1 = __webpack_require__(336);
+const os_1 = __webpack_require__(333);
 // Initialize ConfigService
 const configService = new config_1.ConfigService();
 // Get local IP address

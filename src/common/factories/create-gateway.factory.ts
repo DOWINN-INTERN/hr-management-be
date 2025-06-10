@@ -1,5 +1,6 @@
 import { JwtService } from '@/modules/account-management/auth/services/jwt.service';
 import { UsersService } from '@/modules/account-management/users/users.service';
+import { UserConnectionService } from '@/modules/notifications/services/user-connection.service';
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { WebSocketGateway } from '@nestjs/websockets';
@@ -12,11 +13,12 @@ export function createGateway(namespace: string) {
     protected namespace = namespace;
     
     constructor(
-      jwtService: JwtService,
-      usersService: UsersService,
-      configService: ConfigService,
+      protected readonly userConnectionService: UserConnectionService,
+      protected readonly jwtService: JwtService,
+      protected readonly usersService: UsersService,
+      protected readonly configService: ConfigService,
     ) {
-      super(jwtService, usersService, configService);
+      super(userConnectionService, jwtService, usersService, configService);
     }
   }
 

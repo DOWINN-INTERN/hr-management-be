@@ -13,7 +13,7 @@ export class RegisterUserDto {
     @ApiProperty({ example: 'user', description: 'The username of the user' })
     @IsString()
     @IsNotEmpty()
-    @Matches(/^[a-z0-9]+$/, { message: 'Username must contain only lowercase letters and numbers' })
+    @Matches(/^[a-z0-9.]+$/, { message: 'Username must contain only lowercase letters, numbers, and dots' })
     @MinLength(5, { message: 'Username must be at least 5 characters long' })
     @Expose()
     userName!: string;

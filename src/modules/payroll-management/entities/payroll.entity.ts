@@ -9,7 +9,7 @@ import { PayrollItem } from '../payroll-items/entities/payroll-item.entity';
 
 @Entity('payrolls')
 export class Payroll extends BaseEntity<Payroll> {
-    @ManyToOne(() => Employee, (employee: Employee) => employee.payrolls, { eager: true })
+    @ManyToOne(() => Employee, (employee: Employee) => employee.payrolls)
     @JoinColumn({ name: 'employeeId' })
     employee!: Employee;
 

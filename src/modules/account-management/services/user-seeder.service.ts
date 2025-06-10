@@ -11,6 +11,7 @@ import { RolesService } from '@/modules/employee-management/roles/roles.service'
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcrypt';
+import { User } from '../users/entities/user.entity';
 import { UsersService } from '../users/users.service';
 
 @Injectable()
@@ -36,7 +37,20 @@ export class UserSeederService implements OnModuleInit {
     
     const superAdminRole = await this.seedSuperAdminRole();
     const employeeRole = await this.seedEmployeeRole();
-    let superAdminEmployee = await this.seedSuperAdminEmployee();
+    let superAdmin = await this.usersService.findOneBy({ email: superAdminEmail });
+    // this.logger.log('Checking if super admin employee exists...');
+    if (!superAdmin) {
+      this.logger.warn('Super admin user does not exist');
+      // create
+      superAdmin = await this.usersService.create({
+        email: superAdminEmail,
+        emailVerified: true,
+        password: await bcrypt.hash(superAdminPassword, 10),
+        userName: superAdminEmail,
+      });
+    }
+
+    let superAdminEmployee = await this.seedSuperAdminEmployee(superAdmin);
 
     // check if super admin employee has the super admin and employee role
     const hasSuperAdminAndEmployeeRole = 
@@ -75,6 +89,7 @@ export class UserSeederService implements OnModuleInit {
           email: superAdminEmail,
           password: await bcrypt.hash(superAdminPassword, 10),
           userName: superAdminEmail,
+          emailVerified: true,
           employee: superAdminEmployee
         });
         // this.logger.log('Super admin user created successfully');
@@ -161,7 +176,7 @@ export class UserSeederService implements OnModuleInit {
     return employeeRole;
   }
 
-  async seedSuperAdminEmployee() {
+  async seedSuperAdminEmployee(user: User) {
     // Check if super admin employee exists
     let superAdminEmployee = await this.employeesService.findOneBy({ employeeNumber: 1 }, { relations: { roles: true } });
 
@@ -173,6 +188,8 @@ export class UserSeederService implements OnModuleInit {
         employmentCondition: EmploymentCondition.REGULAR,
         employmentType: EmploymentType.FULL_TIME,
         commencementDate: new Date(),
+        user,
+        userId: user.id,
         employeeNumber: 1,
       });
       // this.logger.log('SuperAdmin employee created successfully');

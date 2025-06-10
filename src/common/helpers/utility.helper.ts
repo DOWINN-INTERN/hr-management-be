@@ -52,7 +52,7 @@ export class UtilityHelper {
             }
             
             if (this.isBroaderScope(roleScope, effectiveScopeType)) {
-            effectiveScopeType = roleScope;
+                effectiveScopeType = roleScope;
             }
         }
         

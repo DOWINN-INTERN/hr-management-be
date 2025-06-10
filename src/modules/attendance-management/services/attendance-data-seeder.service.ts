@@ -331,20 +331,20 @@ async seedManagedAttendanceScenarios(targetDate: Date = new Date()) {
     attendance.dayType = dayType;
     attendance.date = schedule.date;
     attendance.cutoff = schedule.cutoff;
-    attendance.organizationId = schedule.organizationId;
-    attendance.departmentId = schedule.departmentId;
-    attendance.branchId = schedule.branchId;
-    attendance.userId = schedule.userId;
+    attendance.organizationId = schedule.employee.organizationId;
+    attendance.departmentId = schedule.employee.departmentId;
+    attendance.branchId = schedule.employee.branchId;
+    attendance.userId = schedule.employee.userId;
     
     // Save the attendance record to get an ID
-    const savedAttendance = await this.attendancesService.save(attendance);
+    const savedAttendance: Attendance = (await this.attendancesService.save(attendance)) as Attendance;
     
     // Create attendance punches if applicable
     const punches: AttendancePunch[] = [];
     
     if (scenario.timeIn) {
       const inPunch = new AttendancePunch({});
-      inPunch.attendance = savedAttendance;
+      inPunch.attendance = savedAttendance as Attendance;
       inPunch.time = scenario.timeIn;
       inPunch.punchMethod = PunchMethod.FINGERPRINT;
       inPunch.punchType = PunchType.CHECK_IN;
@@ -355,7 +355,7 @@ async seedManagedAttendanceScenarios(targetDate: Date = new Date()) {
     
     if (scenario.timeOut) {
       const outPunch = new AttendancePunch({});
-      outPunch.attendance = savedAttendance;
+      outPunch.attendance = savedAttendance as Attendance;
       outPunch.time = scenario.timeOut;
       outPunch.punchMethod = PunchMethod.FINGERPRINT;
       outPunch.punchType = PunchType.CHECK_OUT;

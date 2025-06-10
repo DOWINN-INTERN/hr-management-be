@@ -1124,8 +1124,12 @@ export abstract class BaseService<T extends BaseEntity<T>> {
     return response;
   }
 
-  async save(entity: T): Promise<T> {
-    return await this.repository.save(entity);
+  async save(entity: T | T[]): Promise<T | T[]> {
+    if (Array.isArray(entity)) {
+      return await this.repository.save(entity);
+    } else {
+      return await this.repository.save(entity);
+    }
   }
     
   // DONE

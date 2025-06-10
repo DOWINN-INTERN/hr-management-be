@@ -108,6 +108,9 @@ export class PayrollItemType extends BaseEntity<PayrollItemType> {
     })
     minAmount?: number;
 
+    @Column({ default: false })
+    isAddableToBaseCompensation!: boolean;
+
     @Column('decimal', 
     { 
         precision: 10, 

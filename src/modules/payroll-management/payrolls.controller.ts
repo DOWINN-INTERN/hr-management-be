@@ -15,7 +15,7 @@ import { RecalculateOptionsDto } from './dtos/recalculate-options.dto';
 import { ReleasePayrollDto } from './dtos/release-payroll.dto';
 import { Payroll } from "./entities/payroll.entity";
 import { PayrollsService } from './payrolls.service';
-import { generateMiniPayslipPdf } from './utils/payslip-pdf-generator';
+import { generatePayslipPdf } from './utils/payslip-pdf-generator';
 export class PayrollsController extends createController(Payroll, PayrollsService, GetPayrollDto, PayrollDto, UpdatePayrollDto)
 {
     constructor(
@@ -321,7 +321,7 @@ export class PayrollsController extends createController(Payroll, PayrollsServic
         // log
         
         // Generate PDF using the custom generator
-        const pdfBuffer = await generateMiniPayslipPdf(payslipData);
+        const pdfBuffer = await generatePayslipPdf(payslipData);
         
         const fileName = `Payslip_${employee.employeeNumber}_${UtilityHelper.ensureDate(payroll.cutoff.startDate).toISOString().slice(0, 10)}.pdf`;
         

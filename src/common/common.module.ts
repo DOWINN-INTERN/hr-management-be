@@ -3,10 +3,8 @@ import { CutoffsModule } from '@/modules/payroll-management/cutoffs/cutoffs.modu
 import { ShiftManagementModule } from '@/modules/shift-management/shift-management.module';
 import { Global, Module } from '@nestjs/common';
 import { RouterModule } from '@nestjs/core';
-import { PdfUtilsController } from './controllers/html-to-pdf.controller';
 import { EmployeeGroupAssignmentListener } from './listeners/employee-group-assignement.listener';
 import { CommonService } from './services/common.service';
-import { HtmlToPdfService } from './services/html-to-pdf.service';
 import { TransactionService } from './services/transaction.service';
 
 @Global()
@@ -22,10 +20,8 @@ import { TransactionService } from './services/transaction.service';
   providers: [
     CommonService, TransactionService,
     EmployeeGroupAssignmentListener,
-    HtmlToPdfService,
   ],
-  controllers: [PdfUtilsController],
-  exports: [CommonService, TransactionService, EmployeeGroupAssignmentListener, HtmlToPdfService],
+  exports: [CommonService, TransactionService, EmployeeGroupAssignmentListener],
 })
 
 export class CommonModule {}

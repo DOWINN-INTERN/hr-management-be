@@ -4,7 +4,7 @@ import { ChunkUploadResult } from '../dtos/chunk-upload-result.dto';
 import { ChunkedFileInfo } from '../dtos/chunked-file-info.dto';
 import { DirectoryMetadata } from '../dtos/directory-metadata.dto';
 import { FileExportOptions } from '../dtos/file-export-options.dto';
-import { FileListOptions } from '../dtos/file-list-options.dto';
+import { FileListOptionsDto } from '../dtos/file-list-options.dto';
 import { FileListResponseDto } from '../dtos/file-list-response.dto';
 import { FileMetadata } from '../dtos/file-meta-data.dto';
 import { FileUploadOptions } from '../dtos/file-upload-options.dto';
@@ -18,7 +18,7 @@ export interface IFileService {
   fileExists(fileKey: string): Promise<boolean>;
 
   // Directory operations
-  listFiles(options?: FileListOptions, authorization?: string): Promise<FileListResponseDto>;
+  listFiles(options?: FileListOptionsDto, authorization?: string): Promise<FileListResponseDto>;
   createDirectory(dirPath: string): Promise<DirectoryMetadata>;
   deleteDirectory(dirPath: string, recursive?: boolean): Promise<boolean>;
   renameDirectory(oldPath: string, newPath: string): Promise<DirectoryMetadata>;

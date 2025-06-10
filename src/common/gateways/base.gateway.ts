@@ -1,5 +1,6 @@
 import { JwtService } from '@/modules/account-management/auth/services/jwt.service';
 import { UsersService } from '@/modules/account-management/users/users.service';
+import { UserConnectionService } from '@/modules/notifications/services/user-connection.service';
 import { Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import {
@@ -37,7 +38,7 @@ export type WsResponseData = {
 
 export abstract class BaseGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect, OnModuleInit, OnModuleDestroy {
     @WebSocketServer() server!: Server;
-    protected logger = new Logger(BaseGateway.name);
+    protected logger = new Logger(this.constructor.name);
     private readonly connections = new Map<string, { count: number, lastConnect: Date }>();
     // Organized client tracking
     protected connectedClients = new Map<string, AuthenticatedSocket>();
@@ -57,17 +58,12 @@ export abstract class BaseGateway implements OnGatewayInit, OnGatewayConnection,
     protected heartbeatInterval?: NodeJS.Timeout;
 
     constructor(
+        protected readonly userConnectionService: UserConnectionService,
         protected readonly jwtService: JwtService,
         protected readonly usersService: UsersService,
-        protected readonly configService: ConfigService, // Add this
+        protected readonly configService: ConfigService,
     ) {
-        // Configure compression
-        const compressionThreshold = this.configService.get<number>('websocket.compressionThreshold', 1024);
-        this.server?.engine?.on('connection', (socket) => {
-            socket.compress = (data: any) => {
-                return data.length > compressionThreshold;
-            };
-        });
+        
     }
     
     // Gateway configuration
@@ -101,6 +97,15 @@ export abstract class BaseGateway implements OnGatewayInit, OnGatewayConnection,
             // this.logger.warn('Server or server.engine not available in afterInit');
             return; // Exit early if server or server.engine is not available
         }
+
+        // Configure compression
+        const compressionThreshold = this.configService.get<number>('websocket.compressionThreshold', 1024);
+        this.server?.engine?.on('connection', (socket) => {
+            socket.compress = (data: any) => {
+                return data.length > compressionThreshold;
+            };
+        });
+
         const corsConfig = {
             origin: this.configService.getOrThrow<string[]>('CORS_ORIGINS'),
             credentials: true,

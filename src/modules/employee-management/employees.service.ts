@@ -59,8 +59,6 @@ export class EmployeesService extends BaseService<Employee> {
             createDto.roles?.push(employeeRole);
         }
 
-        
-
         // find the user id
         if (createDto.userId) {
             const user = await this.usersService.findOneByOrFail({ id: createDto.userId });

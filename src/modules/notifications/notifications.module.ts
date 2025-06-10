@@ -2,6 +2,7 @@ import { BullModule } from '@nestjs/bull';
 import { Global, Module } from '@nestjs/common';
 import { RouterModule } from '@nestjs/core';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { AccountManagementModule } from '../account-management/account-management.module';
 import { Notification } from './entities/notification.entity';
 import { NotificationsGateway } from './gateways/notifications.gateway';
 import { NotificationsController } from './notifications.controller';
@@ -31,6 +32,7 @@ import { WebPushService } from './services/web-push.service';
             ]
           },
         ]),
+        AccountManagementModule,
     ],
   providers: [
     NotificationsService, 
