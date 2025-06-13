@@ -1,5 +1,6 @@
 import { PunchMethod } from "@/common/enums/punch-method.enum";
 import { PunchType } from "@/common/enums/punch-type.enum";
+import { BiometricUserDto, GetBiometricUserDto } from "../dtos/biometric-user.dto";
 import { ConnectDeviceDto } from "../dtos/connect-device.dto";
 import { BiometricDevice } from "../entities/biometric-device.entity";
 
@@ -13,50 +14,41 @@ export interface IBiometricTemplate {
 
 export interface IBiometricService {
     // Core device management (required)
-    connect(dto: ConnectDeviceDto): Promise<BiometricDevice>;
+    connect(dto: ConnectDeviceDto, createdBy?: string): Promise<BiometricDevice>;
     disconnect(deviceId: string, isManual: boolean): Promise<BiometricDevice>;
     
     // Device information methods
     getSerialNumber(deviceId: string): Promise<string>;
     getFirmwareVersion(deviceId: string): Promise<string>;
     getDeviceName(deviceId: string): Promise<string>;
+    
+    // Device action methods
     restartDevice(deviceId: string): Promise<boolean>;
+    // Time management methods
+    getTime(deviceId: string): Promise<Date>;
+    setTime(deviceId: string, time: Date): Promise<boolean>;
+
+    // User methods
     registerUser(
         deviceId: string, 
-        userData: {
-            userId: string;
-            name: string;
-            password?: string;
-            cardNumber?: string;
-            role?: number;
-        }
-    ): Promise<IBiometricUser>;
+        userData: BiometricUserDto,
+    ): Promise<BiometricUserDto>;
+    updateUser(
+        deviceId: string, 
+        userData: BiometricUserDto
+    ): Promise<BiometricUserDto>;
+    deleteUser(deviceId: string, userId: number): Promise<boolean>;
+    getUserById(dto: GetBiometricUserDto): Promise<BiometricUserDto>;
+    getUsers(deviceId: string): Promise<BiometricUserDto[]>;
+    getUserDetails(deviceId: string): Promise<IBiometricUser[]>;
 
     getUserFingerprint(
         deviceId: string,
         userId: string,
         fingerId?: number
     ): Promise<IBiometricTemplate | null>;
-    
-    // Time management methods
-    getTime(deviceId: string): Promise<Date>;
-    setTime(deviceId: string, time: Date): Promise<boolean>;
-    
-    // User management methods
-    enrollUser(deviceId: string, userId: string, fingerId: number): Promise<IBiometricTemplate>;
-    deleteUser(deviceId: string, userId: string): Promise<boolean>;
     verifyFingerprint(deviceId: string, template: IBiometricTemplate): Promise<boolean>;
-    getUsers(deviceId: string): Promise<IBiometricUser[]>;
-    getUserDetails(deviceId: string): Promise<IBiometricUser[]>;
-    setUser(
-        deviceId: string,
-        uid: number,
-        userId: string,
-        name: string,
-        password?: string,
-        role?: number,
-        cardno?: number
-    ): Promise<boolean>;
+    
     syncUsers(sourceDeviceId: string, targetDeviceId: string): Promise<number>;
     
     // Attendance management methods
@@ -93,7 +85,7 @@ export interface IBiometricUser {
     /**
      * User ID in the system
      */
-    userId: string;
+    userId: number
 
     /**
      * User's name
@@ -103,15 +95,16 @@ export interface IBiometricUser {
     /**
      * User's password (if applicable)
      */
-    password: string;
+    password?: string;
 
     /**
      * Card number
      */
     cardNumber?: string;
 
-    /**
-     * User role (0=normal user, 14=admin)
-     */
     role: number;
+    department: number;
+    attendanceMode: number;
+    enrolledFingerprints: number[];
+    deviceCode: number;
 }

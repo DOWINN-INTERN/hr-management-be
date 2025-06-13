@@ -2,14 +2,14 @@ import { BiometricDeviceType } from '@/common/enums/biometrics-device-type.enum'
 import { HttpException, HttpStatus, InternalServerErrorException, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Repository } from 'typeorm';
+import { BiometricUserDto, GetBiometricUserDto } from '../dtos/biometric-user.dto';
 import { ConnectDeviceDto } from '../dtos/connect-device.dto';
 import { BiometricDevice } from '../entities/biometric-device.entity';
 import { BiometricsGateway } from '../gateways/biometrics.gateway';
 import {
   AttendanceRecord,
   IBiometricService,
-  IBiometricTemplate,
-  IBiometricUser
+  IBiometricTemplate
 } from '../interfaces/biometric.interface';
 
 /**
@@ -56,15 +56,15 @@ export abstract class BaseBiometricsService implements Partial<IBiometricService
                       deviceId: device.deviceId,
                       ipAddress: device.ipAddress,
                       port: device.port,
-                      deviceType: device.provider
-                  } as ConnectDeviceDto)
+                      deviceType: device.provider,
+                  } as ConnectDeviceDto, device.createdBy)
                   .catch()
               )
             );
         }
         } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-        this.logger.error(`Error initializing devices from database: ${errorMessage}`);
+          const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+          this.logger.error(`Error initializing devices from database: ${errorMessage}`);
         }
     }
   
@@ -84,14 +84,13 @@ export abstract class BaseBiometricsService implements Partial<IBiometricService
 
     abstract registerUser(
         deviceId: string, 
-        userData: {
-            userId: string;
-            name: string;
-            password?: string;
-            cardNumber?: string;
-            role?: number;
-        }
-    ): Promise<IBiometricUser>;
+        userData: BiometricUserDto,
+    ): Promise<BiometricUserDto>;
+
+    abstract updateUser(
+        deviceId: string,
+        userData: BiometricUserDto
+    ): Promise<BiometricUserDto>;
 
     /**
      * Connect to a Biometric device
@@ -99,7 +98,7 @@ export abstract class BaseBiometricsService implements Partial<IBiometricService
      * @param port Device port
      * @returns Connected device information
      */
-    async connect(dto: ConnectDeviceDto): Promise<BiometricDevice> {
+    async connect(dto: ConnectDeviceDto, createdBy?: string): Promise<BiometricDevice> {
         if (this.biometricDeviceType !== dto.deviceType) {
             throw new InternalServerErrorException(
                 `Device type mismatch: expected ${this.biometricDeviceType}, got ${dto.deviceType}`
@@ -109,8 +108,7 @@ export abstract class BaseBiometricsService implements Partial<IBiometricService
         const deviceId = this.generateDeviceId(dto.ipAddress, dto.port);
 
         // Create new connection with retry logic
-        return await this.connectWithRetry(dto, deviceId);
-
+        return await this.connectWithRetry(dto, deviceId, createdBy);
     }
 
     /**
@@ -154,7 +152,8 @@ export abstract class BaseBiometricsService implements Partial<IBiometricService
 
     abstract connectWithRetry(
       dto: ConnectDeviceDto,
-      deviceId: string
+      deviceId: string,
+      createdBy?: string
     ): Promise<BiometricDevice>;
 
     abstract disconnect(deviceId: string, isManual: boolean): Promise<BiometricDevice>;
@@ -194,7 +193,7 @@ export abstract class BaseBiometricsService implements Partial<IBiometricService
         throw new BiometricException('Method not implemented', HttpStatus.NOT_IMPLEMENTED);
     }
     
-    async deleteUser(deviceId: string, userId: string): Promise<boolean> {
+    async deleteUser(deviceId: string, userId: number): Promise<boolean> {
         throw new BiometricException('Method not implemented', HttpStatus.NOT_IMPLEMENTED);
     }
     
@@ -202,25 +201,14 @@ export abstract class BaseBiometricsService implements Partial<IBiometricService
         throw new BiometricException('Method not implemented', HttpStatus.NOT_IMPLEMENTED);
     }
     
-    async getUsers(deviceId: string): Promise<IBiometricUser[]> {
+    async getUsers(deviceId: string): Promise<BiometricUserDto[]> {
         throw new BiometricException('Method not implemented', HttpStatus.NOT_IMPLEMENTED);
     }
-    
-    async getUserDetails(deviceId: string): Promise<IBiometricUser[]> {
-        throw new BiometricException('Method not implemented', HttpStatus.NOT_IMPLEMENTED);
-    }
-  
-  async setUser(
-    deviceId: string,
-    uid: number,
-    userId: string,
-    name: string,
-    password?: string,
-    role?: number,
-    cardno?: number
-  ): Promise<boolean> {
+
+  async getUserById(dto: GetBiometricUserDto): Promise<BiometricUserDto> {
     throw new BiometricException('Method not implemented', HttpStatus.NOT_IMPLEMENTED);
   }
+    
   
   async syncUsers(sourceDeviceId: string, targetDeviceId: string): Promise<number> {
     throw new BiometricException('Method not implemented', HttpStatus.NOT_IMPLEMENTED);

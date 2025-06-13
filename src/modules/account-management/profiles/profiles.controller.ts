@@ -8,8 +8,8 @@ import { ProfilesService } from './profiles.service';
 
 export class ProfilesController extends createController(Profile, ProfilesService, GetProfileDto, ProfileDto, UpdateProfileDto)
 {
-    override findAllAdvanced(paginationDto: PaginationDto<Profile>): Promise<PaginatedResponseDto<GetProfileDto>> {
-        return super.findAllAdvanced(paginationDto);
+    override findAllAdvanced(req: any, paginationDto: PaginationDto<Profile>): Promise<PaginatedResponseDto<GetProfileDto>> {
+        return super.findAllAdvanced(req, paginationDto);
     }
 
     override async findOne(id: string): Promise<GetProfileDto> {

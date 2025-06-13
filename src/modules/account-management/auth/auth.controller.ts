@@ -1,14 +1,13 @@
 import { Authorize } from '@/common/decorators/authorize.decorator';
 import { CurrentUser } from '@/common/decorators/current-user.decorator';
+import { ApiCreateResponses, ApiGenericResponses } from '@/common/decorators/generic-api-responses.decorator';
 import { GeneralResponseDto } from '@/common/dtos/generalresponse.dto';
 import { IJwtPayload } from '@/common/interfaces/jwt-payload.interface';
 import { Body, Controller, Get, Logger, ParseUUIDPipe, Post, Req, Res, UnauthorizedException, UseGuards } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ApiBody, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
-import { plainToInstance } from 'class-transformer';
 import { Request, Response } from 'express';
 import { GoogleAuthGuard } from '../../../common/guards/google-auth.guard';
-import { GetUserDto } from '../users/dtos/user.dto';
 import { UsersService } from '../users/users.service';
 import { AuthService } from './auth.service';
 import { LoginResponseDto } from './dto/login-response.dto';
@@ -257,12 +256,14 @@ export class AuthController {
     type: RegisterUserDto,
     required: true,
   })
-  @ApiResponse({ status: 400, description: 'Bad Request - Invalid input', type: GeneralResponseDto })
-  @ApiResponse({ status: 409, description: 'Conflict - User already exists', type: GeneralResponseDto })
-  @ApiResponse({ status: 500, description: 'Internal Server Error', type: GeneralResponseDto })
-  @ApiResponse({ status: 201, description: 'User registered successfully.' })
-  async register(@Body() registerDto: RegisterUserDto): Promise<GetUserDto> {
-    return plainToInstance(GetUserDto, this.authService.registerUser(registerDto));
+  @ApiCreateResponses('User', GeneralResponseDto)
+  @ApiGenericResponses()
+  async register(@Body() registerDto: RegisterUserDto): Promise<Partial<GeneralResponseDto>> {
+    await this.authService.registerUser(registerDto);
+    return {
+      statusCode: 201,
+      message: 'Account created successfully. Please check your email to verify your account.',
+    };
   }
 
   // @Get('google')

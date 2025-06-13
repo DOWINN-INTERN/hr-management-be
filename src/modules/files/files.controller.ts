@@ -1,7 +1,9 @@
 import { Authorize } from '@/common/decorators/authorize.decorator';
 import { CurrentUser } from '@/common/decorators/current-user.decorator';
+import { ApiGenericResponses } from '@/common/decorators/generic-api-responses.decorator';
 import { Action } from '@/common/enums/action.enum';
 import { RoleScopeType } from '@/common/enums/role-scope-type.enum';
+import { UtilityHelper } from '@/common/helpers/utility.helper';
 import { ResourceScope } from '@/common/interceptors/scope.interceptor';
 import { IJwtPayload } from '@/common/interfaces/jwt-payload.interface';
 import {
@@ -16,7 +18,6 @@ import {
   Logger,
   NotFoundException,
   Param,
-  ParseUUIDPipe,
   Post,
   Put,
   Query,
@@ -39,17 +40,27 @@ import {
   ApiTags
 } from '@nestjs/swagger';
 import { Request, Response } from 'express';
+import path from 'path';
 import { FILE_SERVICE } from './config/file-provider.config';
 import { DirectoryMetadata } from './dtos/directory-metadata.dto';
 import { FileListOptionsDto, FileSortField, SortDirection } from './dtos/file-list-options.dto';
 import { FileListResponseDto } from './dtos/file-list-response.dto';
 import { FileMetadata } from './dtos/file-meta-data.dto';
+import { FileUploadOptions } from './dtos/file-upload-options.dto';
+import { FileUploadDto } from './dtos/file-upload.dto';
 import { IFileService } from './interfaces/file-service.interface';
 
   @ApiTags('Files')
   @Controller('files')
   export class FilesController {
     private readonly logger = new Logger(FilesController.name);
+    private readonly GLOBAL_FILE_SIZE_LIMIT = 10000;
+    private readonly ORGANIZATION_FILE_SIZE_LIMIT = 5000;
+    private readonly BRANCH_FILE_SIZE_LIMIT = 2500;
+    private readonly DEPARTMENT_FILE_SIZE_LIMIT = 1000;
+    private readonly OWNED_FILE_SIZE_LIMIT = 500;
+    private readonly MAX_FILE_SIZE = 100; // 100MB
+
     constructor(
         @Inject(FILE_SERVICE)
         private readonly fileService: IFileService
@@ -77,57 +88,13 @@ import { IFileService } from './interfaces/file-service.interface';
       return parts.join('/');
     }
 
-    private validateTenantAccess(
-      resourceScope: ResourceScope,
-      organizationId?: string,
-      branchId?: string,
-      departmentId?: string
-    ): void {
-      switch (resourceScope.type) {
-        case RoleScopeType.GLOBAL:
-          // Global scope can access any tenant
-          return;
-          
-        case RoleScopeType.ORGANIZATION:
-          if (organizationId && !resourceScope.organizations?.includes(organizationId)) {
-            throw new ForbiddenException(`Access denied to organization ${organizationId}`);
-          }
-          break;
-          
-        case RoleScopeType.BRANCH:
-          if (branchId && !resourceScope.branches?.includes(branchId)) {
-            throw new ForbiddenException(`Access denied to branch ${branchId}`);
-          }
-          if (organizationId && !resourceScope.organizations?.includes(organizationId)) {
-            throw new ForbiddenException(`Access denied to organization ${organizationId}`);
-          }
-          break;
-          
-        case RoleScopeType.DEPARTMENT:
-          if (departmentId && !resourceScope.departments?.includes(departmentId)) {
-            throw new ForbiddenException(`Access denied to department ${departmentId}`);
-          }
-          if (branchId && !resourceScope.branches?.includes(branchId)) {
-            throw new ForbiddenException(`Access denied to branch ${branchId}`);
-          }
-          if (organizationId && !resourceScope.organizations?.includes(organizationId)) {
-            throw new ForbiddenException(`Access denied to organization ${organizationId}`);
-          }
-          break;
-          
-        case RoleScopeType.OWNED:
-          // For owned scope, they can only access their own files
-          // This will be handled by file-level permissions
-          break;
-      }
-    }
-
     private getEffectiveTenantContext(
       resourceScope: ResourceScope,
       requestedOrgId?: string,
       requestedBranchId?: string,
-      requestedDeptId?: string
-    ): { organizationId?: string; branchId?: string; departmentId?: string } {
+      requestedDeptId?: string,
+      requestedUserId?: string
+    ): { organizationId?: string; branchId?: string; departmentId?: string; userId?: string } {
       switch (resourceScope.type) {
         case RoleScopeType.GLOBAL:
           return {
@@ -171,7 +138,10 @@ import { IFileService } from './interfaces/file-service.interface';
   
     @Post('upload')
     @Authorize({ endpointType: Action.CREATE })
-    @ApiOperation({ summary: 'Upload a single file' })
+    @ApiOperation({
+      summary: 'Upload a Single File with Multi-tenant Security',
+      description: 'Uploads a file to the tenant-specific directory with access control based on user scope.'
+    })
     @ApiConsumes('multipart/form-data')
     @ApiBody({
       schema: {
@@ -189,104 +159,183 @@ import { IFileService } from './interfaces/file-service.interface';
       name: 'organizationId',
       type: String,
       required: false,
-      description: 'Organization ID for multi-tenant context'
+      description: 'Organization ID for organization/branch/department scoped uploads'
     })
     @ApiQuery({
       name: 'branchId',
       required: false,
       type: String,
-
-      description: 'Branch ID for multi-tenant context'
+      description: 'Branch ID for branch/department scoped uploads'
     })
     @ApiQuery({
       name: 'departmentId',
       type: String,
       required: false,
-      description: 'Department ID for multi-tenant context'
+      description: 'Department ID for department scoped uploads'
     })
     @ApiQuery({
       name: 'folder',
       required: false,
       type: String,
-      description: 'Folder path to upload the file to'
+      description: 'Folder path relative to tenant root directory'
     })
     @ApiQuery({
       name: 'userId',
       required: false,
       type: String,
-      description: 'User ID of the uploader (for metadata purposes)'
+      description: 'User ID for user-specific uploads (admin only or owned resources)'
     })
     @ApiResponse({
       status: HttpStatus.CREATED,
       description: 'File uploaded successfully',
       type: FileMetadata
     })
+    @ApiGenericResponses()
     @UseInterceptors(FileInterceptor('file'))
     async uploadFile(
       @UploadedFile() file: Express.Multer.File,
       @Req() req: any,
-      @Query('organizationId', ParseUUIDPipe) organizationId?: string,
-      @Query('branchId', ParseUUIDPipe) branchId?: string,
-      @Query('departmentId', ParseUUIDPipe) departmentId?: string,
-      @Query('folder', ParseUUIDPipe) folder?: string,
+      @Query() query: FileUploadDto,
       @CurrentUser() user?: IJwtPayload,
     ): Promise<FileMetadata> {
       if (!file) {
         throw new BadRequestException('No file provided');
       }
 
-      const resourceScope = req.resourceScope as ResourceScope;
-      if (!resourceScope) {
-        throw new ForbiddenException('Access scope not determined');
-      }
+      const resourceScope = req.resourceScope;
 
-      // Validate tenant access
-      this.validateTenantAccess(resourceScope, organizationId, branchId, departmentId);
-
-      // Get effective tenant context based on user's scope
-      const effectiveContext = this.getEffectiveTenantContext(
-        resourceScope,
-        organizationId,
-        branchId,
-        departmentId
-      );
-
-      // Build tenant-aware folder structure
-      const tenantFolder = this.buildTenantFolder(
-        effectiveContext.organizationId,
-        effectiveContext.branchId,
-        effectiveContext.departmentId,
-        folder
-      );
-  
       try {
-        const authorization = req.headers.authorization;
-        return await this.fileService.uploadFile(file, {
-          folder: tenantFolder,
-          token: authorization,
-          organizationId: effectiveContext.organizationId,
-          branchId: effectiveContext.branchId,
-          departmentId: effectiveContext.departmentId,
+        // Extract tenant context from query
+        const tenantContext = {
+          organizationId: query.organizationId,
+          branchId: query.branchId,
+          departmentId: query.departmentId,
+          userId: query.userId
+        };
+
+        // Validate tenant access and get the base tenant directory
+        const tenantDirectory = UtilityHelper.validateAndGetTenantDirectory(
+          resourceScope,
+          tenantContext
+        );
+
+        // Build the full upload path
+        let uploadPath = tenantDirectory;
+        if (query.folder) {
+          // Sanitize the folder path to prevent directory traversal
+          const sanitizedFolder = query.folder
+            .replace(/\.\./g, '') // Remove ..
+            .replace(/^\/+/, '') // Remove leading slashes
+            .replace(/\/+/g, '/'); // Normalize multiple slashes
+          
+          if (sanitizedFolder) {
+            uploadPath = path.join(tenantDirectory, sanitizedFolder);
+          }
+        }
+
+        // log upload path
+        this.logger.log(`Uploading file to path: ${uploadPath}`);
+
+        // Validate the final path is within the allowed tenant directory
+        if (!UtilityHelper.validateFilePath(uploadPath, tenantDirectory)) {
+          throw new ForbiddenException('Invalid file path: outside allowed directory');
+        }
+
+        // Additional file validation based on scope
+        this.validateFileUpload(file, resourceScope, uploadPath);
+
+        // Create upload options with tenant metadata
+        const uploadOptions: FileUploadOptions = {
+          folder: uploadPath,
+          token: req.headers.authorization,
+          organizationId: tenantContext.organizationId,
+          branchId: tenantContext.branchId,
+          departmentId: tenantContext.departmentId,
           userId: user?.sub,
           scope: resourceScope.type,
-          metadata: { 
+          maxSizeBytes: this.MAX_FILE_SIZE * 1024 * 1024, // 100MB
+          metadata: {
             uploadedBy: user?.sub || 'anonymous',
-            organizationId: effectiveContext.organizationId,
-            branchId: effectiveContext.branchId,
-            departmentId: effectiveContext.departmentId,
-            scope: resourceScope.type,
-            uploadedAt: new Date().toISOString()
+            uploadedAt: new Date().toISOString(),
+            tenantDirectory: tenantDirectory,
+            originalPath: uploadPath
           }
-        });
+        };
+
+        // Upload the file
+        return await this.fileService.uploadFile(file, uploadOptions);
+
       } catch (error) {
-        if (error instanceof Error) {
-          throw new BadRequestException(`File upload failed: ${error.message}`);
+        this.logger.error(
+          `File upload failed for user ${user?.sub}: ${error instanceof Error ? error.message : String(error)}`
+        );
+        
+        if (error instanceof ForbiddenException || error instanceof BadRequestException) {
+          throw error;
         }
-        throw new BadRequestException('File upload failed');
+        
+        throw new BadRequestException(`File upload failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
       }
     }
+
+    /**
+     * Validates file upload based on scope and path restrictions
+     */
+    private validateFileUpload(
+      file: Express.Multer.File,
+      resourceScope: any,
+      uploadPath: string
+    ): void {
+      // File size limits based on scope
+      const maxSizeByScope: any = {
+        [RoleScopeType.GLOBAL]: this.GLOBAL_FILE_SIZE_LIMIT * 1024 * 1024, // 100MB
+        [RoleScopeType.ORGANIZATION]: this.ORGANIZATION_FILE_SIZE_LIMIT * 1024 * 1024, // 50MB
+        [RoleScopeType.BRANCH]: this.BRANCH_FILE_SIZE_LIMIT * 1024 * 1024, // 25MB
+        [RoleScopeType.DEPARTMENT]: this.DEPARTMENT_FILE_SIZE_LIMIT * 1024 * 1024, // 10MB
+        [RoleScopeType.OWNED]: this.OWNED_FILE_SIZE_LIMIT * 1024 * 1024, // 5MB
+      };
+
+      const maxSize = maxSizeByScope[resourceScope.type] || maxSizeByScope[RoleScopeType.OWNED];
+      
+      if (file.size > maxSize) {
+        throw new BadRequestException(
+          `File size ${(file.size / 1024 / 1024).toFixed(2)}MB exceeds the limit of ${(maxSize / 1024 / 1024).toFixed(2)}MB for ${resourceScope.type} scope`
+        );
+      }
+
+      // Restricted file types for certain scopes
+      const restrictedTypes = [
+        'application/x-executable',
+        'application/x-msdownload',
+        'application/x-msdos-program'
+      ];
+
+      if (resourceScope.type !== RoleScopeType.GLOBAL && restrictedTypes.includes(file.mimetype)) {
+        throw new BadRequestException(
+          `File type ${file.mimetype} is not allowed for ${resourceScope.type} scope`
+        );
+      }
+
+      // Path depth restrictions
+      // const pathDepth = uploadPath.split('/').length;
+      // const maxDepthByScope: any = {
+      //   [RoleScopeType.GLOBAL]: 10,
+      //   [RoleScopeType.ORGANIZATION]: 8,
+      //   [RoleScopeType.BRANCH]: 6,
+      //   [RoleScopeType.DEPARTMENT]: 5,
+      //   [RoleScopeType.OWNED]: 4,
+      // };
+
+      // const maxDepth = maxDepthByScope[resourceScope.type] || maxDepthByScope[RoleScopeType.OWNED];
+      
+      // if (pathDepth > maxDepth) {
+      //   throw new BadRequestException(
+      //     `Upload path depth ${pathDepth} exceeds maximum allowed depth of ${maxDepth} for ${resourceScope.type} scope`
+      //   );
+      // }
+    }
   
-    @Post('upload-multiple')
+    // @Post('upload-multiple')
     @Authorize()
     @ApiOperation({ summary: 'Upload multiple files' })
     @ApiConsumes('multipart/form-data')
@@ -336,10 +385,34 @@ import { IFileService } from './interfaces/file-service.interface';
       }
     }
   
-    @Get('metadata/:key')
-    @Authorize()
-    @ApiOperation({ summary: 'Get file metadata' })
+    @Get('metadata/:key(*)')
+    @Authorize({ endpointType: Action.READ })
+    @ApiOperation({ summary: 'Get file metadata with multi-tenant security' })
     @ApiParam({ name: 'key', description: 'File key' })
+    @ApiQuery({
+      name: 'organizationId',
+      type: String,
+      required: false,
+      description: 'Organization ID for scoped access'
+    })
+    @ApiQuery({
+      name: 'branchId',
+      required: false,
+      type: String,
+      description: 'Branch ID for scoped access'
+    })
+    @ApiQuery({
+      name: 'departmentId',
+      type: String,
+      required: false,
+      description: 'Department ID for scoped access'
+    })
+    @ApiQuery({
+      name: 'userId',
+      required: false,
+      type: String,
+      description: 'User ID for user-specific access'
+    })
     @ApiResponse({
       status: 200,
       description: 'File metadata retrieved successfully',
@@ -455,32 +528,110 @@ import { IFileService } from './interfaces/file-service.interface';
       }
     }
   
-    @Get('stream/:key')
-    @Authorize()
-    @ApiOperation({ summary: 'Stream a file (for browser viewing)' })
+    @Get('stream/:key(*)')
+    @Authorize({ endpointType: Action.READ })
+    @ApiOperation({ summary: 'Stream a file (for browser viewing) with tenant security' })
     @ApiParam({ name: 'key', description: 'File key' })
+    @ApiQuery({
+      name: 'organizationId',
+      type: String,
+      required: false,
+      description: 'Organization ID for scoped access'
+    })
+    @ApiQuery({
+      name: 'branchId',
+      required: false,
+      type: String,
+      description: 'Branch ID for scoped access'
+    })
+    @ApiQuery({
+      name: 'departmentId',
+      type: String,
+      required: false,
+      description: 'Department ID for scoped access'
+    })
+    @ApiQuery({
+      name: 'userId',
+      required: false,
+      type: String,
+      description: 'User ID for user-specific access'
+    })
     @ApiResponse({ status: 200, description: 'File stream' })
-    @ApiResponse({ status: 404, description: 'File not found' })
-    // This properly disables all interceptors for this route
+    @ApiGenericResponses()
     @UseInterceptors()
-    // Important! Add this to bypass global interceptors
     @Version(VERSION_NEUTRAL)
-    async streamFile(@Param('key') key: string, @Res({ passthrough: false }) res: Response): Promise<void> {
-        try {
-            // Check if file exists first before starting to stream
-            if (!(await this.fileService.fileExists(key))) {
-                res.status(404).send(`File not found: ${key}`);
-                return;
-            }
-            
-            // Stream the file - no try/catch here to prevent header modifications after streaming
-            await this.fileService.streamFile(key, res, true);
-        } catch (error) {
-            // Only set status and send error if headers haven't been sent yet
-            if (!res.headersSent) {
-            res.status(500).send('Error streaming file');
-            }
+    async streamFile(
+      @Param('key') fileKey: string,
+      @Query() query: {
+        organizationId?: string;
+        branchId?: string;
+        departmentId?: string;
+        userId?: string;
+      },
+      @Req() req: any,
+      @Res() res: any,
+      @CurrentUser() user?: IJwtPayload,
+    ): Promise<void> {
+        const resourceScope = req.resourceScope;
+
+        // Extract tenant context from query
+        const tenantContext = {
+          organizationId: query.organizationId,
+          branchId: query.branchId,
+          departmentId: query.departmentId,
+          userId: query.userId
+        };
+
+        // Get file metadata first to validate access
+        const metadata = await this.fileService.getFileMetadata(fileKey, req.headers.authorization);
+        
+        // Get file stream with tenant validation
+        const stream = await this.fileService.getFileStream(fileKey, {
+          scope: resourceScope,
+          tenantContext,
+          authorization: req.headers.authorization
+        });
+
+        // Set appropriate headers for streaming
+        res.set({
+          'Content-Type': metadata.mimeType,
+          'Content-Length': metadata.size.toString(),
+          'Content-Disposition': `inline; filename="${encodeURIComponent(metadata.originalName)}"`,
+          'Cache-Control': 'public, max-age=31536000', // 1 year cache
+          'Last-Modified': metadata.lastModified?.toUTCString(),
+          'ETag': `"${metadata.size}-${metadata.lastModified?.getTime()}"`,
+        });
+
+        // Handle range requests for video/audio streaming
+        const range = req.headers.range;
+        if (range && (metadata.mimeType.startsWith('video/') || metadata.mimeType.startsWith('audio/'))) {
+          const parts = range.replace(/bytes=/, "").split("-");
+          const start = parseInt(parts[0], 10);
+          const end = parts[1] ? parseInt(parts[1], 10) : metadata.size - 1;
+          const chunksize = (end - start) + 1;
+
+          res.status(206);
+          res.set({
+            'Content-Range': `bytes ${start}-${end}/${metadata.size}`,
+            'Accept-Ranges': 'bytes',
+            'Content-Length': chunksize.toString(),
+          });
+
+          // Get range stream from file service
+          const rangeStream = await this.fileService.getFileStream(fileKey, {
+            scope: resourceScope,
+            tenantContext,
+            authorization: req.headers.authorization
+          });
+          rangeStream.pipe(res);
+        } else {
+          // Stream the entire file
+          stream.pipe(res);
         }
+
+        this.logger.log(
+          `File streamed: ${fileKey} by user ${user?.sub} from tenant context: ${JSON.stringify(tenantContext)}`
+        );
     }
   
     @Get('url/:key')
@@ -612,15 +763,6 @@ import { IFileService } from './interfaces/file-service.interface';
   }
 
   try {
-    // Validate tenant access for the requested scope context
-    if (queryDto.scope) {
-      this.validateTenantAccess(
-        resourceScope,
-        queryDto.scope.organizationId,
-        queryDto.scope.branchId,
-        queryDto.scope.departmentId
-      );
-    }
 
     // Get effective tenant context based on user's scope and request
     const effectiveContext = this.getEffectiveTenantContext(

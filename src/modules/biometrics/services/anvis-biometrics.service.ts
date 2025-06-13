@@ -2,16 +2,18 @@ import { BiometricDeviceType } from '@/common/enums/biometrics-device-type.enum'
 import { PunchMethod } from '@/common/enums/punch-method.enum';
 import { PunchType } from '@/common/enums/punch-type.enum';
 import { ATTENDANCE_EVENTS, AttendanceRecordedEvent } from '@/common/events/attendance.event';
-import { HttpStatus, Injectable, InternalServerErrorException, Logger, RequestTimeoutException } from '@nestjs/common';
+import { ConflictException, HttpStatus, Injectable, InternalServerErrorException, Logger, NotFoundException, RequestTimeoutException } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { BiometricUserDto, GetBiometricUserDto } from '../dtos/biometric-user.dto';
 import { ConnectDeviceDto } from '../dtos/connect-device.dto';
 import { BiometricDevice } from '../entities/biometric-device.entity';
 import { BiometricTemplate } from '../entities/biometric-template.entity';
 import { BiometricsGateway } from '../gateways/biometrics.gateway';
-import { AttendanceRecord, IBiometricTemplate, IBiometricUser } from '../interfaces/biometric.interface';
+import { AttendanceRecord, IBiometricTemplate } from '../interfaces/biometric.interface';
 import { BaseBiometricsService, BiometricException } from './base-biometrics.service';
+const { UserInfo } = require('../../../../anviz-protocol/model/user-info');
 
 // Import the Anviz protocol library
 const { Device, Record, RecordInformation, DeviceInfo1, DeviceInfo2 } = require('../../../../anviz-protocol');
@@ -186,7 +188,8 @@ export class AnvizBiometricsService extends BaseBiometricsService {
      */
     async connectWithRetry(
         dto: ConnectDeviceDto,
-        deviceId: string
+        deviceId: string,
+        createdBy?: string
     ): Promise<BiometricDevice> {
         const { ipAddress, port } = dto;
 
@@ -291,7 +294,7 @@ export class AnvizBiometricsService extends BaseBiometricsService {
                 const deviceInfo = await this.getAnvizDeviceInfo(deviceId);
                 
                 // Check if device ID already exists
-                const existingDevice = await this.deviceRepository.findOne({ where: { deviceId } });
+                let existingDevice = await this.deviceRepository.findOne({ where: { deviceId } });
                 
                 // Create a standardized device object
                 let device: Partial<BiometricDevice> = {
@@ -305,6 +308,11 @@ export class AnvizBiometricsService extends BaseBiometricsService {
                     isOffline: false,
                     provider: BiometricDeviceType.ANVIZ,
                     lastSync: new Date(),
+                    organizationId: dto.organizationId,
+                    branchId: dto.branchId,
+                    departmentId: dto.departmentId,
+                    userId: dto.userId,
+                    createdBy
                 };
 
                 // Set up heartbeat to monitor connection health
@@ -329,9 +337,22 @@ export class AnvizBiometricsService extends BaseBiometricsService {
 
                 // log
                 this.logger.log(`Connected to Anviz device ${deviceId} (${deviceInfo.serialNumber})`);
-                this.biometricsGateway.pingAll();
-                // Update or create device in database
-                return await this.deviceRepository.save(device);
+                
+                // check if device already exists
+                if (!existingDevice) {
+                    // Create new device
+                    const newDevice = this.deviceRepository.create(device as BiometricDevice);
+                    existingDevice = await this.deviceRepository.save(newDevice);
+                    this.logger.log(`Created new Anviz device ${deviceId} in database`);
+                }
+                else {
+                    // Update existing device
+                    await this.deviceRepository.update(existingDevice.id, { lastSync: new Date(), isConnected: true, isOffline: false });
+                    this.logger.log(`Updated Anviz device ${deviceId} in database`);
+                }
+                
+                await this.biometricsGateway.pingAll();
+                return existingDevice;
 
             };
 
@@ -342,7 +363,7 @@ export class AnvizBiometricsService extends BaseBiometricsService {
         } catch (error: any) {
             // Schedule automatic reconnection
             this.logger.error(`Failed to connect to Anviz device ${deviceId}: ${error.message}`);
-            throw new InternalServerErrorException(`Failed to connect to Anviz device ${deviceId}`);
+            throw new InternalServerErrorException(`Failed to connect to Anviz device ${deviceId}: ${error.message}`);
         }
 
     }
@@ -553,27 +574,85 @@ export class AnvizBiometricsService extends BaseBiometricsService {
      * Get users from Anviz device
      * @param deviceId Device identifier
      */
-    async getUsers(deviceId: string): Promise<IBiometricUser[]> {
+    async getUsers(deviceId: string): Promise<BiometricUserDto[]> {
         return this.queueCommand(deviceId, 'getUsers', async () => {
             try {
                 this.checkDeviceConnection(deviceId);
                 
                 this.logger.log(`Getting users from device ${deviceId}`);
                 
-                return new Promise((resolve, reject) => {
+                return new Promise<BiometricUserDto[]>((resolve, reject) => {
+                    const timeoutId = setTimeout(() => {
+                        reject(new Error('Get users operation timed out'));
+                    }, 15000);
+                    
                     const anvizDevice = this.getAnvizDevice(deviceId);
                     
                     anvizDevice.getUserInfos((userInfos: any) => {
+                        clearTimeout(timeoutId);
                         try {
-                            // Convert Anviz user format to system format
-                            const users: IBiometricUser[] = userInfos.map((user: any) => ({
-                                userId: user.userId.toString(),
-                                name: user.name || '',
-                                password: user.password?.toString() || '',
-                                cardNumber: user.card?.toString() || '',
-                                role: user.group || 0,
-                                enrolledFingerprints: []
-                            }));
+                            // Validate response
+                            if (!Array.isArray(userInfos)) {
+                                throw new Error('Invalid response format: expected array of users');
+                            }
+                            
+                            this.logger.log(`Retrieved ${userInfos.length} users from device ${deviceId}`);
+                            
+                            // Convert Anviz user format to BiometricUserDto format with proper validation
+                            const users: BiometricUserDto[] = userInfos
+                                .filter((user: any) => {
+                                    // Filter out invalid users
+                                    if (!user || typeof user.userId === 'undefined' || user.userId === null) {
+                                        this.logger.warn(`Skipping invalid user entry from device ${deviceId}`);
+                                        return false;
+                                    }
+                                    return true;
+                                })
+                                .map((user: any) => {
+                                    try {
+                                        // Get enrolled fingerprints for this user
+                                        const enrolledFingerprints: number[] = [];
+                                        if (user.enrollFpState) {
+                                            // Parse fingerprint enrollment state (bit mask)
+                                            for (let i = 0; i < 10; i++) {
+                                                if (user.enrollFpState & (1 << i)) {
+                                                    enrolledFingerprints.push(i + 1);
+                                                }
+                                            }
+                                        }
+                                        
+                                        // Create BiometricUserDto object
+                                        const userDto = new BiometricUserDto();
+                                        userDto.deviceId = deviceId;
+                                        userDto.biometricUserId = user.userId;
+                                        userDto.name = user.name || '';
+                                        userDto.password = user.password ? user.password === 1048575 ? '' : user.password.toString() : '';
+                                        userDto.cardNumber = user.card ? user.card === -1 ? '' : user.card : '';
+                                        
+                                        return userDto;
+                                    } catch (conversionError) {
+                                        this.logger.warn(`Error converting user ${user.userId} from device ${deviceId}: ${conversionError instanceof Error ? conversionError.message : String(conversionError)}`);
+                                        // Return a basic user DTO for problematic entries
+                                        const basicUserDto = new BiometricUserDto();
+                                        basicUserDto.deviceId = deviceId;
+                                        basicUserDto.biometricUserId = user.userId;
+                                        basicUserDto.name = user.name || 'Unknown';
+                                    
+                                        return basicUserDto;
+                                    }
+                                });
+                            
+                            // Log summary
+                            const userSummary = users.reduce((acc, user) => {
+                                acc.totalUsers++;
+                                if (user.cardNumber) {
+                                    acc.usersWithCards++;
+                                }
+                                return acc;
+                            }, { totalUsers: 0, usersWithFingerprints: 0, usersWithCards: 0 });
+                            
+                            this.logger.log(`Device ${deviceId} user summary: ${userSummary.totalUsers} total, ${userSummary.usersWithFingerprints} with fingerprints, ${userSummary.usersWithCards} with cards`);
+                            
                             resolve(users);
                         } catch (error) {
                             reject(error);
@@ -584,6 +663,127 @@ export class AnvizBiometricsService extends BaseBiometricsService {
                 const errorMessage = error instanceof Error ? error.message : String(error);
                 this.logger.error(`Error getting users from device ${deviceId}: ${errorMessage}`);
                 throw new BiometricException(`Failed to get users: ${errorMessage}`);
+            }
+        });
+    }
+
+    /**
+     * Get a specific user by ID from Anviz device
+     * @param deviceId Device identifier
+     * @param userId User ID to find
+     */
+    async getUserById(dto: GetBiometricUserDto): Promise<BiometricUserDto> {
+        return this.queueCommand(dto.deviceId, 'getUserById', async () => {
+            try {
+                this.checkDeviceConnection(dto.deviceId);
+                
+                this.logger.log(`Getting user ${dto.biometricUserId} from device ${dto.deviceId}`);
+                
+                return new Promise<BiometricUserDto>((resolve, reject) => {
+                    const timeoutId = setTimeout(() => {
+                        reject(new RequestTimeoutException(`Get user ${dto.biometricUserId} operation timed out`));
+                    }, 10000);
+                    
+                    const anvizDevice = this.getAnvizDevice(dto.deviceId);
+                    
+                    // Use getUserInfos to get all users and find the specific one
+                    anvizDevice.getUserInfos((userInfos: any) => {
+                        clearTimeout(timeoutId);
+                        try {
+                            // Validate response
+                            if (!Array.isArray(userInfos)) {
+                                throw new Error('Invalid response format: expected array of users');
+                            }
+                            
+                            this.logger.debug(`Retrieved ${userInfos.length} users from device ${dto.deviceId}, searching for user ${dto.biometricUserId}`);
+                            
+                            // Find user with matching userId
+                            const foundUser = userInfos.find((user: any) => {
+                                // Handle potential type mismatches
+                                const userIdToCheck = typeof user.userId === 'string' ? 
+                                    parseInt(user.userId) : user.userId;
+                                return userIdToCheck === dto.biometricUserId;
+                            });
+                            
+                            if (!foundUser) {
+                                this.logger.warn(`User ${dto.biometricUserId} not found on device ${dto.deviceId}`);
+                                reject(new NotFoundException(`User ${dto.biometricUserId} not found on device ${dto.deviceId}`));
+                                return;
+                            }
+                            
+                            // Validate found user data
+                            if (!foundUser || typeof foundUser.userId === 'undefined' || foundUser.userId === null) {
+                                this.logger.warn(`Invalid user data for user ${dto.biometricUserId} from device ${dto.deviceId}`);
+                                reject(new BiometricException(`Invalid user data for user ${dto.biometricUserId} from device ${dto.deviceId}`));
+                                return;
+                            }
+                            
+                            try {
+                                // Parse enrolled fingerprints
+                                const enrolledFingerprints: number[] = [];
+                                if (foundUser.enrollFpState) {
+                                    // Parse fingerprint enrollment state (bit mask)
+                                    for (let i = 0; i < 10; i++) {
+                                        if (foundUser.enrollFpState & (1 << i)) {
+                                            enrolledFingerprints.push(i + 1);
+                                        }
+                                    }
+                                }
+                                
+                                // Create BiometricUserDto object with proper validation
+                                const userDto = new BiometricUserDto();
+                                userDto.deviceId = dto.deviceId;
+                                userDto.biometricUserId = foundUser.userId;
+                                userDto.name = foundUser.name || '';
+                                
+                                // Handle password validation (Anviz returns 1048575 for empty passwords)
+                                if (foundUser.password && foundUser.password !== 1048575) {
+                                    userDto.password = foundUser.password;
+                                }
+                                
+                                // Handle card validation (Anviz returns -1 for no card)
+                                if (foundUser.card && foundUser.card !== -1) {
+                                    userDto.cardNumber = foundUser.card;
+                                }
+                                
+                                this.logger.log(`Found user ${dto.biometricUserId} on device ${dto.deviceId}: ${userDto.name} with ${enrolledFingerprints.length} enrolled fingerprints`);
+                                
+                                // Log additional user details for debugging
+                                this.logger.debug(`User ${dto.biometricUserId} details - Group: ${foundUser.group}, Department: ${foundUser.dpt}, Attendance Mode: ${foundUser.attendanceMode}`);
+                                
+                                resolve(userDto);
+                                
+                            } catch (conversionError) {
+                                
+                                // Return basic user object for problematic entries
+                                const basicUserDto = new BiometricUserDto();
+                                basicUserDto.deviceId = dto.deviceId;
+                                basicUserDto.biometricUserId = foundUser.userId;
+                                basicUserDto.name = foundUser.name || 'Unknown';
+                                
+                                resolve(basicUserDto);
+                            }
+                            
+                        } catch (error) {
+                            this.logger.error(`Error processing user data for user ${dto.biometricUserId} from device ${dto.deviceId}: ${error instanceof Error ? error.message : String(error)}`);
+                            reject(new BiometricException(`Failed to process user data: ${error instanceof Error ? error.message : String(error)}`));
+                        }
+                    });
+                });
+                
+            } catch (error) {
+                const errorMessage = error instanceof Error ? error.message : String(error);
+                this.logger.error(`Error getting user ${dto.biometricUserId} from device ${dto.deviceId}: ${errorMessage}`);
+                
+                // Re-throw known exceptions
+                if (error instanceof BiometricException || 
+                    error instanceof RequestTimeoutException ||
+                    error instanceof NotFoundException ||
+                    error instanceof ConflictException) {
+                    throw error;
+                }
+                
+                throw new BiometricException(`Failed to get user: ${errorMessage}`);
             }
         });
     }
@@ -676,68 +876,230 @@ export class AnvizBiometricsService extends BaseBiometricsService {
     }
 
     /**
-     * Register a new user on Anviz device
+     * Register a new user on Anviz device (only creates new users)
      * @param deviceId Device identifier
      * @param userData User data
      */
     async registerUser(
         deviceId: string,
-        userData: {
-            userId: string;
-            name: string;
-            password?: string;
-            cardNumber?: string;
-            role?: number;
-        }
-    ): Promise<IBiometricUser> {
-        try {
-            this.checkDeviceConnection(deviceId);
-            
-            this.logger.log(`Registering user ${userData.userId} on device ${deviceId}`);
-            
-            const anvizDevice = this.getAnvizDevice(deviceId);
-            
-            // Create Anviz user object
-            const userInfo = {
-                userId: parseInt(userData.userId),
-                name: userData.name,
-                password: userData.password ? parseInt(userData.password) : 0,
-                passwordLength: userData.password ? userData.password.length : 0,
-                card: userData.cardNumber ? parseInt(userData.cardNumber) : 0,
-                group: userData.role || 0,
-                dpt: 1, // Department (default: 1)
-                attendanceMode: 0 // Default mode
-            };
-            
-            // Set user on device
-            await new Promise<void>((resolve, reject) => {
-                try {
-                    anvizDevice.setUserInfo(userInfo);
-                    resolve();
-                } catch (error) {
-                    reject(error);
+        userData: BiometricUserDto
+    ): Promise<BiometricUserDto> {
+        return this.queueCommand(deviceId, 'registerUser', async () => {
+            try {
+                this.checkDeviceConnection(deviceId);
+                
+                this.logger.log(`Registering user ${userData.biometricUserId} on device ${deviceId}`);
+                
+                const anvizDevice = this.getAnvizDevice(deviceId);
+                
+                // Check if user already exists
+                const existingUser = await new Promise<any>((resolve, reject) => {
+                    const timeoutId = setTimeout(() => {
+                        reject(new Error('Check existing user operation timed out'));
+                    }, 10000);
+                    
+                    anvizDevice.getUserInfos((userInfos: any) => {
+                        clearTimeout(timeoutId);
+                        try {
+                            // Find user with matching userId
+                            const foundUser = userInfos.find((user: any) => 
+                                user.userId === userData.biometricUserId
+                            );
+                            resolve(foundUser || null);
+                        } catch (error) {
+                            reject(error);
+                        }
+                    });
+                });
+                
+                if (existingUser) {
+                    throw new ConflictException(
+                        `User ${userData.biometricUserId} already exists on device ${deviceId}.`,
+                    );
                 }
-            });
-            
-            // Return standardized user object
-            const createdUser = {
-                userId: userData.userId,
-                name: userData.name,
-                password: userData.password || '', // Provide a default empty string if password is undefined
-                cardNumber: userData.cardNumber,
-                role: userData.role || 0,
-                department: 1,
-                attendanceMode: 0,
-                enrolledFingerprints: []
-            };
-            
-            this.logger.log(`Successfully registered user ${userData.userId} on device ${deviceId}`);
-            return createdUser;
-        } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : String(error);
-            this.logger.error(`Error registering user on device ${deviceId}: ${errorMessage}`);
-            throw new BiometricException(`Failed to register user: ${errorMessage}`);
-        }
+                
+                // User doesn't exist, create new user
+                this.logger.log(`Creating new user ${userData.biometricUserId} on device ${deviceId}`);
+                
+                const userInfo = new UserInfo();
+                userInfo.userId = userData.biometricUserId;
+                userInfo.name = userData.name;
+                userInfo.password = userData.password;
+                userInfo.card = userData.cardNumber;
+                userInfo.group = 0;
+                userInfo.dpt = 1; // Department (default: 1)
+                userInfo.attendanceMode = 0; // Default mode
+                userInfo.enrollFpState = 0;
+                userInfo.keep = 0;
+                userInfo.specialMessage = 0;
+                
+                // Create new user
+                await new Promise<void>((resolve, reject) => {
+                    const originalHandleResponse = anvizDevice.handleResponse;
+                    
+                    anvizDevice.handleResponse = (cmd: any, callback: any) => {
+                        cmd.onResponse = (response: any) => {
+                            try {
+                                anvizDevice.handleResponse = originalHandleResponse;
+                                
+                                if (response.command !== cmd.command) {
+                                    reject(new Error(`Command mismatch: expected ${cmd.command}, got ${response.command}`));
+                                    return;
+                                }
+                                
+                                if (response.returnValue !== 0) {
+                                    reject(new Error(`ACK Error: ${response.returnValue}`));
+                                    return;
+                                }
+                                
+                                resolve();
+                            } catch (error) {
+                                reject(error);
+                            }
+                        };
+                        anvizDevice.send(cmd);
+                    };
+                    
+                    try {
+                        anvizDevice.setUserInfo(userInfo);
+                    } catch (error) {
+                        anvizDevice.handleResponse = originalHandleResponse;
+                        reject(error);
+                    }
+                });
+                
+                this.logger.log(`Successfully created new user ${userData.biometricUserId} on device ${deviceId}`);
+                
+                // Return standardized user object
+                const createdUser: BiometricUserDto = {
+                    deviceId,
+                    biometricUserId: userData.biometricUserId,
+                    name: userData.name,
+                    password: userData.password,
+                    cardNumber: userData.cardNumber,
+                };
+                
+                return createdUser;
+                
+            } catch (error: any) {
+                this.logger.error(`Error registering user on device ${deviceId}: ${error.errorMessage}`);
+                throw error;
+            }
+        });
+    }
+
+    /**
+     * Update an existing user on Anviz device
+     * @param deviceId Device identifier
+     * @param userData User data
+     */
+    async updateUser(
+        deviceId: string,
+        userData: BiometricUserDto
+    ): Promise<BiometricUserDto> {
+        return this.queueCommand(deviceId, 'updateUser', async () => {
+            try {
+                this.checkDeviceConnection(deviceId);
+                
+                this.logger.log(`Updating user ${userData.biometricUserId} on device ${deviceId}`);
+                
+                const anvizDevice = this.getAnvizDevice(deviceId);
+                
+                // Check if user exists
+                const existingUser = await new Promise<any>((resolve, reject) => {
+                    const timeoutId = setTimeout(() => {
+                        reject(new Error('Check existing user operation timed out'));
+                    }, 10000);
+                    
+                    anvizDevice.getUserInfos((userInfos: any) => {
+                        clearTimeout(timeoutId);
+                        try {
+                            // Find user with matching userId
+                            const foundUser = userInfos.find((user: any) => 
+                                user.userId === userData.biometricUserId
+                            );
+                            resolve(foundUser || null);
+                        } catch (error) {
+                            reject(error);
+                        }
+                    });
+                });
+                
+                if (!existingUser) {
+                    throw new NotFoundException(
+                        `User ${userData.biometricUserId} does not exist on device ${deviceId}.`,
+                    );
+                }
+                
+                this.logger.log(`User ${userData.biometricUserId} exists on device ${deviceId}. Proceeding with update.`);
+                
+                // Update existing user, preserving existing fields when new values aren't provided
+                const userInfo = new UserInfo();
+                userInfo.userId = userData.biometricUserId;
+                userInfo.name = userData.name;
+                userInfo.password = userData.password || existingUser.password || 0;
+                userInfo.card = userData.cardNumber || existingUser.card || 0;
+                userInfo.group = existingUser.group || 0;
+                userInfo.dpt = existingUser.dpt || 1;
+                userInfo.attendanceMode = existingUser.attendanceMode || 0;
+                userInfo.enrollFpState = existingUser.enrollFpState || 0;
+                userInfo.keep = existingUser.keep || 0;
+                userInfo.specialMessage = existingUser.specialMessage || 0;
+                
+                // Update the user
+                await new Promise<void>((resolve, reject) => {
+                    const originalHandleResponse = anvizDevice.handleResponse;
+                    
+                    anvizDevice.handleResponse = (cmd: any, callback: any) => {
+                        cmd.onResponse = (response: any) => {
+                            try {
+                                anvizDevice.handleResponse = originalHandleResponse;
+                                
+                                if (response.command !== cmd.command) {
+                                    reject(new Error(`Command mismatch: expected ${cmd.command}, got ${response.command}`));
+                                    return;
+                                }
+                                
+                                if (response.returnValue !== 0) {
+                                    reject(new Error(`ACK Error: ${response.returnValue}`));
+                                    return;
+                                }
+                                
+                                resolve();
+                            } catch (error) {
+                                reject(error);
+                            }
+                        };
+                        anvizDevice.send(cmd);
+                    };
+                    
+                    try {
+                        anvizDevice.setUserInfo(userInfo);
+                    } catch (error) {
+                        anvizDevice.handleResponse = originalHandleResponse;
+                        reject(error);
+                    }
+                });
+                
+                this.logger.log(`Successfully updated user ${userData.biometricUserId} on device ${deviceId}`);
+                
+                // Return standardized user object
+                const updatedUser: BiometricUserDto = {
+                    deviceId,
+                    biometricUserId: userData.biometricUserId,
+                    name: userData.name,
+                    password: userData.password,
+                    cardNumber: userData.cardNumber,
+                };
+                
+                return updatedUser;
+                
+            } catch (error) {
+                const errorMessage = error instanceof Error ? error.message : String(error);
+                this.logger.error(`Error updating user on device ${deviceId}: ${errorMessage}`);
+                throw error;
+            }
+        });
     }
 
     /**
@@ -745,23 +1107,17 @@ export class AnvizBiometricsService extends BaseBiometricsService {
      * @param deviceId Device identifier
      * @param userId User ID to delete
      */
-    async deleteUser(deviceId: string, userId: string): Promise<boolean> {
-        try {
-            this.checkDeviceConnection(deviceId);
-            
-            this.logger.log(`Deleting user ${userId} from device ${deviceId}`);
-            
-            const anvizDevice = this.getAnvizDevice(deviceId);
-            
-            // Delete user
-            anvizDevice.deleteUser(parseInt(userId));
-            
-            return true;
-        } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : String(error);
-            this.logger.error(`Error deleting user ${userId} from device ${deviceId}: ${errorMessage}`);
-            throw new BiometricException(`Failed to delete user: ${errorMessage}`);
-        }
+    async deleteUser(deviceId: string, userId: number): Promise<boolean> {
+        this.checkDeviceConnection(deviceId);
+        
+        this.logger.log(`Deleting user ${userId} from device ${deviceId}`);
+        
+        const anvizDevice = this.getAnvizDevice(deviceId);
+        
+        // Delete user
+        anvizDevice.deleteUser(userId);
+        
+        return true;
     }
 
     /**
@@ -935,7 +1291,7 @@ export class AnvizBiometricsService extends BaseBiometricsService {
                 
                 return new Promise((resolve, reject) => {
                     const timeoutId = setTimeout(() => {
-                        reject(new Error('Get time operation timed out'));
+                        reject(new RequestTimeoutException('Get time operation timed out'));
                     }, 5000);
                     
                     const anvizDevice = this.getAnvizDevice(deviceId);
@@ -1092,7 +1448,7 @@ export class AnvizBiometricsService extends BaseBiometricsService {
      * Get user details (enhanced user information)
      * @param deviceId Device identifier
      */
-    async getUserDetails(deviceId: string): Promise<IBiometricUser[]> {
+    async getUserDetails(deviceId: string): Promise<BiometricUserDto[]> {
         // For Anviz devices, getUserDetails and getUsers return the same information
         return this.getUsers(deviceId);
     }
@@ -1124,61 +1480,6 @@ export class AnvizBiometricsService extends BaseBiometricsService {
     }
     
     /**
-     * Set a user on the device with more detailed options
-     * @param deviceId Device identifier
-     * @param uid Internal user ID
-     * @param userId External user ID
-     * @param name User name
-     * @param password User password (optional)
-     * @param role User role (optional)
-     * @param cardno Card number (optional)
-     */
-    async setUser(
-        deviceId: string,
-        uid: number,
-        userId: string,
-        name: string,
-        password?: string,
-        role?: number,
-        cardno?: number
-    ): Promise<boolean> {
-        return this.queueCommand(deviceId, 'setUser', async () => {
-            try {
-                this.checkDeviceConnection(deviceId);
-                
-                this.logger.log(`Setting user ${userId} on device ${deviceId}`);
-                
-                const anvizDevice = this.getAnvizDevice(deviceId);
-                
-                // Create Anviz user object
-                const userInfo = {
-                    userId: parseInt(userId), 
-                    name,
-                    password: password ? parseInt(password) : 0,
-                    passwordLength: password ? password.length : 0,
-                    card: cardno || 0,
-                    group: role || 0,
-                    dpt: 1, // Department (default: 1)
-                    attendanceMode: 0 // Default mode
-                };
-                
-                return new Promise<boolean>((resolve, reject) => {
-                    try {
-                        anvizDevice.setUserInfo(userInfo);
-                        resolve(true);
-                    } catch (error) {
-                        reject(error);
-                    }
-                });
-            } catch (error) {
-                const errorMessage = error instanceof Error ? error.message : String(error);
-                this.logger.error(`Error setting user on device ${deviceId}: ${errorMessage}`);
-                throw new BiometricException(`Failed to set user: ${errorMessage}`);
-            }
-        });
-    }
-    
-    /**
      * Sync users from one device to another
      * @param sourceDeviceId Source device ID
      * @param targetDeviceId Target device ID
@@ -1199,22 +1500,21 @@ export class AnvizBiometricsService extends BaseBiometricsService {
                 
                 // Process each user
                 for (const user of users) {
-                    try {
-                        // Register user on target device
-                        await this.registerUser(targetDeviceId, {
-                            userId: user.userId,
-                            name: user.name,
-                            password: user.password,
-                            cardNumber: user.cardNumber,
-                            role: user.role
-                        });
+                    // try {
+                    //     // Register user on target device
+                    //     await this.registerUser(targetDeviceId, {
+                    //         userId: user.userId,
+                    //         name: user.name,
+                    //         password: user.password,
+                    //         cardNumber: user.cardNumber,
+                    //     });
                         
-                        syncCount++;
-                    } catch (userError) {
-                        const error = userError as Error;
-                        this.logger.warn(`Error syncing user ${user.userId}: ${error.message}`);
-                        // Continue with next user
-                    }
+                    //     syncCount++;
+                    // } catch (userError) {
+                    //     const error = userError as Error;
+                    //     this.logger.warn(`Error syncing user ${user.userId}: ${error.message}`);
+                    //     // Continue with next user
+                    // }
                 }
                 
                 this.logger.log(`Successfully synced ${syncCount} users from ${sourceDeviceId} to ${targetDeviceId}`);

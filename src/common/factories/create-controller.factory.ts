@@ -4,6 +4,7 @@ import { ApiBody, ApiOperation, ApiParam, ApiQuery, ApiResponse, ApiTags } from 
 import pluralize, { singular } from 'pluralize';
 import { BaseController } from '../controllers/base.controller';
 import { CurrentUser } from '../decorators/current-user.decorator';
+import { ApiCreateResponses, ApiGenericResponses, ApiUpdateResponses } from '../decorators/generic-api-responses.decorator';
 import { Override } from '../decorators/override.decorator';
 import { GeneralResponseDto } from '../dtos/generalresponse.dto';
 import { PaginatedResponseDto } from '../dtos/paginated-response.dto';
@@ -48,18 +49,8 @@ export function createController<TEntity extends BaseEntity<TEntity>, Service ex
       description: `${singular(formattedEntityName)} creation data`,
       required: true
     })
-    @ApiResponse({ 
-      status: HttpStatus.CREATED, 
-      description: `${singular(formattedEntityName)} has been successfully created.`,
-      type: getDtoClass
-    })
-    @ApiResponse({ status: HttpStatus.BAD_REQUEST, description: 'Invalid input data.', type: GeneralResponseDto })
-    @ApiResponse({ status: HttpStatus.UNPROCESSABLE_ENTITY, description: 'Unprocessable entity.', type: GeneralResponseDto })
-    @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized.', type: GeneralResponseDto })
-    @ApiResponse({ status: HttpStatus.CONFLICT, description: `${singular(formattedEntityName)} already exists.`, type: GeneralResponseDto })
-    @ApiResponse({ status: HttpStatus.INTERNAL_SERVER_ERROR, description: 'Internal server error.', type: GeneralResponseDto })
-    @ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Related entity not found.', type: GeneralResponseDto })
-    @ApiResponse({ status: HttpStatus.FORBIDDEN, description: 'Forbidden.', type: GeneralResponseDto })
+    @ApiCreateResponses(singular(formattedEntityName), getDtoClass)
+    @ApiGenericResponses()
     override async create(
       @Body() entityDto: CreateDto,
       @CurrentUser('sub') createdById: string
@@ -82,18 +73,8 @@ export function createController<TEntity extends BaseEntity<TEntity>, Service ex
       description: `${singular(formattedEntityName)} update data`,
       required: true
     })
-    @ApiResponse({ 
-      status: HttpStatus.OK, 
-      description: `${singular(formattedEntityName)} has been successfully updated.`,
-      type: getDtoClass
-    })
-    @ApiResponse({ status: HttpStatus.BAD_REQUEST, description: 'Invalid input data.', type: GeneralResponseDto })
-    @ApiResponse({ status: HttpStatus.UNPROCESSABLE_ENTITY, description: 'Unprocessable entity.', type: GeneralResponseDto })
-    @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized.', type: GeneralResponseDto })
-    @ApiResponse({ status: HttpStatus.NOT_FOUND, description: `${singular(formattedEntityName)} not found.`, type: GeneralResponseDto })
-    @ApiResponse({ status: HttpStatus.INTERNAL_SERVER_ERROR, description: 'Internal server error.', type: GeneralResponseDto })
-    @ApiResponse({ status: HttpStatus.FORBIDDEN, description: 'Forbidden.', type: GeneralResponseDto })
-    @ApiResponse({ status: HttpStatus.CONFLICT, description: 'Data conflict during update.', type: GeneralResponseDto })
+    @ApiUpdateResponses(singular(formattedEntityName), getDtoClass)
+    @ApiGenericResponses()
     override async update(
         @Param('id') id: string,
         @Body() entityDto: UpdateDto,
@@ -117,12 +98,9 @@ export function createController<TEntity extends BaseEntity<TEntity>, Service ex
       description: `${singular(formattedEntityName)} has been successfully deleted.`,
       type: GeneralResponseDto
     })
-    @ApiResponse({ status: HttpStatus.BAD_REQUEST, description: 'Invalid ID format.', type: GeneralResponseDto })
-    @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized.', type: GeneralResponseDto })
     @ApiResponse({ status: HttpStatus.NOT_FOUND, description: `${singular(formattedEntityName)} not found.`, type: GeneralResponseDto })
-    @ApiResponse({ status: HttpStatus.INTERNAL_SERVER_ERROR, description: 'Internal server error.', type: GeneralResponseDto })
-    @ApiResponse({ status: HttpStatus.FORBIDDEN, description: 'Forbidden.', type: GeneralResponseDto })
     @ApiResponse({ status: HttpStatus.CONFLICT, description: 'Cannot delete due to existing references.', type: GeneralResponseDto })
+    @ApiGenericResponses()
     override async delete(@Param('id') id: string): Promise<GeneralResponseDto> {
       return await super.delete(id);
     }
@@ -142,11 +120,8 @@ export function createController<TEntity extends BaseEntity<TEntity>, Service ex
       description: `${singular(formattedEntityName)} has been successfully soft-deleted.`,
       type: GeneralResponseDto
     })
-    @ApiResponse({ status: HttpStatus.BAD_REQUEST, description: 'Invalid ID format.', type: GeneralResponseDto })
-    @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized.', type: GeneralResponseDto })
     @ApiResponse({ status: HttpStatus.NOT_FOUND, description: `${singular(formattedEntityName)} not found.`, type: GeneralResponseDto })
-    @ApiResponse({ status: HttpStatus.INTERNAL_SERVER_ERROR, description: 'Internal server error.', type: GeneralResponseDto })
-    @ApiResponse({ status: HttpStatus.FORBIDDEN, description: 'Forbidden.', type: GeneralResponseDto })
+    @ApiGenericResponses()
     override async softDelete(
       @Param('id') id: string, 
       @CurrentUser('sub') deletedBy: string
@@ -183,11 +158,8 @@ export function createController<TEntity extends BaseEntity<TEntity>, Service ex
       description: `${singular(formattedEntityName)} was successfully retrieved.`,
       type: getDtoClass
     })
-    @ApiResponse({ status: HttpStatus.BAD_REQUEST, description: 'Invalid ID format.', type: GeneralResponseDto })
-    @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized.', type: GeneralResponseDto })
     @ApiResponse({ status: HttpStatus.NOT_FOUND, description: `${singular(formattedEntityName)} not found.`, type: GeneralResponseDto })
-    @ApiResponse({ status: HttpStatus.INTERNAL_SERVER_ERROR, description: 'Internal server error.', type: GeneralResponseDto })
-    @ApiResponse({ status: HttpStatus.FORBIDDEN, description: 'Forbidden.', type: GeneralResponseDto })
+    @ApiGenericResponses()
     override async findById(
       @Param('id') id: string,
       @Query('relations') relations?: string,
@@ -228,9 +200,7 @@ export function createController<TEntity extends BaseEntity<TEntity>, Service ex
       type: getDtoClass
     })
     @ApiResponse({ status: HttpStatus.NOT_FOUND, description: `${singular(formattedEntityName)} not found with the specified criteria`, type: GeneralResponseDto })
-    @ApiResponse({ status: HttpStatus.FORBIDDEN, description: 'Forbidden. User does not have permission to access this resource', type: GeneralResponseDto })
-    @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized. Authentication is required', type: GeneralResponseDto })
-    @ApiResponse({ status: HttpStatus.INTERNAL_SERVER_ERROR, description: 'Internal server error', type: GeneralResponseDto })
+    @ApiGenericResponses()
     override async findOne(
       @Query('fields') fieldsString: string,
       @Query('relations') relations?: string,
@@ -307,8 +277,8 @@ export function createController<TEntity extends BaseEntity<TEntity>, Service ex
         Alternative format: \`?relations={"user":true,"category":{"subcategories":true}}\`
         `,
     })
-    override findAllAdvanced(paginationDto: PaginationDto<TEntity>): Promise<PaginatedResponseDto<GetDto>> {
-      return super.findAllAdvanced(paginationDto);
+    override findAllAdvanced(req: any, paginationDto: PaginationDto<TEntity>): Promise<PaginatedResponseDto<GetDto>> {
+      return super.findAllAdvanced(req, paginationDto);
     }
   }
     

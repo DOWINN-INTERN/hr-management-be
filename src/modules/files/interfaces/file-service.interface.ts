@@ -30,7 +30,16 @@ export interface IFileService {
   completeChunkedUpload(uploadId: string): Promise<FileMetadata>;
 
   // Streaming and downloading
-  getFileStream(fileKey: string): Promise<Readable>;
+  getFileStream(fileKey: string, options?: {
+  scope?: any;
+  tenantContext?: {
+    organizationId?: string;
+    branchId?: string;
+    departmentId?: string;
+    userId?: string;
+  };
+  authorization?: string;
+}): Promise<Readable>;
   streamFile(fileKey: string, res: Response, inline?: boolean): Promise<void>;
   downloadFile(fileKey: string, res: Response, filename?: string): Promise<void>;
   getFileBuffer(fileKey: string): Promise<Buffer>;

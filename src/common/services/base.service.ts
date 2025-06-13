@@ -6,6 +6,7 @@ import { UsersService } from '../../modules/account-management/users/users.servi
 import { GeneralResponseDto } from '../dtos/generalresponse.dto';
 import { PaginatedResponseDto } from '../dtos/paginated-response.dto';
 import { PaginationDto } from '../dtos/pagination.dto';
+import { RoleScopeType } from '../enums/role-scope-type.enum';
 import { UtilityHelper } from '../helpers/utility.helper';
 import { TransactionService } from './transaction.service';
 
@@ -53,9 +54,9 @@ export abstract class BaseService<T extends BaseEntity<T>> {
     return this.repository;
   }
 
-  async findAllComplex(paginationDto: PaginationDto<T>): Promise<PaginatedResponseDto<T>> {
+  async findAllComplex(scope: RoleScopeType, paginationDto: PaginationDto<T>): Promise<PaginatedResponseDto<T>> {
     try {
-      const findOptions = paginationDto.toFindManyOptions();
+      const findOptions = paginationDto.toFindManyOptions(scope);
       const alias = this.entityName.toLowerCase();
       
       // Debug the incoming filter

@@ -5,6 +5,7 @@ import { BadRequestException, Injectable, InternalServerErrorException, Logger, 
 import { DeepPartial, FindManyOptions, FindOptionsRelations, FindOptionsWhere, In, Repository, SelectQueryBuilder } from 'typeorm';
 import { PaginatedResponseDto } from '../dtos/paginated-response.dto';
 import { PaginationDto } from '../dtos/pagination.dto';
+import { RoleScopeType } from '../enums/role-scope-type.enum';
 import { UtilityHelper } from '../helpers/utility.helper';
 import { TransactionService } from './transaction.service';
 
@@ -20,9 +21,9 @@ export abstract class BaseService<T extends BaseEntity<T>> {
     protected readonly usersService?: UsersService | null
   ) {}
 
-  async findAllComplex(paginationDto: PaginationDto<T>): Promise<PaginatedResponseDto<T>> {
+  async findAllComplex(scope: RoleScopeType, paginationDto: PaginationDto<T>): Promise<PaginatedResponseDto<T>> {
     try {
-      const findOptions = paginationDto.toFindManyOptions();
+      const findOptions = paginationDto.toFindManyOptions(scope);
   
       // Make better use of your existing QueryBuilder implementation
       // which already has proper filtering support
@@ -129,9 +130,9 @@ export abstract class BaseService<T extends BaseEntity<T>> {
 
 
   // DONE
-  async findAll(paginationDto: PaginationDto<T>): Promise<PaginatedResponseDto<T>> {
+  async findAll(scope: RoleScopeType, paginationDto: PaginationDto<T>): Promise<PaginatedResponseDto<T>> {
     const [data, totalCount] = await this.repository.findAndCount({
-      ...paginationDto.toFindManyOptions(),
+      ...paginationDto.toFindManyOptions(scope),
     });
     
     return {

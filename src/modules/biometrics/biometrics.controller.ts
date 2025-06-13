@@ -1,12 +1,17 @@
-import { Body, Controller, Delete, Get, HttpException, HttpStatus, Param, Post, Put, Query, UseInterceptors, ValidationPipe } from '@nestjs/common';
+import { Authorize } from '@/common/decorators/authorize.decorator';
+import { ApiGenericResponses } from '@/common/decorators/generic-api-responses.decorator';
+import { GeneralResponseDto } from '@/common/dtos/generalresponse.dto';
+import { Action } from '@/common/enums/action.enum';
+import { UtilityHelper } from '@/common/helpers/utility.helper';
+import { Body, Controller, Delete, ForbiddenException, Get, HttpException, HttpStatus, NotFoundException, Param, Post, Put, Query, Req, UseInterceptors, ValidationPipe } from '@nestjs/common';
 import { ApiOperation, ApiParam, ApiProperty, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { IsNumber, IsOptional, IsString } from 'class-validator';
+import { BiometricUserDto, GetBiometricUserDto } from './dtos/biometric-user.dto';
 import { ErrorResponseDto } from './dtos/error-response.dto';
 import { TimeoutInterceptor } from './interceptors/timeout.interceptor';
 import { AttendanceRecord, IBiometricTemplate, IBiometricUser } from './interfaces/biometric.interface';
 import { BiometricDevicesService } from './services/biometric-devices.service';
 import { BiometricsFactoryService } from './services/biometrics-factory.service';
-import { SetUserDto } from './dtos/set-user.dto';
 
 class GetFingerprintDto {
     @ApiProperty({
@@ -193,162 +198,246 @@ export class BiometricsController {
         }
     }
 
+    @Post('users/register')
+    @Authorize({ endpointType: Action.CREATE })
     @ApiOperation({ summary: 'Register a new user on a biometric device' })
     @ApiResponse({ 
         status: HttpStatus.CREATED, 
         description: 'User registered successfully',
-        type: Object
+        type: BiometricUserDto
     })
-    @ApiResponse({ 
-        status: HttpStatus.BAD_REQUEST, 
-        description: 'Invalid input data',
-        type: ErrorResponseDto
-    })
-    @ApiResponse({ 
-        status: HttpStatus.NOT_FOUND, 
-        description: 'Device not found',
-        type: ErrorResponseDto
-    })
-    @Post('users/register')
+    @ApiGenericResponses()
     async registerUser(
-        @Body() setUserDto: SetUserDto
-    ): Promise<IBiometricUser> {
+        @Req() req: any,
+        @Body() setUserDto: BiometricUserDto,
+    ): Promise<BiometricUserDto> {
+         // Get the device information first to check access scope
+        const device = await this.biometricDevicesService.findOneBy({ deviceId: setUserDto.deviceId });
+        if (!device) {
+            throw new HttpException(
+                `Biometric Device ${setUserDto.deviceId} not found`,
+                HttpStatus.NOT_FOUND
+            );
+        }
+
+        // Get resource scope from request
+        const resourceScope = req.resourceScope;
+
+        // Check if user has access to this device based on scope
+        const hasAccess = UtilityHelper.checkScopeAccess(device, resourceScope);
+        if (!hasAccess) {
+            throw new HttpException(
+                `You don't have permission to register users on Biometric Device ${setUserDto.deviceId}`,
+                HttpStatus.FORBIDDEN
+            );
+        }
+
         // Get the appropriate service based on the device ID
         const service = await this.biometricsFactory.getServiceByDeviceId(setUserDto.deviceId);
-        
+
         return await service.registerUser(
             setUserDto.deviceId,
-            {
-                userId: setUserDto.userId,
-                name: setUserDto.name,
-                password: setUserDto.password,
-                cardNumber: setUserDto.cardNumber,
-                role: setUserDto.role
-            }
+            setUserDto
         );
     }
 
-    @ApiOperation({ summary: 'Set device time' })
-    @ApiResponse({ status: HttpStatus.OK, description: 'Device time set successfully' })
-    @ApiResponse({ 
-        status: HttpStatus.BAD_REQUEST, 
-        description: 'Invalid time format',
-        type: ErrorResponseDto
-    })
-    @ApiResponse({ 
-        status: HttpStatus.NOT_FOUND, 
-        description: 'Device not found',
-        type: ErrorResponseDto
-    })
-    @ApiResponse({ 
-        status: HttpStatus.NOT_IMPLEMENTED, 
-        description: 'Feature not implemented on this device',
-        type: ErrorResponseDto
-    })
-    @ApiParam({ name: 'deviceId', description: 'Target device ID' })
-    @Put('devices/:deviceId/time')
-    async setTime(
-        @Param('deviceId') deviceId: string,
-        @Body() body: { time?: string }
-    ): Promise<{ success: boolean }> {
-        try {
-            // Get the appropriate service based on the device ID
-            const service = await this.biometricsFactory.getServiceByDeviceId(deviceId);
-            
-            // Parse the time or use current time
-            const time = body.time ? new Date(body.time) : new Date();
-            
-            // Validate time format
-            if (isNaN(time.getTime())) {
-                throw new HttpException(
-                    'Invalid time format',
-                    HttpStatus.BAD_REQUEST
-                );
-            }
-            
-            const result = await service.setTime(deviceId, time);
-            
-            return { success: result };
-        } catch (error: unknown) {
-            return this.handleError(
-                error,
-                'Failed to set device time',
-                'Time setting not supported by this device type'
-            );
-        }
-    }
-
-    @ApiOperation({ summary: 'Delete a user from a device' })
-    @ApiResponse({ status: HttpStatus.OK, description: 'User deleted successfully' })
-    @ApiResponse({ 
-        status: HttpStatus.NOT_FOUND, 
-        description: 'Device or user not found',
-        type: ErrorResponseDto
-    })
-    @ApiResponse({ 
-        status: HttpStatus.BAD_REQUEST, 
-        description: 'Invalid user ID format',
-        type: ErrorResponseDto
-    })
-    @ApiResponse({ 
-        status: HttpStatus.INTERNAL_SERVER_ERROR, 
-        description: 'Error deleting user',
-        type: ErrorResponseDto
-    })
-    @ApiParam({ name: 'deviceId', description: 'Target device ID' })
-    @ApiParam({ name: 'userId', description: 'User ID to delete' })
-    @Delete('devices/:deviceId/users/:userId')
-    async deleteUser(
-        @Param('deviceId') deviceId: string,
-        @Param('userId') userId: string
-    ): Promise<{ success: boolean }> {
-        try {
-            // Get the appropriate service based on the device ID
-            const service = await this.biometricsFactory.getServiceByDeviceId(deviceId);
-            
-            const result = await service.deleteUser(deviceId, userId);
-            
-            return { success: result };
-        } catch (error: unknown) {
-            return this.handleError(
-                error,
-                'Failed to delete user',
-                'User deletion not supported by this device type'
-            );
-        }
-    }
-
-    @ApiOperation({ summary: 'Get users registered on a device' })
+    @Put('users/update')
+    @Authorize({ endpointType: Action.UPDATE })
+    @ApiOperation({ summary: 'Update an existing user on a biometric device' })
     @ApiResponse({ 
         status: HttpStatus.OK, 
-        description: 'List of user IDs',
-        type: [Object]
+        description: 'User updated successfully',
+        type: BiometricUserDto
+    })
+    @ApiGenericResponses()
+    async updateUser(
+        @Req() req: any,
+        @Body() setUserDto: BiometricUserDto,
+    ): Promise<BiometricUserDto> {
+        // Get the device information first to check access scope
+        const device = await this.biometricDevicesService.findOneBy({ deviceId: setUserDto.deviceId });
+        if (!device) {
+            throw new HttpException(
+                `Biometric Device ${setUserDto.deviceId} not found`,
+                HttpStatus.NOT_FOUND
+            );
+        }
+
+        // Get resource scope from request
+        const resourceScope = req.resourceScope;
+
+        // Check if user has access to this device based on scope
+        const hasAccess = UtilityHelper.checkScopeAccess(device, resourceScope);
+        if (!hasAccess) {
+            throw new HttpException(
+                `You don't have permission to update users on Biometric Device ${setUserDto.deviceId}`,
+                HttpStatus.FORBIDDEN
+            );
+        }
+
+        // Get the appropriate service based on the device ID
+        const service = await this.biometricsFactory.getServiceByDeviceId(setUserDto.deviceId);
+
+        return await service.updateUser(
+            setUserDto.deviceId,
+            setUserDto
+        );
+    }
+
+    // TODO: Delete user endpoint
+    // @Delete('devices/:deviceId/users/:userId')
+    // @Authorize({ endpointType: Action.DELETE })
+    // @ApiOperation({ summary: 'Delete a user from a biometric device' })
+    // @ApiParam({
+    //     name: 'deviceId',
+    //     description: 'Target device ID',
+    //     type: String,
+    //     example: "10.10.10.100:5010"
+    // })
+    // @ApiParam({
+    //     name: 'biometricUserId',
+    //     description: 'User ID to delete',
+    //     type: Number,
+    //     example: 1001
+    // })
+    // @ApiResponse({
+    //     status: HttpStatus.OK,
+    //     description: 'User deleted successfully',
+    //     type: GeneralResponseDto
+    // })
+    // @ApiResponse({
+    //     status: HttpStatus.NOT_FOUND,
+    //     description: 'Device or user not found',
+    //     type: GeneralResponseDto
+    // })
+    // @ApiGenericResponses()
+    // async deleteUser(
+    //     @Req() req: any,
+    //     @Param('deviceId') deviceId: string,
+    //     @Param('biometricUserId') biometricUserId: number
+    // ): Promise<Partial<GeneralResponseDto>> {
+    //     // Get the device information first to check access scope
+    //     const device = await this.biometricDevicesService.findOneBy({ deviceId: deviceId });
+    //     if (!device) {
+    //         throw new HttpException(
+    //             `Biometric Device ${deviceId} not found`,
+    //             HttpStatus.NOT_FOUND
+    //         );
+    //     }
+
+    //     // Get resource scope from request
+    //     const resourceScope = req.resourceScope;
+
+    //     // Check if user has access to this device based on scope
+    //     const hasAccess = UtilityHelper.checkScopeAccess(device, resourceScope);
+    //     if (!hasAccess) {
+    //         throw new HttpException(
+    //             `You don't have permission to delete users on Biometric Device ${deviceId}`,
+    //             HttpStatus.FORBIDDEN
+    //         );
+    //     }
+
+    //     const service = await this.biometricsFactory.getServiceByDeviceId(deviceId);
+        
+    //     const result = await service.deleteUser(deviceId, biometricUserId);
+        
+    //     return {
+    //         message: result 
+    //             ? `User ${biometricUserId} deleted successfully from device ${deviceId}` 
+    //             : `Failed to delete user ${biometricUserId} from device ${deviceId}`
+    //     };
+    // }
+
+    @Get('devices/:deviceId/users')
+    @Authorize({ endpointType: Action.READ })
+    @ApiOperation({ summary: 'Get users registered on a biometric device' })
+    @ApiParam({
+        name: 'deviceId',
+        description: 'Target device ID',
+        type: String,
+        example: "10.10.10.100:5010"
+    })
+    @ApiResponse({ 
+        status: HttpStatus.OK,
+        description: 'List of users retrieved successfully',
+        type: [BiometricUserDto]
     })
     @ApiResponse({ 
         status: HttpStatus.NOT_FOUND, 
-        description: 'Device not found',
-        type: ErrorResponseDto
+        description: 'Biometric Device not found',
+        type: GeneralResponseDto
     })
-    @ApiResponse({ 
-        status: HttpStatus.NOT_IMPLEMENTED, 
-        description: 'Feature not implemented on this device',
-        type: ErrorResponseDto
-    })
-    @ApiParam({ name: 'deviceId', description: 'Target device ID' })
-    @Get('devices/:deviceId/users')
-    async getUsers(@Param('deviceId') deviceId: string): Promise<IBiometricUser[]> {
-        try {
-            // Get the appropriate service based on the device ID
-            const service = await this.biometricsFactory.getServiceByDeviceId(deviceId);
-            
-            return await service.getUsers(deviceId);
-        } catch (error: unknown) {
-            return this.handleError(
-                error,
-                'Failed to get users',
-                'User retrieval not supported by this device type'
+    @ApiGenericResponses()
+    async getUsers(@Req() req: any, @Param('deviceId') deviceId: string): Promise<BiometricUserDto[]> {
+        // Get the device information first to check access scope
+        const device = await this.biometricDevicesService.findOneBy({ deviceId: deviceId });
+        if (!device) {
+            throw new HttpException(
+                `Biometric Device ${deviceId} not found`,
+                HttpStatus.NOT_FOUND
             );
         }
+
+        // Get resource scope from request
+        const resourceScope = req.resourceScope;
+        // Check if user has access to this device based on scope
+        const hasAccess = UtilityHelper.checkScopeAccess(device, resourceScope);
+        if (!hasAccess) {
+            throw new HttpException(
+                `You don't have permission to access users on Biometric Device ${deviceId}`,
+                HttpStatus.FORBIDDEN
+            );
+        }
+
+        const service = await this.biometricsFactory.getServiceByDeviceId(deviceId);
+        return await service.getUsers(deviceId);
+    }
+
+    @Get('devices/:deviceId/users/:biometricUserId')
+    @Authorize({ endpointType: Action.READ })
+    @ApiOperation({ summary: 'Get a specific user by ID from a biometric device' })
+    @ApiParam({
+        name: 'deviceId',
+        description: 'Target device ID',
+        type: String
+    })
+    @ApiParam({
+        name: 'biometricUserId',
+        description: 'User ID in the biometric device',
+        type: Number
+    })
+    @ApiResponse({ 
+        status: HttpStatus.OK, 
+        description: 'User retrieved successfully',
+        type: BiometricUserDto
+    })
+    @ApiResponse({ 
+        status: HttpStatus.NOT_FOUND, 
+        description: 'User or device not found',
+        type: GeneralResponseDto
+    })
+    @ApiGenericResponses()
+    async getUserById(@Req() req: any, @Param() params: GetBiometricUserDto): Promise<BiometricUserDto> {
+        // Get the device information first to check access scope
+        const device = await this.biometricDevicesService.findOneBy({ deviceId: params.deviceId });
+        if (!device) {
+            throw new NotFoundException(
+                `Biometric Device ${params.deviceId} not found`,
+            );
+        }
+
+        // Get resource scope from request
+        const resourceScope = req.resourceScope;
+        // Check if user has access to this device based on scope
+        const hasAccess = UtilityHelper.checkScopeAccess(device, resourceScope);
+        if (!hasAccess) {
+            throw new ForbiddenException(
+                `You don't have permission to access user ${params.biometricUserId} on Biometric Device ${params.deviceId}`,
+            );
+        }
+
+        const service = await this.biometricsFactory.getServiceByDeviceId(params.deviceId);
+        return await service.getUserById(params);
     }
 
     @ApiOperation({ summary: 'Get attendance records from a device' })
@@ -370,7 +459,7 @@ export class BiometricsController {
     @ApiParam({ name: 'deviceId', description: 'Target device ID' })
     @ApiQuery({ name: 'startDate', required: false, description: 'Filter by start date (ISO format)' })
     @ApiQuery({ name: 'endDate', required: false, description: 'Filter by end date (ISO format)' })
-    @Get('devices/:deviceId/attendance')
+    @Get('devices/:deviceId/attendances')
     async getAttendanceRecords(
         @Param('deviceId') deviceId: string,
         @Query('startDate') startDateParam?: string,
@@ -477,47 +566,6 @@ export class BiometricsController {
                 error,
                 'Failed to clear attendance records',
                 'Attendance record clearing not supported by this device type'
-            );
-        }
-    }
-
-    @ApiOperation({ summary: 'Get device time' })
-    @ApiResponse({ 
-        status: HttpStatus.OK, 
-        description: 'Device time retrieved successfully',
-        schema: {
-            type: 'object',
-            properties: {
-                deviceId: { type: 'string', example: '192.168.1.100:4370' },
-                time: { type: 'string', format: 'date-time', example: '2025-05-06T12:00:00.000Z' }
-            }
-        }
-    })
-    @ApiResponse({ 
-        status: HttpStatus.NOT_FOUND, 
-        description: 'Device not found',
-        type: ErrorResponseDto
-    })
-    @ApiResponse({ 
-        status: HttpStatus.NOT_IMPLEMENTED, 
-        description: 'Feature not implemented on this device',
-        type: ErrorResponseDto
-    })
-    @ApiParam({ name: 'deviceId', description: 'Target device ID' })
-    @Get('devices/:deviceId/time')
-    async getTime(@Param('deviceId') deviceId: string): Promise<{ deviceId: string; time: Date }> {
-        try {
-            // Get the appropriate service based on the device ID
-            const service = await this.biometricsFactory.getServiceByDeviceId(deviceId);
-            
-            const time = await service.getTime(deviceId);
-            
-            return { deviceId, time };
-        } catch (error: unknown) {
-            return this.handleError(
-                error,
-                'Failed to get device time',
-                'Time retrieval not supported by this device type'
             );
         }
     }
@@ -719,58 +767,6 @@ export class BiometricsController {
                 error,
                 'Failed to sync users between devices',
                 'User synchronization not supported by this device type'
-            );
-        }
-    }
-
-    @ApiOperation({ summary: 'Execute custom command on device' })
-    @ApiResponse({ 
-        status: HttpStatus.OK, 
-        description: 'Command executed successfully',
-        schema: {
-            type: 'object',
-            properties: {
-                deviceId: { type: 'string', example: '192.168.1.100:4370' },
-                command: { type: 'string', example: 'get_device_info1' },
-                result: { type: 'object', additionalProperties: true }
-            }
-        }
-    })
-    @ApiResponse({ 
-        status: HttpStatus.NOT_FOUND, 
-        description: 'Device not found',
-        type: ErrorResponseDto
-    })
-    @ApiResponse({ 
-        status: HttpStatus.BAD_REQUEST, 
-        description: 'Invalid command',
-        type: ErrorResponseDto
-    })
-    @ApiResponse({ 
-        status: HttpStatus.NOT_IMPLEMENTED, 
-        description: 'Feature not implemented on this device',
-        type: ErrorResponseDto
-    })
-    @ApiParam({ name: 'deviceId', description: 'Target device ID' })
-    @Post('devices/:deviceId/command')
-    async executeCommand(
-        @Param('deviceId') deviceId: string,
-        @Body() executeCommandDto: ExecuteCommandDto
-    ): Promise<{ deviceId: string; command: string; result: any }> {
-        try {
-            const { command, data } = executeCommandDto;
-            
-            // Get the appropriate service based on the device ID
-            const service = await this.biometricsFactory.getServiceByDeviceId(deviceId);
-            
-            const result = await service.executeCommand(deviceId, command, data);
-            
-            return { deviceId, command, result };
-        } catch (error: unknown) {
-            return this.handleError(
-                error,
-                'Failed to execute command',
-                'Command execution not supported by this device type'
             );
         }
     }

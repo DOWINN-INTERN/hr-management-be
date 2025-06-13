@@ -9,11 +9,12 @@ import { PunchMethod } from '@/common/enums/punch-method.enum';
 import { PunchType } from '@/common/enums/punch-type.enum';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Repository } from 'typeorm';
+import { BiometricUserDto } from '../dtos/biometric-user.dto';
 import { ConnectDeviceDto } from '../dtos/connect-device.dto';
 import { BiometricDevice } from '../entities/biometric-device.entity';
 import { BiometricTemplate } from '../entities/biometric-template.entity';
 import { BiometricsGateway } from '../gateways/biometrics.gateway';
-import { AttendanceRecord, IBiometricTemplate, IBiometricUser } from '../interfaces/biometric.interface';
+import { AttendanceRecord, IBiometricTemplate } from '../interfaces/biometric.interface';
 import { BaseBiometricsService, BiometricException } from './base-biometrics.service';
 import { BiometricsPollingService } from './biometrics-polling.service';
 
@@ -23,6 +24,12 @@ import { BiometricsPollingService } from './biometrics-polling.service';
  */
 @Injectable()
 export class ZKTecoBiometricsService extends BaseBiometricsService {
+    updateUser(deviceId: string, userData: BiometricUserDto): Promise<BiometricUserDto> {
+        throw new Error('Method not implemented.');
+    }
+    registerUser(deviceId: string, userData: BiometricUserDto): Promise<BiometricUserDto> {
+        throw new Error('Method not implemented.');
+    }
     
     constructor(
         private readonly configService: ConfigService,
@@ -47,71 +54,63 @@ export class ZKTecoBiometricsService extends BaseBiometricsService {
         });
     }
 
-    /**
-     * Register a new user on the ZKTeco device without fingerprint enrollment
-     * @param deviceId Device identifier
-     * @param userData User data to register
-     * @returns Created user information
-     */
-    async registerUser(
-        deviceId: string, 
-        userData: {
-            userId: string;
-            name: string;
-            password?: string;
-            cardNumber?: string;
-            role?: number;
-        }
-    ): Promise<IBiometricUser> {
-        const zkDevice = this.getConnectedDevice(deviceId);
+    // /**
+    //  * Register a new user on the ZKTeco device without fingerprint enrollment
+    //  * @param deviceId Device identifier
+    //  * @param userData User data to register
+    //  * @returns Created user information
+    //  */
+    // async registerUser(
+    //     deviceId: string, 
+    //     userData: BiometricUserDto
+    // ): Promise<BiometricUserDto> {
+    //     const zkDevice = this.getConnectedDevice(deviceId);
 
-        try {
-            this.logger.log(`Registering user ${userData.userId} on device ${deviceId}`);
+    //     try {
+    //         this.logger.log(`Registering user ${userData.userId} on device ${deviceId}`);
             
-            // Convert userId to numeric ID if possible, or use a default
-            const uid = parseInt(userData.userId) || Math.floor(Math.random() * 9000) + 1000;
+    //         // Convert userId to numeric ID if possible, or use a default
+    //         const uid = parseInt(userData.userId) || Math.floor(Math.random() * 9000) + 1000;
             
-            // Prepare parameters with defaults
-            const name = userData.name || `User ${userData.userId}`;
-            const password = userData.password || '';
-            const role = userData.role || 0; // 0 = normal user, 14 = admin
-            const cardno = userData.cardNumber ? parseInt(userData.cardNumber) : 0;
+    //         // Prepare parameters with defaults
+    //         const name = userData.name || `User ${userData.userId}`;
+    //         const password = userData.password || '';
+    //         const cardno = userData.cardNumber ? parseInt(userData.cardNumber) : 0;
             
-            // Validate input parameters
-            if (uid <= 0 || uid > 65535) {
-                throw new Error('User ID must be a positive integer less than 65535');
-            }
+    //         // Validate input parameters
+    //         if (uid <= 0 || uid > 65535) {
+    //             throw new Error('User ID must be a positive integer less than 65535');
+    //         }
             
-            if (name.length > 24) {
-                throw new Error('Name must be less than 24 characters');
-            }
+    //         if (name.length > 24) {
+    //             throw new Error('Name must be less than 24 characters');
+    //         }
             
-            if (password.length > 8) {
-                throw new Error('Password must be less than 8 characters');
-            }
+    //         if (password.length > 8) {
+    //             throw new Error('Password must be less than 8 characters');
+    //         }
             
-            // Create/update the user on the device
-            await zkDevice.setUser(uid, userData.userId, name, password, role, cardno);
+    //         // Create/update the user on the device
+    //         await zkDevice.setUser(uid, userData.userId, name, password, cardno);
             
-            // Create a standardized user object to return
-            const createdUser: IBiometricUser = {
-                userId: userData.userId,
-                name: name,
-                password: password,
-                cardNumber: cardno.toString(),
-                role: role
-            };
+    //         // Create a standardized user object to return
+    //         const createdUser: IBiometricUser = {
+    //             userId: userData.userId,
+    //             name: name,
+    //             password: password,
+    //             cardNumber: cardno.toString(),
+    //         };
             
-            this.logger.log(`Successfully registered user ${userData.userId} on device ${deviceId}`);
-            return createdUser;
-        } catch (error) {
-            // log error object as json
-            this.logger.error(`Error registering user on device ${deviceId}: ${JSON.stringify(error)}`);
-            const errorMessage = error instanceof Error ? error.message : String(error);
-            this.logger.error(`Error registering user on device ${deviceId}: ${errorMessage}`);
-            throw new BiometricException(`Failed to register user: ${errorMessage}`, HttpStatus.BAD_REQUEST);
-        }
-    }
+    //         this.logger.log(`Successfully registered user ${userData.userId} on device ${deviceId}`);
+    //         return createdUser;
+    //     } catch (error) {
+    //         // log error object as json
+    //         this.logger.error(`Error registering user on device ${deviceId}: ${JSON.stringify(error)}`);
+    //         const errorMessage = error instanceof Error ? error.message : String(error);
+    //         this.logger.error(`Error registering user on device ${deviceId}: ${errorMessage}`);
+    //         throw new BiometricException(`Failed to register user: ${errorMessage}`, HttpStatus.BAD_REQUEST);
+    //     }
+    // }
     
 
     /**
@@ -663,7 +662,7 @@ export class ZKTecoBiometricsService extends BaseBiometricsService {
      * @param deviceId Device identifier
      * @returns Array of user IDs
      */
-    async getUsers(deviceId: string): Promise<IBiometricUser[]> {
+    async getUsers(deviceId: string): Promise<BiometricUserDto[]> {
         const zkDevice = this.getConnectedDevice(deviceId);
 
         try {
@@ -705,14 +704,14 @@ export class ZKTecoBiometricsService extends BaseBiometricsService {
      * @param userId User ID to delete
      * @returns True if deleted successfully
      */
-    async deleteUser(deviceId: string, userId: string): Promise<boolean> {
+    async deleteUser(deviceId: string, userId: number): Promise<boolean> {
         const zkDevice = this.getConnectedDevice(deviceId);
 
         try {
             this.logger.log(`Deleting user ${userId} from device ${deviceId}`);
             
             // Convert userId to numeric ID
-            const uid = parseInt(userId);
+            const uid = userId;
             
             // Validate input parameter
             if (isNaN(uid) || uid <= 0 || uid > 65535) {
@@ -735,12 +734,12 @@ export class ZKTecoBiometricsService extends BaseBiometricsService {
                 // After successful deletion from device, also remove templates from database
                 if (success) {
                     try {
-                        const deleteResult = await this.templateRepository.delete({
-                            userId: userId,
-                            provider: 'zkteco'
-                        });
+                        // const deleteResult = await this.templateRepository.delete({
+                        //     userId: userId,
+                        //     provider: 'zkteco'
+                        // });
                         
-                        this.logger.debug(`Deleted ${deleteResult.affected || 0} templates from database for user ${userId}`);
+                        // this.logger.debug(`Deleted ${deleteResult.affected || 0} templates from database for user ${userId}`);
                     } catch (dbError) {
                         this.logger.warn(`Failed to delete templates from database: ${dbError instanceof Error ? dbError.message : String(dbError)}`);
                         // Continue even if database deletion fails
@@ -784,8 +783,8 @@ export class ZKTecoBiometricsService extends BaseBiometricsService {
             const uid = parseInt(userId) || 1;
             const name = `User ${userId}`;  // Default name if not provided
             
-            // Create/update the user first
-            await this.setUser(deviceId, uid, userId, name);
+            // // Create/update the user first
+            // await this.setUser(deviceId, uid, userId, name);
             
             // Start enrollment mode using executeCmd
             // According to ZKTeco protocol, CMD_STARTENROLL (61 or 0x3d) initiates enrollment
@@ -1049,34 +1048,33 @@ export class ZKTecoBiometricsService extends BaseBiometricsService {
             this.logger.log(`Syncing users from device ${sourceDeviceId} to ${targetDeviceId}`);
             
             // Get users from source device
-            const users = await this.getUserDetails(sourceDeviceId);
-            if (!users || users.length === 0) {
-                this.logger.warn(`No users found on source device ${sourceDeviceId}`);
-                return 0;
-            }
+            // const users = await this.getUserDetails(sourceDeviceId);
+            // if (!users || users.length === 0) {
+            //     this.logger.warn(`No users found on source device ${sourceDeviceId}`);
+            //     return 0;
+            // }
             
             // Get target device
             const targetDevice = this.getConnectedDevice(targetDeviceId);
             
             // Transfer each user to target device
             let syncedCount = 0;
-            for (const user of users) {
-                try {
-                await this.setUser(
-                    targetDeviceId,
-                    parseInt(user.userId) || 0, // Use numeric ID if possible
-                    user.userId,
-                    user.name,
-                    user.password,
-                    user.role,
-                    parseInt(user.cardNumber || '0') || 0
-                );
-                syncedCount++;
-                } catch (userError) {
-                const errorMessage = userError instanceof Error ? userError.message : String(userError);
-                this.logger.warn(`Failed to sync user ${user.userId}: ${errorMessage}`);
-                }
-            }
+            // for (const user of users) {
+            //     try {
+            //     // await this.setUser(
+            //     //     targetDeviceId,
+            //     //     user.userId || 0, // Use numeric ID if possible
+            //     //     user.userId,
+            //     //     user.name,
+            //     //     user.password,
+            //     //     parseInt(user.cardNumber || '0') || 0
+            //     // );
+            //     syncedCount++;
+            //     } catch (userError) {
+            //     const errorMessage = userError instanceof Error ? userError.message : String(userError);
+            //     this.logger.warn(`Failed to sync user ${user.userId}: ${errorMessage}`);
+            //     }
+            // }
             
             this.logger.log(`Successfully synced ${syncedCount} users from ${sourceDeviceId} to ${targetDeviceId}`);
             return syncedCount;

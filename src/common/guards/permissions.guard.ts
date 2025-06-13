@@ -97,28 +97,28 @@ export class PermissionsGuard implements CanActivate {
 
       // check if user is an employee if user is not an employee only allow access to their own resource
       if (!user.employee) {
-        this.logger.warn(`User is not an employee`);
         // Check if the user is trying to access their own resource
-        // const userId = request.params.userId || request.query.userId || request.body.userId;
-        // if (userId !== userClaims.sub) {
-        //   this.logger.warn(`User is trying to access another user's resource: ${userId}`);
+        const userId = request.params.userId || request.query.userId || request.body.userId;
           
-        //   // Log unauthorized access attempt
-        //   await this.logUserActivity(
-        //     userClaims, endpointType, baseName, false,
-        //     `Attempted to access another user's resource: ${userId}`,
-        //     resourceId, userClaims.sub
-        //   );
+        if (userId !== userClaims.sub && userId) {
+          this.logger.warn(`User is trying to access another user's resource: ${userId}`);
           
-        //   throw new ForbiddenException('You do not have the permission to access or manage this resource.');
-        // }
+          // Log unauthorized access attempt
+          await this.logUserActivity(
+            userClaims, endpointType, baseName, false,
+            `Attempted to access another user's resource: ${userId}`,
+            resourceId, userClaims.sub
+          );
+          
+          throw new ForbiddenException('You do not have the permission to access or manage this resource.');
+        }
         
-        // // Log successful access to own resource
-        // await this.logUserActivity(
-        //   userClaims, endpointType, baseName, true,
-        //   `Accessed own resource`,
-        //   resourceId, userClaims.sub
-        // );
+        // Log successful access to own resource
+        await this.logUserActivity(
+          userClaims, endpointType, baseName, true,
+          `Accessed resource`,
+          resourceId, userClaims.sub
+        );
         
         return true;
       }
@@ -225,6 +225,7 @@ export class PermissionsGuard implements CanActivate {
         user: { id: userId },
         message: logMessage
       });
+      this.logger.log(logMessage);
     } catch (error) {
       // Don't let logging errors affect the app's operation
       this.logger.error(`Failed to log user activity: ${error instanceof Error ? error.message : 'Unknown error'}`);

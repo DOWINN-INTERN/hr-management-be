@@ -6,16 +6,16 @@ import { Branch } from "../../entities/branch.entity";
 
 @Entity('departments')
 export class Department extends BaseEntity<Department> {
-    @Column({ unique: true })
+    @Column()
     name!: string;
 
-    @Column({ nullable: true })
+    @Column({ nullable: true, type: 'text' })
     description?: string;
 
     @Column({ nullable: true })
     logo?: string;
 
-    @Column({ unique: true })
+    @Column()
     alias!: string;
 
     @Column({ nullable: true })

@@ -14,13 +14,15 @@ import {
     ParseUUIDPipe,
     Post,
     Put,
-    Query
+    Query,
+    Req
 } from '@nestjs/common';
 import { ApiBody, ApiOperation, ApiQuery, ApiResponse } from '@nestjs/swagger';
 import { ClassConstructor, plainToInstance } from 'class-transformer';
 import { DeepPartial, FindOptionsOrder, FindOptionsRelations, FindOptionsSelect } from 'typeorm';
 import { Authorize } from '../decorators/authorize.decorator';
 import { CurrentUser } from '../decorators/current-user.decorator';
+import { ApiGenericResponses } from '../decorators/generic-api-responses.decorator';
 import { GeneralResponseDto } from '../dtos/generalresponse.dto';
 import { Action } from '../enums/action.enum';
 import { UtilityHelper } from '../helpers/utility.helper';
@@ -67,10 +69,7 @@ export abstract class BaseController<T extends BaseEntity<T>, K extends BaseServ
     @Put(':id')
     @Authorize({ endpointType: Action.UPDATE })
     async update(
-        @Param('id', new ParseUUIDPipe({ 
-            version: '4',
-            errorHttpStatusCode: HttpStatus.BAD_REQUEST
-        })) id: string,
+        @Param('id', ParseUUIDPipe) id: string,
         @Body() entityDto: UpdateDto,
         @CurrentUser('sub') updatedById: string
     ): Promise<GetDto> {
@@ -166,15 +165,41 @@ export abstract class BaseController<T extends BaseEntity<T>, K extends BaseServ
     })
     @ApiQuery({ name: 'skip', required: false, type: Number })
     @ApiQuery({ name: 'take', required: false, type: Number })
+    @ApiQuery({
+        name: 'userId',
+        required: false,
+        type: String,
+        description: 'Filter by user ID',
+    })
+    @ApiQuery({
+        name: 'departmentId',
+        required: false,
+        type: String,
+        description: 'Filter by department ID',
+    })
+    @ApiQuery({
+        name: 'branchId',
+        required: false,
+        type: String,
+        description: 'Filter by branch ID',
+    })
+    @ApiQuery({
+        name: 'organizationId',
+        required: false,
+        type: String,
+        description: 'Filter by organization ID',
+    })
     @ApiResponse({
         status: HttpStatus.OK,
         description: 'Successfully retrieved entities',
         type: PaginatedResponseDto<GetDto>,
     })
+    @ApiGenericResponses()
     async findAllAdvanced(
+        @Req() req: any,
         @Query() paginationDto: PaginationDto<T>,
     ): Promise<PaginatedResponseDto<GetDto>> {
-        const entityResult = await this.baseService.findAllComplex(paginationDto);
+        const entityResult = await this.baseService.findAllComplex(req.resourceScope.type, paginationDto);
         
         // Transform using class-transformer
         const dtoResult: PaginatedResponseDto<GetDto> = {

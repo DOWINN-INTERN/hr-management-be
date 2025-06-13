@@ -1,4 +1,6 @@
 import { Role } from "@/modules/employee-management/roles/entities/role.entity";
+import { ForbiddenException } from "@nestjs/common";
+import path from "path";
 import { FindOptionsRelations, FindOptionsSelect } from "typeorm";
 import { RoleScopeType } from "../enums/role-scope-type.enum";
 
@@ -43,20 +45,22 @@ export class UtilityHelper {
         }
 
         let effectiveScopeType = RoleScopeType.OWNED;
+        let effectiveRoleName = 'Staff';
         
         for (const role of roles) {
             const roleScope = role.scope || RoleScopeType.OWNED;
             
             if (roleScope === RoleScopeType.GLOBAL) {
-            return role;
+                return role;
             }
             
             if (this.isBroaderScope(roleScope, effectiveScopeType)) {
                 effectiveScopeType = roleScope;
+                effectiveRoleName = role.name || 'Staff';
             }
         }
         
-        return roles[0];
+        return { scope: effectiveScopeType, name: effectiveRoleName };
     }
     
     static isBroaderScope(scopeA: RoleScopeType, scopeB: RoleScopeType): boolean {
@@ -103,6 +107,305 @@ export class UtilityHelper {
         }
         
         return count;
+    }
+
+    /**
+     * Validates tenant access for file operations and returns the effective tenant directory
+     * @param scope The user's resource scope
+     * @param tenantContext The requested tenant context from DTO
+     * @returns The validated tenant directory path
+     */
+    static validateAndGetTenantDirectory(
+        scope: any, // ResourceScope type
+        tenantContext: {
+            organizationId?: string;
+            branchId?: string;
+            departmentId?: string;
+            userId?: string;
+        }
+    ): string {
+        const { type, organizations, branches, departments, userId } = scope;
+
+        switch (type) {
+            case RoleScopeType.GLOBAL:
+                // Global scope can access any directory structure
+                if (tenantContext.userId) {
+                    return `users/${tenantContext.userId}`;
+                }
+                if (tenantContext.organizationId) {
+                    let path = `organizations/${tenantContext.organizationId}`;
+                    if (tenantContext.branchId) {
+                        path += `/branches/${tenantContext.branchId}`;
+                        if (tenantContext.departmentId) {
+                            path += `/departments/${tenantContext.departmentId}`;
+                        }
+                    }
+                    return path;
+                }
+                return '';
+
+            case RoleScopeType.ORGANIZATION:
+                // Must provide organizationId and it must be in their allowed organizations
+                if (!tenantContext.organizationId) {
+                    throw new ForbiddenException('Organization scope requires organizationId');
+                }
+                if (!organizations?.includes(tenantContext.organizationId)) {
+                    throw new ForbiddenException(
+                        `You don't have access to organization: ${tenantContext.organizationId}`
+                    );
+                }
+                
+                let orgPath = `organizations/${tenantContext.organizationId}`;
+                if (tenantContext.branchId) {
+                    orgPath += `/branches/${tenantContext.branchId}`;
+                    if (tenantContext.departmentId) {
+                        orgPath += `/departments/${tenantContext.departmentId}`;
+                    }
+                }
+                return orgPath;
+
+            case RoleScopeType.BRANCH:
+                // Must provide branchId and it must be in their allowed branches
+                if (!tenantContext.branchId) {
+                    throw new ForbiddenException('You must provide branchId to upload files');
+                }
+
+                // Check if user has access to the branch resource
+                if (!branches?.includes(tenantContext.branchId)) {
+                    throw new ForbiddenException(
+                        `You don't have access to branch: ${tenantContext.branchId}`
+                    );
+                }
+                
+                // For branch scope, we need to validate organization-branch relationship
+                let userOrgId: string;
+                
+                // Check if user provided organization Id
+                if (tenantContext.organizationId) {
+                    // If organizationId is provided, validate that the branch belongs to this organization
+                    userOrgId = tenantContext.organizationId;
+                    
+                    // Check if the user has access to this organization
+                    if (!organizations?.includes(userOrgId)) {
+                        throw new ForbiddenException(
+                            `You don't have access to organization: ${userOrgId}`
+                        );
+                    }
+                    
+                    // Find the index of the branch to get corresponding organization
+                    const branchIndex = branches?.indexOf(tenantContext.branchId);
+                    const correspondingOrgId = organizations?.[branchIndex];
+                    
+                    if (correspondingOrgId !== userOrgId) {
+                        throw new ForbiddenException(
+                            `Branch ${tenantContext.branchId} does not belong to organization ${userOrgId}`
+                        );
+                    }
+                } else {
+                    // If no organizationId provided, derive it from branch scope
+                    const branchIndex = branches?.indexOf(tenantContext.branchId);
+                    userOrgId = organizations?.[branchIndex];
+                    
+                    if (!userOrgId) {
+                        throw new ForbiddenException(
+                            'Cannot determine organization context for the specified branch'
+                        );
+                    }
+                }
+
+                
+                let branchPath = `organizations/${userOrgId}/branches/${tenantContext.branchId}`;
+
+                // If user provided departmentId, validate it
+                if (tenantContext.departmentId) {
+                    // Validate that the department exists and belongs to the user's accessible branch
+                    if (!departments?.includes(tenantContext.departmentId)) {
+                        throw new ForbiddenException(
+                            `You don't have access to department: ${tenantContext.departmentId}`
+                        );
+                    }
+                    
+                    // Additional validation: ensure department belongs to the specified branch
+                    // This assumes departments array corresponds to branches array by index
+                    const departmentBranchIndex = departments.indexOf(tenantContext.departmentId);
+                    const associatedBranchId = branches?.[departmentBranchIndex];
+                    
+                    if (associatedBranchId !== tenantContext.branchId) {
+                        throw new ForbiddenException(
+                            `Department ${tenantContext.departmentId} does not belong to branch ${tenantContext.branchId}`
+                        );
+                    }
+                    
+                    branchPath += `/departments/${tenantContext.departmentId}`;
+                }
+                return branchPath;
+
+            case RoleScopeType.DEPARTMENT:
+                // Must provide departmentId and it must be in their allowed departments
+                if (!tenantContext.departmentId) {
+                    throw new ForbiddenException('You must provide departmentId to upload files');
+                }
+                if (!departments?.includes(tenantContext.departmentId)) {
+                    throw new ForbiddenException(
+                        `You don't have access to department: ${tenantContext.departmentId}`
+                    );
+                }
+                
+                // For department scope, we need to validate organization-branch-department relationship
+                let departmentOrgId: string;
+                let departmentBranchId: string;
+                // Check if user provided organizationId
+                if (tenantContext.organizationId) {
+                    // If organizationId is provided, validate that the department belongs to this organization
+                    departmentOrgId = tenantContext.organizationId;
+                    // Check if the user has access to this organization
+                    if (!organizations?.includes(departmentOrgId)) {
+                        throw new ForbiddenException(
+                            `You don't have access to organization: ${departmentOrgId}`
+                        );
+                    }
+                    // Find the index of the department to get corresponding branch
+                    const departmentIndex = departments?.indexOf(tenantContext.departmentId);
+                    departmentBranchId = branches?.[departmentIndex];
+                    if (!departmentBranchId) {
+                        throw new ForbiddenException(
+                            `Department ${tenantContext.departmentId} does not belong to organization ${departmentOrgId}`
+                        );
+                    }
+                } else {
+                    // If no organizationId provided, derive it from department scope
+                    const departmentIndex = departments?.indexOf(tenantContext.departmentId);
+                    departmentOrgId = organizations?.[departmentIndex];
+                    departmentBranchId = branches?.[departmentIndex];
+                    if (!departmentOrgId || !departmentBranchId) {
+                        throw new ForbiddenException(
+                            'Cannot determine organization or branch context for the specified department'
+                        );
+                    }
+                }
+                // Check if user provided branchId
+                if (tenantContext.branchId) {
+                    // Validate that the branchId matches the department's branch
+                    if (tenantContext.branchId !== departmentBranchId) {
+                        throw new ForbiddenException(
+                            `Department ${tenantContext.departmentId} does not belong to branch ${tenantContext.branchId}`
+                        );
+                    }
+                    // Validate that the branchId belongs to the user's accessible organization
+                    if (!branches?.includes(tenantContext.branchId)) {
+                        throw new ForbiddenException(
+                            `You don't have access to branch: ${tenantContext.branchId}`
+                        );
+                    }
+                } else {
+                    // If no branchId provided, dervice it from department scope
+                    const departmentIndex = departments?.indexOf(tenantContext.departmentId);
+                    departmentBranchId = branches?.[departmentIndex];
+                    if (!departmentBranchId) {
+                        throw new ForbiddenException(
+                            `Cannot determine branch context for the specified department ${tenantContext.departmentId}`
+                        );
+                    }
+                }
+                // Construct the department path
+                return `organizations/${departmentOrgId}/branches/${departmentBranchId}/departments/${tenantContext.departmentId}`;
+            case RoleScopeType.OWNED:
+                // Can only upload to their own user directory
+                if (tenantContext.userId && tenantContext.userId !== userId) {
+                    throw new ForbiddenException('You can only upload files to your own directory');
+                }
+                return `users/${userId}`;
+
+            default:
+                throw new ForbiddenException('Invalid scope type');
+        }
+    }
+
+    /**
+     * Validates that a file path is within the allowed tenant directory
+     * @param filePath The file path to validate
+     * @param allowedTenantPath The allowed tenant directory path
+     * @returns boolean indicating if the path is valid
+     */
+    static validateFilePath(filePath: string, allowedTenantPath: string): boolean {
+        // Normalize paths to prevent directory traversal attacks
+        const normalizedFilePath = path.normalize(filePath).replace(/^(\.\.[\/\\])+/, '');
+        const normalizedTenantPath = path.normalize(allowedTenantPath);
+        
+        // Check if the file path starts with the allowed tenant path
+        return normalizedFilePath.startsWith(normalizedTenantPath);
+    }
+
+    /**
+     * Check if a resource has access based on its scope configuration
+     * @param resource The resource to check access for
+     * @param resourceScope The scope configuration containing access rules
+     * @returns boolean indicating if access is granted
+     */
+    static checkScopeAccess(resource: any, resourceScope: any): boolean {
+        const { type, organizations, branches, departments, userId } = resourceScope;
+        let hasAccess = false;
+        switch (type) {
+            case RoleScopeType.GLOBAL:
+                return true;
+
+            case RoleScopeType.ORGANIZATION:
+                if (!resource.organizationId) {
+                    console.warn('Resource missing organizationId for ORGANIZATION scope check');
+                    return true;
+                }
+                hasAccess = organizations?.includes(resource.organizationId) ?? false;
+
+                if (!hasAccess) {
+                    throw new ForbiddenException(
+                        `You do not have access or manage this resource in organization: ${resource.organizationId}`
+                    );
+                }
+
+                return hasAccess;
+
+            case RoleScopeType.BRANCH:
+                if (!resource.branchId) {
+                    console.warn('Resource missing branchId for BRANCH scope check');
+                    return true;
+                }
+                hasAccess = branches?.includes(resource.branchId) ?? false;
+                if (!hasAccess) {
+                    throw new ForbiddenException(
+                        `You do not have access or manage this resource in branch: ${resource.branchId}`
+                    );
+                }
+                return hasAccess;
+
+            case RoleScopeType.DEPARTMENT:
+                if (!resource.departmentId) {
+                    console.warn('Resource missing departmentId for DEPARTMENT scope check');
+                    return true;
+                }
+                hasAccess = departments?.includes(resource.departmentId) ?? false;
+                if (!hasAccess) {
+                    throw new ForbiddenException(
+                        `You do not have access or manage this resource in department: ${resource.departmentId}`
+                    );
+                }
+                return hasAccess;
+
+            case RoleScopeType.OWNED:
+                if (!resource.userId) {
+                    console.warn('Resource missing userId for OWNED scope check');
+                    return true;
+                }
+                hasAccess = userId === resource.userId;
+                if (!hasAccess) {
+                    throw new ForbiddenException(
+                        `You do not have access or manage this resource owned by user: ${resource.userId}`
+                    );
+                }
+                return hasAccess;
+
+            default:
+                return false;
+        }
     }
 
     /**

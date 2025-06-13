@@ -1,8 +1,9 @@
+import { BaseDto } from '@/common/dtos/base.dto';
 import { BiometricDeviceType } from '@/common/enums/biometrics-device-type.enum';
 import { ApiProperty } from '@nestjs/swagger';
 import { IsEnum, IsIP, IsInt, IsNotEmpty, Max, Min } from 'class-validator';
 
-export class ConnectDeviceDto {
+export class ConnectDeviceDto extends BaseDto {
     @ApiProperty({
         description: 'Device IP address',
         example: '192.168.1.100'

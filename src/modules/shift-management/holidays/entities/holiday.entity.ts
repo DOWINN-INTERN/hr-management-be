@@ -21,6 +21,6 @@ export class Holiday extends BaseEntity<Holiday> {
     @Column({ type: 'enum', enum: Day })
     day!: Day;
 
-    @OneToMany(() => Schedule, (schedule: Schedule) => schedule.holiday, { nullable: true, cascade: true })
+    @OneToMany(() => Schedule, (schedule: Schedule) => schedule.holiday, { nullable: true,  onDelete: 'SET NULL' })
     schedules?: Schedule[];
 }

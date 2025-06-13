@@ -10,7 +10,7 @@ export class Organization extends BaseEntity<Organization> {
     @Column({ unique: true })
     name!: string;
 
-    @Column({ nullable: true })
+    @Column({ nullable: true, type: 'text' })
     description?: string;
 
     @Column({ nullable: true })

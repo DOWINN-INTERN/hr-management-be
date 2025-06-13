@@ -1,8 +1,9 @@
 import { BadRequestException } from '@nestjs/common';
 import { ApiProperty } from '@nestjs/swagger';
 import { Transform, Type } from 'class-transformer';
-import { IsInt, IsOptional, Min } from 'class-validator';
+import { IsInt, IsOptional, IsUUID, Min } from 'class-validator';
 import { Between, FindManyOptions, FindOptionsSelect, FindOptionsWhere, ILike, In, LessThan, LessThanOrEqual, Like, MoreThan, MoreThanOrEqual, Not } from 'typeorm';
+import { RoleScopeType } from '../enums/role-scope-type.enum';
 
 /**
  * Defines operators for advanced filtering in API queries
@@ -120,6 +121,42 @@ export type FilterOperators = {
  */
 export class PaginationDto<T> {
   @ApiProperty({
+    description: 'Organization ID for resource filtering',
+    required: false,
+    example: 'uuid-here'
+  })
+  @IsOptional()
+  @IsUUID()
+  organizationId?: string;
+
+  @ApiProperty({
+    description: 'Branch ID for resource filtering',
+    required: false,
+    example: 'uuid-here'
+  })
+  @IsOptional()
+  @IsUUID()
+  branchId?: string;
+
+  @ApiProperty({
+    description: 'Department ID for resource filtering',
+    required: false,
+    example: 'uuid-here'
+  })
+  @IsOptional()
+  @IsUUID()
+  departmentId?: string;
+
+  @ApiProperty({
+    description: 'User ID for resource filtering',
+    required: false,
+    example: 'uuid-here'
+  })
+  @IsOptional()
+  @IsUUID()
+  userId?: string;
+  
+  @ApiProperty({
     description: 'Number of items to skip',
     required: false,
     minimum: 0,
@@ -183,13 +220,22 @@ export class PaginationDto<T> {
   @IsOptional()
   select?: string | string[];
 
-  toFindManyOptions(baseWhere: Partial<T> = {}): FindManyOptions<T> {
+  toFindManyOptions(scope: RoleScopeType, baseWhere: Partial<T> = {}): FindManyOptions<T> {
     const filterObj = this.parseStringInput(this.filter);
     const sortObj = this.parseStringInput(this.sort);
     
     // Process where conditions with advanced operators
     let filterWhere = this.applyFilterOperators(filterObj);
 
+    // Add resource filtering
+    const resourceFilters = this.getResourceFilters(scope);
+    
+    // Merge resource filters with other filters
+    filterWhere = {
+      ...filterWhere,
+      ...resourceFilters
+    };
+    
     // Simplify the deleted logic
     if (!filterWhere.hasOwnProperty('isDeleted')) {
       filterWhere = {
@@ -361,5 +407,28 @@ export class PaginationDto<T> {
     return result;
   }
 
-
+  /**
+   * Extract resource filters from the DTO properties
+   */
+  private getResourceFilters(scope: RoleScopeType): Partial<T> {
+    const resourceFilters: any = {};
+    
+    if (scope === RoleScopeType.ORGANIZATION && this.organizationId) {
+      resourceFilters.organizationId = this.organizationId;
+    }
+    
+    if (scope === RoleScopeType.BRANCH && this.branchId) {
+      resourceFilters.branchId = this.branchId;
+    }
+    
+    if (scope === RoleScopeType.DEPARTMENT && this.departmentId) {
+      resourceFilters.departmentId = this.departmentId;
+    }
+    
+    if (scope === RoleScopeType.OWNED && this.userId) {
+      resourceFilters.userId = this.userId;
+    }
+    
+    return resourceFilters;
+  }
 }

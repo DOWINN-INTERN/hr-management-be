@@ -1,4 +1,5 @@
-import { Injectable } from '@nestjs/common';
+import { UtilityHelper } from '@/common/helpers/utility.helper';
+import { ForbiddenException, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as fs from 'fs';
 import { promises as fsPromises } from 'fs';
@@ -235,41 +236,68 @@ export class LocalFileService extends BaseFileService {
     }
   }
 
-  // TODO: Implement tenant scoping
   async uploadFile(file: Express.Multer.File, options?: FileUploadOptions): Promise<FileMetadata> {
-    const folder = options?.folder || '';
-    const finalDir = path.join(this.uploadDir, folder);
-    
-    // Create folder if it doesn't exist
-    if (folder && !fs.existsSync(finalDir)) {
-      fs.mkdirSync(finalDir, { recursive: true });
+    try {
+      // Validate file
+      this.validateFile(file, options);
+
+      const folder = options?.folder || '';
+      
+      // Ensure the folder path doesn't allow directory traversal
+      const sanitizedFolder = folder
+        .replace(/\.\./g, '') // Remove ..
+        .replace(/^\/+/, '') // Remove leading slashes
+        .replace(/\/+/g, '/') // Normalize multiple slashes
+        .replace(/\/+$/, ''); // Remove trailing slashes
+
+      const finalDir = path.join(this.uploadDir, sanitizedFolder);
+      
+      // Security check: ensure the final directory is within uploadDir
+      const resolvedFinalDir = path.resolve(finalDir);
+      const resolvedUploadDir = path.resolve(this.uploadDir);
+      
+      if (!resolvedFinalDir.startsWith(resolvedUploadDir)) {
+        throw new Error('Invalid upload path: directory traversal detected');
+      }
+      
+      // Create folder if it doesn't exist
+      if (!fs.existsSync(finalDir)) {
+        fs.mkdirSync(finalDir, { recursive: true });
+        this.logger.log(`Created tenant directory: ${sanitizedFolder}`);
+      }
+      
+      const fileName = this.generateUniqueFileName(file.originalname);
+      const filePath = path.join(finalDir, fileName);
+      const fileKey = sanitizedFolder ? `${sanitizedFolder}/${fileName}` : fileName;
+
+      // Write file
+      await fsPromises.writeFile(filePath, file.buffer);
+      
+      // Get file stats
+      const stats = await fsPromises.stat(filePath);
+
+      const url = await this.getFileUrl(fileKey, options?.token);
+
+      const metadata: FileMetadata = {
+        key: fileKey,
+        originalName: file.originalname,
+        size: file.size,
+        mimeType: file.mimetype,
+        url,
+        createdAt: stats.birthtime,
+        lastModified: stats.mtime,
+        metadata: {
+          ...options?.metadata,
+        },
+      };
+      
+      this.logger.log(`File uploaded to tenant directory: ${fileKey}`);
+      return metadata;
+
+    } catch (error) {
+      this.logger.error(`Error uploading file: ${error instanceof Error ? error.message : String(error)}`);
+      throw error;
     }
-    
-    const fileName = this.generateUniqueFileName(file.originalname);
-    const filePath = path.join(finalDir, fileName);
-    const fileKey = folder ? `${folder}/${fileName}` : fileName;
-
-    // Write file
-    await fsPromises.writeFile(filePath, file.buffer);
-    
-    // Get file stats
-    const stats = await fsPromises.stat(filePath);
-
-    const url = await this.getFileUrl(fileKey, options?.token);
-
-    const metadata: FileMetadata = {
-      key: fileKey,
-      originalName: file.originalname,
-      size: file.size,
-      mimeType: file.mimetype,
-      url,
-      createdAt: stats.birthtime,
-      lastModified: stats.mtime,
-      encoding: file.encoding,
-      metadata: options?.metadata,
-    };
-    
-    return metadata;
   }
 
   // TODO: Implement tenant scoping and separation
@@ -729,30 +757,135 @@ private async calculateDirectorySize(dirPath: string, includeHidden: boolean = f
     }
   }
 
-  async getFileStream(fileKey: string): Promise<Readable> {
-    const filePath = path.join(this.uploadDir, fileKey);
-    
-    if (!fs.existsSync(filePath)) {
-      throw new Error(`File ${fileKey} not found`);
-    }
-    
-    return fs.createReadStream(filePath);
-  }
+  async getFileStream(fileKey: string, options?: {
+  scope?: any;
+  tenantContext?: {
+    organizationId?: string;
+    branchId?: string;
+    departmentId?: string;
+    userId?: string;
+  };
+  authorization?: string;
+}): Promise<Readable> {
+  try {
+    // log scope and tentant conext
+    this.logger.log(`getFileStream called with fileKey: ${fileKey}, scope: ${JSON.stringify(options?.scope)}, tenantContext: ${JSON.stringify(options?.tenantContext)}`);
 
-  async getFileBuffer(fileKey: string): Promise<Buffer> {
-    const filePath = path.join(this.uploadDir, fileKey);
+    // Validate tenant access if scope and tenant context are provided
+    if (options?.scope && options?.tenantContext) {
+      const allowedTenantPath = UtilityHelper.validateAndGetTenantDirectory(
+        options.scope,
+        options.tenantContext
+      );
+
+      // log allowedTenantPath
+      this.logger.log(`Allowed tenant path: ${allowedTenantPath}`);
+      this.logger.log(`Validating file key: ${fileKey} against allowed tenant path: ${allowedTenantPath}`);
+      
+      // Validate the file key is within the allowed tenant directory
+      if (!UtilityHelper.validateFilePath(fileKey, allowedTenantPath) && allowedTenantPath) {
+        throw new ForbiddenException(`Access denied: File ${fileKey} is outside your allowed directory`);
+      }
+    }
+
+    // Sanitize file key to prevent directory traversal
+    const sanitizedFileKey = fileKey
+      .replace(/\.\./g, '') // Remove ..
+      .replace(/^\/+/, '') // Remove leading slashes
+      .replace(/\/+/g, '/'); // Normalize multiple slashes
+
+    const filePath = path.join(this.uploadDir, sanitizedFileKey);
+    
+    // Additional security check: ensure the resolved path is within uploadDir
+    const resolvedFilePath = path.resolve(filePath);
+    const resolvedUploadDir = path.resolve(this.uploadDir);
+    
+    if (!resolvedFilePath.startsWith(resolvedUploadDir)) {
+      throw new Error('Invalid file path: directory traversal detected');
+    }
     
     if (!fs.existsSync(filePath)) {
       throw new Error(`File ${fileKey} not found`);
     }
+
+    // Verify it's actually a file and not a directory
+    const stats = await fsPromises.stat(filePath);
+    if (!stats.isFile()) {
+      throw new Error(`Path ${fileKey} is not a file`);
+    }
     
-    return fsPromises.readFile(filePath);
+    this.logger.log(`Streaming file: ${sanitizedFileKey}`);
+    return fs.createReadStream(filePath);
+    
+  } catch (error) {
+    this.logger.error(`Error streaming file ${fileKey}: ${error instanceof Error ? error.message : String(error)}`);
+    throw error;
   }
+}
+
+async getFileBuffer(fileKey: string, options?: {
+  scope?: any;
+  tenantContext?: {
+    organizationId?: string;
+    branchId?: string;
+    departmentId?: string;
+    userId?: string;
+  };
+  authorization?: string;
+}): Promise<Buffer> {
+  try {
+    // Validate tenant access if scope and tenant context are provided
+    if (options?.scope && options?.tenantContext) {
+      const allowedTenantPath = UtilityHelper.validateAndGetTenantDirectory(
+        options.scope,
+        options.tenantContext
+      );
+      
+      // Validate the file key is within the allowed tenant directory
+      if (!UtilityHelper.validateFilePath(fileKey, allowedTenantPath)) {
+        throw new Error(`Access denied: File ${fileKey} is outside your allowed directory`);
+      }
+    }
+
+    // Sanitize file key to prevent directory traversal
+    const sanitizedFileKey = fileKey
+      .replace(/\.\./g, '') // Remove ..
+      .replace(/^\/+/, '') // Remove leading slashes
+      .replace(/\/+/g, '/'); // Normalize multiple slashes
+
+    const filePath = path.join(this.uploadDir, sanitizedFileKey);
+    
+    // Additional security check: ensure the resolved path is within uploadDir
+    const resolvedFilePath = path.resolve(filePath);
+    const resolvedUploadDir = path.resolve(this.uploadDir);
+    
+    if (!resolvedFilePath.startsWith(resolvedUploadDir)) {
+      throw new Error('Invalid file path: directory traversal detected');
+    }
+    
+    if (!fs.existsSync(filePath)) {
+      throw new Error(`File ${fileKey} not found`);
+    }
+
+    // Verify it's actually a file and not a directory
+    const stats = await fsPromises.stat(filePath);
+    if (!stats.isFile()) {
+      throw new Error(`Path ${fileKey} is not a file`);
+    }
+    
+    this.logger.log(`Reading file buffer: ${sanitizedFileKey}`);
+    return fsPromises.readFile(filePath);
+    
+  } catch (error) {
+    this.logger.error(`Error reading file ${fileKey}: ${error instanceof Error ? error.message : String(error)}`);
+    throw error;
+  }
+}
 
   async getFileUrl(fileKey: string, authorization?: string): Promise<string> {
     // Local storage doesn't support presigned URLs with expiration
     // Just return a direct URL
-    const encodedFileKey = encodeURIComponent(fileKey);
+    const encodedFileKey = fileKey;
     const token = authorization?.replace(/^Bearer\s+/i, '') || '';
     return `${this.baseUrl}/${encodedFileKey}?token=${token}`;
   }

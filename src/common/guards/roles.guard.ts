@@ -21,6 +21,19 @@ export class RolesGuard implements CanActivate {
         ROLES_KEY,
         [context.getHandler(), context.getClass()],
       );
+
+      const onlyAllowRoles = this.reflector.getAllAndOverride<boolean>(
+        'onlyAllowRoles',
+        [context.getHandler(), context.getClass()],
+      );
+
+      // log only allow roles
+      this.logger.log(`Only allow roles: ${onlyAllowRoles}`);
+
+      const allowEmployee = this.reflector.getAllAndOverride<boolean>(
+        'allowEmployee',
+        [context.getHandler(), context.getClass()],
+      );
       
       // If no roles are required, allow access
       if (!requiredRoles || requiredRoles.length === 0) {
@@ -36,6 +49,23 @@ export class RolesGuard implements CanActivate {
       if (!user) {
         this.logger.warn(`User with ID ${userClaims.sub} not found`);
         throw new ForbiddenException('User not found');
+      }
+
+      // TODO: Do not allow access to users with no role
+      // log user email and user roles
+      this.logger.log(`User email: ${user.email}`);
+      this.logger.log(`User roles: ${user.employee?.roles?.map(role => role.name).join(', ') || 'None'}`);
+
+      // Do not allow access to users with no role
+      if ((!user.employee?.roles || user.employee.roles.length === 0) && onlyAllowRoles) {
+        this.logger.warn(`User with ID ${userClaims.sub} has no roles assigned`);
+        throw new ForbiddenException('You do not have a role to access this resource.');
+      }
+
+      // If allowEmployee is true, check if the user has only the employee role
+      if (allowEmployee && user.employee?.roles?.length === 1 && user.employee.roles[0].name === Role.EMPLOYEE) {
+        this.logger.warn(`User with ID ${userClaims.sub} has only the employee role`);
+        throw new ForbiddenException('You do not have sufficient permissions to access this resource.');
       }
 
       // If user has the super admin role, allow access

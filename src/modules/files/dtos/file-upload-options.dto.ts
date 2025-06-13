@@ -1,6 +1,8 @@
+import { BaseDto } from "@/common/dtos/base.dto";
 import { RoleScopeType } from "@/common/enums/role-scope-type.enum";
+import { PartialType } from "@nestjs/swagger";
 
-export class FileUploadOptions {
+export class FileUploadOptions extends PartialType(BaseDto) {
     folder?: string;
     customFileName?: string;
     metadata?: Record<string, any>;
@@ -10,9 +12,5 @@ export class FileUploadOptions {
     allowedTypes?: string[];
     token?: string;
     // Add multi-tenant context
-    organizationId?: string;
-    branchId?: string;
-    departmentId?: string;
-    userId?: string;
     scope?: RoleScopeType;
 }
