@@ -9,7 +9,7 @@ import { ResourceAccessInterceptor } from '../interceptors/resource-access.inter
 import { IPermission } from '../interfaces/permission.interface';
 import { AccessOptions } from './departments.decorator';
 import { Permissions } from './permissions.decorator';
-import { Roles } from './roles.decorator';
+import { AllowEmployee, OnlyAllowRoles, Roles } from './roles.decorator';
 
 export const PERMISSIONS_FUNCTION_KEY = 'permissions_function';
 export const PERMISSION_ENDPOINT_TYPE = 'permission_endpoint_type';
@@ -23,9 +23,9 @@ export interface AuthorizeOptions extends Omit<AccessOptions, 'permissions'> {
 
 export function Authorize(options?: AuthorizeOptions): MethodDecorator {
   const decorators = [
+    Roles(options?.roles),
     UseGuards(JwtAuthGuard, RolesGuard, PermissionsGuard, ScopeGuard),
     UseInterceptors(ResourceAccessInterceptor),
-    Roles(options?.roles),
     ApiBearerAuth('access-token'),
   ];
 
@@ -39,10 +39,13 @@ export function Authorize(options?: AuthorizeOptions): MethodDecorator {
     decorators.push(Permissions(options?.permissions));
   }
 
-  decorators.push(
-    SetMetadata('onlyAllowRoles', options?.allowRoles ?? true), // default to true: // only allow users with roles to access this endpoint
-    SetMetadata('allowEmployee', options?.allowEmployee ?? false), // default to false: // do not allow users with only employee role to access this endpoint
-  );
+  if (options?.allowRoles) {
+    decorators.push(OnlyAllowRoles(options.allowRoles));
+  }
+
+  if (options?.allowEmployee) {
+    decorators.push(AllowEmployee(options.allowEmployee));
+  }
   
   return applyDecorators(...decorators);
 }

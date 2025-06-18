@@ -2,7 +2,7 @@
 import { UsersService } from "@/modules/account-management/users/users.service";
 import { CanActivate, ExecutionContext, ForbiddenException, Injectable, Logger } from "@nestjs/common";
 import { Reflector } from "@nestjs/core";
-import { ROLES_KEY } from "../decorators/roles.decorator";
+import { ALLOW_EMPLOYEE_KEY, ONLY_ALLOW_ROLES_KEY, ROLES_KEY } from "../decorators/roles.decorator";
 import { Role } from "../enums/role.enum";
 import { IJwtPayload } from "../interfaces/jwt-payload.interface";
 
@@ -23,7 +23,7 @@ export class RolesGuard implements CanActivate {
       );
 
       const onlyAllowRoles = this.reflector.getAllAndOverride<boolean>(
-        'onlyAllowRoles',
+        ONLY_ALLOW_ROLES_KEY,
         [context.getHandler(), context.getClass()],
       );
 
@@ -31,12 +31,12 @@ export class RolesGuard implements CanActivate {
       this.logger.log(`Only allow roles: ${onlyAllowRoles}`);
 
       const allowEmployee = this.reflector.getAllAndOverride<boolean>(
-        'allowEmployee',
+        ALLOW_EMPLOYEE_KEY,
         [context.getHandler(), context.getClass()],
       );
       
       // If no roles are required, allow access
-      if (!requiredRoles || requiredRoles.length === 0) {
+      if ((!requiredRoles || requiredRoles.length === 0)) {
         return true;
       }
 
@@ -51,7 +51,6 @@ export class RolesGuard implements CanActivate {
         throw new ForbiddenException('User not found');
       }
 
-      // TODO: Do not allow access to users with no role
       // log user email and user roles
       this.logger.log(`User email: ${user.email}`);
       this.logger.log(`User roles: ${user.employee?.roles?.map(role => role.name).join(', ') || 'None'}`);
@@ -73,11 +72,18 @@ export class RolesGuard implements CanActivate {
       if (hasSuperAdminRole) {
         return true;
       }
+
+      // If no roles are required, allow access
+      if ((!requiredRoles || requiredRoles.length === 0)) {
+        return true;
+      }
       
       // Check if the user has the required roles
       const hasRequiredRoles = user?.employee?.roles?.some(role => requiredRoles.includes(role.name));
 
       if (!hasRequiredRoles) {
+        // Log the roles the user has
+        this.logger.warn(`User with ID ${userClaims.sub} does not have required roles: ${requiredRoles.join(', ')}`);
         throw new ForbiddenException('You are not authorized to access this resource.');
       }
 

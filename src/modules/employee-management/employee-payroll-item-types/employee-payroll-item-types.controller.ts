@@ -1,5 +1,6 @@
 import { Authorize } from "@/common/decorators/authorize.decorator";
 import { CurrentUser } from "@/common/decorators/current-user.decorator";
+import { ApiGenericResponses } from "@/common/decorators/generic-api-responses.decorator";
 import { GeneralResponseDto } from "@/common/dtos/generalresponse.dto";
 import { Action } from "@/common/enums/action.enum";
 import { createController } from "@/common/factories/create-controller.factory";
@@ -50,11 +51,8 @@ export class EmployeePayrollItemTypesController extends createController(
         description: 'Compensation has been successfully set up',
         type: GetPayrollItemDto
     })
-    @ApiResponse({ status: 400, description: 'Invalid employee ID format or invalid rate type', type: GeneralResponseDto })
     @ApiResponse({ status: 404, description: 'Employee or payroll item type not found', type: GeneralResponseDto })
-    @ApiResponse({ status: 500, description: 'Internal server error', type: GeneralResponseDto })
-    @ApiResponse({ status: 401, description: 'Unauthorized', type: GeneralResponseDto })
-    @ApiResponse({ status: 403, description: 'Forbidden', type: GeneralResponseDto })
+    @ApiGenericResponses()
     async setupEmployeeCompensation(
         @Param('employeeId', ParseUUIDPipe) employeeId: string,
         @Body() dto: EmployeeCompensationDto,

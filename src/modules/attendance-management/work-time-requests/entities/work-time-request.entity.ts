@@ -38,9 +38,9 @@ export class WorkTimeRequest extends BaseEntity<WorkTimeRequest> {
     @JoinColumn({ name: 'attendanceId' })
     attendance?: Attendance;
 
-    @ManyToOne(() => Cutoff, (cutoff: Cutoff) => cutoff.workTimeRequests)
+    @ManyToOne(() => Cutoff, (cutoff: Cutoff) => cutoff.workTimeRequests, { nullable: true })
     @JoinColumn({ name: 'cutoffId' })
-    cutoff!: Cutoff;
+    cutoff?: Cutoff;
 
     @OneToMany(() => Document, (document: Document) => document.workTimeRequest, { nullable: true, cascade: true })
     documents?: Document[];

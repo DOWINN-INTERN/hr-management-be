@@ -2,29 +2,46 @@ import { PaginatedResponseDto } from '@/common/dtos/paginated-response.dto';
 import { PaginationDto } from '@/common/dtos/pagination.dto';
 import { BaseService } from '@/common/services/base.service';
 import { BaseEntity } from '@/database/entities/base.entity';
+import { ExportOptionsDto } from '@/modules/files/dtos/export-options.dto';
+import { ImportOptionsDto } from '@/modules/files/dtos/import-options.dto';
+import { ImportResult } from '@/modules/files/dtos/import-result.dto';
+import { ImportExportService } from '@/modules/files/services/import-export.service';
 import {
+    BadRequestException,
     Body,
     Delete,
     Get,
     HttpStatus,
+    Inject,
     InternalServerErrorException,
     Logger,
+    MaxFileSizeValidator,
     NotFoundException,
+    Optional,
     Param,
+    ParseFilePipe,
     ParseUUIDPipe,
     Post,
     Put,
     Query,
-    Req
+    Req,
+    Res,
+    UploadedFile,
+    UseInterceptors
 } from '@nestjs/common';
-import { ApiBody, ApiOperation, ApiQuery, ApiResponse } from '@nestjs/swagger';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { ApiBody, ApiConsumes, ApiOperation, ApiQuery, ApiResponse } from '@nestjs/swagger';
 import { ClassConstructor, plainToInstance } from 'class-transformer';
+import { Response } from 'express';
 import { DeepPartial, FindOptionsOrder, FindOptionsRelations, FindOptionsSelect } from 'typeorm';
+import { ApiQueryFromDto } from '../decorators/api-query-from-dto.decorator';
 import { Authorize } from '../decorators/authorize.decorator';
 import { CurrentUser } from '../decorators/current-user.decorator';
 import { ApiGenericResponses } from '../decorators/generic-api-responses.decorator';
 import { GeneralResponseDto } from '../dtos/generalresponse.dto';
 import { Action } from '../enums/action.enum';
+import { FileFormat } from '../enums/file-format';
+import { RoleScopeType } from '../enums/role-scope-type.enum';
 import { UtilityHelper } from '../helpers/utility.helper';
 import { IPermission } from '../interfaces/permission.interface';
 
@@ -55,6 +72,8 @@ export abstract class BaseController<T extends BaseEntity<T>, K extends BaseServ
         protected readonly baseService: K,
         protected readonly getDtoClass: ClassConstructor<GetDto>,
         public readonly entityName: string,
+        @Optional() @Inject(ImportExportService)
+        protected readonly importExportService?: ImportExportService
     ) { 
 
     }
@@ -331,12 +350,212 @@ export abstract class BaseController<T extends BaseEntity<T>, K extends BaseServ
         },
     })
     @ApiResponse({ status: HttpStatus.NO_CONTENT, description: 'The entities have been successfully deleted.' })
-    @ApiResponse({ status: HttpStatus.BAD_REQUEST, description: 'Invalid input data.' })
-    @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized.' })
-    @ApiResponse({ status: HttpStatus.INTERNAL_SERVER_ERROR, description: 'Internal' })
-    @ApiResponse({ status: HttpStatus.FORBIDDEN, description: 'Forbidden.' })
     @ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Entity not found.' })
+    @ApiGenericResponses()
     async deleteMany(@Body('ids') ids: string[], @Body('hardDelete') hardDelete: boolean = false): Promise<void> {
         await this.baseService.deleteMany(ids, hardDelete);
+    }
+
+    @Post('export')
+    @Authorize({ endpointType: Action.READ })
+    async exportData(
+        @Body() exportOptions: Partial<ExportOptionsDto<T>>,
+        @Req() req: any,
+        @Res() res: Response,
+        @CurrentUser('sub') userId: string,
+    ): Promise<any> {
+        try {
+            this.logger.log(`Starting export for ${this.entityName} with format: ${exportOptions.format || 'CSV'}`);
+            
+            // Check if service exists
+            if (!this.importExportService) {
+                this.logger.error('Import/Export service not available');
+                throw new BadRequestException('Import/Export service not available');
+            }
+            
+            // Set default options with improved defaults
+            const options: ExportOptionsDto<T> = {
+                format: exportOptions.format || FileFormat.CSV,
+                maxRecords: exportOptions.maxRecords || 1000,
+                filter: exportOptions.filter || {},
+                scope: req.resourceScope?.type || RoleScopeType.OWNED,
+                ...exportOptions,
+            };
+            
+            // Generate a filename if not provided
+            const metadata = options.metadata || {};
+            const timestamp = new Date().toISOString().slice(0, 10);
+            const filename = metadata.filename || `${this.entityName.toLowerCase()}-export-${timestamp}`;
+            
+            // Log export parameters
+            this.logger.debug(`Export options: ${JSON.stringify({
+                format: options.format,
+                filter: options.filter,
+                maxRecords: options.maxRecords,
+                relations: options.relations,
+                filename,
+            })}`);
+            
+            // Get export data
+            const startTime = Date.now();
+            const result = await this.importExportService.exportData(
+                this.baseService,
+                options
+            );
+            const endTime = Date.now();
+            
+            // Set headers based on format
+            let contentType: string;
+            let fileExtension: string;
+            
+            switch (options.format) {
+                case FileFormat.CSV:
+                    contentType = 'text/csv';
+                    fileExtension = '.csv';
+                    break;
+                case FileFormat.EXCEL:
+                    contentType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+                    fileExtension = '.xlsx';
+                    break;
+                case FileFormat.JSON:
+                    contentType = 'application/json';
+                    fileExtension = '.json';
+                    break;
+                case FileFormat.XML:
+                    contentType = 'application/xml';
+                    fileExtension = '.xml';
+                    break;
+                case FileFormat.PDF:
+                    contentType = 'application/pdf';
+                    fileExtension = '.pdf';
+                    break;
+                default:
+                    contentType = 'text/plain';
+                    fileExtension = '.txt';
+            }
+            
+            // Log success
+            this.logger.log(`Export completed successfully in ${endTime - startTime}ms`);
+            
+            // Send the file
+            res.set({
+                'Content-Type': contentType,
+                'Content-Disposition': `attachment; filename="${filename}${fileExtension}"`,
+                'X-Export-Timestamp': new Date().toISOString(),
+            });
+            
+            res.send(result.data || result);
+            return;
+            
+        } catch (error: any) {
+            this.logger.error(`Error exporting data: ${error.message}`, error.stack);
+            
+            // Send a user-friendly error response
+            if (error instanceof BadRequestException) {
+                throw error; // Pass through validation errors
+            } else if (error instanceof NotFoundException) {
+                throw error; // Pass through not found errors 
+            } else {
+                // For other errors, hide technical details in production
+                throw new InternalServerErrorException(
+                    process.env.NODE_ENV === 'production'
+                        ? `Failed to export ${this.entityName} data`
+                        : `Failed to export ${this.entityName} data: ${error.message}`
+                );
+            }
+        }
+    }
+
+    @Post('import')
+    @Authorize({ endpointType: Action.CREATE })
+    @UseInterceptors(FileInterceptor('file'))
+    @ApiConsumes('multipart/form-data')
+    @ApiBody({
+      schema: {
+        type: 'object',
+        properties: {
+          file: {
+            type: 'string',
+            format: 'binary',
+            description: 'File to upload'
+          }
+        }
+      }
+    })
+    @ApiQueryFromDto(ImportOptionsDto)
+    @ApiResponse({
+        status: 200,
+        description: 'Import operation completed successfully',
+        type: ImportResult
+    })
+    @ApiResponse({
+        status: 400,
+        description: 'Invalid input file or options'
+    })
+    @ApiGenericResponses()
+    async importData(
+        @UploadedFile(
+            new ParseFilePipe({
+                validators: [
+                    new MaxFileSizeValidator({ maxSize: 10 * 1024 * 1024 }), // 10MB limit
+                ],
+            }),
+        ) 
+        file: Express.Multer.File,
+        @Query() queryOptions: ImportOptionsDto<T>,
+        @Req() req: any,
+        @CurrentUser('sub') userId: string,
+    ): Promise<ImportResult> {
+    try {
+        // Check service existence
+        if (!this.importExportService) {
+            throw new BadRequestException('Import/Export service not available');
+        }
+
+        // Convert string values to proper types
+        const providedOptions = {
+            ...queryOptions,
+        };
+        
+        // Set default options
+        const importOptions: ImportOptionsDto<T> = {
+            ...providedOptions,  // Spread first so explicit values below can override
+            format: providedOptions.format || this.detectFileFormat(file.originalname),
+            batchSize: providedOptions.batchSize || 100,
+        };
+        
+        // Import the data
+        return await this.importExportService.importData(
+            this.baseService,
+            file.buffer,
+            importOptions,
+            userId
+        );
+    } catch (error: any) {
+        if (error instanceof BadRequestException) {
+            throw error;
+        } 
+        
+        this.logger.error(`Error importing data: ${error.message}`, error.stack);
+        throw new InternalServerErrorException(
+            `Failed to import ${this.entityName} data: ${error.message}`
+        );
+    }
+    }
+
+    private detectFileFormat(filename: string): FileFormat {
+        const extension = filename.split('.').pop()?.toLowerCase();
+        
+        switch (extension) {
+            case 'csv':
+            return FileFormat.CSV;
+            case 'xls':
+            case 'xlsx':
+            return FileFormat.EXCEL;
+            case 'json':
+            return FileFormat.JSON;
+            default:
+            return FileFormat.CSV; // Default to CSV
+        }
     }
 }

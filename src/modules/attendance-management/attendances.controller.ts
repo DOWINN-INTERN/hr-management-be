@@ -1,5 +1,6 @@
 import { Authorize } from "@/common/decorators/authorize.decorator";
 import { CurrentUser } from "@/common/decorators/current-user.decorator";
+import { ApiGenericResponses } from "@/common/decorators/generic-api-responses.decorator";
 import { GeneralResponseDto } from "@/common/dtos/generalresponse.dto";
 import { Action } from "@/common/enums/action.enum";
 import { createController } from "@/common/factories/create-controller.factory";
@@ -42,16 +43,7 @@ export class AttendancesController extends createController(Attendance, Attendan
         description: 'Attendance records processed successfully',
         type: GeneralResponseDto
     })
-    @ApiResponse({
-        status: HttpStatus.UNAUTHORIZED,
-        description: 'User is not authorized to process attendance records',
-        type: GeneralResponseDto
-    })
-    @ApiResponse({
-        status: HttpStatus.INTERNAL_SERVER_ERROR,
-        description: 'An error occurred while processing attendance records',
-        type: GeneralResponseDto
-    })
+    @ApiGenericResponses()
     async processAttendanceRecords(
         @CurrentUser('sub') userId: string,
     ): Promise<Partial<GeneralResponseDto>> {

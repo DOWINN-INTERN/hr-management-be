@@ -84,6 +84,9 @@ export class PayrollItemType extends BaseEntity<PayrollItemType> {
 
     @Column({ default: true })
     includeInPayrollItemsProcessing!: boolean;
+
+    @Column({ default: false })
+    includeInBaseCompensation!: boolean;
     
     @Column({ default: false })
     isTaxable!: boolean;

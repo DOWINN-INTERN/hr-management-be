@@ -1,6 +1,7 @@
 import { Authorize } from '@/common/decorators/authorize.decorator';
 import { CurrentUser } from '@/common/decorators/current-user.decorator';
 import { ApiGenericResponses } from '@/common/decorators/generic-api-responses.decorator';
+import { AllowEmployee, OnlyAllowRoles } from '@/common/decorators/roles.decorator';
 import { Action } from '@/common/enums/action.enum';
 import { RoleScopeType } from '@/common/enums/role-scope-type.enum';
 import { UtilityHelper } from '@/common/helpers/utility.helper';
@@ -50,91 +51,93 @@ import { FileUploadOptions } from './dtos/file-upload-options.dto';
 import { FileUploadDto } from './dtos/file-upload.dto';
 import { IFileService } from './interfaces/file-service.interface';
 
-  @ApiTags('Files')
-  @Controller('files')
-  export class FilesController {
-    private readonly logger = new Logger(FilesController.name);
-    private readonly GLOBAL_FILE_SIZE_LIMIT = 10000;
-    private readonly ORGANIZATION_FILE_SIZE_LIMIT = 5000;
-    private readonly BRANCH_FILE_SIZE_LIMIT = 2500;
-    private readonly DEPARTMENT_FILE_SIZE_LIMIT = 1000;
-    private readonly OWNED_FILE_SIZE_LIMIT = 500;
-    private readonly MAX_FILE_SIZE = 100; // 100MB
+@ApiTags('Files')
+@Controller('files')
+@AllowEmployee(true)
+@OnlyAllowRoles(false)
+export class FilesController {
+  private readonly logger = new Logger(FilesController.name);
+  private readonly GLOBAL_FILE_SIZE_LIMIT = 10000;
+  private readonly ORGANIZATION_FILE_SIZE_LIMIT = 5000;
+  private readonly BRANCH_FILE_SIZE_LIMIT = 2500;
+  private readonly DEPARTMENT_FILE_SIZE_LIMIT = 1000;
+  private readonly OWNED_FILE_SIZE_LIMIT = 500;
+  private readonly MAX_FILE_SIZE = 100; // 100MB
 
-    constructor(
-        @Inject(FILE_SERVICE)
-        private readonly fileService: IFileService
-    ) {}
+  constructor(
+      @Inject(FILE_SERVICE)
+      private readonly fileService: IFileService
+  ) {}
 
-    private buildTenantFolder(organizationId?: string, branchId?: string, departmentId?: string, additionalPath?: string): string {
-      const parts = [];
+  private buildTenantFolder(organizationId?: string, branchId?: string, departmentId?: string, additionalPath?: string): string {
+    const parts = [];
+    
+    if (organizationId) {
+      parts.push('organizations', organizationId);
       
-      if (organizationId) {
-        parts.push('organizations', organizationId);
+      if (branchId) {
+        parts.push('branches', branchId);
         
-        if (branchId) {
-          parts.push('branches', branchId);
-          
-          if (departmentId) {
-            parts.push('departments', departmentId);
-          }
+        if (departmentId) {
+          parts.push('departments', departmentId);
         }
       }
-      
-      if (additionalPath) {
-        parts.push(additionalPath);
-      }
-      
-      return parts.join('/');
     }
+    
+    if (additionalPath) {
+      parts.push(additionalPath);
+    }
+    
+    return parts.join('/');
+  }
 
-    private getEffectiveTenantContext(
-      resourceScope: ResourceScope,
-      requestedOrgId?: string,
-      requestedBranchId?: string,
-      requestedDeptId?: string,
-      requestedUserId?: string
-    ): { organizationId?: string; branchId?: string; departmentId?: string; userId?: string } {
-      switch (resourceScope.type) {
-        case RoleScopeType.GLOBAL:
-          return {
-            organizationId: requestedOrgId,
-            branchId: requestedBranchId,
-            departmentId: requestedDeptId
-          };
-          
-        case RoleScopeType.ORGANIZATION:
-          return {
-            organizationId: requestedOrgId || resourceScope.organizations?.[0],
-            branchId: requestedBranchId,
-            departmentId: requestedDeptId
-          };
-          
-        case RoleScopeType.BRANCH:
-          return {
-            organizationId: requestedOrgId || resourceScope.organizations?.[0],
-            branchId: requestedBranchId || resourceScope.branches?.[0],
-            departmentId: requestedDeptId
-          };
-          
-        case RoleScopeType.DEPARTMENT:
-          return {
-            organizationId: requestedOrgId || resourceScope.organizations?.[0],
-            branchId: requestedBranchId || resourceScope.branches?.[0],
-            departmentId: requestedDeptId || resourceScope.departments?.[0]
-          };
-          
-        case RoleScopeType.OWNED:
-          return {
-            organizationId: requestedOrgId,
-            branchId: requestedBranchId,
-            departmentId: requestedDeptId
-          };
-          
-        default:
-          return {};
-      }
+  private getEffectiveTenantContext(
+    resourceScope: ResourceScope,
+    requestedOrgId?: string,
+    requestedBranchId?: string,
+    requestedDeptId?: string,
+    requestedUserId?: string
+  ): { organizationId?: string; branchId?: string; departmentId?: string; userId?: string } {
+    switch (resourceScope.type) {
+      case RoleScopeType.GLOBAL:
+        return {
+          organizationId: requestedOrgId,
+          branchId: requestedBranchId,
+          departmentId: requestedDeptId
+        };
+        
+      case RoleScopeType.ORGANIZATION:
+        return {
+          organizationId: requestedOrgId || resourceScope.organizations?.[0],
+          branchId: requestedBranchId,
+          departmentId: requestedDeptId
+        };
+        
+      case RoleScopeType.BRANCH:
+        return {
+          organizationId: requestedOrgId || resourceScope.organizations?.[0],
+          branchId: requestedBranchId || resourceScope.branches?.[0],
+          departmentId: requestedDeptId
+        };
+        
+      case RoleScopeType.DEPARTMENT:
+        return {
+          organizationId: requestedOrgId || resourceScope.organizations?.[0],
+          branchId: requestedBranchId || resourceScope.branches?.[0],
+          departmentId: requestedDeptId || resourceScope.departments?.[0]
+        };
+        
+      case RoleScopeType.OWNED:
+        return {
+          organizationId: requestedOrgId,
+          branchId: requestedBranchId,
+          departmentId: requestedDeptId
+        };
+        
+      default:
+        return {};
     }
+  }
   
     @Post('upload')
     @Authorize({ endpointType: Action.CREATE })

@@ -32,6 +32,12 @@ export class GroupsService extends BaseService<Group> {
         // Create the group first (without employees)
         const group = await super.create(createDto, createdBy);
 
+        // Update the employee records to associate them with the new group
+        await this.employeesService.getRepository().update(
+            { id: In(employeeRefsIds) },
+            { group: group }
+        );
+
         // Emit event for employee assignment to group
         this.eventEmitter.emit(
             GROUP_EVENTS.EMPLOYEE_ASSIGNED,
@@ -66,6 +72,12 @@ export class GroupsService extends BaseService<Group> {
                 id: In(employeesToRemove)
             });
 
+            // Update the employee records to remove group association
+            await this.employeesService.getRepository().update(
+                { id: In(employeesToRemove) },
+                { group: undefined }
+            );
+
             this.eventEmitter.emit(
                 GROUP_EVENTS.EMPLOYEE_REMOVED,
                 new EmployeeAssignedEvent(group, removedEmployees, updatedBy)
@@ -77,6 +89,12 @@ export class GroupsService extends BaseService<Group> {
             const employees = await this.employeesService.getRepository().findBy({ 
                 id: In(employeesToAdd)
             });
+
+             await this.employeesService.getRepository().update(
+                { id: In(employeesToAdd) },
+                { group: group }
+            );
+    
             
             this.eventEmitter.emit(
                 GROUP_EVENTS.EMPLOYEE_ASSIGNED,

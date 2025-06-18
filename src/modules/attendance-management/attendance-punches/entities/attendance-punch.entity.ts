@@ -23,7 +23,7 @@ export class AttendancePunch extends BaseEntity<AttendancePunch> {
     @Column()
     employeeNumber!: number;
 
-    @ManyToOne(() => BiometricDevice, (biometricDevice: BiometricDevice) => biometricDevice.attendancePunches)
+    @ManyToOne(() => BiometricDevice, (biometricDevice: BiometricDevice) => biometricDevice.attendancePunches, { nullable: true })
     @JoinColumn({ name: 'biometricDeviceId' })
-    biometricDevice!: BiometricDevice;
+    biometricDevice?: BiometricDevice;
 }

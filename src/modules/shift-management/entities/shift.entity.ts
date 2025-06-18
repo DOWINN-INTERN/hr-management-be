@@ -1,7 +1,6 @@
 import { Day } from '@/common/enums/day.enum';
 import { BaseEntity } from '@/database/entities/base.entity';
-import { Cutoff } from '@/modules/payroll-management/cutoffs/entities/cutoff.entity';
-import { Column, Entity, JoinTable, ManyToMany, OneToMany } from 'typeorm';
+import { Column, Entity, OneToMany } from 'typeorm';
 import { Group } from '../groups/entities/group.entity';
 import { Schedule } from '../schedules/entities/schedule.entity';
 import { ShiftDay } from './shift-day.entity';
@@ -69,14 +68,6 @@ export class Shift extends BaseEntity<Shift> {
     getActiveDays(): Day[] {
         return this.days?.map(day => day.day) || [];
     }
-    
-    @ManyToMany(() => Cutoff, (cutoff: Cutoff) => cutoff.shifts, { nullable: true, cascade: true })
-    @JoinTable({
-        name: 'shift_cutoffs',
-        joinColumn: { name: 'shift_id', referencedColumnName: 'id' },
-        inverseJoinColumn: { name: 'cutoff_id', referencedColumnName: 'id' },
-    })
-    cutoffs?: Cutoff[];
     
     @OneToMany(() => Group, (group: Group) => group.shift, { nullable: true })
     groups?: Group[];

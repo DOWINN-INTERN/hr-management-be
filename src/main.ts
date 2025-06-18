@@ -2,9 +2,9 @@ import { createBullBoard } from '@bull-board/api';
 import { BullAdapter } from '@bull-board/api/bullAdapter'; // Correct import
 import { ExpressAdapter } from '@bull-board/express'; // Correct import
 import { getQueueToken } from '@nestjs/bull';
-import { ValidationPipe } from '@nestjs/common';
+import { ClassSerializerInterceptor, ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { NestFactory } from '@nestjs/core';
+import { NestFactory, Reflector } from '@nestjs/core';
 import { SwaggerModule } from '@nestjs/swagger';
 import { apiReference } from '@scalar/nestjs-api-reference';
 import compression from 'compression';
@@ -74,6 +74,8 @@ async function bootstrap() {
       enableImplicitConversion: true, // Allow implicit type conversion
     },
   }));
+
+  app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)));
 
   // Global exception filter
   app.useGlobalFilters(new HttpExceptionFilter());

@@ -1,7 +1,8 @@
 import { Role } from "@/modules/employee-management/roles/entities/role.entity";
-import { ForbiddenException } from "@nestjs/common";
+import { ForbiddenException, HttpStatus } from "@nestjs/common";
 import path from "path";
 import { FindOptionsRelations, FindOptionsSelect } from "typeorm";
+import { GeneralResponseDto } from "../dtos/generalresponse.dto";
 import { RoleScopeType } from "../enums/role-scope-type.enum";
 
 export class UtilityHelper {
@@ -107,6 +108,75 @@ export class UtilityHelper {
         }
         
         return count;
+    }
+
+    /**
+     * Creates a standardized GeneralResponseDto with optional parameters
+     * @param statusCode HTTP status code (defaults to 200)
+     * @param detail Brief description of the response type
+     * @param message Detailed message or array of messages
+     * @param traceId Optional trace ID for request tracking
+     * @param path Optional request path
+     * @returns Configured GeneralResponseDto instance
+     */
+    static createGeneralResponse(
+        statusCode: number = HttpStatus.OK,
+        detail: string,
+        message: string | string[],
+        traceId?: string,
+        path?: string
+    ): GeneralResponseDto {
+        const response = new GeneralResponseDto();
+        
+        response.statusCode = statusCode;
+        response.timestamp = new Date().toISOString();
+        response.detail = detail;
+        response.message = message;
+        
+        // Set optional fields if provided
+        if (traceId) {
+            response.traceId = traceId;
+        }
+        
+        if (path) {
+            response.path = path;
+        }
+        
+        return response;
+    }
+
+    /**
+     * Creates a success response with standard OK status
+     * @param detail Brief description of the successful operation
+     * @param message Success message
+     * @param traceId Optional trace ID
+     * @param path Optional request path
+     */
+    static createSuccessResponse(
+        detail: string,
+        message: string,
+        traceId?: string,
+        path?: string
+    ): GeneralResponseDto {
+        return this.createGeneralResponse(HttpStatus.OK, detail, message, traceId, path);
+    }
+
+    /**
+     * Creates an error response with specified status code
+     * @param statusCode HTTP error status code
+     * @param detail Brief description of the error type
+     * @param message Error message or array of messages
+     * @param traceId Optional trace ID
+     * @param path Optional request path
+     */
+    static createErrorResponse(
+        statusCode: number,
+        detail: string,
+        message: string | string[],
+        traceId?: string,
+        path?: string
+    ): GeneralResponseDto {
+        return this.createGeneralResponse(statusCode, detail, message, traceId, path);
     }
 
     /**
@@ -351,7 +421,6 @@ export class UtilityHelper {
 
             case RoleScopeType.ORGANIZATION:
                 if (!resource.organizationId) {
-                    console.warn('Resource missing organizationId for ORGANIZATION scope check');
                     return true;
                 }
                 hasAccess = organizations?.includes(resource.organizationId) ?? false;
@@ -366,7 +435,6 @@ export class UtilityHelper {
 
             case RoleScopeType.BRANCH:
                 if (!resource.branchId) {
-                    console.warn('Resource missing branchId for BRANCH scope check');
                     return true;
                 }
                 hasAccess = branches?.includes(resource.branchId) ?? false;
@@ -379,7 +447,6 @@ export class UtilityHelper {
 
             case RoleScopeType.DEPARTMENT:
                 if (!resource.departmentId) {
-                    console.warn('Resource missing departmentId for DEPARTMENT scope check');
                     return true;
                 }
                 hasAccess = departments?.includes(resource.departmentId) ?? false;
@@ -392,7 +459,6 @@ export class UtilityHelper {
 
             case RoleScopeType.OWNED:
                 if (!resource.userId) {
-                    console.warn('Resource missing userId for OWNED scope check');
                     return true;
                 }
                 hasAccess = userId === resource.userId;

@@ -1,4 +1,5 @@
 import { ConfigService } from "@nestjs/config";
+import { ImportExportService } from "../services/import-export.service";
 import { LocalFileService } from "../services/local-file.service";
 
 export const FILE_SERVICE = 'FILE_SERVICE';
@@ -27,4 +28,4 @@ export const fileProviderConfig = {
     inject: [ConfigService],
 };
 
-export const fileProviders = [fileProviderConfig, LocalFileService];
+export const fileProviders = [fileProviderConfig, LocalFileService, ImportExportService];

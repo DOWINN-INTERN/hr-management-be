@@ -1512,6 +1512,7 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.CommonModule = void 0;
 const employee_management_module_1 = __webpack_require__(/*! @/modules/employee-management/employee-management.module */ "./src/modules/employee-management/employee-management.module.ts");
+const files_module_1 = __webpack_require__(/*! @/modules/files/files.module */ "./src/modules/files/files.module.ts");
 const cutoffs_module_1 = __webpack_require__(/*! @/modules/payroll-management/cutoffs/cutoffs.module */ "./src/modules/payroll-management/cutoffs/cutoffs.module.ts");
 const shift_management_module_1 = __webpack_require__(/*! @/modules/shift-management/shift-management.module */ "./src/modules/shift-management/shift-management.module.ts");
 const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
@@ -1525,7 +1526,7 @@ exports.CommonModule = CommonModule;
 exports.CommonModule = CommonModule = __decorate([
     (0, common_1.Global)(),
     (0, common_1.Module)({
-        imports: [cutoffs_module_1.CutoffsModule, shift_management_module_1.ShiftManagementModule, employee_management_module_1.EmployeeManagementModule,
+        imports: [cutoffs_module_1.CutoffsModule, shift_management_module_1.ShiftManagementModule, employee_management_module_1.EmployeeManagementModule, files_module_1.FilesModule,
             core_1.RouterModule.register([
                 {
                     path: 'common',
@@ -1564,24 +1565,33 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
-var _a, _b, _c, _d, _e, _f, _g, _h, _j;
+var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r, _s, _t;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.BaseController = void 0;
 const paginated_response_dto_1 = __webpack_require__(/*! @/common/dtos/paginated-response.dto */ "./src/common/dtos/paginated-response.dto.ts");
 const pagination_dto_1 = __webpack_require__(/*! @/common/dtos/pagination.dto */ "./src/common/dtos/pagination.dto.ts");
+const import_options_dto_1 = __webpack_require__(/*! @/modules/files/dtos/import-options.dto */ "./src/modules/files/dtos/import-options.dto.ts");
+const import_result_dto_1 = __webpack_require__(/*! @/modules/files/dtos/import-result.dto */ "./src/modules/files/dtos/import-result.dto.ts");
+const import_export_service_1 = __webpack_require__(/*! @/modules/files/services/import-export.service */ "./src/modules/files/services/import-export.service.ts");
 const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
+const platform_express_1 = __webpack_require__(/*! @nestjs/platform-express */ "@nestjs/platform-express");
 const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
 const class_transformer_1 = __webpack_require__(/*! class-transformer */ "class-transformer");
+const express_1 = __webpack_require__(/*! express */ "express");
+const api_query_from_dto_decorator_1 = __webpack_require__(/*! ../decorators/api-query-from-dto.decorator */ "./src/common/decorators/api-query-from-dto.decorator.ts");
 const authorize_decorator_1 = __webpack_require__(/*! ../decorators/authorize.decorator */ "./src/common/decorators/authorize.decorator.ts");
 const current_user_decorator_1 = __webpack_require__(/*! ../decorators/current-user.decorator */ "./src/common/decorators/current-user.decorator.ts");
 const generic_api_responses_decorator_1 = __webpack_require__(/*! ../decorators/generic-api-responses.decorator */ "./src/common/decorators/generic-api-responses.decorator.ts");
 const action_enum_1 = __webpack_require__(/*! ../enums/action.enum */ "./src/common/enums/action.enum.ts");
+const file_format_1 = __webpack_require__(/*! ../enums/file-format */ "./src/common/enums/file-format.ts");
+const role_scope_type_enum_1 = __webpack_require__(/*! ../enums/role-scope-type.enum */ "./src/common/enums/role-scope-type.enum.ts");
 const utility_helper_1 = __webpack_require__(/*! ../helpers/utility.helper */ "./src/common/helpers/utility.helper.ts");
-class BaseController {
-    constructor(baseService, getDtoClass, entityName) {
+let BaseController = class BaseController {
+    constructor(baseService, getDtoClass, entityName, importExportService) {
         this.baseService = baseService;
         this.getDtoClass = getDtoClass;
         this.entityName = entityName;
+        this.importExportService = importExportService;
         // Static permissions map that all instances share
         this.permissions = { Create: [], Read: [], Update: [], Delete: [] };
         this.logger = new common_1.Logger(this.constructor.name);
@@ -1680,7 +1690,126 @@ class BaseController {
     async deleteMany(ids, hardDelete = false) {
         await this.baseService.deleteMany(ids, hardDelete);
     }
-}
+    async exportData(exportOptions, req, res, userId) {
+        var _a;
+        try {
+            this.logger.log(`Starting export for ${this.entityName} with format: ${exportOptions.format || 'CSV'}`);
+            // Check if service exists
+            if (!this.importExportService) {
+                this.logger.error('Import/Export service not available');
+                throw new common_1.BadRequestException('Import/Export service not available');
+            }
+            // Set default options with improved defaults
+            const options = Object.assign({ format: exportOptions.format || file_format_1.FileFormat.CSV, maxRecords: exportOptions.maxRecords || 1000, filter: exportOptions.filter || {}, scope: ((_a = req.resourceScope) === null || _a === void 0 ? void 0 : _a.type) || role_scope_type_enum_1.RoleScopeType.OWNED }, exportOptions);
+            // Generate a filename if not provided
+            const metadata = options.metadata || {};
+            const timestamp = new Date().toISOString().slice(0, 10);
+            const filename = metadata.filename || `${this.entityName.toLowerCase()}-export-${timestamp}`;
+            // Log export parameters
+            this.logger.debug(`Export options: ${JSON.stringify({
+                format: options.format,
+                filter: options.filter,
+                maxRecords: options.maxRecords,
+                relations: options.relations,
+                filename,
+            })}`);
+            // Get export data
+            const startTime = Date.now();
+            const result = await this.importExportService.exportData(this.baseService, options);
+            const endTime = Date.now();
+            // Set headers based on format
+            let contentType;
+            let fileExtension;
+            switch (options.format) {
+                case file_format_1.FileFormat.CSV:
+                    contentType = 'text/csv';
+                    fileExtension = '.csv';
+                    break;
+                case file_format_1.FileFormat.EXCEL:
+                    contentType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+                    fileExtension = '.xlsx';
+                    break;
+                case file_format_1.FileFormat.JSON:
+                    contentType = 'application/json';
+                    fileExtension = '.json';
+                    break;
+                case file_format_1.FileFormat.XML:
+                    contentType = 'application/xml';
+                    fileExtension = '.xml';
+                    break;
+                case file_format_1.FileFormat.PDF:
+                    contentType = 'application/pdf';
+                    fileExtension = '.pdf';
+                    break;
+                default:
+                    contentType = 'text/plain';
+                    fileExtension = '.txt';
+            }
+            // Log success
+            this.logger.log(`Export completed successfully in ${endTime - startTime}ms`);
+            // Send the file
+            res.set({
+                'Content-Type': contentType,
+                'Content-Disposition': `attachment; filename="${filename}${fileExtension}"`,
+                'X-Export-Timestamp': new Date().toISOString(),
+            });
+            res.send(result.data || result);
+            return;
+        }
+        catch (error) {
+            this.logger.error(`Error exporting data: ${error.message}`, error.stack);
+            // Send a user-friendly error response
+            if (error instanceof common_1.BadRequestException) {
+                throw error; // Pass through validation errors
+            }
+            else if (error instanceof common_1.NotFoundException) {
+                throw error; // Pass through not found errors 
+            }
+            else {
+                // For other errors, hide technical details in production
+                throw new common_1.InternalServerErrorException(process.env.NODE_ENV === 'production'
+                    ? `Failed to export ${this.entityName} data`
+                    : `Failed to export ${this.entityName} data: ${error.message}`);
+            }
+        }
+    }
+    async importData(file, queryOptions, req, userId) {
+        try {
+            // Check service existence
+            if (!this.importExportService) {
+                throw new common_1.BadRequestException('Import/Export service not available');
+            }
+            // Convert string values to proper types
+            const providedOptions = Object.assign({}, queryOptions);
+            // Set default options
+            const importOptions = Object.assign(Object.assign({}, providedOptions), { format: providedOptions.format || this.detectFileFormat(file.originalname), batchSize: providedOptions.batchSize || 100 });
+            // Import the data
+            return await this.importExportService.importData(this.baseService, file.buffer, importOptions, userId);
+        }
+        catch (error) {
+            if (error instanceof common_1.BadRequestException) {
+                throw error;
+            }
+            this.logger.error(`Error importing data: ${error.message}`, error.stack);
+            throw new common_1.InternalServerErrorException(`Failed to import ${this.entityName} data: ${error.message}`);
+        }
+    }
+    detectFileFormat(filename) {
+        var _a;
+        const extension = (_a = filename.split('.').pop()) === null || _a === void 0 ? void 0 : _a.toLowerCase();
+        switch (extension) {
+            case 'csv':
+                return file_format_1.FileFormat.CSV;
+            case 'xls':
+            case 'xlsx':
+                return file_format_1.FileFormat.EXCEL;
+            case 'json':
+                return file_format_1.FileFormat.JSON;
+            default:
+                return file_format_1.FileFormat.CSV; // Default to CSV
+        }
+    }
+};
 exports.BaseController = BaseController;
 __decorate([
     (0, common_1.Post)(),
@@ -1689,7 +1818,7 @@ __decorate([
     __param(1, (0, current_user_decorator_1.CurrentUser)('sub')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object, String]),
-    __metadata("design:returntype", typeof (_a = typeof Promise !== "undefined" && Promise) === "function" ? _a : Object)
+    __metadata("design:returntype", typeof (_c = typeof Promise !== "undefined" && Promise) === "function" ? _c : Object)
 ], BaseController.prototype, "create", null);
 __decorate([
     (0, common_1.Put)(':id'),
@@ -1699,7 +1828,7 @@ __decorate([
     __param(2, (0, current_user_decorator_1.CurrentUser)('sub')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, Object, String]),
-    __metadata("design:returntype", typeof (_b = typeof Promise !== "undefined" && Promise) === "function" ? _b : Object)
+    __metadata("design:returntype", typeof (_d = typeof Promise !== "undefined" && Promise) === "function" ? _d : Object)
 ], BaseController.prototype, "update", null);
 __decorate([
     (0, common_1.Get)(),
@@ -1823,8 +1952,8 @@ __decorate([
     __param(0, (0, common_1.Req)()),
     __param(1, (0, common_1.Query)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, typeof (_c = typeof pagination_dto_1.PaginationDto !== "undefined" && pagination_dto_1.PaginationDto) === "function" ? _c : Object]),
-    __metadata("design:returntype", typeof (_d = typeof Promise !== "undefined" && Promise) === "function" ? _d : Object)
+    __metadata("design:paramtypes", [Object, typeof (_e = typeof pagination_dto_1.PaginationDto !== "undefined" && pagination_dto_1.PaginationDto) === "function" ? _e : Object]),
+    __metadata("design:returntype", typeof (_f = typeof Promise !== "undefined" && Promise) === "function" ? _f : Object)
 ], BaseController.prototype, "findAllAdvanced", null);
 __decorate([
     (0, common_1.Get)('find'),
@@ -1834,7 +1963,7 @@ __decorate([
     __param(2, (0, common_1.Query)('select')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, String, String]),
-    __metadata("design:returntype", typeof (_e = typeof Promise !== "undefined" && Promise) === "function" ? _e : Object)
+    __metadata("design:returntype", typeof (_g = typeof Promise !== "undefined" && Promise) === "function" ? _g : Object)
 ], BaseController.prototype, "findOne", null);
 __decorate([
     (0, common_1.Get)('find/:id'),
@@ -1844,7 +1973,7 @@ __decorate([
     __param(2, (0, common_1.Query)('select')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, String, String]),
-    __metadata("design:returntype", typeof (_f = typeof Promise !== "undefined" && Promise) === "function" ? _f : Object)
+    __metadata("design:returntype", typeof (_h = typeof Promise !== "undefined" && Promise) === "function" ? _h : Object)
 ], BaseController.prototype, "findById", null);
 __decorate([
     (0, common_1.Delete)('delete/soft/:id'),
@@ -1853,7 +1982,7 @@ __decorate([
     __param(1, (0, current_user_decorator_1.CurrentUser)('sub')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String, String]),
-    __metadata("design:returntype", typeof (_g = typeof Promise !== "undefined" && Promise) === "function" ? _g : Object)
+    __metadata("design:returntype", typeof (_j = typeof Promise !== "undefined" && Promise) === "function" ? _j : Object)
 ], BaseController.prototype, "softDelete", null);
 __decorate([
     (0, common_1.Delete)('delete/:id'),
@@ -1861,7 +1990,7 @@ __decorate([
     __param(0, (0, common_1.Param)('id')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
-    __metadata("design:returntype", typeof (_h = typeof Promise !== "undefined" && Promise) === "function" ? _h : Object)
+    __metadata("design:returntype", typeof (_k = typeof Promise !== "undefined" && Promise) === "function" ? _k : Object)
 ], BaseController.prototype, "delete", null);
 __decorate([
     (0, authorize_decorator_1.Authorize)({ endpointType: action_enum_1.Action.DELETE }),
@@ -1885,17 +2014,110 @@ __decorate([
         },
     }),
     (0, swagger_1.ApiResponse)({ status: common_1.HttpStatus.NO_CONTENT, description: 'The entities have been successfully deleted.' }),
-    (0, swagger_1.ApiResponse)({ status: common_1.HttpStatus.BAD_REQUEST, description: 'Invalid input data.' }),
-    (0, swagger_1.ApiResponse)({ status: common_1.HttpStatus.UNAUTHORIZED, description: 'Unauthorized.' }),
-    (0, swagger_1.ApiResponse)({ status: common_1.HttpStatus.INTERNAL_SERVER_ERROR, description: 'Internal' }),
-    (0, swagger_1.ApiResponse)({ status: common_1.HttpStatus.FORBIDDEN, description: 'Forbidden.' }),
     (0, swagger_1.ApiResponse)({ status: common_1.HttpStatus.NOT_FOUND, description: 'Entity not found.' }),
+    (0, generic_api_responses_decorator_1.ApiGenericResponses)(),
     __param(0, (0, common_1.Body)('ids')),
     __param(1, (0, common_1.Body)('hardDelete')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Array, Boolean]),
-    __metadata("design:returntype", typeof (_j = typeof Promise !== "undefined" && Promise) === "function" ? _j : Object)
+    __metadata("design:returntype", typeof (_l = typeof Promise !== "undefined" && Promise) === "function" ? _l : Object)
 ], BaseController.prototype, "deleteMany", null);
+__decorate([
+    (0, common_1.Post)('export'),
+    (0, authorize_decorator_1.Authorize)({ endpointType: action_enum_1.Action.READ }),
+    __param(0, (0, common_1.Body)()),
+    __param(1, (0, common_1.Req)()),
+    __param(2, (0, common_1.Res)()),
+    __param(3, (0, current_user_decorator_1.CurrentUser)('sub')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [typeof (_m = typeof Partial !== "undefined" && Partial) === "function" ? _m : Object, Object, typeof (_o = typeof express_1.Response !== "undefined" && express_1.Response) === "function" ? _o : Object, String]),
+    __metadata("design:returntype", typeof (_p = typeof Promise !== "undefined" && Promise) === "function" ? _p : Object)
+], BaseController.prototype, "exportData", null);
+__decorate([
+    (0, common_1.Post)('import'),
+    (0, authorize_decorator_1.Authorize)({ endpointType: action_enum_1.Action.CREATE }),
+    (0, common_1.UseInterceptors)((0, platform_express_1.FileInterceptor)('file')),
+    (0, swagger_1.ApiConsumes)('multipart/form-data'),
+    (0, swagger_1.ApiBody)({
+        schema: {
+            type: 'object',
+            properties: {
+                file: {
+                    type: 'string',
+                    format: 'binary',
+                    description: 'File to upload'
+                }
+            }
+        }
+    }),
+    (0, api_query_from_dto_decorator_1.ApiQueryFromDto)(import_options_dto_1.ImportOptionsDto),
+    (0, swagger_1.ApiResponse)({
+        status: 200,
+        description: 'Import operation completed successfully',
+        type: import_result_dto_1.ImportResult
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: 400,
+        description: 'Invalid input file or options'
+    }),
+    (0, generic_api_responses_decorator_1.ApiGenericResponses)(),
+    __param(0, (0, common_1.UploadedFile)(new common_1.ParseFilePipe({
+        validators: [
+            new common_1.MaxFileSizeValidator({ maxSize: 10 * 1024 * 1024 }), // 10MB limit
+        ],
+    }))),
+    __param(1, (0, common_1.Query)()),
+    __param(2, (0, common_1.Req)()),
+    __param(3, (0, current_user_decorator_1.CurrentUser)('sub')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [typeof (_r = typeof Express !== "undefined" && (_q = Express.Multer) !== void 0 && _q.File) === "function" ? _r : Object, typeof (_s = typeof import_options_dto_1.ImportOptionsDto !== "undefined" && import_options_dto_1.ImportOptionsDto) === "function" ? _s : Object, Object, String]),
+    __metadata("design:returntype", typeof (_t = typeof Promise !== "undefined" && Promise) === "function" ? _t : Object)
+], BaseController.prototype, "importData", null);
+exports.BaseController = BaseController = __decorate([
+    __param(3, (0, common_1.Optional)()),
+    __param(3, (0, common_1.Inject)(import_export_service_1.ImportExportService)),
+    __metadata("design:paramtypes", [void 0, typeof (_a = typeof class_transformer_1.ClassConstructor !== "undefined" && class_transformer_1.ClassConstructor) === "function" ? _a : Object, String, typeof (_b = typeof import_export_service_1.ImportExportService !== "undefined" && import_export_service_1.ImportExportService) === "function" ? _b : Object])
+], BaseController);
+
+
+/***/ }),
+
+/***/ "./src/common/decorators/api-query-from-dto.decorator.ts":
+/*!***************************************************************!*\
+  !*** ./src/common/decorators/api-query-from-dto.decorator.ts ***!
+  \***************************************************************/
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.ApiQueryFromDto = ApiQueryFromDto;
+const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
+const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
+__webpack_require__(/*! reflect-metadata */ "reflect-metadata");
+function ApiQueryFromDto(dtoClass) {
+    // Get all properties with @ApiProperty/@ApiPropertyOptional decorators
+    const prototype = dtoClass.prototype;
+    const props = Reflect.getMetadata('swagger/apiModelPropertiesArray', prototype) || [];
+    // Create an array of ApiQuery decorators for each property
+    const decorators = props.map((prop) => {
+        const propertyName = prop.name;
+        const propertyMetadata = Reflect.getMetadata('swagger/apiModelProperties', prototype, propertyName);
+        // Skip functions and complex types that can't be represented in URL
+        if (['function', 'object'].includes(typeof (propertyMetadata === null || propertyMetadata === void 0 ? void 0 : propertyMetadata.type))) {
+            return null;
+        }
+        return (0, swagger_1.ApiQuery)({
+            name: propertyName,
+            type: (propertyMetadata === null || propertyMetadata === void 0 ? void 0 : propertyMetadata.type) || String,
+            required: !(propertyMetadata === null || propertyMetadata === void 0 ? void 0 : propertyMetadata.isOptional),
+            enum: propertyMetadata === null || propertyMetadata === void 0 ? void 0 : propertyMetadata.enum,
+            description: (propertyMetadata === null || propertyMetadata === void 0 ? void 0 : propertyMetadata.description) || '',
+            example: propertyMetadata === null || propertyMetadata === void 0 ? void 0 : propertyMetadata.example,
+        });
+    }).filter(Boolean); // Filter out nulls for skipped properties
+    return (0, common_1.applyDecorators)(...decorators);
+}
 
 
 /***/ }),
@@ -1923,11 +2145,10 @@ const roles_decorator_1 = __webpack_require__(/*! ./roles.decorator */ "./src/co
 exports.PERMISSIONS_FUNCTION_KEY = 'permissions_function';
 exports.PERMISSION_ENDPOINT_TYPE = 'permission_endpoint_type';
 function Authorize(options) {
-    var _a, _b;
     const decorators = [
+        (0, roles_decorator_1.Roles)(options === null || options === void 0 ? void 0 : options.roles),
         (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard, permissions_guard_1.PermissionsGuard, scope_guard_1.ScopeGuard),
         (0, common_1.UseInterceptors)(resource_access_interceptor_1.ResourceAccessInterceptor),
-        (0, roles_decorator_1.Roles)(options === null || options === void 0 ? void 0 : options.roles),
         (0, swagger_1.ApiBearerAuth)('access-token'),
     ];
     // Only add ScopeGuard for endpoints that need scope checking
@@ -1938,8 +2159,12 @@ function Authorize(options) {
         // For regular array-based permissions
         decorators.push((0, permissions_decorator_1.Permissions)(options === null || options === void 0 ? void 0 : options.permissions));
     }
-    decorators.push((0, common_1.SetMetadata)('onlyAllowRoles', (_a = options === null || options === void 0 ? void 0 : options.allowRoles) !== null && _a !== void 0 ? _a : true), // default to true: // only allow users with roles to access this endpoint
-    (0, common_1.SetMetadata)('allowEmployee', (_b = options === null || options === void 0 ? void 0 : options.allowEmployee) !== null && _b !== void 0 ? _b : false));
+    if (options === null || options === void 0 ? void 0 : options.allowRoles) {
+        decorators.push((0, roles_decorator_1.OnlyAllowRoles)(options.allowRoles));
+    }
+    if (options === null || options === void 0 ? void 0 : options.allowEmployee) {
+        decorators.push((0, roles_decorator_1.AllowEmployee)(options.allowEmployee));
+    }
     return (0, common_1.applyDecorators)(...decorators);
 }
 
@@ -2217,9 +2442,11 @@ exports.Permissions = Permissions;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.Roles = exports.ROLES_KEY = void 0;
+exports.AllowEmployee = exports.OnlyAllowRoles = exports.Roles = exports.ALLOW_EMPLOYEE_KEY = exports.ONLY_ALLOW_ROLES_KEY = exports.ROLES_KEY = void 0;
 const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
 exports.ROLES_KEY = 'roles';
+exports.ONLY_ALLOW_ROLES_KEY = 'onlyAllowRoles';
+exports.ALLOW_EMPLOYEE_KEY = 'allowEmployee';
 /**
  * Decorator that assigns roles to a route or controller.
  * This metadata can be used with a guard to control access to specific endpoints.
@@ -2247,6 +2474,10 @@ exports.ROLES_KEY = 'roles';
  */
 const Roles = (roles = []) => (0, common_1.SetMetadata)(exports.ROLES_KEY, roles);
 exports.Roles = Roles;
+const OnlyAllowRoles = (onlyAllowRoles = true) => (0, common_1.SetMetadata)(exports.ONLY_ALLOW_ROLES_KEY, onlyAllowRoles);
+exports.OnlyAllowRoles = OnlyAllowRoles;
+const AllowEmployee = (allowEmployee = false) => (0, common_1.SetMetadata)(exports.ALLOW_EMPLOYEE_KEY, allowEmployee);
+exports.AllowEmployee = AllowEmployee;
 
 
 /***/ }),
@@ -3168,6 +3399,28 @@ var EmploymentType;
 
 /***/ }),
 
+/***/ "./src/common/enums/file-format.ts":
+/*!*****************************************!*\
+  !*** ./src/common/enums/file-format.ts ***!
+  \*****************************************/
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.FileFormat = void 0;
+var FileFormat;
+(function (FileFormat) {
+    FileFormat["CSV"] = "csv";
+    FileFormat["EXCEL"] = "xlsx";
+    FileFormat["PDF"] = "pdf";
+    FileFormat["JSON"] = "json";
+    FileFormat["XML"] = "xml";
+})(FileFormat || (exports.FileFormat = FileFormat = {}));
+
+
+/***/ }),
+
 /***/ "./src/common/enums/holiday-type.enum.ts":
 /*!***********************************************!*\
   !*** ./src/common/enums/holiday-type.enum.ts ***!
@@ -3807,17 +4060,22 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.createController = createController;
+const export_options_dto_1 = __webpack_require__(/*! @/modules/files/dtos/export-options.dto */ "./src/modules/files/dtos/export-options.dto.ts");
+const import_options_dto_1 = __webpack_require__(/*! @/modules/files/dtos/import-options.dto */ "./src/modules/files/dtos/import-options.dto.ts");
+const import_export_service_1 = __webpack_require__(/*! @/modules/files/services/import-export.service */ "./src/modules/files/services/import-export.service.ts");
 const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
 const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
+const express_1 = __webpack_require__(/*! express */ "express");
 const pluralize_1 = __importStar(__webpack_require__(/*! pluralize */ "pluralize"));
 const base_controller_1 = __webpack_require__(/*! ../controllers/base.controller */ "./src/common/controllers/base.controller.ts");
 const current_user_decorator_1 = __webpack_require__(/*! ../decorators/current-user.decorator */ "./src/common/decorators/current-user.decorator.ts");
 const generic_api_responses_decorator_1 = __webpack_require__(/*! ../decorators/generic-api-responses.decorator */ "./src/common/decorators/generic-api-responses.decorator.ts");
 const override_decorator_1 = __webpack_require__(/*! ../decorators/override.decorator */ "./src/common/decorators/override.decorator.ts");
+const roles_decorator_1 = __webpack_require__(/*! ../decorators/roles.decorator */ "./src/common/decorators/roles.decorator.ts");
 const generalresponse_dto_1 = __webpack_require__(/*! ../dtos/generalresponse.dto */ "./src/common/dtos/generalresponse.dto.ts");
 const pagination_dto_1 = __webpack_require__(/*! ../dtos/pagination.dto */ "./src/common/dtos/pagination.dto.ts");
 function createController(EntityClass, ServiceClass, getDtoClass, createDtoClass, updateDtoClass) {
-    var _a, _b, _c, _d, _e, _f, _g, _h;
+    var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r;
     // Extract entity name from class (removing "Entity" suffix if present)
     const entityName = EntityClass.name.replace(/Entity$/, '');
     // Add spaces before capital letters (except the first letter)
@@ -3827,8 +4085,8 @@ function createController(EntityClass, ServiceClass, getDtoClass, createDtoClass
     // Determine plural name for controller routes (used in swagger docs)
     const pluralName = (0, pluralize_1.default)(formattedEntityName);
     let DynamicController = class DynamicController extends base_controller_1.BaseController {
-        constructor(baseService) {
-            super(baseService, getDtoClass, formattedEntityName);
+        constructor(baseService, importExportService) {
+            super(baseService, getDtoClass, formattedEntityName, importExportService);
         }
         async create(entityDto, createdById) {
             return await super.create(entityDto, createdById);
@@ -3851,6 +4109,12 @@ function createController(EntityClass, ServiceClass, getDtoClass, createDtoClass
         findAllAdvanced(req, paginationDto) {
             return super.findAllAdvanced(req, paginationDto);
         }
+        exportData(exportOptions, req, res, userId) {
+            return super.exportData(exportOptions, req, res, userId);
+        }
+        async importData(file, options, req, userId) {
+            return super.importData(file, options, req, userId);
+        }
     };
     __decorate([
         (0, override_decorator_1.Override)(),
@@ -3869,7 +4133,7 @@ function createController(EntityClass, ServiceClass, getDtoClass, createDtoClass
         __param(1, (0, current_user_decorator_1.CurrentUser)('sub')),
         __metadata("design:type", Function),
         __metadata("design:paramtypes", [Object, String]),
-        __metadata("design:returntype", typeof (_a = typeof Promise !== "undefined" && Promise) === "function" ? _a : Object)
+        __metadata("design:returntype", typeof (_b = typeof Promise !== "undefined" && Promise) === "function" ? _b : Object)
     ], DynamicController.prototype, "create", null);
     __decorate([
         (0, override_decorator_1.Override)(),
@@ -3894,7 +4158,7 @@ function createController(EntityClass, ServiceClass, getDtoClass, createDtoClass
         __param(2, (0, current_user_decorator_1.CurrentUser)('sub')),
         __metadata("design:type", Function),
         __metadata("design:paramtypes", [String, Object, String]),
-        __metadata("design:returntype", typeof (_b = typeof Promise !== "undefined" && Promise) === "function" ? _b : Object)
+        __metadata("design:returntype", typeof (_c = typeof Promise !== "undefined" && Promise) === "function" ? _c : Object)
     ], DynamicController.prototype, "update", null);
     __decorate([
         (0, override_decorator_1.Override)(),
@@ -3918,7 +4182,7 @@ function createController(EntityClass, ServiceClass, getDtoClass, createDtoClass
         __param(0, (0, common_1.Param)('id')),
         __metadata("design:type", Function),
         __metadata("design:paramtypes", [String]),
-        __metadata("design:returntype", typeof (_c = typeof Promise !== "undefined" && Promise) === "function" ? _c : Object)
+        __metadata("design:returntype", typeof (_d = typeof Promise !== "undefined" && Promise) === "function" ? _d : Object)
     ], DynamicController.prototype, "delete", null);
     __decorate([
         (0, override_decorator_1.Override)(),
@@ -3942,7 +4206,7 @@ function createController(EntityClass, ServiceClass, getDtoClass, createDtoClass
         __param(1, (0, current_user_decorator_1.CurrentUser)('sub')),
         __metadata("design:type", Function),
         __metadata("design:paramtypes", [String, String]),
-        __metadata("design:returntype", typeof (_d = typeof Promise !== "undefined" && Promise) === "function" ? _d : Object)
+        __metadata("design:returntype", typeof (_e = typeof Promise !== "undefined" && Promise) === "function" ? _e : Object)
     ], DynamicController.prototype, "softDelete", null);
     __decorate([
         (0, override_decorator_1.Override)(),
@@ -3981,7 +4245,7 @@ function createController(EntityClass, ServiceClass, getDtoClass, createDtoClass
         __param(2, (0, common_1.Query)('select')),
         __metadata("design:type", Function),
         __metadata("design:paramtypes", [String, String, String]),
-        __metadata("design:returntype", typeof (_e = typeof Promise !== "undefined" && Promise) === "function" ? _e : Object)
+        __metadata("design:returntype", typeof (_f = typeof Promise !== "undefined" && Promise) === "function" ? _f : Object)
     ], DynamicController.prototype, "findById", null);
     __decorate([
         (0, override_decorator_1.Override)(),
@@ -4022,7 +4286,7 @@ function createController(EntityClass, ServiceClass, getDtoClass, createDtoClass
         __param(2, (0, common_1.Query)('select')),
         __metadata("design:type", Function),
         __metadata("design:paramtypes", [String, String, String]),
-        __metadata("design:returntype", typeof (_f = typeof Promise !== "undefined" && Promise) === "function" ? _f : Object)
+        __metadata("design:returntype", typeof (_g = typeof Promise !== "undefined" && Promise) === "function" ? _g : Object)
     ], DynamicController.prototype, "findOne", null);
     __decorate([
         (0, override_decorator_1.Override)(),
@@ -4094,14 +4358,133 @@ function createController(EntityClass, ServiceClass, getDtoClass, createDtoClass
         `,
         }),
         __metadata("design:type", Function),
-        __metadata("design:paramtypes", [Object, typeof (_g = typeof pagination_dto_1.PaginationDto !== "undefined" && pagination_dto_1.PaginationDto) === "function" ? _g : Object]),
-        __metadata("design:returntype", typeof (_h = typeof Promise !== "undefined" && Promise) === "function" ? _h : Object)
+        __metadata("design:paramtypes", [Object, typeof (_h = typeof pagination_dto_1.PaginationDto !== "undefined" && pagination_dto_1.PaginationDto) === "function" ? _h : Object]),
+        __metadata("design:returntype", typeof (_j = typeof Promise !== "undefined" && Promise) === "function" ? _j : Object)
     ], DynamicController.prototype, "findAllAdvanced", null);
+    __decorate([
+        (0, override_decorator_1.Override)(),
+        (0, swagger_1.ApiOperation)({
+            summary: `Export ${pluralName} Data`,
+            description: `Exports ${pluralName.toLowerCase()} data based on the provided export options.`
+        }),
+        (0, swagger_1.ApiBody)({
+            type: export_options_dto_1.ExportOptionsDto,
+            description: 'Export configuration options',
+            examples: {
+                csv: {
+                    summary: 'Basic CSV Export',
+                    value: {
+                        format: 'csv',
+                        maxRecords: 1000,
+                        filter: { status: 'active' }
+                    }
+                },
+                excel: {
+                    summary: 'Excel with Relations',
+                    value: {
+                        format: 'excel',
+                        relations: ['user', 'department'],
+                        sort: { createdAt: 'DESC' },
+                        metadata: {
+                            title: `${(0, pluralize_1.singular)(formattedEntityName)} Report`,
+                            company: 'Company Name'
+                        }
+                    }
+                },
+                pdf: {
+                    summary: 'Filtered PDF Report',
+                    value: {
+                        format: 'pdf',
+                        filter: { status: { in: ['active', 'pending'] } },
+                        metadata: {
+                            title: `${(0, pluralize_1.singular)(formattedEntityName)} Summary`,
+                            description: 'Monthly activity report'
+                        }
+                    }
+                },
+                advanced: {
+                    summary: 'Advanced Export Configuration',
+                    value: {
+                        format: 'excel',
+                        filter: { createdAt: { gte: '{{startDate}}', lt: '{{endDate}}' } },
+                        sort: { createdAt: 'DESC' },
+                        select: ['id', 'name', 'status', 'createdAt'],
+                        relations: ['department'],
+                        fieldMap: { createdAt: 'Date Created', department: 'Department Name' },
+                        metadata: {
+                            title: `${(0, pluralize_1.singular)(formattedEntityName)} Export`,
+                            subtitle: 'Detailed Report',
+                            author: 'System Administrator'
+                        },
+                        customHeaders: {
+                            'Generated By': 'API System',
+                            'Report Period': '{{reportPeriod}}'
+                        }
+                    }
+                }
+            }
+        }),
+        (0, swagger_1.ApiResponse)({
+            status: common_1.HttpStatus.OK,
+            description: `Successfully exported ${pluralName.toLowerCase()} data as a downloadable file.`,
+            content: {
+                'text/csv': {
+                    schema: {
+                        type: 'string',
+                        format: 'binary'
+                    }
+                },
+                'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': {
+                    schema: {
+                        type: 'string',
+                        format: 'binary'
+                    }
+                },
+                'application/json': {
+                    schema: {
+                        type: 'string',
+                        format: 'binary'
+                    }
+                },
+                'application/xml': {
+                    schema: {
+                        type: 'string',
+                        format: 'binary'
+                    }
+                },
+                'application/pdf': {
+                    schema: {
+                        type: 'string',
+                        format: 'binary'
+                    }
+                }
+            }
+        }),
+        (0, generic_api_responses_decorator_1.ApiGenericResponses)(),
+        __metadata("design:type", Function),
+        __metadata("design:paramtypes", [typeof (_k = typeof Partial !== "undefined" && Partial) === "function" ? _k : Object, Object, typeof (_l = typeof express_1.Response !== "undefined" && express_1.Response) === "function" ? _l : Object, String]),
+        __metadata("design:returntype", typeof (_m = typeof Promise !== "undefined" && Promise) === "function" ? _m : Object)
+    ], DynamicController.prototype, "exportData", null);
+    __decorate([
+        (0, override_decorator_1.Override)(),
+        (0, swagger_1.ApiOperation)({
+            summary: `Import ${entityName} Data`,
+            description: `Import ${entityName.toLowerCase()} records from CSV, Excel or JSON file with validation.`
+        }),
+        __metadata("design:type", Function),
+        __metadata("design:paramtypes", [typeof (_p = typeof Express !== "undefined" && (_o = Express.Multer) !== void 0 && _o.File) === "function" ? _p : Object, typeof (_q = typeof import_options_dto_1.ImportOptionsDto !== "undefined" && import_options_dto_1.ImportOptionsDto) === "function" ? _q : Object, Object, String]),
+        __metadata("design:returntype", typeof (_r = typeof Promise !== "undefined" && Promise) === "function" ? _r : Object)
+    ], DynamicController.prototype, "importData", null);
     DynamicController = __decorate([
         (0, swagger_1.ApiTags)(pluralName),
         (0, common_1.Controller)(),
+        (0, roles_decorator_1.OnlyAllowRoles)(true) // Only allow users with roles to access this controller
+        ,
+        (0, roles_decorator_1.AllowEmployee)(false) // Do not allow access to users with only employee role
+        ,
         __param(0, (0, common_1.Inject)(ServiceClass)),
-        __metadata("design:paramtypes", [void 0])
+        __param(1, (0, common_1.Inject)(import_export_service_1.ImportExportService)),
+        __metadata("design:paramtypes", [void 0, typeof (_a = typeof import_export_service_1.ImportExportService !== "undefined" && import_export_service_1.ImportExportService) === "function" ? _a : Object])
     ], DynamicController);
     return DynamicController;
 }
@@ -5305,12 +5688,12 @@ let RolesGuard = RolesGuard_1 = class RolesGuard {
         var _a, _b, _c, _d, _e, _f, _g, _h, _j;
         try {
             const requiredRoles = this.reflector.getAllAndOverride(roles_decorator_1.ROLES_KEY, [context.getHandler(), context.getClass()]);
-            const onlyAllowRoles = this.reflector.getAllAndOverride('onlyAllowRoles', [context.getHandler(), context.getClass()]);
+            const onlyAllowRoles = this.reflector.getAllAndOverride(roles_decorator_1.ONLY_ALLOW_ROLES_KEY, [context.getHandler(), context.getClass()]);
             // log only allow roles
             this.logger.log(`Only allow roles: ${onlyAllowRoles}`);
-            const allowEmployee = this.reflector.getAllAndOverride('allowEmployee', [context.getHandler(), context.getClass()]);
+            const allowEmployee = this.reflector.getAllAndOverride(roles_decorator_1.ALLOW_EMPLOYEE_KEY, [context.getHandler(), context.getClass()]);
             // If no roles are required, allow access
-            if (!requiredRoles || requiredRoles.length === 0) {
+            if ((!requiredRoles || requiredRoles.length === 0)) {
                 return true;
             }
             // Get the user payload from the request
@@ -5321,7 +5704,6 @@ let RolesGuard = RolesGuard_1 = class RolesGuard {
                 this.logger.warn(`User with ID ${userClaims.sub} not found`);
                 throw new common_1.ForbiddenException('User not found');
             }
-            // TODO: Do not allow access to users with no role
             // log user email and user roles
             this.logger.log(`User email: ${user.email}`);
             this.logger.log(`User roles: ${((_b = (_a = user.employee) === null || _a === void 0 ? void 0 : _a.roles) === null || _b === void 0 ? void 0 : _b.map(role => role.name).join(', ')) || 'None'}`);
@@ -5340,9 +5722,15 @@ let RolesGuard = RolesGuard_1 = class RolesGuard {
             if (hasSuperAdminRole) {
                 return true;
             }
+            // If no roles are required, allow access
+            if ((!requiredRoles || requiredRoles.length === 0)) {
+                return true;
+            }
             // Check if the user has the required roles
             const hasRequiredRoles = (_j = (_h = user === null || user === void 0 ? void 0 : user.employee) === null || _h === void 0 ? void 0 : _h.roles) === null || _j === void 0 ? void 0 : _j.some(role => requiredRoles.includes(role.name));
             if (!hasRequiredRoles) {
+                // Log the roles the user has
+                this.logger.warn(`User with ID ${userClaims.sub} does not have required roles: ${requiredRoles.join(', ')}`);
                 throw new common_1.ForbiddenException('You are not authorized to access this resource.');
             }
             return hasRequiredRoles;
@@ -5595,6 +5983,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.UtilityHelper = void 0;
 const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
 const path_1 = __importDefault(__webpack_require__(/*! path */ "path"));
+const generalresponse_dto_1 = __webpack_require__(/*! ../dtos/generalresponse.dto */ "./src/common/dtos/generalresponse.dto.ts");
 const role_scope_type_enum_1 = __webpack_require__(/*! ../enums/role-scope-type.enum */ "./src/common/enums/role-scope-type.enum.ts");
 class UtilityHelper {
     static isEmpty(value) {
@@ -5681,6 +6070,51 @@ class UtilityHelper {
             currentDate.setDate(currentDate.getDate() + 1);
         }
         return count;
+    }
+    /**
+     * Creates a standardized GeneralResponseDto with optional parameters
+     * @param statusCode HTTP status code (defaults to 200)
+     * @param detail Brief description of the response type
+     * @param message Detailed message or array of messages
+     * @param traceId Optional trace ID for request tracking
+     * @param path Optional request path
+     * @returns Configured GeneralResponseDto instance
+     */
+    static createGeneralResponse(statusCode = common_1.HttpStatus.OK, detail, message, traceId, path) {
+        const response = new generalresponse_dto_1.GeneralResponseDto();
+        response.statusCode = statusCode;
+        response.timestamp = new Date().toISOString();
+        response.detail = detail;
+        response.message = message;
+        // Set optional fields if provided
+        if (traceId) {
+            response.traceId = traceId;
+        }
+        if (path) {
+            response.path = path;
+        }
+        return response;
+    }
+    /**
+     * Creates a success response with standard OK status
+     * @param detail Brief description of the successful operation
+     * @param message Success message
+     * @param traceId Optional trace ID
+     * @param path Optional request path
+     */
+    static createSuccessResponse(detail, message, traceId, path) {
+        return this.createGeneralResponse(common_1.HttpStatus.OK, detail, message, traceId, path);
+    }
+    /**
+     * Creates an error response with specified status code
+     * @param statusCode HTTP error status code
+     * @param detail Brief description of the error type
+     * @param message Error message or array of messages
+     * @param traceId Optional trace ID
+     * @param path Optional request path
+     */
+    static createErrorResponse(statusCode, detail, message, traceId, path) {
+        return this.createGeneralResponse(statusCode, detail, message, traceId, path);
     }
     /**
      * Validates tenant access for file operations and returns the effective tenant directory
@@ -5869,7 +6303,6 @@ class UtilityHelper {
                 return true;
             case role_scope_type_enum_1.RoleScopeType.ORGANIZATION:
                 if (!resource.organizationId) {
-                    console.warn('Resource missing organizationId for ORGANIZATION scope check');
                     return true;
                 }
                 hasAccess = (_a = organizations === null || organizations === void 0 ? void 0 : organizations.includes(resource.organizationId)) !== null && _a !== void 0 ? _a : false;
@@ -5879,7 +6312,6 @@ class UtilityHelper {
                 return hasAccess;
             case role_scope_type_enum_1.RoleScopeType.BRANCH:
                 if (!resource.branchId) {
-                    console.warn('Resource missing branchId for BRANCH scope check');
                     return true;
                 }
                 hasAccess = (_b = branches === null || branches === void 0 ? void 0 : branches.includes(resource.branchId)) !== null && _b !== void 0 ? _b : false;
@@ -5889,7 +6321,6 @@ class UtilityHelper {
                 return hasAccess;
             case role_scope_type_enum_1.RoleScopeType.DEPARTMENT:
                 if (!resource.departmentId) {
-                    console.warn('Resource missing departmentId for DEPARTMENT scope check');
                     return true;
                 }
                 hasAccess = (_c = departments === null || departments === void 0 ? void 0 : departments.includes(resource.departmentId)) !== null && _c !== void 0 ? _c : false;
@@ -5899,7 +6330,6 @@ class UtilityHelper {
                 return hasAccess;
             case role_scope_type_enum_1.RoleScopeType.OWNED:
                 if (!resource.userId) {
-                    console.warn('Resource missing userId for OWNED scope check');
                     return true;
                 }
                 hasAccess = userId === resource.userId;
@@ -7102,6 +7532,12 @@ let BaseService = class BaseService {
     async findOneBy(criteria, options) {
         const findOptions = Object.assign({ where: Object.assign(Object.assign({}, ((options === null || options === void 0 ? void 0 : options.withDeleted) || 'isDeleted' in criteria ? {} : { isDeleted: false })), criteria) }, options);
         return await this.repository.findOne(findOptions);
+    }
+    async findManyBy(criteria, options) {
+        const findOptions = Object.assign({ where: Array.isArray(criteria)
+                ? criteria.map(c => (Object.assign(Object.assign({}, ((options === null || options === void 0 ? void 0 : options.withDeleted) ? {} : { isDeleted: false })), c)))
+                : Object.assign(Object.assign({}, ((options === null || options === void 0 ? void 0 : options.withDeleted) ? {} : { isDeleted: false })), criteria) }, options);
+        return await this.repository.find(findOptions);
     }
     async findOneByOrFail(criteria, options) {
         const entity = await this.findOneBy(criteria, options);
@@ -8366,11 +8802,72 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var _a, _b, _c;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.BaseEntity = void 0;
+const class_transformer_1 = __webpack_require__(/*! class-transformer */ "class-transformer");
 const typeorm_1 = __webpack_require__(/*! typeorm */ "typeorm");
 class BaseEntity extends typeorm_1.BaseEntity {
     constructor(item) {
         super();
         Object.assign(this, item);
+    }
+    /**
+     * Soft delete the entity by setting isDeleted flag and deletedAt timestamp
+     */
+    softDelete(deletedBy) {
+        this.isDeleted = true;
+        this.deletedAt = new Date();
+        if (deletedBy) {
+            this.deletedBy = deletedBy;
+        }
+    }
+    /**
+     * Restore a soft-deleted entity
+     */
+    restore() {
+        this.isDeleted = false;
+        this.deletedAt = undefined;
+        this.deletedBy = undefined;
+    }
+    /**
+     * Check if entity belongs to specific organization
+     */
+    belongsToOrganization(organizationId) {
+        return this.organizationId === organizationId;
+    }
+    /**
+     * Check if entity belongs to specific user
+     */
+    belongsToUser(userId) {
+        return this.userId === userId;
+    }
+    /**
+     * Convert entity to plain object with optional group-based serialization
+     * @param groups - Array of groups to include in serialization
+     * @returns Plain object representation
+     */
+    toPlain(groups) {
+        return (0, class_transformer_1.instanceToPlain)(this, {
+            excludeExtraneousValues: false,
+            exposeDefaultValues: true,
+            groups: groups || []
+        });
+    }
+    /**
+     * Get public-safe representation (excludes sensitive data)
+     */
+    toPublic() {
+        return this.toPlain(['public']);
+    }
+    /**
+     * Get admin representation (includes all data)
+     */
+    toAdmin() {
+        return this.toPlain(['admin', 'public']);
+    }
+    /**
+     * Get audit representation (includes audit fields)
+     */
+    toAudit() {
+        return this.toPlain(['audit', 'public']);
     }
 }
 exports.BaseEntity = BaseEntity;
@@ -8535,6 +9032,7 @@ async function bootstrap() {
             enableImplicitConversion: true, // Allow implicit type conversion
         },
     }));
+    app.useGlobalInterceptors(new common_1.ClassSerializerInterceptor(app.get(core_1.Reflector)));
     // Global exception filter
     app.useGlobalFilters(new http_exception_filter_1.HttpExceptionFilter());
     // Global logging interceptor (using our new logging interceptor)
@@ -11063,6 +11561,7 @@ const document_entity_1 = __webpack_require__(/*! @/modules/documents/entities/d
 const employee_entity_1 = __webpack_require__(/*! @/modules/employee-management/entities/employee.entity */ "./src/modules/employee-management/entities/employee.entity.ts");
 const activity_log_entity_1 = __webpack_require__(/*! @/modules/logs/activity-logs/entities/activity-log.entity */ "./src/modules/logs/activity-logs/entities/activity-log.entity.ts");
 const notification_entity_1 = __webpack_require__(/*! @/modules/notifications/entities/notification.entity */ "./src/modules/notifications/entities/notification.entity.ts");
+const class_transformer_1 = __webpack_require__(/*! class-transformer */ "class-transformer");
 const typeorm_1 = __webpack_require__(/*! typeorm */ "typeorm");
 const base_entity_1 = __webpack_require__(/*! ../../../../database/entities/base.entity */ "./src/database/entities/base.entity.ts");
 const profile_entity_1 = __webpack_require__(/*! ../../profiles/entities/profile.entity */ "./src/modules/account-management/profiles/entities/profile.entity.ts");
@@ -11085,6 +11584,7 @@ __decorate([
     __metadata("design:type", String)
 ], User.prototype, "email", void 0);
 __decorate([
+    (0, class_transformer_1.Exclude)(),
     (0, typeorm_1.Column)(),
     __metadata("design:type", String)
 ], User.prototype, "password", void 0);
@@ -11133,10 +11633,12 @@ __decorate([
     __metadata("design:type", typeof (_d = typeof Date !== "undefined" && Date) === "function" ? _d : Object)
 ], User.prototype, "lockOutEnd", void 0);
 __decorate([
+    (0, class_transformer_1.Exclude)(),
     (0, typeorm_1.Column)({ nullable: true }),
     __metadata("design:type", String)
 ], User.prototype, "verificationToken", void 0);
 __decorate([
+    (0, class_transformer_1.Exclude)(),
     (0, typeorm_1.Column)({ nullable: true }),
     __metadata("design:type", typeof (_e = typeof Date !== "undefined" && Date) === "function" ? _e : Object)
 ], User.prototype, "verificationTokenExpires", void 0);
@@ -12725,7 +13227,7 @@ __decorate([
     __metadata("design:type", Number)
 ], AttendancePunch.prototype, "employeeNumber", void 0);
 __decorate([
-    (0, typeorm_1.ManyToOne)(() => biometric_device_entity_1.BiometricDevice, (biometricDevice) => biometricDevice.attendancePunches),
+    (0, typeorm_1.ManyToOne)(() => biometric_device_entity_1.BiometricDevice, (biometricDevice) => biometricDevice.attendancePunches, { nullable: true }),
     (0, typeorm_1.JoinColumn)({ name: 'biometricDeviceId' }),
     __metadata("design:type", typeof (_e = typeof biometric_device_entity_1.BiometricDevice !== "undefined" && biometric_device_entity_1.BiometricDevice) === "function" ? _e : Object)
 ], AttendancePunch.prototype, "biometricDevice", void 0);
@@ -12761,6 +13263,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.AttendancesController = void 0;
 const authorize_decorator_1 = __webpack_require__(/*! @/common/decorators/authorize.decorator */ "./src/common/decorators/authorize.decorator.ts");
 const current_user_decorator_1 = __webpack_require__(/*! @/common/decorators/current-user.decorator */ "./src/common/decorators/current-user.decorator.ts");
+const generic_api_responses_decorator_1 = __webpack_require__(/*! @/common/decorators/generic-api-responses.decorator */ "./src/common/decorators/generic-api-responses.decorator.ts");
 const generalresponse_dto_1 = __webpack_require__(/*! @/common/dtos/generalresponse.dto */ "./src/common/dtos/generalresponse.dto.ts");
 const action_enum_1 = __webpack_require__(/*! @/common/enums/action.enum */ "./src/common/enums/action.enum.ts");
 const create_controller_factory_1 = __webpack_require__(/*! @/common/factories/create-controller.factory */ "./src/common/factories/create-controller.factory.ts");
@@ -12815,16 +13318,7 @@ __decorate([
         description: 'Attendance records processed successfully',
         type: generalresponse_dto_1.GeneralResponseDto
     }),
-    (0, swagger_1.ApiResponse)({
-        status: common_1.HttpStatus.UNAUTHORIZED,
-        description: 'User is not authorized to process attendance records',
-        type: generalresponse_dto_1.GeneralResponseDto
-    }),
-    (0, swagger_1.ApiResponse)({
-        status: common_1.HttpStatus.INTERNAL_SERVER_ERROR,
-        description: 'An error occurred while processing attendance records',
-        type: generalresponse_dto_1.GeneralResponseDto
-    }),
+    (0, generic_api_responses_decorator_1.ApiGenericResponses)(),
     __param(0, (0, current_user_decorator_1.CurrentUser)('sub')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
@@ -15549,7 +16043,7 @@ let AttendanceDataSeederService = AttendanceDataSeederService_1 = class Attendan
         this.attendancesService = attendancesService;
         this.attendancePunchesService = attendancePunchesService;
         this.logger = new common_1.Logger(AttendanceDataSeederService_1.name);
-        this.EMPLOYEE_ID = 'fdddac4f-c6aa-485b-a8d5-9f44502f8dd9';
+        this.EMPLOYEE_ID = '4b752aed-c6ca-4085-9195-c50b69d0a787';
         this.EMPLOYEE_NUMBER = 1;
         this.DEFAULT_DEVICE_ID = 'DEVICE001';
     }
@@ -16286,7 +16780,7 @@ __decorate([
     __metadata("design:type", typeof (_f = typeof attendance_entity_1.Attendance !== "undefined" && attendance_entity_1.Attendance) === "function" ? _f : Object)
 ], WorkTimeRequest.prototype, "attendance", void 0);
 __decorate([
-    (0, typeorm_1.ManyToOne)(() => cutoff_entity_1.Cutoff, (cutoff) => cutoff.workTimeRequests),
+    (0, typeorm_1.ManyToOne)(() => cutoff_entity_1.Cutoff, (cutoff) => cutoff.workTimeRequests, { nullable: true }),
     (0, typeorm_1.JoinColumn)({ name: 'cutoffId' }),
     __metadata("design:type", typeof (_g = typeof cutoff_entity_1.Cutoff !== "undefined" && cutoff_entity_1.Cutoff) === "function" ? _g : Object)
 ], WorkTimeRequest.prototype, "cutoff", void 0);
@@ -17062,9 +17556,6 @@ let BiometricDevicesController = class BiometricDevicesController extends (0, cr
     }
     async create(entityDto, createdById) {
         return await super.create(entityDto, createdById);
-    }
-    async delete(id) {
-        return await super.delete(id);
     }
     async softDelete(id, deletedBy) {
         return await super.softDelete(id, deletedBy);
@@ -18566,7 +19057,7 @@ __decorate([
     __metadata("design:type", typeof (_b = typeof Date !== "undefined" && Date) === "function" ? _b : Object)
 ], BiometricDevice.prototype, "lastSync", void 0);
 __decorate([
-    (0, typeorm_1.OneToMany)(() => attendance_punch_entity_1.AttendancePunch, (attendancePunch) => attendancePunch.biometricDevice, { nullable: true }),
+    (0, typeorm_1.OneToMany)(() => attendance_punch_entity_1.AttendancePunch, (attendancePunch) => attendancePunch.biometricDevice, { nullable: true, onDelete: 'SET NULL' }),
     __metadata("design:type", Array)
 ], BiometricDevice.prototype, "attendancePunches", void 0);
 exports.BiometricDevice = BiometricDevice = __decorate([
@@ -25921,6 +26412,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.EmployeePayrollItemTypesController = void 0;
 const authorize_decorator_1 = __webpack_require__(/*! @/common/decorators/authorize.decorator */ "./src/common/decorators/authorize.decorator.ts");
 const current_user_decorator_1 = __webpack_require__(/*! @/common/decorators/current-user.decorator */ "./src/common/decorators/current-user.decorator.ts");
+const generic_api_responses_decorator_1 = __webpack_require__(/*! @/common/decorators/generic-api-responses.decorator */ "./src/common/decorators/generic-api-responses.decorator.ts");
 const generalresponse_dto_1 = __webpack_require__(/*! @/common/dtos/generalresponse.dto */ "./src/common/dtos/generalresponse.dto.ts");
 const action_enum_1 = __webpack_require__(/*! @/common/enums/action.enum */ "./src/common/enums/action.enum.ts");
 const create_controller_factory_1 = __webpack_require__(/*! @/common/factories/create-controller.factory */ "./src/common/factories/create-controller.factory.ts");
@@ -25973,11 +26465,8 @@ __decorate([
         description: 'Compensation has been successfully set up',
         type: payroll_item_dto_1.GetPayrollItemDto
     }),
-    (0, swagger_1.ApiResponse)({ status: 400, description: 'Invalid employee ID format or invalid rate type', type: generalresponse_dto_1.GeneralResponseDto }),
     (0, swagger_1.ApiResponse)({ status: 404, description: 'Employee or payroll item type not found', type: generalresponse_dto_1.GeneralResponseDto }),
-    (0, swagger_1.ApiResponse)({ status: 500, description: 'Internal server error', type: generalresponse_dto_1.GeneralResponseDto }),
-    (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized', type: generalresponse_dto_1.GeneralResponseDto }),
-    (0, swagger_1.ApiResponse)({ status: 403, description: 'Forbidden', type: generalresponse_dto_1.GeneralResponseDto }),
+    (0, generic_api_responses_decorator_1.ApiGenericResponses)(),
     __param(0, (0, common_1.Param)('employeeId', common_1.ParseUUIDPipe)),
     __param(1, (0, common_1.Body)()),
     __param(2, (0, current_user_decorator_1.CurrentUser)('sub')),
@@ -27535,6 +28024,7 @@ exports.RolesService = RolesService = __decorate([
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.fileProviders = exports.fileProviderConfig = exports.FILE_SERVICE = void 0;
 const config_1 = __webpack_require__(/*! @nestjs/config */ "@nestjs/config");
+const import_export_service_1 = __webpack_require__(/*! ../services/import-export.service */ "./src/modules/files/services/import-export.service.ts");
 const local_file_service_1 = __webpack_require__(/*! ../services/local-file.service */ "./src/modules/files/services/local-file.service.ts");
 exports.FILE_SERVICE = 'FILE_SERVICE';
 exports.fileProviderConfig = {
@@ -27558,7 +28048,7 @@ exports.fileProviderConfig = {
     },
     inject: [config_1.ConfigService],
 };
-exports.fileProviders = [exports.fileProviderConfig, local_file_service_1.LocalFileService];
+exports.fileProviders = [exports.fileProviderConfig, local_file_service_1.LocalFileService, import_export_service_1.ImportExportService];
 
 
 /***/ }),
@@ -27615,6 +28105,190 @@ __decorate([
     (0, swagger_1.ApiPropertyOptional)({ description: 'Whether this is a parent directory link' }),
     __metadata("design:type", Boolean)
 ], DirectoryMetadata.prototype, "isParent", void 0);
+
+
+/***/ }),
+
+/***/ "./src/modules/files/dtos/export-options.dto.ts":
+/*!******************************************************!*\
+  !*** ./src/modules/files/dtos/export-options.dto.ts ***!
+  \******************************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+"use strict";
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var _a, _b, _c, _d, _e, _f, _g;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.ExportOptionsDto = exports.DocumentMetadata = void 0;
+const file_format_1 = __webpack_require__(/*! @/common/enums/file-format */ "./src/common/enums/file-format.ts");
+const role_scope_type_enum_1 = __webpack_require__(/*! @/common/enums/role-scope-type.enum */ "./src/common/enums/role-scope-type.enum.ts");
+const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
+const class_validator_1 = __webpack_require__(/*! class-validator */ "class-validator");
+class DocumentMetadata {
+}
+exports.DocumentMetadata = DocumentMetadata;
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'Document title',
+        example: 'Monthly Sales Report'
+    }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], DocumentMetadata.prototype, "title", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'Document subtitle',
+        example: 'Q1 2025'
+    }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], DocumentMetadata.prototype, "subtitle", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'Author name',
+        example: 'System Administrator'
+    }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], DocumentMetadata.prototype, "author", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'Company/organization name',
+        example: 'ACME Corp.'
+    }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], DocumentMetadata.prototype, "company", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'Custom filename',
+        example: 'sales-report-2025-q1'
+    }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], DocumentMetadata.prototype, "filename", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'Document description',
+        example: 'Quarterly sales data for all regions'
+    }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], DocumentMetadata.prototype, "description", void 0);
+class ExportOptionsDto {
+}
+exports.ExportOptionsDto = ExportOptionsDto;
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        enum: file_format_1.FileFormat,
+        description: 'Format of the export file',
+        example: file_format_1.FileFormat.CSV
+    }),
+    (0, class_validator_1.IsEnum)(file_format_1.FileFormat),
+    (0, class_validator_1.IsNotEmpty)(),
+    __metadata("design:type", typeof (_a = typeof file_format_1.FileFormat !== "undefined" && file_format_1.FileFormat) === "function" ? _a : Object)
+], ExportOptionsDto.prototype, "format", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'Maximum number of records to export',
+        type: Number,
+        example: 1000
+    }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsInt)(),
+    __metadata("design:type", Number)
+], ExportOptionsDto.prototype, "maxRecords", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'Filter criteria',
+        example: { status: 'active', createdAt: { gte: '2023-01-01' } }
+    }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsObject)(),
+    __metadata("design:type", typeof (_b = typeof Record !== "undefined" && Record) === "function" ? _b : Object)
+], ExportOptionsDto.prototype, "filter", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'Relations to include',
+        example: { user: true, profile: false },
+    }),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Object)
+], ExportOptionsDto.prototype, "relations", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        type: [String],
+        description: 'Fields to select',
+        example: ['id', 'name', 'email']
+    }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsArray)(),
+    (0, class_validator_1.IsString)({ each: true }),
+    __metadata("design:type", Array)
+], ExportOptionsDto.prototype, "select", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        example: { createdAt: 'DESC' },
+        description: 'Sort order',
+        examples: [
+            { createdAt: 'DESC' },
+            { name: 'ASC' }
+        ]
+    }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsObject)(),
+    __metadata("design:type", typeof (_d = typeof Record !== "undefined" && Record) === "function" ? _d : Object)
+], ExportOptionsDto.prototype, "sort", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        enum: role_scope_type_enum_1.RoleScopeType,
+        description: 'Scope for data access',
+        example: role_scope_type_enum_1.RoleScopeType.BRANCH
+    }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsEnum)(role_scope_type_enum_1.RoleScopeType),
+    __metadata("design:type", typeof (_e = typeof role_scope_type_enum_1.RoleScopeType !== "undefined" && role_scope_type_enum_1.RoleScopeType) === "function" ? _e : Object)
+], ExportOptionsDto.prototype, "scope", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'Field mapping from internal field names to external names',
+        example: { id: 'ID', name: 'Full Name', email: 'Email Address' }
+    }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsObject)(),
+    __metadata("design:type", typeof (_f = typeof Record !== "undefined" && Record) === "function" ? _f : Object)
+], ExportOptionsDto.prototype, "fieldMap", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'Custom headers for the export file',
+        example: { Region: "North America", Period: "Q1 2025" }
+    }),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", typeof (_g = typeof Record !== "undefined" && Record) === "function" ? _g : Object)
+], ExportOptionsDto.prototype, "customHeaders", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'Document metadata',
+        type: DocumentMetadata
+    }),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", DocumentMetadata)
+], ExportOptionsDto.prototype, "metadata", void 0);
 
 
 /***/ }),
@@ -28068,6 +28742,114 @@ __decorate([
 
 /***/ }),
 
+/***/ "./src/modules/files/dtos/import-options.dto.ts":
+/*!******************************************************!*\
+  !*** ./src/modules/files/dtos/import-options.dto.ts ***!
+  \******************************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+"use strict";
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var _a, _b;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.ImportOptionsDto = void 0;
+const file_format_1 = __webpack_require__(/*! @/common/enums/file-format */ "./src/common/enums/file-format.ts");
+const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
+const class_transformer_1 = __webpack_require__(/*! class-transformer */ "class-transformer");
+const class_validator_1 = __webpack_require__(/*! class-validator */ "class-validator");
+class ImportOptionsDto {
+}
+exports.ImportOptionsDto = ImportOptionsDto;
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        enum: file_format_1.FileFormat,
+        description: 'Format of the import file',
+        example: file_format_1.FileFormat.CSV
+    }),
+    (0, class_validator_1.IsEnum)(file_format_1.FileFormat),
+    (0, class_validator_1.IsNotEmpty)(),
+    __metadata("design:type", typeof (_a = typeof file_format_1.FileFormat !== "undefined" && file_format_1.FileFormat) === "function" ? _a : Object)
+], ImportOptionsDto.prototype, "format", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'Field mapping from external field names to internal entity properties',
+        example: { name: 'Full Name', email: 'Email Address' }
+    }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsObject)(),
+    __metadata("design:type", typeof (_b = typeof Record !== "undefined" && Record) === "function" ? _b : Object)
+], ImportOptionsDto.prototype, "fieldMap", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'Field used to identify existing records for updates',
+        example: 'id',
+        type: String,
+    }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", Object)
+], ImportOptionsDto.prototype, "identifierField", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'Size of batches for processing large imports',
+        minimum: 1,
+        default: 100,
+        example: 500
+    }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsNumber)(),
+    (0, class_transformer_1.Type)(() => Number),
+    __metadata("design:type", Number)
+], ImportOptionsDto.prototype, "batchSize", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'Maximum number of records to import',
+        example: 5000
+    }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsNumber)(),
+    (0, class_transformer_1.Type)(() => Number),
+    __metadata("design:type", Number)
+], ImportOptionsDto.prototype, "maxRecords", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'Perform validation without saving changes to database',
+        default: false
+    }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsBoolean)(),
+    __metadata("design:type", Boolean)
+], ImportOptionsDto.prototype, "dryRun", void 0);
+
+
+/***/ }),
+
+/***/ "./src/modules/files/dtos/import-result.dto.ts":
+/*!*****************************************************!*\
+  !*** ./src/modules/files/dtos/import-result.dto.ts ***!
+  \*****************************************************/
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.ImportResult = void 0;
+class ImportResult {
+}
+exports.ImportResult = ImportResult;
+
+
+/***/ }),
+
 /***/ "./src/modules/files/files.controller.ts":
 /*!***********************************************!*\
   !*** ./src/modules/files/files.controller.ts ***!
@@ -28098,6 +28880,7 @@ exports.FilesController = void 0;
 const authorize_decorator_1 = __webpack_require__(/*! @/common/decorators/authorize.decorator */ "./src/common/decorators/authorize.decorator.ts");
 const current_user_decorator_1 = __webpack_require__(/*! @/common/decorators/current-user.decorator */ "./src/common/decorators/current-user.decorator.ts");
 const generic_api_responses_decorator_1 = __webpack_require__(/*! @/common/decorators/generic-api-responses.decorator */ "./src/common/decorators/generic-api-responses.decorator.ts");
+const roles_decorator_1 = __webpack_require__(/*! @/common/decorators/roles.decorator */ "./src/common/decorators/roles.decorator.ts");
 const action_enum_1 = __webpack_require__(/*! @/common/enums/action.enum */ "./src/common/enums/action.enum.ts");
 const role_scope_type_enum_1 = __webpack_require__(/*! @/common/enums/role-scope-type.enum */ "./src/common/enums/role-scope-type.enum.ts");
 const utility_helper_1 = __webpack_require__(/*! @/common/helpers/utility.helper */ "./src/common/helpers/utility.helper.ts");
@@ -29067,6 +29850,8 @@ __decorate([
 exports.FilesController = FilesController = FilesController_1 = __decorate([
     (0, swagger_1.ApiTags)('Files'),
     (0, common_1.Controller)('files'),
+    (0, roles_decorator_1.AllowEmployee)(true),
+    (0, roles_decorator_1.OnlyAllowRoles)(false),
     __param(0, (0, common_1.Inject)(file_provider_config_1.FILE_SERVICE)),
     __metadata("design:paramtypes", [typeof (_a = typeof file_service_interface_1.IFileService !== "undefined" && file_service_interface_1.IFileService) === "function" ? _a : Object])
 ], FilesController);
@@ -29093,12 +29878,15 @@ exports.FilesModule = void 0;
 const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
 const file_provider_config_1 = __webpack_require__(/*! ./config/file-provider.config */ "./src/modules/files/config/file-provider.config.ts");
 const files_controller_1 = __webpack_require__(/*! ./files.controller */ "./src/modules/files/files.controller.ts");
+const import_export_service_1 = __webpack_require__(/*! ./services/import-export.service */ "./src/modules/files/services/import-export.service.ts");
 let FilesModule = class FilesModule {
 };
 exports.FilesModule = FilesModule;
 exports.FilesModule = FilesModule = __decorate([
+    (0, common_1.Global)(),
     (0, common_1.Module)({
         providers: [...file_provider_config_1.fileProviders],
+        exports: [import_export_service_1.ImportExportService],
         controllers: [files_controller_1.FilesController],
     })
 ], FilesModule);
@@ -29412,6 +30200,1254 @@ exports.BaseFileService = BaseFileService = __decorate([
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [String, String])
 ], BaseFileService);
+
+
+/***/ }),
+
+/***/ "./src/modules/files/services/import-export.service.ts":
+/*!*************************************************************!*\
+  !*** ./src/modules/files/services/import-export.service.ts ***!
+  \*************************************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
+var ImportExportService_1;
+var _a;
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.ImportExportService = void 0;
+const pagination_dto_1 = __webpack_require__(/*! @/common/dtos/pagination.dto */ "./src/common/dtos/pagination.dto.ts");
+const file_format_1 = __webpack_require__(/*! @/common/enums/file-format */ "./src/common/enums/file-format.ts");
+const role_scope_type_enum_1 = __webpack_require__(/*! @/common/enums/role-scope-type.enum */ "./src/common/enums/role-scope-type.enum.ts");
+const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
+const typeorm_1 = __webpack_require__(/*! @nestjs/typeorm */ "@nestjs/typeorm");
+const buffer_1 = __webpack_require__(/*! buffer */ "buffer");
+const Papa = __importStar(__webpack_require__(/*! papaparse */ "papaparse"));
+const typeorm_2 = __webpack_require__(/*! typeorm */ "typeorm");
+const XLSX = __importStar(__webpack_require__(/*! xlsx */ "xlsx"));
+const xml2js = __importStar(__webpack_require__(/*! xml2js */ "xml2js"));
+const pdfMake = __importStar(__webpack_require__(/*! pdfmake/build/pdfmake */ "pdfmake/build/pdfmake"));
+const pdfFonts = __importStar(__webpack_require__(/*! pdfmake/build/vfs_fonts */ "pdfmake/build/vfs_fonts"));
+// Set up PDF fonts
+pdfMake.vfs = pdfFonts.vfs;
+let ImportExportService = ImportExportService_1 = class ImportExportService {
+    constructor(dataSource) {
+        this.dataSource = dataSource;
+        this.logger = new common_1.Logger(ImportExportService_1.name);
+    }
+    /**
+     * Export data from a repository to the specified format
+     */
+    async exportData(service, options) {
+        const startTime = Date.now();
+        try {
+            this.logger.log(`Beginning export operation with format: ${options.format}`);
+            // Convert relations to string[] if needed
+            let relations;
+            if (Array.isArray(options.relations)) {
+                relations = options.relations;
+            }
+            else if (options.relations && typeof options.relations === 'object') {
+                relations = Object.keys(options.relations).filter(key => options.relations[key]);
+            }
+            // Create PaginationDto instance
+            const paginationDto = new pagination_dto_1.PaginationDto();
+            paginationDto.take = options.maxRecords || 1000;
+            paginationDto.skip = 0;
+            paginationDto.filter = options.filter || {};
+            paginationDto.relations = relations;
+            paginationDto.select = options.select;
+            paginationDto.sort = options.sort || { createdAt: 'DESC' };
+            this.logger.debug(`Fetching data with filter: ${JSON.stringify(options.filter)}`);
+            const { data, totalCount } = await service.findAllComplex(options.scope || role_scope_type_enum_1.RoleScopeType.OWNED, paginationDto);
+            const queryTime = Date.now() - startTime;
+            this.logger.log(`Fetched ${data.length}/${totalCount} records in ${queryTime}ms`);
+            if (!data || data.length === 0) {
+                throw new common_1.BadRequestException('No data found to export');
+            }
+            // Transform data if a transformer is provided
+            const transformedData = data;
+            // Apply field mapping if specified
+            const mappedData = options.fieldMap
+                ? this.mapFields(transformedData, options.fieldMap)
+                : transformedData;
+            // Format and return based on requested format
+            const formatResult = await this.formatOutput(mappedData, options.format || file_format_1.FileFormat.CSV, options.customHeaders, options.metadata, options.filter);
+            const endTime = Date.now();
+            const totalTime = endTime - startTime;
+            this.logger.log(`Export completed in ${totalTime}ms`);
+            // Return result with metadata
+            return {
+                data: formatResult,
+                totalRecords: totalCount,
+                queryTime,
+                stats: {
+                    exportedRecords: data.length,
+                    totalRecords: totalCount,
+                    processingTimeMs: totalTime,
+                    format: options.format,
+                    timestamp: new Date().toISOString()
+                }
+            };
+        }
+        catch (error) {
+            const errorTime = Date.now() - startTime;
+            this.logger.error(`Error exporting data (${errorTime}ms): ${error.message}`, error.stack);
+            throw error;
+        }
+    }
+    /**
+     * Format output data based on requested format
+     */
+    async formatOutput(data, format, customHeaders, metadata, filter) {
+        try {
+            switch (format) {
+                case file_format_1.FileFormat.CSV:
+                    return this.formatCSV(data, customHeaders, filter, metadata);
+                case file_format_1.FileFormat.EXCEL:
+                    return this.formatExcel(data, customHeaders, filter, metadata);
+                case file_format_1.FileFormat.JSON:
+                    return this.formatJSON(data, customHeaders, filter, metadata);
+                case file_format_1.FileFormat.XML:
+                    return this.formatXML(data, customHeaders, filter, metadata);
+                case file_format_1.FileFormat.PDF:
+                    return await this.formatPDF(data, customHeaders, filter, metadata);
+                default:
+                    throw new common_1.BadRequestException(`Unsupported export format: ${format}`);
+            }
+        }
+        catch (error) {
+            this.logger.error(`Error formatting output: ${error.message}`, error.stack);
+            throw new common_1.BadRequestException(`Failed to format output: ${error.message}`);
+        }
+    }
+    /**
+     * Format data as CSV
+     */
+    formatCSV(data, customHeaders, filters, metadata) {
+        // Log the first item for debugging
+        this.logger.debug(`CSV export data first item: ${JSON.stringify(data[0])}`);
+        // We'll create two parts: metadata header rows and the actual data
+        let csvLines = [];
+        // 1. Add metadata section as header rows if requested
+        if (metadata) {
+            if (metadata.title) {
+                csvLines.push(`# ${metadata.title}`);
+            }
+            if (metadata.subtitle) {
+                csvLines.push(`# ${metadata.subtitle}`);
+            }
+            if (metadata.company) {
+                csvLines.push(`# Company: ${metadata.company}`);
+            }
+            if (metadata.author) {
+                csvLines.push(`# Author: ${metadata.author}`);
+            }
+            csvLines.push(`# Export date: ${new Date().toLocaleString()}`);
+            if (metadata.description) {
+                csvLines.push(`# ${metadata.description}`);
+            }
+            csvLines.push(''); // Empty line after metadata
+        }
+        // 2. Add filter section if available
+        if (filters && Object.keys(filters).length > 0) {
+            csvLines.push('# Filters:');
+            try {
+                // Add each filter as a comment line
+                Object.entries(filters).forEach(([key, value]) => {
+                    const filterValue = typeof value === 'object' ?
+                        JSON.stringify(value) : String(value);
+                    csvLines.push(`# ${key}: ${filterValue}`);
+                });
+            }
+            catch (e) {
+                // If processing fails, just add a note
+                csvLines.push('# Filter processing error');
+            }
+            csvLines.push(''); // Empty line after filters
+        }
+        // Apply custom headers if provided
+        let exportData = [...data];
+        if (customHeaders && Object.keys(customHeaders).length > 0) {
+            csvLines.push('# Additional Information:');
+            Object.entries(customHeaders).forEach(([key, value]) => {
+                csvLines.push(`# ${key}: ${value}`);
+            });
+            csvLines.push(''); // Empty line after custom headers
+        }
+        // Generate CSV for the data part
+        const dataCSV = Papa.unparse(exportData, {
+            header: true,
+            delimiter: ',',
+            newline: '\r\n'
+        });
+        // Combine metadata lines with the data CSV
+        const fullCSV = csvLines.length > 0 ?
+            `${csvLines.join('\r\n')}\r\n${dataCSV}` :
+            dataCSV;
+        this.logger.debug(`CSV output sample (first 100 chars): ${fullCSV.substring(0, 100)}...`);
+        return fullCSV;
+    }
+    /**
+    * Format data as Excel
+    */
+    formatExcel(data, customHeaders, filters, metadata) {
+        var _a;
+        // Debug what data we received
+        this.logger.debug(`Excel export: Received ${data.length} records`);
+        this.logger.debug(`First record fields: ${data.length > 0 ? Object.keys(data[0]).join(', ') : 'none'}`);
+        // Get field mapping from the applied field maps in previous steps
+        // We're using data as-is since fieldMap was already applied in exportData method
+        let exportData = [...data];
+        // Create workbook
+        const workbook = XLSX.utils.book_new();
+        // Add metadata if provided
+        if (metadata) {
+            workbook.Props = {
+                Title: metadata.title || '',
+                Subject: metadata.subtitle || '',
+                Author: metadata.author || '',
+                Company: metadata.company || '',
+                Comments: metadata.description || '',
+                CreatedDate: new Date()
+            };
+        }
+        // Add totals row if provided
+        // if (totals) {
+        //   const totalsRow: Record<string, any> = {};
+        //   // Use keys directly since field mapping was already applied in exportData
+        //   Object.keys(totals).forEach(key => {
+        //     totalsRow[key] = totals[key];
+        //   });
+        //   // Add a label for the totals row
+        //   const firstKey = Object.keys(totalsRow)[0] || Object.keys(exportData[0] || {})[0];
+        //   if (firstKey) {
+        //     totalsRow[firstKey] = 'TOTAL';
+        //   }
+        //   exportData.push(totalsRow);
+        // }
+        // Handle empty dataset
+        if (!exportData.length || Object.keys(exportData[0] || {}).length === 0) {
+            this.logger.warn('No data or empty records for Excel export');
+            const worksheet = XLSX.utils.aoa_to_sheet([
+                ['No data available'],
+                ['Your query returned no results or selected fields did not match any data']
+            ]);
+            XLSX.utils.book_append_sheet(workbook, worksheet, 'No Data');
+            return XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' });
+        }
+        // Create metadata worksheet - collect all header and info content first
+        const headerContent = [];
+        // 1. Add metadata section
+        if (metadata) {
+            // Title
+            if (metadata.title) {
+                headerContent.push([metadata.title]);
+            }
+            // Subtitle
+            if (metadata.subtitle) {
+                headerContent.push([metadata.subtitle]);
+            }
+            // Company name, author, date
+            if (metadata.company) {
+                headerContent.push([`Company: ${metadata.company}`]);
+            }
+            if (metadata.author) {
+                headerContent.push([`Prepared by: ${metadata.author}`]);
+            }
+            headerContent.push([`Export date: ${new Date().toLocaleString()}`]);
+            // Description
+            if (metadata.description) {
+                headerContent.push([metadata.description]);
+            }
+            // Add spacing after metadata
+            headerContent.push(['']);
+        }
+        // 2. Add filter section if available
+        if (filters && Object.keys(filters).length > 0) {
+            headerContent.push(['Filters:']);
+            try {
+                // Add each filter as a row
+                Object.entries(filters).forEach(([key, value]) => {
+                    const filterValue = typeof value === 'object' ?
+                        JSON.stringify(value) : String(value);
+                    headerContent.push([`${key}: ${filterValue}`]);
+                });
+            }
+            catch (e) {
+                // If processing fails, just add a note
+                headerContent.push(['Filter processing error']);
+            }
+            // Add spacing after filters
+            headerContent.push(['']);
+        }
+        // 3. Add custom headers as additional metadata above the data table
+        if (customHeaders && Object.keys(customHeaders).length > 0) {
+            headerContent.push(['Additional Information:']);
+            Object.entries(customHeaders).forEach(([key, value]) => {
+                headerContent.push([`${key}: ${value}`]);
+            });
+            // Add spacing after custom headers
+            headerContent.push(['']);
+        }
+        // Create the main worksheet with the metadata headers first
+        const worksheet = XLSX.utils.aoa_to_sheet(headerContent);
+        // 4. Now add the actual data table with column headers
+        // Calculate the starting cell for data table (after all header content)
+        const startRow = headerContent.length;
+        // Add the data table to the worksheet using sheet_add_json
+        XLSX.utils.sheet_add_json(worksheet, exportData, {
+            origin: startRow,
+            skipHeader: false,
+            header: Object.keys(exportData[0] || {})
+        });
+        // Set column widths (auto-size based on content)
+        const columnWidths = [];
+        const maxCols = Math.max(...exportData.map(row => Object.keys(row).length), 1);
+        for (let i = 0; i < maxCols; i++) {
+            // Default width with some padding
+            columnWidths.push({ wch: 15 });
+        }
+        worksheet['!cols'] = columnWidths;
+        // Apply styles - make the title bold if possible
+        if (worksheet['A1']) {
+            worksheet['A1'].s = { font: { bold: true, sz: 14 } };
+        }
+        // Add the worksheet to the workbook
+        XLSX.utils.book_append_sheet(workbook, worksheet, ((_a = metadata === null || metadata === void 0 ? void 0 : metadata.title) === null || _a === void 0 ? void 0 : _a.substring(0, 31)) || 'Data');
+        // Generate buffer
+        return XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' });
+    }
+    /**
+     * Format data as JSON
+     */
+    formatJSON(data, customHeaders, filters, metadata) {
+        // Create the result structure with metadata
+        const result = {
+            metadata: Object.assign(Object.assign({}, metadata), { totalData: data.length, exportDate: new Date().toLocaleString() }),
+            filters,
+            customHeaders,
+            data: [...data]
+        };
+        // Return prettified JSON
+        return JSON.stringify(result, null, 2);
+    }
+    /**
+     * Format data as XML
+     */
+    formatXML(data, customHeaders, filters, metadata) {
+        const builder = new xml2js.Builder({
+            rootName: 'export',
+            xmldec: { version: '1.0', encoding: 'UTF-8' }
+        });
+        // Prepare data with proper XML field names (remove special chars)
+        const cleanData = data.map(item => {
+            const result = {};
+            Object.keys(item).forEach(key => {
+                const safeName = key.replace(/[^a-zA-Z0-9_]/g, '_');
+                result[safeName] = item[key];
+            });
+            return result;
+        });
+        // Build the XML structure
+        const xmlStructure = {
+            metadata: {
+                count: data.length,
+                timestamp: new Date().toISOString(),
+                export_date: new Date().toLocaleString()
+            },
+            records: {
+                record: cleanData
+            }
+        };
+        // Add document metadata if provided
+        if (metadata) {
+            if (metadata.title)
+                xmlStructure.metadata.title = metadata.title;
+            if (metadata.subtitle)
+                xmlStructure.metadata.subtitle = metadata.subtitle;
+            if (metadata.author)
+                xmlStructure.metadata.author = metadata.author;
+            if (metadata.company)
+                xmlStructure.metadata.company = metadata.company;
+            if (metadata.description)
+                xmlStructure.metadata.description = metadata.description;
+        }
+        // Add filters if provided
+        if (filters && Object.keys(filters).length > 0) {
+            xmlStructure.metadata.filters = {};
+            Object.entries(filters).forEach(([key, value]) => {
+                xmlStructure.metadata.filters[key] = typeof value === 'object' ?
+                    JSON.stringify(value) : String(value);
+            });
+        }
+        // Add custom headers if provided
+        if (customHeaders && Object.keys(customHeaders).length > 0) {
+            xmlStructure.metadata.custom_headers = Object.entries(customHeaders).map(([key, value]) => {
+                return {
+                    header: {
+                        name: key.replace(/[^a-zA-Z0-9_]/g, '_'),
+                        value: value
+                    }
+                };
+            });
+        }
+        return builder.buildObject(xmlStructure);
+    }
+    /**
+     * Format data as PDF
+     */
+    async formatPDF(data, customHeaders, filter, metadata, totals) {
+        this.logger.debug(`PDF export: Formatting ${data.length} records`);
+        // Define document colors and styles
+        const colors = {
+            primary: '#2C3E50',
+            secondary: '#3498DB',
+            accent: '#E74C3C',
+            lightGray: '#EEEEEE',
+            mediumGray: '#CCCCCC',
+            darkGray: '#999999',
+            white: '#FFFFFF',
+            black: '#333333'
+        };
+        const styles = {
+            header: {
+                fontSize: 22,
+                bold: true,
+                color: colors.primary,
+                margin: [0, 0, 0, 10]
+            },
+            subheader: {
+                fontSize: 16,
+                bold: true,
+                color: colors.primary,
+                margin: [0, 10, 0, 5]
+            },
+            sectionTitle: {
+                fontSize: 14,
+                bold: true,
+                color: colors.primary,
+                margin: [0, 15, 0, 8]
+            },
+            normal: {
+                fontSize: 10,
+                color: colors.black
+            },
+            tableHeader: {
+                fontSize: 12,
+                bold: true,
+                color: colors.primary
+            },
+            footer: {
+                fontSize: 8,
+                color: colors.darkGray,
+                margin: [40, 0]
+            }
+        };
+        // Prepare column definitions and data for the table
+        const columnDefs = [];
+        const tableHeaders = [];
+        // Determine columns using the first data item
+        if (data.length > 0) {
+            const firstItem = data[0];
+            Object.keys(firstItem).forEach(key => {
+                // Use the original key as both the display text and data key
+                columnDefs.push({ text: key, dataKey: key });
+                tableHeaders.push({
+                    text: key,
+                    style: 'tableHeader',
+                    fillColor: colors.lightGray
+                });
+            });
+        }
+        // Transform data for PDF table format
+        const tableRows = data.map(item => {
+            return columnDefs.map(col => {
+                const value = item[col.dataKey];
+                return {
+                    text: this.formatPdfCellValue(value),
+                    style: 'normal'
+                };
+            });
+        });
+        // Add totals row if provided
+        if (totals && Object.keys(totals).length > 0) {
+            const totalsRow = columnDefs.map((col, index) => {
+                if (index === 0) {
+                    return {
+                        text: 'TOTAL',
+                        style: 'tableHeader',
+                        fillColor: colors.lightGray
+                    };
+                }
+                const value = totals[col.dataKey];
+                return {
+                    text: value !== undefined ? this.formatPdfCellValue(value) : '',
+                    style: 'tableHeader',
+                    fillColor: colors.lightGray
+                };
+            });
+            tableRows.push(totalsRow);
+        }
+        // Prepare document content
+        const content = [];
+        // 1. Add title page with metadata, filters, and custom headers all on first page
+        if (metadata && (metadata.title || metadata.subtitle || metadata.company)) {
+            // Title
+            if (metadata.title) {
+                content.push({
+                    text: metadata.title,
+                    style: 'header',
+                    alignment: 'center',
+                    margin: [0, 40, 0, 20]
+                });
+            }
+            // Subtitle
+            if (metadata.subtitle) {
+                content.push({
+                    text: metadata.subtitle,
+                    style: 'subheader',
+                    alignment: 'center',
+                    margin: [0, 0, 0, 40]
+                });
+            }
+            // Company and author info in a table for better alignment
+            const infoItems = [];
+            if (metadata.company) {
+                infoItems.push(['Company:', metadata.company]);
+            }
+            if (metadata.author) {
+                infoItems.push(['Prepared by:', metadata.author]);
+            }
+            infoItems.push(['Export date:', new Date().toLocaleString()]);
+            if (infoItems.length > 0) {
+                content.push({
+                    layout: 'noBorders',
+                    margin: [0, 40, 0, 20],
+                    table: {
+                        widths: ['30%', '70%'],
+                        body: infoItems.map(([label, value]) => [
+                            { text: label, bold: true, fontSize: 10, color: colors.darkGray },
+                            { text: value, fontSize: 10 }
+                        ])
+                    }
+                });
+            }
+            // Description
+            if (metadata.description) {
+                content.push({
+                    text: metadata.description,
+                    fontSize: 12,
+                    margin: [0, 20, 0, 20]
+                });
+            }
+            // Don't add page break here, continue with filters and custom headers
+        }
+        else {
+            // Simple header if no full metadata
+            content.push({
+                text: 'Data Export',
+                style: 'header',
+                margin: [0, 0, 0, 20]
+            });
+        }
+        // 2. Add filter section if available (now on same page as metadata)
+        if (filter && Object.keys(filter).length > 0) {
+            content.push({ text: 'Filters', style: 'sectionTitle' });
+            const filterRows = [];
+            Object.entries(filter).forEach(([key, value]) => {
+                const filterValue = typeof value === 'object' ?
+                    JSON.stringify(value) : String(value);
+                filterRows.push([
+                    { text: key, bold: true, fontSize: 10 },
+                    { text: filterValue, fontSize: 10 }
+                ]);
+            });
+            content.push({
+                layout: 'lightHorizontalLines',
+                margin: [0, 0, 0, 20],
+                table: {
+                    widths: ['30%', '70%'],
+                    headerRows: 0,
+                    body: filterRows
+                }
+            });
+        }
+        // 3. Add custom headers section if available (now on same page as metadata)
+        if (customHeaders && Object.keys(customHeaders).length > 0) {
+            content.push({ text: 'Additional Information', style: 'sectionTitle' });
+            const headerRows = [];
+            Object.entries(customHeaders).forEach(([key, value]) => {
+                headerRows.push([
+                    { text: key, bold: true, fontSize: 10 },
+                    { text: value, fontSize: 10 }
+                ]);
+            });
+            content.push({
+                layout: 'lightHorizontalLines',
+                margin: [0, 0, 0, 20],
+                table: {
+                    widths: ['30%', '70%'],
+                    headerRows: 0,
+                    body: headerRows
+                }
+            });
+        }
+        // NOW add the page break after all the metadata, filters and custom headers
+        content.push({ text: '', pageBreak: 'after' });
+        // 4. Data section title
+        content.push({ text: 'Data Records', style: 'sectionTitle' });
+        // Determine if landscape mode is needed based on the number of columns
+        const shouldUseLandscape = columnDefs.length > 6 ||
+            (columnDefs.length > 4 && data.some(row => {
+                return Object.values(row).some(val => typeof val === 'string' && val.length > 30);
+            }));
+        // 5. Main data table
+        const tableBody = [tableHeaders, ...tableRows];
+        // Add record count information at the top of the data section
+        content.push({
+            text: `Total Records: ${data.length}`,
+            alignment: 'right',
+            fontSize: 10,
+            bold: true,
+            margin: [0, 0, 0, 10]
+        });
+        // Calculate optimal column widths to fit the page
+        // Page width calculation (A4 is 595 points in portrait, 842 in landscape)
+        const pageWidth = shouldUseLandscape ? 842 : 595;
+        const margins = 40 * 2; // Left and right margins (40 each)
+        const availableWidth = pageWidth - margins - 20; // 20pt extra buffer
+        // Determine column width distribution based on content
+        let tableWidths;
+        if (columnDefs.length > 0) {
+            if (columnDefs.length <= 3) {
+                // For few columns, allocate even widths with star notation
+                tableWidths = Array(columnDefs.length).fill('*');
+            }
+            else {
+                // For many columns, allocate percentage widths based on column count
+                const colWidth = availableWidth / columnDefs.length;
+                // Calculate relative widths - analyze content in first few rows to make smart decisions
+                const widths = columnDefs.map((col, index) => {
+                    // Estimate content width based on column header and sample data
+                    const headerLength = col.text.length;
+                    // Sample some values from this column to estimate width needs
+                    const sampleRows = Math.min(tableRows.length, 10);
+                    let avgContentLength = 0;
+                    for (let i = 0; i < sampleRows; i++) {
+                        if (tableRows[i] && tableRows[i][index] && tableRows[i][index].text) {
+                            avgContentLength += String(tableRows[i][index].text).length;
+                        }
+                    }
+                    if (sampleRows > 0) {
+                        avgContentLength /= sampleRows;
+                    }
+                    // Cap width between minimum and maximum
+                    const contentBasedWidth = Math.max(headerLength, Math.min(avgContentLength, 40));
+                    return contentBasedWidth;
+                });
+                // Scale widths to fit total available width
+                const totalWidthUnits = widths.reduce((sum, w) => sum + w, 0);
+                tableWidths = widths.map(width => {
+                    const percentage = width / totalWidthUnits;
+                    return availableWidth * percentage;
+                });
+            }
+        }
+        else {
+            tableWidths = ['*']; // Default for empty tables
+        }
+        // Add the table with calculated widths
+        content.push({
+            table: {
+                headerRows: 1,
+                widths: tableWidths,
+                body: tableBody
+            },
+            layout: {
+                hLineWidth: (i, node) => {
+                    return (i === 0 || i === 1 || i === node.table.body.length) ? 1 : 0.5;
+                },
+                vLineWidth: (i) => 0.5,
+                hLineColor: (i) => i === 1 ? colors.primary : colors.mediumGray,
+                vLineColor: () => colors.mediumGray,
+                fillColor: (rowIndex, node, columnIndex) => {
+                    if (rowIndex === 0) {
+                        return colors.lightGray;
+                    }
+                    // For totals row
+                    if (totals && rowIndex === node.table.body.length - 1) {
+                        return colors.lightGray;
+                    }
+                    // Zebra striping
+                    return rowIndex % 2 === 0 ? '#F9F9F9' : null;
+                },
+                paddingLeft: () => 8,
+                paddingRight: () => 8,
+                paddingTop: () => 8,
+                paddingBottom: () => 8
+            }
+        });
+        // Create the document definition with the table layout
+        const docDefinition = {
+            pageSize: 'A4',
+            pageOrientation: shouldUseLandscape ? 'landscape' : 'portrait',
+            pageMargins: [40, 60, 40, 60],
+            content: content,
+            styles: styles,
+            defaultStyle: {
+                fontSize: 10,
+                color: colors.black
+            },
+            footer: function (currentPage, pageCount) {
+                return {
+                    columns: [
+                        {
+                            text: (metadata === null || metadata === void 0 ? void 0 : metadata.company) || '',
+                            alignment: 'left',
+                            style: 'footer'
+                        },
+                        {
+                            text: `Page ${currentPage.toString()} of ${pageCount}`,
+                            alignment: 'right',
+                            style: 'footer',
+                            margin: [0, 0, 40, 0]
+                        }
+                    ],
+                    margin: [40, 20]
+                };
+            },
+            info: {
+                title: (metadata === null || metadata === void 0 ? void 0 : metadata.title) || 'Export Document',
+                author: (metadata === null || metadata === void 0 ? void 0 : metadata.author) || 'System',
+                subject: (metadata === null || metadata === void 0 ? void 0 : metadata.subtitle) || '',
+                keywords: 'export, data',
+                creator: (metadata === null || metadata === void 0 ? void 0 : metadata.company) || 'Application',
+                producer: (metadata === null || metadata === void 0 ? void 0 : metadata.company) || 'Application'
+            }
+        };
+        // Create PDF
+        const pdfDoc = pdfMake.createPdf(docDefinition);
+        // Convert to buffer
+        return new Promise((resolve, reject) => {
+            pdfDoc.getBuffer((buffer) => {
+                resolve(buffer_1.Buffer.from(buffer));
+            });
+        });
+    }
+    /**
+     * Format a value for PDF cell display
+     */
+    formatPdfCellValue(value) {
+        if (value === null || value === undefined) {
+            return '';
+        }
+        // Format dates nicely
+        if (value instanceof Date) {
+            return value.toLocaleDateString() + ' ' +
+                value.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        }
+        // Format numbers with commas for thousands
+        if (typeof value === 'number') {
+            // Format currency with 2 decimal places if it looks like money
+            if (Number.isFinite(value) &&
+                (String(value).includes('.') || value > 1000 || value === 0)) {
+                return value.toLocaleString(undefined, {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                });
+            }
+            // Integer formatting
+            return value.toLocaleString();
+        }
+        // Format boolean values
+        if (typeof value === 'boolean') {
+            return value ? 'Yes' : 'No';
+        }
+        // Format objects (like JSON data)
+        if (typeof value === 'object') {
+            try {
+                return JSON.stringify(value);
+            }
+            catch (e) {
+                return '[Complex Object]';
+            }
+        }
+        return String(value);
+    }
+    /**
+     * Calculate totals for numeric columns
+     */
+    calculateColumnTotals(data) {
+        if (!data || data.length === 0)
+            return {};
+        const totals = {};
+        const numericColumns = new Set();
+        // First pass: identify numeric columns
+        data.forEach(row => {
+            Object.entries(row).forEach(([key, value]) => {
+                // Check if the value is a number
+                if (typeof value === 'number') {
+                    numericColumns.add(key);
+                }
+            });
+        });
+        // Second pass: calculate totals for numeric columns
+        numericColumns.forEach(column => {
+            totals[column] = data.reduce((sum, row) => {
+                const value = row[column];
+                return sum + (typeof value === 'number' ? value : 0);
+            }, 0);
+        });
+        return totals;
+    }
+    /**
+     * Import data into a repository from the provided content with enhanced features
+     * @param service - Base service to handle database operations
+     * @param content - File content as Buffer or string
+     * @param options - Import configuration options
+     */
+    async importData(service, content, options, userId) {
+        const startTime = Date.now();
+        this.logger.log(`Beginning import operation with format: ${options.format}`);
+        try {
+            // Set default options
+            const importOptions = Object.assign({ batchSize: 100, validate: true, useTransaction: true, updateExisting: false }, options);
+            // Parse the input data based on the format
+            const parsedData = await this.parseInput(content, importOptions.format);
+            if (!parsedData || !Array.isArray(parsedData) || parsedData.length === 0) {
+                throw new common_1.BadRequestException('No valid data found to import');
+            }
+            this.logger.log(`Parsed ${parsedData.length} records from ${importOptions.format} file`);
+            // Validate max records limit if specified
+            if (importOptions.maxRecords && parsedData.length > importOptions.maxRecords) {
+                throw new common_1.BadRequestException(`Import exceeds maximum record limit (${importOptions.maxRecords}). Found ${parsedData.length} records.`);
+            }
+            // Apply field mapping if specified
+            const mappedData = importOptions.fieldMap
+                ? this.mapFields(parsedData, importOptions.fieldMap, true)
+                : parsedData;
+            // Prepare result object with metadata
+            const result = {
+                totalRecords: mappedData.length,
+                successCount: 0,
+                errorCount: 0,
+                errors: [],
+                created: [],
+                updated: [],
+                skipped: [],
+                importTime: 0,
+                metadata: {
+                    format: importOptions.format,
+                    startTime: new Date().toISOString(),
+                    userId,
+                    batchSize: importOptions.batchSize,
+                    withValidation: importOptions.validate
+                }
+            };
+            // Get entity class from service
+            const entityClass = service.getRepository().target;
+            // Perform dry run if requested
+            if (importOptions.dryRun) {
+                this.logger.log('Performing dry run validation without saving data');
+                await this.validateImportBatch(service, mappedData, importOptions, result, entityClass);
+                result.importTime = Date.now() - startTime;
+                result.metadata.endTime = new Date().toISOString();
+                result.metadata.dryRun = true;
+                this.logger.log(`Dry run completed in ${result.importTime}ms. Errors: ${result.errorCount}`);
+                return result;
+            }
+            // Process the actual import
+            try {
+                // Process in transaction
+                await this.dataSource.transaction(async (transactionManager) => {
+                    await this.processImportBatch(service, mappedData, importOptions, result, entityClass, userId, transactionManager);
+                });
+            }
+            catch (error) {
+                this.logger.error(`Transaction error during import: ${error.message}`);
+                // Add transaction error to the results
+                result.errors.push({
+                    record: null,
+                    error: `Transaction failed: ${error.message}`,
+                    type: 'transaction'
+                });
+                result.errorCount++;
+            }
+            // Calculate total time and set metadata
+            result.importTime = Date.now() - startTime;
+            result.metadata.endTime = new Date().toISOString();
+            this.logger.log(`Import completed in ${result.importTime}ms. Created: ${result.created.length}, ` +
+                `Updated: ${result.updated.length}, Skipped: ${result.skipped.length}, Errors: ${result.errorCount}`);
+            return result;
+        }
+        catch (error) {
+            const errorTime = Date.now() - startTime;
+            this.logger.error(`Error during import process (${errorTime}ms): ${error.message}`, error.stack);
+            throw error;
+        }
+    }
+    /**
+     * Validate import data without committing changes
+     */
+    async validateImportBatch(service, records, options, result, entityClass) {
+        const batchSize = options.batchSize || 100;
+        // Process in batches to avoid memory issues with large imports
+        for (let i = 0; i < records.length; i += batchSize) {
+            const batch = records.slice(i, i + batchSize);
+            // For each record in the batch
+            for (let j = 0; j < batch.length; j++) {
+                const record = batch[j];
+                const rowNumber = i + j + 1; // 1-based row number for user-friendly messages
+                try {
+                    // Transform to entity instance for validation if dtoClass is provided
+                    let entityDto = record;
+                    // Determine if this is a new record or an update
+                    let existingRecord = null;
+                    if (options.identifierField && record[options.identifierField]) {
+                        const criteria = {
+                            [options.identifierField]: record[options.identifierField]
+                        };
+                        existingRecord = await service.findOneBy(criteria);
+                    }
+                    // Record the action that would be taken
+                    if (existingRecord) {
+                        result.updated.push(existingRecord.id);
+                        result.successCount++;
+                    }
+                    else if (!existingRecord) {
+                        // This would be a creation
+                        result.created.push(`row-${rowNumber}`);
+                        result.successCount++;
+                    }
+                    else {
+                        // Record exists but updateExisting is false
+                        const recordId = options.identifierField && record[options.identifierField]
+                            ? record[options.identifierField]
+                            : `row-${rowNumber}`;
+                        result.skipped.push(String(recordId));
+                    }
+                }
+                catch (error) {
+                    this.handleImportError(record, error, result, 'system', rowNumber);
+                }
+            }
+        }
+    }
+    /**
+     * Process a batch of records for import with performance optimizations
+     */
+    async processImportBatch(service, records, options, result, entityClass, userId, transactionManager) {
+        const batchSize = options.batchSize || 100;
+        const repo = transactionManager ? transactionManager.getRepository(entityClass) : service.getRepository();
+        // Track entities for potential bulk operations
+        const entitiesToCreate = [];
+        const entitiesToUpdate = [];
+        // Process in batches to avoid memory issues with large imports
+        for (let i = 0; i < records.length; i += batchSize) {
+            const batch = records.slice(i, i + batchSize);
+            this.logger.debug(`Processing batch ${Math.floor(i / batchSize) + 1}/${Math.ceil(records.length / batchSize)}`);
+            // First pass: validate all records in batch
+            let hasErrors = false;
+            for (let j = 0; j < batch.length; j++) {
+                const record = batch[j];
+                const rowNumber = i + j + 1;
+                try {
+                    // Transform and validate
+                    let entityDto = record;
+                    // Check if record exists
+                    if (options.identifierField && record[options.identifierField]) {
+                        const criteria = {
+                            [options.identifierField]: record[options.identifierField]
+                        };
+                        const existingRecord = await service.findOneBy(criteria);
+                        if (existingRecord) {
+                            result.skipped.push(String(record[options.identifierField]));
+                            continue;
+                        }
+                    }
+                }
+                catch (error) {
+                    this.handleImportError(record, error, result, 'system', rowNumber);
+                    hasErrors = true;
+                }
+            }
+            // If any validation errors in this batch, skip further processing
+            if (hasErrors) {
+                continue;
+            }
+            // Second pass: process records
+            for (let j = 0; j < batch.length; j++) {
+                const record = batch[j];
+                const rowNumber = i + j + 1;
+                try {
+                    // Transform to entity instance for validation if dtoClass is provided
+                    let entityDto = record;
+                    // Determine if this is a new record or an update
+                    let existingRecord = null;
+                    if (options.identifierField && record[options.identifierField]) {
+                        const criteria = {
+                            [options.identifierField]: record[options.identifierField]
+                        };
+                        existingRecord = await service.findOneBy(criteria);
+                    }
+                    // Create or update the record
+                    if (existingRecord) {
+                        // Add to batch update list
+                        entitiesToUpdate.push({
+                            id: existingRecord.id,
+                            entity: Object.assign(Object.assign({}, entityDto), { updatedBy: userId })
+                        });
+                    }
+                    else if (!existingRecord) {
+                        // Add to batch creation list
+                        entitiesToCreate.push(Object.assign(Object.assign({}, entityDto), { createdBy: userId }));
+                    }
+                    else {
+                        // Record exists but updateExisting is false
+                        if (options.identifierField && record[options.identifierField]) {
+                            result.skipped.push(String(record[options.identifierField]));
+                        }
+                        else {
+                            result.skipped.push(`row-${rowNumber}`);
+                        }
+                    }
+                }
+                catch (error) {
+                    this.handleImportError(record, error, result, 'system', rowNumber);
+                }
+            }
+            // Process bulk operations if collected
+            try {
+                // Bulk create
+                if (entitiesToCreate.length > 0) {
+                    const entities = repo.create(entitiesToCreate);
+                    const savedEntities = await repo.save(entities);
+                    savedEntities.forEach(entity => {
+                        result.created.push(entity.id);
+                        result.successCount++;
+                    });
+                    entitiesToCreate.length = 0; // Clear array
+                }
+                // Bulk update
+                for (const item of entitiesToUpdate) {
+                    await repo.update(item.id, item.entity);
+                    result.updated.push(item.id);
+                    result.successCount++;
+                }
+                entitiesToUpdate.length = 0; // Clear array
+            }
+            catch (bulkError) {
+                this.logger.error(`Error in bulk operation: ${bulkError.message}`, bulkError.stack);
+                // Add error for each record that was being processed
+                [...entitiesToCreate, ...entitiesToUpdate.map(item => item.entity)].forEach(entity => {
+                    result.errorCount++;
+                    result.errors.push({
+                        record: entity,
+                        error: `Bulk operation failed: ${bulkError.message}`,
+                        type: 'database'
+                    });
+                });
+                entitiesToCreate.length = 0;
+                entitiesToUpdate.length = 0;
+            }
+        }
+    }
+    /**
+     * Enhanced error handling with categorization and row numbers
+     */
+    handleImportError(record, error, result, errorType = 'system', rowNumber) {
+        result.errorCount++;
+        let errorMessage = 'Unknown error';
+        let errorDetails = [];
+        // Format error message based on error type
+        if (error instanceof Error) {
+            errorMessage = error.message;
+        }
+        else if (Array.isArray(error)) {
+            // Handle validation errors
+            errorMessage = 'Validation failed';
+            errorDetails = error.map((e) => {
+                const constraints = Object.values(e.constraints || {}).join('; ');
+                return `${e.property}: ${constraints}`;
+            });
+        }
+        else if (typeof error === 'string') {
+            errorMessage = error;
+        }
+        const rowPrefix = rowNumber ? `Row ${rowNumber}: ` : '';
+        result.errors.push({
+            record,
+            error: `${rowPrefix}${errorMessage}${errorDetails.length ? ': ' + errorDetails.join(', ') : ''}`,
+            type: errorType,
+            row: rowNumber
+        });
+    }
+    /**
+     * Parse input content based on format with enhanced error handling
+     */
+    async parseInput(content, format) {
+        try {
+            switch (format) {
+                case file_format_1.FileFormat.CSV:
+                    return this.parseCSV(content.toString());
+                case file_format_1.FileFormat.EXCEL:
+                    return this.parseExcel(content);
+                case file_format_1.FileFormat.JSON:
+                    return this.parseJSON(content.toString());
+                default:
+                    throw new common_1.BadRequestException(`Unsupported import format: ${format}`);
+            }
+        }
+        catch (error) {
+            this.logger.error(`Error parsing input: ${error.message}`, error.stack);
+            // Enhance error message with format-specific context
+            let enhancedMessage = `Failed to parse ${format} input: ${error.message}`;
+            if (format === file_format_1.FileFormat.CSV) {
+                enhancedMessage += '. Please check CSV formatting, including delimiters and quotes.';
+            }
+            else if (format === file_format_1.FileFormat.EXCEL) {
+                enhancedMessage += '. Please check that the Excel file is valid and not password-protected.';
+            }
+            else if (format === file_format_1.FileFormat.JSON) {
+                enhancedMessage += '. Please ensure valid JSON formatting.';
+            }
+            throw new common_1.BadRequestException(enhancedMessage);
+        }
+    }
+    /**
+     * Map fields using a field map configuration
+     */
+    mapFields(data, fieldMap, isImport = false) {
+        return data.map(item => {
+            const result = {};
+            if (isImport) {
+                // For import: map from external names to internal names
+                Object.keys(item).forEach(externalField => {
+                    var _a;
+                    // Find the internal field name that maps to this external field
+                    const internalField = (_a = Object.entries(fieldMap)
+                        .find(([_, ext]) => ext === externalField)) === null || _a === void 0 ? void 0 : _a[0];
+                    if (internalField) {
+                        result[internalField] = item[externalField];
+                    }
+                    else if (!fieldMap || Object.keys(fieldMap).length === 0) {
+                        // If no mapping specified, keep original fields
+                        result[externalField] = item[externalField];
+                    }
+                });
+            }
+            else {
+                // For export: map from internal names to external names
+                Object.keys(fieldMap).forEach(internalField => {
+                    if (item[internalField] !== undefined) {
+                        const externalField = fieldMap[internalField];
+                        result[externalField] = item[internalField];
+                    }
+                });
+                // Include fields not in the mapping if no mapping specified
+                if (!fieldMap || Object.keys(fieldMap).length === 0) {
+                    Object.assign(result, item);
+                }
+            }
+            return result;
+        });
+    }
+    /**
+     * Parse CSV content
+     */
+    parseCSV(content) {
+        const result = Papa.parse(content, {
+            header: true,
+            skipEmptyLines: true,
+            dynamicTyping: true
+        });
+        if (result.errors && result.errors.length > 0) {
+            const errorMsg = result.errors.map(e => e.message).join('; ');
+            throw new common_1.BadRequestException(`CSV parsing errors: ${errorMsg}`);
+        }
+        return result.data;
+    }
+    /**
+     * Parse Excel content
+     */
+    parseExcel(content) {
+        const workbook = XLSX.read(content, { type: 'buffer' });
+        const sheetName = workbook.SheetNames[0];
+        const sheet = workbook.Sheets[sheetName];
+        return XLSX.utils.sheet_to_json(sheet, { defval: null });
+    }
+    /**
+     * Parse JSON content
+     */
+    parseJSON(content) {
+        const parsed = JSON.parse(content);
+        // Handle both array and object formats
+        if (Array.isArray(parsed)) {
+            return parsed;
+        }
+        else if (typeof parsed === 'object' && parsed !== null) {
+            // Some APIs return { data: [...] }
+            if (parsed.data && Array.isArray(parsed.data)) {
+                return parsed.data;
+            }
+            // Single object case
+            return [parsed];
+        }
+        throw new common_1.BadRequestException('Invalid JSON format: must be an array or object with data property');
+    }
+};
+exports.ImportExportService = ImportExportService;
+exports.ImportExportService = ImportExportService = ImportExportService_1 = __decorate([
+    (0, common_1.Injectable)(),
+    __param(0, (0, typeorm_1.InjectDataSource)()),
+    __metadata("design:paramtypes", [typeof (_a = typeof typeorm_2.DataSource !== "undefined" && typeorm_2.DataSource) === "function" ? _a : Object])
+], ImportExportService);
 
 
 /***/ }),
@@ -30720,10 +32756,10 @@ let SystemLogger = class SystemLogger extends common_1.ConsoleLogger {
         }
     }
     debug(message, context) {
-        // if (!this.shouldIgnoreLog(message, context)) {
-        //     super.debug(message, context);
-        //     this.saveLog(message, context, LogLevel.DEBUG);
-        // }
+        if (!this.shouldIgnoreLog(message, context)) {
+            super.debug(message, context);
+            this.saveLog(message, context, log_level_enum_1.LogLevel.DEBUG);
+        }
     }
     verbose(message, context) {
         if (!this.shouldIgnoreLog(message, context)) {
@@ -33903,16 +35939,15 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var _a, _b, _c, _d;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Cutoff = void 0;
+const cutoff_status_enum_1 = __webpack_require__(/*! @/common/enums/payroll/cutoff-status.enum */ "./src/common/enums/payroll/cutoff-status.enum.ts");
 const cutoff_type_enum_1 = __webpack_require__(/*! @/common/enums/payroll/cutoff-type.enum */ "./src/common/enums/payroll/cutoff-type.enum.ts");
 const base_entity_1 = __webpack_require__(/*! @/database/entities/base.entity */ "./src/database/entities/base.entity.ts");
 const attendance_entity_1 = __webpack_require__(/*! @/modules/attendance-management/entities/attendance.entity */ "./src/modules/attendance-management/entities/attendance.entity.ts");
 const final_work_hour_entity_1 = __webpack_require__(/*! @/modules/attendance-management/final-work-hours/entities/final-work-hour.entity */ "./src/modules/attendance-management/final-work-hours/entities/final-work-hour.entity.ts");
 const work_time_request_entity_1 = __webpack_require__(/*! @/modules/attendance-management/work-time-requests/entities/work-time-request.entity */ "./src/modules/attendance-management/work-time-requests/entities/work-time-request.entity.ts");
-const shift_entity_1 = __webpack_require__(/*! @/modules/shift-management/entities/shift.entity */ "./src/modules/shift-management/entities/shift.entity.ts");
 const schedule_entity_1 = __webpack_require__(/*! @/modules/shift-management/schedules/entities/schedule.entity */ "./src/modules/shift-management/schedules/entities/schedule.entity.ts");
 const typeorm_1 = __webpack_require__(/*! typeorm */ "typeorm");
 const payroll_entity_1 = __webpack_require__(/*! ../../entities/payroll.entity */ "./src/modules/payroll-management/entities/payroll.entity.ts");
-const cutoff_status_enum_1 = __webpack_require__(/*! @/common/enums/payroll/cutoff-status.enum */ "./src/common/enums/payroll/cutoff-status.enum.ts");
 let Cutoff = class Cutoff extends base_entity_1.BaseEntity {
 };
 exports.Cutoff = Cutoff;
@@ -33957,15 +35992,11 @@ __decorate([
     __metadata("design:type", Array)
 ], Cutoff.prototype, "finalWorkHours", void 0);
 __decorate([
-    (0, typeorm_1.ManyToMany)(() => shift_entity_1.Shift, (shift) => shift.cutoffs, { nullable: true }),
-    __metadata("design:type", Array)
-], Cutoff.prototype, "shifts", void 0);
-__decorate([
     (0, typeorm_1.OneToMany)(() => attendance_entity_1.Attendance, (attendance) => attendance.cutoff, { nullable: true }),
     __metadata("design:type", Array)
 ], Cutoff.prototype, "attendances", void 0);
 __decorate([
-    (0, typeorm_1.OneToMany)(() => work_time_request_entity_1.WorkTimeRequest, (workTimeRequest) => workTimeRequest.cutoff, { nullable: true }),
+    (0, typeorm_1.OneToMany)(() => work_time_request_entity_1.WorkTimeRequest, (workTimeRequest) => workTimeRequest.cutoff, { nullable: true, onDelete: 'SET NULL' }),
     __metadata("design:type", Array)
 ], Cutoff.prototype, "workTimeRequests", void 0);
 exports.Cutoff = Cutoff = __decorate([
@@ -35365,6 +37396,16 @@ __decorate([
 ], PayrollItemTypeDto.prototype, "includeInPayrollItemsProcessing", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({
+        description: 'Whether to include in base compensation',
+        default: false,
+        example: false
+    }),
+    (0, class_validator_1.IsBoolean)(),
+    (0, class_validator_1.IsNotEmpty)(),
+    __metadata("design:type", Boolean)
+], PayrollItemTypeDto.prototype, "includeInBaseCompensation", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
         description: 'Whether the payroll item is taxable',
         default: false,
         example: false
@@ -35588,6 +37629,10 @@ __decorate([
     (0, typeorm_1.Column)({ default: true }),
     __metadata("design:type", Boolean)
 ], PayrollItemType.prototype, "includeInPayrollItemsProcessing", void 0);
+__decorate([
+    (0, typeorm_1.Column)({ default: false }),
+    __metadata("design:type", Boolean)
+], PayrollItemType.prototype, "includeInBaseCompensation", void 0);
 __decorate([
     (0, typeorm_1.Column)({ default: false }),
     __metadata("design:type", Boolean)
@@ -39995,7 +42040,6 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Shift = void 0;
 const base_entity_1 = __webpack_require__(/*! @/database/entities/base.entity */ "./src/database/entities/base.entity.ts");
-const cutoff_entity_1 = __webpack_require__(/*! @/modules/payroll-management/cutoffs/entities/cutoff.entity */ "./src/modules/payroll-management/cutoffs/entities/cutoff.entity.ts");
 const typeorm_1 = __webpack_require__(/*! typeorm */ "typeorm");
 const group_entity_1 = __webpack_require__(/*! ../groups/entities/group.entity */ "./src/modules/shift-management/groups/entities/group.entity.ts");
 const schedule_entity_1 = __webpack_require__(/*! ../schedules/entities/schedule.entity */ "./src/modules/shift-management/schedules/entities/schedule.entity.ts");
@@ -40064,15 +42108,6 @@ __decorate([
     }),
     __metadata("design:type", Array)
 ], Shift.prototype, "days", void 0);
-__decorate([
-    (0, typeorm_1.ManyToMany)(() => cutoff_entity_1.Cutoff, (cutoff) => cutoff.shifts, { nullable: true, cascade: true }),
-    (0, typeorm_1.JoinTable)({
-        name: 'shift_cutoffs',
-        joinColumn: { name: 'shift_id', referencedColumnName: 'id' },
-        inverseJoinColumn: { name: 'cutoff_id', referencedColumnName: 'id' },
-    }),
-    __metadata("design:type", Array)
-], Shift.prototype, "cutoffs", void 0);
 __decorate([
     (0, typeorm_1.OneToMany)(() => group_entity_1.Group, (group) => group.shift, { nullable: true }),
     __metadata("design:type", Array)
@@ -40329,6 +42364,8 @@ let GroupsService = GroupsService_1 = class GroupsService extends base_service_1
         const employees = await this.employeesService.getEmployeesByIds(employeeRefsIds);
         // Create the group first (without employees)
         const group = await super.create(createDto, createdBy);
+        // Update the employee records to associate them with the new group
+        await this.employeesService.getRepository().update({ id: (0, typeorm_2.In)(employeeRefsIds) }, { group: group });
         // Emit event for employee assignment to group
         this.eventEmitter.emit(employee_assigned_event_1.GROUP_EVENTS.EMPLOYEE_ASSIGNED, new employee_assigned_event_1.EmployeeAssignedEvent(group, employees, createdBy));
         return group;
@@ -40351,6 +42388,8 @@ let GroupsService = GroupsService_1 = class GroupsService extends base_service_1
             const removedEmployees = await this.employeesService.getRepository().findBy({
                 id: (0, typeorm_2.In)(employeesToRemove)
             });
+            // Update the employee records to remove group association
+            await this.employeesService.getRepository().update({ id: (0, typeorm_2.In)(employeesToRemove) }, { group: undefined });
             this.eventEmitter.emit(employee_assigned_event_1.GROUP_EVENTS.EMPLOYEE_REMOVED, new employee_assigned_event_1.EmployeeAssignedEvent(group, removedEmployees, updatedBy));
         }
         // Add new employees to the group
@@ -40358,6 +42397,7 @@ let GroupsService = GroupsService_1 = class GroupsService extends base_service_1
             const employees = await this.employeesService.getRepository().findBy({
                 id: (0, typeorm_2.In)(employeesToAdd)
             });
+            await this.employeesService.getRepository().update({ id: (0, typeorm_2.In)(employeesToAdd) }, { group: group });
             this.eventEmitter.emit(employee_assigned_event_1.GROUP_EVENTS.EMPLOYEE_ASSIGNED, new employee_assigned_event_1.EmployeeAssignedEvent(group, employees, updatedBy));
         }
         return group;
@@ -40690,6 +42730,55 @@ exports.HolidaysService = HolidaysService = __decorate([
 
 /***/ }),
 
+/***/ "./src/modules/shift-management/schedules/dtos/schedule-generation.dto.ts":
+/*!********************************************************************************!*\
+  !*** ./src/modules/shift-management/schedules/dtos/schedule-generation.dto.ts ***!
+  \********************************************************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+"use strict";
+
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.ScheduleGenerationDto = void 0;
+const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
+const class_validator_1 = __webpack_require__(/*! class-validator */ "class-validator");
+class ScheduleGenerationDto {
+}
+exports.ScheduleGenerationDto = ScheduleGenerationDto;
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'List of employee IDs to generate schedules for',
+        type: [String],
+        example: ['emp123', 'emp456']
+    }),
+    (0, class_validator_1.IsArray)(),
+    (0, class_validator_1.ArrayNotEmpty)(),
+    (0, class_validator_1.IsString)({ each: true }),
+    __metadata("design:type", Array)
+], ScheduleGenerationDto.prototype, "employeeIds", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Cutoff ID for which to generate schedules',
+        type: String,
+        example: 'cutoff123'
+    }),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsNotEmpty)(),
+    __metadata("design:type", String)
+], ScheduleGenerationDto.prototype, "cutoffId", void 0);
+
+
+/***/ }),
+
 /***/ "./src/modules/shift-management/schedules/dtos/schedule.dto.ts":
 /*!*********************************************************************!*\
   !*** ./src/modules/shift-management/schedules/dtos/schedule.dto.ts ***!
@@ -40969,7 +43058,7 @@ __decorate([
     __metadata("design:type", Array)
 ], Schedule.prototype, "scheduleChangeRequests", void 0);
 __decorate([
-    (0, typeorm_1.ManyToOne)(() => cutoff_entity_1.Cutoff, (cutoff) => cutoff.schedules, { eager: true }),
+    (0, typeorm_1.ManyToOne)(() => cutoff_entity_1.Cutoff, (cutoff) => cutoff.schedules, { eager: true, nullable: true }),
     (0, typeorm_1.JoinColumn)({ name: 'cutoffId' }),
     __metadata("design:type", typeof (_g = typeof cutoff_entity_1.Cutoff !== "undefined" && cutoff_entity_1.Cutoff) === "function" ? _g : Object)
 ], Schedule.prototype, "cutoff", void 0);
@@ -41835,13 +43924,35 @@ exports.ScheduleChangeResponsesService = ScheduleChangeResponsesService = __deco
 /*!************************************************************************!*\
   !*** ./src/modules/shift-management/schedules/schedules.controller.ts ***!
   \************************************************************************/
-/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 "use strict";
 
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __metadata = (this && this.__metadata) || function (k, v) {
+    if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+};
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
+var _a, _b;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.SchedulesController = void 0;
+const authorize_decorator_1 = __webpack_require__(/*! @/common/decorators/authorize.decorator */ "./src/common/decorators/authorize.decorator.ts");
+const current_user_decorator_1 = __webpack_require__(/*! @/common/decorators/current-user.decorator */ "./src/common/decorators/current-user.decorator.ts");
+const generic_api_responses_decorator_1 = __webpack_require__(/*! @/common/decorators/generic-api-responses.decorator */ "./src/common/decorators/generic-api-responses.decorator.ts");
+const generalresponse_dto_1 = __webpack_require__(/*! @/common/dtos/generalresponse.dto */ "./src/common/dtos/generalresponse.dto.ts");
+const action_enum_1 = __webpack_require__(/*! @/common/enums/action.enum */ "./src/common/enums/action.enum.ts");
 const create_controller_factory_1 = __webpack_require__(/*! @/common/factories/create-controller.factory */ "./src/common/factories/create-controller.factory.ts");
+const utility_helper_1 = __webpack_require__(/*! @/common/helpers/utility.helper */ "./src/common/helpers/utility.helper.ts");
+const common_1 = __webpack_require__(/*! @nestjs/common */ "@nestjs/common");
+const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
+const schedule_generation_dto_1 = __webpack_require__(/*! ./dtos/schedule-generation.dto */ "./src/modules/shift-management/schedules/dtos/schedule-generation.dto.ts");
 const schedule_dto_1 = __webpack_require__(/*! ./dtos/schedule.dto */ "./src/modules/shift-management/schedules/dtos/schedule.dto.ts");
 const schedule_entity_1 = __webpack_require__(/*! ./entities/schedule.entity */ "./src/modules/shift-management/schedules/entities/schedule.entity.ts");
 const schedules_service_1 = __webpack_require__(/*! ./schedules.service */ "./src/modules/shift-management/schedules/schedules.service.ts");
@@ -41855,11 +43966,39 @@ class SchedulesController extends (0, create_controller_factory_1.createControll
     async findOne(fieldsString, relations, select) {
         return super.findOne(fieldsString, relations, select);
     }
-    async delete(id) {
-        return super.delete(id);
+    async softDelete(id, deletedBy) {
+        return super.softDelete(id, deletedBy);
+    }
+    async generateSchedules(dto, userId) {
+        const generatedSchedules = await this.baseService.generateSchedules(dto, userId);
+        return utility_helper_1.UtilityHelper.createSuccessResponse('Schedule Generation Successful', `Successfully generated ${generatedSchedules.length} schedules for the specified employees`);
     }
 }
 exports.SchedulesController = SchedulesController;
+__decorate([
+    (0, common_1.Post)('generate'),
+    (0, authorize_decorator_1.Authorize)({ endpointType: action_enum_1.Action.CREATE }),
+    (0, swagger_1.ApiOperation)({
+        summary: 'Generate schedules for employees',
+        description: 'Generates schedules for specified employees based on the provided criteria, including employee IDs and cutoff ID.'
+    }),
+    (0, swagger_1.ApiBody)({
+        type: schedule_generation_dto_1.ScheduleGenerationDto,
+        required: true,
+        description: 'The criteria for generating schedules, including employee IDs, and cutoff ID.'
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: common_1.HttpStatus.OK,
+        description: 'Schedules generated successfully',
+        type: generalresponse_dto_1.GeneralResponseDto
+    }),
+    (0, generic_api_responses_decorator_1.ApiGenericResponses)(),
+    __param(0, (0, common_1.Body)()),
+    __param(1, (0, current_user_decorator_1.CurrentUser)('sub')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [typeof (_a = typeof schedule_generation_dto_1.ScheduleGenerationDto !== "undefined" && schedule_generation_dto_1.ScheduleGenerationDto) === "function" ? _a : Object, String]),
+    __metadata("design:returntype", typeof (_b = typeof Promise !== "undefined" && Promise) === "function" ? _b : Object)
+], SchedulesController.prototype, "generateSchedules", null);
 
 
 /***/ }),
@@ -42023,7 +44162,8 @@ let SchedulesService = class SchedulesService extends base_service_1.BaseService
         // Get the group with shift
         const group = await this.groupsService.findOneByOrFail({ id: groupId }, { relations: { shift: true } });
         if (!group.shift) {
-            throw new common_1.NotFoundException(`${group.name} has no shift assigned`);
+            this.logger.warn(`Group ${groupId} has no assigned shift, skipping schedule generation`);
+            return [];
         }
         // Get cutoff
         const cutoff = await this.cutoffsService.findOneByOrFail({ id: cutoffId });
@@ -42039,6 +44179,56 @@ let SchedulesService = class SchedulesService extends base_service_1.BaseService
         }
         // Save all generated schedules
         return this.schedulesRepository.save(generatedSchedules);
+    }
+    async generateSchedules(dto, userId) {
+        this.logger.log(`Generating schedules for ${dto.employeeIds.length} employees`);
+        // Get employees with their groups and shifts
+        const employees = await this.employeesService.getRepository().find({
+            where: {
+                id: (0, typeorm_2.In)(dto.employeeIds),
+            },
+            relations: {
+                group: { shift: true }, // Include group with its shift
+            },
+        });
+        if (employees.length === 0) {
+            throw new common_1.NotFoundException(`No employees found for the provided IDs: ${dto.employeeIds.join(', ')}`);
+        }
+        // Group employees by group ID
+        const employeesByGroupId = new Map();
+        for (const employee of employees) {
+            if (!employee.group) {
+                this.logger.warn(`Employee ${employee.id} has no assigned group, skipping schedule generation`);
+                continue;
+            }
+            const groupId = employee.group.id;
+            if (!employeesByGroupId.has(groupId)) {
+                employeesByGroupId.set(groupId, []);
+            }
+            employeesByGroupId.get(groupId).push(employee.id);
+        }
+        if (employeesByGroupId.size === 0) {
+            this.logger.warn(`No employees found with assigned groups, skipping schedule generation`);
+            throw new common_1.NotFoundException(`No employees found with assigned groups for the provided IDs: ${dto.employeeIds.join(', ')}`);
+        }
+        // Generate schedules for each group
+        const allGeneratedSchedules = [];
+        for (const [groupId, groupEmployeeIds] of employeesByGroupId.entries()) {
+            try {
+                const groupSchedules = await this.generateSchedulesForEmployees(groupEmployeeIds, groupId, dto.cutoffId);
+                allGeneratedSchedules.push(...groupSchedules);
+                this.logger.log(`Successfully generated ${groupSchedules.length} schedules for group ${groupId}`);
+            }
+            catch (error) {
+                this.logger.error(`Failed to generate schedules for group ${groupId}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+            }
+        }
+        this.logger.log(`Total schedules generated: ${allGeneratedSchedules.length}`);
+        if (allGeneratedSchedules.length === 0) {
+            throw new common_1.NotFoundException(`No schedules were generated for the provided employee IDs: ${dto.employeeIds.join(', ')}`);
+        }
+        // Log total schedules generated
+        return allGeneratedSchedules;
     }
     async generateSchedulesForEmployee(employee, shift, cutoff) {
         const { startDate, endDate } = cutoff;
@@ -42328,7 +44518,6 @@ let DefaultShiftsSeeder = DefaultShiftsSeeder_1 = class DefaultShiftsSeeder {
             defaultBreakTime: 60,
             defaultDuration: 8,
             days: dayShifts,
-            cutoffs: [cutoffRef]
         });
         this.logger.log(`Created day shift: ${dayShift.id}`);
         // Create default group for day shift
@@ -42359,7 +44548,6 @@ let DefaultShiftsSeeder = DefaultShiftsSeeder_1 = class DefaultShiftsSeeder {
             defaultBreakTime: 45,
             defaultDuration: 7.25,
             days: nightShiftDays,
-            cutoffs: [cutoffRef]
         });
         this.logger.log(`Created night shift: ${nightShift.id}`);
         // Create night shift group
@@ -42390,7 +44578,6 @@ let DefaultShiftsSeeder = DefaultShiftsSeeder_1 = class DefaultShiftsSeeder {
             defaultBreakTime: 30,
             defaultDuration: 7.5,
             days: graveyardShiftDays,
-            cutoffs: [cutoffRef]
         });
         this.logger.log(`Created graveyard shift: ${graveyardShift.id}`);
         // Create graveyard shift group
@@ -42421,7 +44608,6 @@ let DefaultShiftsSeeder = DefaultShiftsSeeder_1 = class DefaultShiftsSeeder {
             defaultBreakTime: 30,
             defaultDuration: 5.5,
             days: weekendShiftDays,
-            cutoffs: [cutoffRef]
         });
         this.logger.log(`Created weekend shift: ${weekendShift.id}`);
         // Create weekend shift group
@@ -42460,7 +44646,6 @@ let DefaultShiftsSeeder = DefaultShiftsSeeder_1 = class DefaultShiftsSeeder {
             defaultBreakTime: 45,
             defaultDuration: 7.25,
             days: flexShiftDays,
-            cutoffs: [cutoffRef]
         });
         this.logger.log(`Created flexible shift: ${flexShift.id}`);
         // Create flexible shift group
@@ -42857,6 +45042,17 @@ module.exports = require("bcryptjs");
 
 /***/ }),
 
+/***/ "buffer":
+/*!*************************!*\
+  !*** external "buffer" ***!
+  \*************************/
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("buffer");
+
+/***/ }),
+
 /***/ "bull":
 /*!***********************!*\
   !*** external "bull" ***!
@@ -43033,6 +45229,17 @@ module.exports = require("nodemailer");
 
 /***/ }),
 
+/***/ "papaparse":
+/*!****************************!*\
+  !*** external "papaparse" ***!
+  \****************************/
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("papaparse");
+
+/***/ }),
+
 /***/ "passport-google-oauth20":
 /*!******************************************!*\
   !*** external "passport-google-oauth20" ***!
@@ -43063,6 +45270,28 @@ module.exports = require("passport-jwt");
 
 "use strict";
 module.exports = require("pdfkit");
+
+/***/ }),
+
+/***/ "pdfmake/build/pdfmake":
+/*!****************************************!*\
+  !*** external "pdfmake/build/pdfmake" ***!
+  \****************************************/
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("pdfmake/build/pdfmake");
+
+/***/ }),
+
+/***/ "pdfmake/build/vfs_fonts":
+/*!******************************************!*\
+  !*** external "pdfmake/build/vfs_fonts" ***!
+  \******************************************/
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("pdfmake/build/vfs_fonts");
 
 /***/ }),
 
@@ -43162,6 +45391,28 @@ module.exports = require("uuid");
 
 "use strict";
 module.exports = require("web-push");
+
+/***/ }),
+
+/***/ "xlsx":
+/*!***********************!*\
+  !*** external "xlsx" ***!
+  \***********************/
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("xlsx");
+
+/***/ }),
+
+/***/ "xml2js":
+/*!*************************!*\
+  !*** external "xml2js" ***!
+  \*************************/
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("xml2js");
 
 /***/ }),
 

@@ -1,6 +1,6 @@
 import dataSource from '@/database/data-source';
 import { BadRequestException, ConflictException, HttpStatus, Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
-import { DeepPartial, FindOneOptions, FindOptionsOrder, FindOptionsRelationByString, FindOptionsRelations, FindOptionsSelect, FindOptionsSelectByString, FindOptionsWhere, In, Repository, SelectQueryBuilder } from 'typeorm';
+import { DeepPartial, FindManyOptions, FindOneOptions, FindOptionsOrder, FindOptionsRelationByString, FindOptionsRelations, FindOptionsSelect, FindOptionsSelectByString, FindOptionsWhere, In, Repository, SelectQueryBuilder } from 'typeorm';
 import { BaseEntity } from '../../database/entities/base.entity';
 import { UsersService } from '../../modules/account-management/users/users.service';
 import { GeneralResponseDto } from '../dtos/generalresponse.dto';
@@ -956,6 +956,34 @@ export abstract class BaseService<T extends BaseEntity<T>> {
     };
     
     return await this.repository.findOne(findOptions);
+  }
+
+  async findManyBy(
+    criteria: FindOptionsWhere<T> | FindOptionsWhere<T>[],
+    options?: {
+      relations?: FindOptionsRelations<T>;
+      select?: FindOptionsSelect<T>;
+      order?: FindOptionsOrder<T>;
+      withDeleted?: boolean;
+      cache?: boolean | number | { id: any; milliseconds: number };
+      loadEagerRelations?: boolean;
+      transaction?: boolean;
+    }
+  ): Promise<T[]> {
+    const findOptions: FindManyOptions<T> = {
+      where: Array.isArray(criteria) 
+        ? criteria.map(c => ({
+            ...(options?.withDeleted ? {} : { isDeleted: false }),
+            ...c
+          }))
+        : {
+            ...(options?.withDeleted ? {} : { isDeleted: false }),
+            ...criteria
+          },
+      ...options
+    };
+    
+    return await this.repository.find(findOptions);
   }
 
   async findOneByOrFail(criteria: Partial<T>,

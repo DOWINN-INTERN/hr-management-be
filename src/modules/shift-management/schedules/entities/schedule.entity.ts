@@ -58,7 +58,7 @@ export class Schedule extends BaseEntity<Schedule> {
     @ManyToMany(() => ScheduleChangeRequest, (scheduleChangeRequest: ScheduleChangeRequest) => scheduleChangeRequest.originalSchedules, { nullable: true })
     scheduleChangeRequests?: ScheduleChangeRequest[];
 
-    @ManyToOne(() => Cutoff, (cutoff: Cutoff) => cutoff.schedules, { eager: true })
+    @ManyToOne(() => Cutoff, (cutoff: Cutoff) => cutoff.schedules, { eager: true, nullable: true })
     @JoinColumn({ name: 'cutoffId' })
     cutoff!: Cutoff;
 }

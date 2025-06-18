@@ -3,6 +3,7 @@ import { Document } from '@/modules/documents/entities/document.entity';
 import { Employee } from '@/modules/employee-management/entities/employee.entity';
 import { ActivityLog } from '@/modules/logs/activity-logs/entities/activity-log.entity';
 import { Notification } from '@/modules/notifications/entities/notification.entity';
+import { Exclude } from 'class-transformer';
 import { AfterLoad, Column, Entity, OneToMany, OneToOne } from 'typeorm';
 import { BaseEntity } from '../../../../database/entities/base.entity';
 import { Profile } from '../../profiles/entities/profile.entity';
@@ -13,6 +14,7 @@ export class User extends BaseEntity<User> {
   @Column({ unique: true })
   email!: string;
 
+  @Exclude()
   @Column()
   password!: string;
 
@@ -49,9 +51,11 @@ export class User extends BaseEntity<User> {
   @Column({ type: 'timestamp', nullable: true })
   lockOutEnd?: Date;
 
+  @Exclude()
   @Column({ nullable: true })
   verificationToken?: string;
 
+  @Exclude()
   @Column({ nullable: true })
   verificationTokenExpires?: Date;
 

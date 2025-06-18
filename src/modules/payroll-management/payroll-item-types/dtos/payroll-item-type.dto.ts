@@ -194,6 +194,15 @@ export class PayrollItemTypeDto extends PartialType(BaseDto) {
   includeInPayrollItemsProcessing!: boolean;
 
   @ApiProperty({
+    description: 'Whether to include in base compensation',
+    default: false,
+    example: false
+  })
+  @IsBoolean()
+  @IsNotEmpty()
+  includeInBaseCompensation!: boolean;
+
+  @ApiProperty({
     description: 'Whether the payroll item is taxable',
     default: false,
     example: false

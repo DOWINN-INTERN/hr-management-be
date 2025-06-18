@@ -52,6 +52,6 @@ export class BiometricDevice extends BaseEntity<BiometricDevice> {
     @Column({ type: 'timestamp', nullable: true })
     lastSync?: Date;
 
-    @OneToMany(() => AttendancePunch, (attendancePunch: AttendancePunch) => attendancePunch.biometricDevice, { nullable: true })
+    @OneToMany(() => AttendancePunch, (attendancePunch: AttendancePunch) => attendancePunch.biometricDevice, { nullable: true, onDelete: 'SET NULL' })
     attendancePunches?: AttendancePunch[];
 }

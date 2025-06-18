@@ -81,7 +81,6 @@ export class DefaultShiftsSeeder implements OnModuleInit {
       defaultBreakTime: 60,
       defaultDuration: 8,
       days: dayShifts,
-      cutoffs: [cutoffRef]
     });
     
     this.logger.log(`Created day shift: ${dayShift.id}`);
@@ -118,7 +117,6 @@ export class DefaultShiftsSeeder implements OnModuleInit {
       defaultBreakTime: 45,
       defaultDuration: 7.25,
       days: nightShiftDays,
-      cutoffs: [cutoffRef]
     });
     
     this.logger.log(`Created night shift: ${nightShift.id}`);
@@ -155,7 +153,6 @@ export class DefaultShiftsSeeder implements OnModuleInit {
       defaultBreakTime: 30,
       defaultDuration: 7.5,
       days: graveyardShiftDays,
-      cutoffs: [cutoffRef]
     });
     
     this.logger.log(`Created graveyard shift: ${graveyardShift.id}`);
@@ -192,7 +189,6 @@ export class DefaultShiftsSeeder implements OnModuleInit {
       defaultBreakTime: 30,
       defaultDuration: 5.5,
       days: weekendShiftDays,
-      cutoffs: [cutoffRef]
     });
     
     this.logger.log(`Created weekend shift: ${weekendShift.id}`);
@@ -238,7 +234,6 @@ export class DefaultShiftsSeeder implements OnModuleInit {
       defaultBreakTime: 45,
       defaultDuration: 7.25,
       days: flexShiftDays,
-      cutoffs: [cutoffRef]
     });
     
     this.logger.log(`Created flexible shift: ${flexShift.id}`);

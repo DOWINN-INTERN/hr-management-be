@@ -27,7 +27,7 @@ export interface TestScenario {
 @Injectable()
 export class AttendanceDataSeederService implements OnModuleInit {
   private readonly logger = new Logger(AttendanceDataSeederService.name);
-  private readonly EMPLOYEE_ID = 'fdddac4f-c6aa-485b-a8d5-9f44502f8dd9';
+  private readonly EMPLOYEE_ID = '4b752aed-c6ca-4085-9195-c50b69d0a787';
   private readonly EMPLOYEE_NUMBER = 1;
   private readonly DEFAULT_DEVICE_ID = 'DEVICE001';
 

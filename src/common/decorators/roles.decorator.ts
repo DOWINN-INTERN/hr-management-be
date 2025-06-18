@@ -1,5 +1,7 @@
 import { SetMetadata } from '@nestjs/common';
 export const ROLES_KEY = 'roles';
+export const ONLY_ALLOW_ROLES_KEY = 'onlyAllowRoles';
+export const ALLOW_EMPLOYEE_KEY = 'allowEmployee';
 /**
  * Decorator that assigns roles to a route or controller.
  * This metadata can be used with a guard to control access to specific endpoints.
@@ -26,3 +28,5 @@ export const ROLES_KEY = 'roles';
  * ```
  */
 export const Roles = (roles: string[] = []) => SetMetadata(ROLES_KEY, roles);
+export const OnlyAllowRoles = (onlyAllowRoles: boolean = true) => SetMetadata(ONLY_ALLOW_ROLES_KEY, onlyAllowRoles);
+export const AllowEmployee = (allowEmployee: boolean = false) => SetMetadata(ALLOW_EMPLOYEE_KEY, allowEmployee);
