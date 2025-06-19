@@ -62,7 +62,9 @@ export abstract class BaseService<T extends BaseEntity<T>> {
       // Debug the incoming filter
       // console.log('Raw filter from client:', JSON.stringify(paginationDto.filter));
       // console.log('Converted findOptions where:', JSON.stringify(findOptions.where));
-      
+
+      this.logger.log(`Finding all ${this.entityName} with options: ${JSON.stringify(findOptions)}`);
+
       // this.logger.debug(`Processing query with filters: ${JSON.stringify(findOptions.where)}`);
       
       // For complex filtering that requires JOIN operations or nested relations
@@ -401,19 +403,29 @@ export abstract class BaseService<T extends BaseEntity<T>> {
         }
 
         // Handle field selection with relations
-        if (findOptions.select && Array.isArray(findOptions.select) && findOptions.select.length > 0) {
-          // Clear any previous automatic selections
+        if (findOptions.select) {
+          // Clear any previous selections first
           queryBuilder.select([]);
           
           // Always include primary key for relational integrity
           queryBuilder.addSelect(`${alias}.id`);
           
-          // Add requested fields for the main entity
-          findOptions.select.forEach(field => {
-            if (typeof field === 'string' && !field.includes('.')) {
-              queryBuilder.addSelect(`${alias}.${field}`);
-            }
-          });
+          if (Array.isArray(findOptions.select)) {
+            // Handle array format
+            findOptions.select.forEach(field => {
+              if (typeof field === 'string' && !field.includes('.')) {
+                queryBuilder.addSelect(`${alias}.${field}`);
+              }
+            });
+          } else {
+            // Handle object format
+            Object.entries(findOptions.select).forEach(([field, included]) => {
+              // Skip id as it's already added
+              if (field !== 'id' && included && !field.includes('.')) {
+                queryBuilder.addSelect(`${alias}.${field}`);
+              }
+            });
+          }
           
           this.logger.debug(`Applied field selection: ${JSON.stringify(findOptions.select)}`);
         }

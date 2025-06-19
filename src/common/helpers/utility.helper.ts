@@ -488,6 +488,22 @@ export class UtilityHelper {
         return this.getBusinessDays(firstDay, lastDay);
     }
 
+    /**
+     * 
+     * Get business days in a year of a given date
+     * 
+     */
+    static getBusinessDaysInYear(date: string | Date): number {
+        const inputDate = this.ensureDate(date);
+        
+        // Create first and last day of the year
+        const firstDay = new Date(inputDate.getFullYear(), 0, 1);
+        const lastDay = new Date(inputDate.getFullYear(), 11, 31);
+        
+        // Calculate business days between these dates
+        return this.getBusinessDays(firstDay, lastDay);
+    }
+
     // Helper method to parse relations string into TypeORM relations object
     static parseRelations(relations: string): FindOptionsRelations<any> {
         const relationsObj: FindOptionsRelations<any> = {};

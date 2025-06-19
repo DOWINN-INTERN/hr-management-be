@@ -1570,6 +1570,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.BaseController = void 0;
 const paginated_response_dto_1 = __webpack_require__(/*! @/common/dtos/paginated-response.dto */ "./src/common/dtos/paginated-response.dto.ts");
 const pagination_dto_1 = __webpack_require__(/*! @/common/dtos/pagination.dto */ "./src/common/dtos/pagination.dto.ts");
+const export_options_dto_1 = __webpack_require__(/*! @/modules/files/dtos/export-options.dto */ "./src/modules/files/dtos/export-options.dto.ts");
 const import_options_dto_1 = __webpack_require__(/*! @/modules/files/dtos/import-options.dto */ "./src/modules/files/dtos/import-options.dto.ts");
 const import_result_dto_1 = __webpack_require__(/*! @/modules/files/dtos/import-result.dto */ "./src/modules/files/dtos/import-result.dto.ts");
 const import_export_service_1 = __webpack_require__(/*! @/modules/files/services/import-export.service */ "./src/modules/files/services/import-export.service.ts");
@@ -1700,7 +1701,7 @@ let BaseController = class BaseController {
                 throw new common_1.BadRequestException('Import/Export service not available');
             }
             // Set default options with improved defaults
-            const options = Object.assign({ format: exportOptions.format || file_format_1.FileFormat.CSV, maxRecords: exportOptions.maxRecords || 1000, filter: exportOptions.filter || {}, scope: ((_a = req.resourceScope) === null || _a === void 0 ? void 0 : _a.type) || role_scope_type_enum_1.RoleScopeType.OWNED }, exportOptions);
+            const options = Object.assign(Object.assign({}, exportOptions), { format: exportOptions.format || file_format_1.FileFormat.CSV, maxRecords: exportOptions.maxRecords || 1000, filter: exportOptions.filter || {}, scope: ((_a = req.resourceScope) === null || _a === void 0 ? void 0 : _a.type) || role_scope_type_enum_1.RoleScopeType.OWNED });
             // Generate a filename if not provided
             const metadata = options.metadata || {};
             const timestamp = new Date().toISOString().slice(0, 10);
@@ -1775,15 +1776,15 @@ let BaseController = class BaseController {
     }
     async importData(file, queryOptions, req, userId) {
         try {
-            // Check service existence
             if (!this.importExportService) {
                 throw new common_1.BadRequestException('Import/Export service not available');
             }
-            // Convert string values to proper types
-            const providedOptions = Object.assign({}, queryOptions);
-            // Set default options
-            const importOptions = Object.assign(Object.assign({}, providedOptions), { format: providedOptions.format || this.detectFileFormat(file.originalname), batchSize: providedOptions.batchSize || 100 });
-            // Import the data
+            // Convert string values and set defaults
+            const importOptions = Object.assign(Object.assign({}, queryOptions), { format: queryOptions.format || this.detectFileFormat(file.originalname), 
+                // Set default identifier field to 'id'
+                identifierField: queryOptions.identifierField || 'id', 
+                // Handle string vs boolean conversion properly
+                batchSize: queryOptions.batchSize || 100 });
             return await this.importExportService.importData(this.baseService, file.buffer, importOptions, userId);
         }
         catch (error) {
@@ -2023,14 +2024,15 @@ __decorate([
     __metadata("design:returntype", typeof (_l = typeof Promise !== "undefined" && Promise) === "function" ? _l : Object)
 ], BaseController.prototype, "deleteMany", null);
 __decorate([
-    (0, common_1.Post)('export'),
+    (0, common_1.Get)('export'),
     (0, authorize_decorator_1.Authorize)({ endpointType: action_enum_1.Action.READ }),
-    __param(0, (0, common_1.Body)()),
+    (0, api_query_from_dto_decorator_1.ApiQueryFromDto)((export_options_dto_1.ExportOptionsDto)),
+    __param(0, (0, common_1.Query)()),
     __param(1, (0, common_1.Req)()),
     __param(2, (0, common_1.Res)()),
     __param(3, (0, current_user_decorator_1.CurrentUser)('sub')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [typeof (_m = typeof Partial !== "undefined" && Partial) === "function" ? _m : Object, Object, typeof (_o = typeof express_1.Response !== "undefined" && express_1.Response) === "function" ? _o : Object, String]),
+    __metadata("design:paramtypes", [typeof (_m = typeof export_options_dto_1.ExportOptionsDto !== "undefined" && export_options_dto_1.ExportOptionsDto) === "function" ? _m : Object, Object, typeof (_o = typeof express_1.Response !== "undefined" && express_1.Response) === "function" ? _o : Object, String]),
     __metadata("design:returntype", typeof (_p = typeof Promise !== "undefined" && Promise) === "function" ? _p : Object)
 ], BaseController.prototype, "exportData", null);
 __decorate([
@@ -2147,7 +2149,7 @@ exports.PERMISSION_ENDPOINT_TYPE = 'permission_endpoint_type';
 function Authorize(options) {
     const decorators = [
         (0, roles_decorator_1.Roles)(options === null || options === void 0 ? void 0 : options.roles),
-        (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard, permissions_guard_1.PermissionsGuard, scope_guard_1.ScopeGuard),
+        (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard, scope_guard_1.ScopeGuard, permissions_guard_1.PermissionsGuard),
         (0, common_1.UseInterceptors)(resource_access_interceptor_1.ResourceAccessInterceptor),
         (0, swagger_1.ApiBearerAuth)('access-token'),
     ];
@@ -4367,63 +4369,6 @@ function createController(EntityClass, ServiceClass, getDtoClass, createDtoClass
             summary: `Export ${pluralName} Data`,
             description: `Exports ${pluralName.toLowerCase()} data based on the provided export options.`
         }),
-        (0, swagger_1.ApiBody)({
-            type: export_options_dto_1.ExportOptionsDto,
-            description: 'Export configuration options',
-            examples: {
-                csv: {
-                    summary: 'Basic CSV Export',
-                    value: {
-                        format: 'csv',
-                        maxRecords: 1000,
-                        filter: { status: 'active' }
-                    }
-                },
-                excel: {
-                    summary: 'Excel with Relations',
-                    value: {
-                        format: 'excel',
-                        relations: ['user', 'department'],
-                        sort: { createdAt: 'DESC' },
-                        metadata: {
-                            title: `${(0, pluralize_1.singular)(formattedEntityName)} Report`,
-                            company: 'Company Name'
-                        }
-                    }
-                },
-                pdf: {
-                    summary: 'Filtered PDF Report',
-                    value: {
-                        format: 'pdf',
-                        filter: { status: { in: ['active', 'pending'] } },
-                        metadata: {
-                            title: `${(0, pluralize_1.singular)(formattedEntityName)} Summary`,
-                            description: 'Monthly activity report'
-                        }
-                    }
-                },
-                advanced: {
-                    summary: 'Advanced Export Configuration',
-                    value: {
-                        format: 'excel',
-                        filter: { createdAt: { gte: '{{startDate}}', lt: '{{endDate}}' } },
-                        sort: { createdAt: 'DESC' },
-                        select: ['id', 'name', 'status', 'createdAt'],
-                        relations: ['department'],
-                        fieldMap: { createdAt: 'Date Created', department: 'Department Name' },
-                        metadata: {
-                            title: `${(0, pluralize_1.singular)(formattedEntityName)} Export`,
-                            subtitle: 'Detailed Report',
-                            author: 'System Administrator'
-                        },
-                        customHeaders: {
-                            'Generated By': 'API System',
-                            'Report Period': '{{reportPeriod}}'
-                        }
-                    }
-                }
-            }
-        }),
         (0, swagger_1.ApiResponse)({
             status: common_1.HttpStatus.OK,
             description: `Successfully exported ${pluralName.toLowerCase()} data as a downloadable file.`,
@@ -4462,7 +4407,7 @@ function createController(EntityClass, ServiceClass, getDtoClass, createDtoClass
         }),
         (0, generic_api_responses_decorator_1.ApiGenericResponses)(),
         __metadata("design:type", Function),
-        __metadata("design:paramtypes", [typeof (_k = typeof Partial !== "undefined" && Partial) === "function" ? _k : Object, Object, typeof (_l = typeof express_1.Response !== "undefined" && express_1.Response) === "function" ? _l : Object, String]),
+        __metadata("design:paramtypes", [typeof (_k = typeof export_options_dto_1.ExportOptionsDto !== "undefined" && export_options_dto_1.ExportOptionsDto) === "function" ? _k : Object, Object, typeof (_l = typeof express_1.Response !== "undefined" && express_1.Response) === "function" ? _l : Object, String]),
         __metadata("design:returntype", typeof (_m = typeof Promise !== "undefined" && Promise) === "function" ? _m : Object)
     ], DynamicController.prototype, "exportData", null);
     __decorate([
@@ -5685,40 +5630,27 @@ let RolesGuard = RolesGuard_1 = class RolesGuard {
         this.logger = new common_1.Logger(RolesGuard_1.name);
     }
     async canActivate(context) {
-        var _a, _b, _c, _d, _e, _f, _g, _h, _j;
+        var _a, _b, _c, _d, _e, _f, _g;
         try {
             const requiredRoles = this.reflector.getAllAndOverride(roles_decorator_1.ROLES_KEY, [context.getHandler(), context.getClass()]);
             const onlyAllowRoles = this.reflector.getAllAndOverride(roles_decorator_1.ONLY_ALLOW_ROLES_KEY, [context.getHandler(), context.getClass()]);
-            // log only allow roles
-            this.logger.log(`Only allow roles: ${onlyAllowRoles}`);
             const allowEmployee = this.reflector.getAllAndOverride(roles_decorator_1.ALLOW_EMPLOYEE_KEY, [context.getHandler(), context.getClass()]);
-            // If no roles are required, allow access
-            if ((!requiredRoles || requiredRoles.length === 0)) {
-                return true;
-            }
             // Get the user payload from the request
             const request = context.switchToHttp().getRequest();
             const userClaims = request.user;
-            var user = await this.usersService.findOneBy({ id: userClaims.sub }, { relations: { employee: { roles: true } } });
-            if (!user) {
-                this.logger.warn(`User with ID ${userClaims.sub} not found`);
-                throw new common_1.ForbiddenException('User not found');
-            }
-            // log user email and user roles
-            this.logger.log(`User email: ${user.email}`);
-            this.logger.log(`User roles: ${((_b = (_a = user.employee) === null || _a === void 0 ? void 0 : _a.roles) === null || _b === void 0 ? void 0 : _b.map(role => role.name).join(', ')) || 'None'}`);
+            var user = await this.usersService.findOneByOrFail({ id: userClaims.sub }, { relations: { employee: { roles: true } } });
             // Do not allow access to users with no role
-            if ((!((_c = user.employee) === null || _c === void 0 ? void 0 : _c.roles) || user.employee.roles.length === 0) && onlyAllowRoles) {
-                this.logger.warn(`User with ID ${userClaims.sub} has no roles assigned`);
-                throw new common_1.ForbiddenException('You do not have a role to access this resource.');
+            if ((!((_a = user.employee) === null || _a === void 0 ? void 0 : _a.roles) || user.employee.roles.length === 0) && onlyAllowRoles) {
+                this.logger.warn(`${userClaims.email} tried to access a resource that requires at least a role`);
+                throw new common_1.ForbiddenException('You do not have a role to access this resource');
             }
             // If allowEmployee is true, check if the user has only the employee role
-            if (allowEmployee && ((_e = (_d = user.employee) === null || _d === void 0 ? void 0 : _d.roles) === null || _e === void 0 ? void 0 : _e.length) === 1 && user.employee.roles[0].name === role_enum_1.Role.EMPLOYEE) {
-                this.logger.warn(`User with ID ${userClaims.sub} has only the employee role`);
-                throw new common_1.ForbiddenException('You do not have sufficient permissions to access this resource.');
+            if (allowEmployee && ((_c = (_b = user.employee) === null || _b === void 0 ? void 0 : _b.roles) === null || _c === void 0 ? void 0 : _c.length) === 1 && user.employee.roles[0].name === role_enum_1.Role.EMPLOYEE) {
+                this.logger.warn(`${userClaims.email} tried to access a resource that regular employees are not allowed to access`);
+                throw new common_1.ForbiddenException('Regular employees are not allowed to access this resource');
             }
             // If user has the super admin role, allow access
-            const hasSuperAdminRole = (_g = (_f = user.employee) === null || _f === void 0 ? void 0 : _f.roles) === null || _g === void 0 ? void 0 : _g.some(role => role.name === role_enum_1.Role.SUPERADMIN);
+            const hasSuperAdminRole = (_e = (_d = user.employee) === null || _d === void 0 ? void 0 : _d.roles) === null || _e === void 0 ? void 0 : _e.some(role => role.name === role_enum_1.Role.SUPERADMIN);
             if (hasSuperAdminRole) {
                 return true;
             }
@@ -5727,7 +5659,7 @@ let RolesGuard = RolesGuard_1 = class RolesGuard {
                 return true;
             }
             // Check if the user has the required roles
-            const hasRequiredRoles = (_j = (_h = user === null || user === void 0 ? void 0 : user.employee) === null || _h === void 0 ? void 0 : _h.roles) === null || _j === void 0 ? void 0 : _j.some(role => requiredRoles.includes(role.name));
+            const hasRequiredRoles = (_g = (_f = user === null || user === void 0 ? void 0 : user.employee) === null || _f === void 0 ? void 0 : _f.roles) === null || _g === void 0 ? void 0 : _g.some(role => requiredRoles.includes(role.name));
             if (!hasRequiredRoles) {
                 // Log the roles the user has
                 this.logger.warn(`User with ID ${userClaims.sub} does not have required roles: ${requiredRoles.join(', ')}`);
@@ -5802,7 +5734,6 @@ let ScopeGuard = ScopeGuard_1 = class ScopeGuard {
                     try {
                         // Determine effective scope
                         const roleScope = utility_helper_1.UtilityHelper.determineEffectiveScope(user.roles || []);
-                        this.logger.log(`Determined effective scope: ${roleScope.scope}`);
                         // Store scope information with correct property names
                         const resourceScope = {
                             roleName: roleScope.name,
@@ -5850,17 +5781,14 @@ let ScopeGuard = ScopeGuard_1 = class ScopeGuard {
                 // Fallback to request.params (even if empty)
                 return request.params || {};
             })();
-            // log body
-            this.logger.log(`Request body: ${JSON.stringify(body)}`);
             // Log the attempt with scope information
-            this.logger.log(`Checking permissions for ${method} with scope type: ${resourceScope.type}`);
+            this.logger.log(`Checking scope for ${method} with scope type: ${resourceScope.type}`);
             // Check creation permissions based on scope
             if (!this.canDoInScope(body, resourceScope, method)) {
                 const errorMessage = this.generateErrorMessage(resourceScope.type, body);
-                this.logger.warn(`Permission denied: ${errorMessage} with your scope ${resourceScope.type}`);
+                this.logger.warn(`Scope denied: ${errorMessage} with your scope ${resourceScope.type}`);
                 throw new common_1.ForbiddenException(errorMessage);
             }
-            this.logger.log('Permission check passed');
             return true;
         }
         catch (error) {
@@ -5873,64 +5801,74 @@ let ScopeGuard = ScopeGuard_1 = class ScopeGuard {
         }
     }
     canDoInScope(data, resourceScope, method) {
-        var _a, _b, _c, _d, _e, _f;
+        // Common validation for all methods
+        const validateScope = (id, scopeIds, resourceType) => {
+            var _a;
+            // Log the validation attempt
+            this.logger.log(`Validating ${resourceType} access for ID: ${id} with scope IDs: ${scopeIds}`);
+            if (!id) {
+                throw new common_1.ForbiddenException(`You must provide a ${resourceType}Id to access this resource`);
+            }
+            const hasAccess = (_a = scopeIds === null || scopeIds === void 0 ? void 0 : scopeIds.includes(id)) !== null && _a !== void 0 ? _a : false;
+            if (!hasAccess) {
+                this.logger.log(`${resourceType} access denied: user tried to access ${resourceType.toLowerCase()} ${id}`);
+            }
+            return hasAccess;
+        };
         switch (resourceScope.type) {
             case role_scope_type_enum_1.RoleScopeType.GLOBAL:
-                // Global scope can create anywhere
                 return true;
             case role_scope_type_enum_1.RoleScopeType.ORGANIZATION:
-                // Can only create within their organizations
-                if (data.organizationId) {
-                    const hasAccess = (_b = (_a = resourceScope.organizations) === null || _a === void 0 ? void 0 : _a.includes(data.organizationId)) !== null && _b !== void 0 ? _b : false;
-                    if (!hasAccess) {
-                        this.logger.log(`Organization access denied: user tried to access org ${data.organizationId}`);
+                // Specific logic for different methods
+                if (method === 'GET' || method === 'DELETE') {
+                    return validateScope(data.organizationId, resourceScope.organizations, 'organization');
+                }
+                else if (method === 'POST') {
+                    // For creation, ensure all resource data is provided
+                    if (!data.organizationId || !data.branchId || !data.departmentId) {
+                        throw new common_1.ForbiddenException(`You must provide organizationId, branchId, and departmentId to create this resource`);
                     }
-                    return hasAccess;
                 }
-                else if (!data.organizationId && method === 'GET') {
-                    throw new common_1.ForbiddenException('You must provide an organizationId to access this resource');
+                else if (['PUT', 'PATCH'].includes(method)) {
+                    // For creation/update, ensure the organization exists and user has access to it
+                    return validateScope(data.organizationId, resourceScope.organizations, 'organization');
                 }
-                return true;
+                return validateScope(data.organizationId, resourceScope.organizations, 'organization');
             case role_scope_type_enum_1.RoleScopeType.BRANCH:
-                // Can only create within their branches
-                if (data.branchId) {
-                    const hasAccess = (_d = (_c = resourceScope.branches) === null || _c === void 0 ? void 0 : _c.includes(data.branchId)) !== null && _d !== void 0 ? _d : false;
-                    if (!hasAccess) {
-                        this.logger.log(`Branch access denied: user tried to access branch ${data.branchId}`);
+                if (method === 'GET' || method === 'DELETE') {
+                    return validateScope(data.branchId, resourceScope.branches, 'branch');
+                }
+                else if (method === 'POST') {
+                    // For creation, ensure all resource data is provided
+                    if (!data.branchId || !data.departmentId) {
+                        throw new common_1.ForbiddenException(`You must provide branchId, and departmentId to create this resource`);
                     }
-                    return hasAccess;
                 }
-                else if (!data.branchId && method === 'GET') {
-                    throw new common_1.ForbiddenException('You must provide a branchId to access this resource');
+                else if (['PUT', 'PATCH'].includes(method)) {
+                    return validateScope(data.branchId, resourceScope.branches, 'branch');
                 }
-                return true;
+                return validateScope(data.branchId, resourceScope.branches, 'branch');
             case role_scope_type_enum_1.RoleScopeType.DEPARTMENT:
-                // Can only create within their departments
-                if (data.departmentId) {
-                    const hasAccess = (_f = (_e = resourceScope.departments) === null || _e === void 0 ? void 0 : _e.includes(data.departmentId)) !== null && _f !== void 0 ? _f : false;
-                    if (!hasAccess) {
-                        this.logger.log(`Department access denied: user tried to access dept ${data.departmentId}`);
-                    }
-                    else if (!data.departmentId && method === 'GET') {
-                        throw new common_1.ForbiddenException('You must provide a departmentId to access this resource');
-                    }
-                    return hasAccess;
+                if (method === 'GET' || method === 'DELETE') {
+                    return validateScope(data.departmentId, resourceScope.departments, 'department');
                 }
-                return true;
+                else if (['POST', 'PUT', 'PATCH'].includes(method)) {
+                    return validateScope(data.departmentId, resourceScope.departments, 'department');
+                }
+                return validateScope(data.departmentId, resourceScope.departments, 'department');
             case role_scope_type_enum_1.RoleScopeType.OWNED:
-                // Usually can't create resources for others
-                if (data.userId) {
-                    const hasAccess = resourceScope.userId === data.userId;
-                    if (!hasAccess) {
-                        this.logger.log(`User resource access denied: user tried to access another user's resource`);
+                if (method === 'GET' || method === 'DELETE') {
+                    return validateScope(data.userId, [resourceScope.userId || ""], 'user');
+                }
+                else if (['POST', 'PUT', 'PATCH'].includes(method)) {
+                    // For user resources, they can only create/modify their own resources
+                    if (data.userId && data.userId !== resourceScope.userId) {
+                        this.logger.log(`User cannot create/modify resources for other users`);
+                        return false;
                     }
-                    return hasAccess;
+                    return true;
                 }
-                else if (method === 'GET' && !data.userId) {
-                    throw new common_1.ForbiddenException('You must provide a userId to access this resource');
-                }
-                // If no userId is provided, allow creation
-                return true;
+                return validateScope(data.userId, [resourceScope.userId || ""], 'user');
             default:
                 this.logger.warn(`Unknown scope type encountered: ${resourceScope.type}`);
                 return false;
@@ -6723,6 +6661,7 @@ let BaseService = class BaseService {
             // Debug the incoming filter
             // console.log('Raw filter from client:', JSON.stringify(paginationDto.filter));
             // console.log('Converted findOptions where:', JSON.stringify(findOptions.where));
+            this.logger.log(`Finding all ${this.entityName} with options: ${JSON.stringify(findOptions)}`);
             // this.logger.debug(`Processing query with filters: ${JSON.stringify(findOptions.where)}`);
             // For complex filtering that requires JOIN operations or nested relations
             if (Object.keys(findOptions.where || {}).length > 0 ||
@@ -7043,17 +6982,28 @@ let BaseService = class BaseService {
                     });
                 }
                 // Handle field selection with relations
-                if (findOptions.select && Array.isArray(findOptions.select) && findOptions.select.length > 0) {
-                    // Clear any previous automatic selections
+                if (findOptions.select) {
+                    // Clear any previous selections first
                     queryBuilder.select([]);
                     // Always include primary key for relational integrity
                     queryBuilder.addSelect(`${alias}.id`);
-                    // Add requested fields for the main entity
-                    findOptions.select.forEach(field => {
-                        if (typeof field === 'string' && !field.includes('.')) {
-                            queryBuilder.addSelect(`${alias}.${field}`);
-                        }
-                    });
+                    if (Array.isArray(findOptions.select)) {
+                        // Handle array format
+                        findOptions.select.forEach(field => {
+                            if (typeof field === 'string' && !field.includes('.')) {
+                                queryBuilder.addSelect(`${alias}.${field}`);
+                            }
+                        });
+                    }
+                    else {
+                        // Handle object format
+                        Object.entries(findOptions.select).forEach(([field, included]) => {
+                            // Skip id as it's already added
+                            if (field !== 'id' && included && !field.includes('.')) {
+                                queryBuilder.addSelect(`${alias}.${field}`);
+                            }
+                        });
+                    }
                     this.logger.debug(`Applied field selection: ${JSON.stringify(findOptions.select)}`);
                 }
                 // Handle relations and field selection
@@ -28129,6 +28079,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var _a, _b, _c, _d, _e, _f, _g;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.ExportOptionsDto = exports.DocumentMetadata = void 0;
+const base_dto_1 = __webpack_require__(/*! @/common/dtos/base.dto */ "./src/common/dtos/base.dto.ts");
 const file_format_1 = __webpack_require__(/*! @/common/enums/file-format */ "./src/common/enums/file-format.ts");
 const role_scope_type_enum_1 = __webpack_require__(/*! @/common/enums/role-scope-type.enum */ "./src/common/enums/role-scope-type.enum.ts");
 const swagger_1 = __webpack_require__(/*! @nestjs/swagger */ "@nestjs/swagger");
@@ -28190,7 +28141,7 @@ __decorate([
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], DocumentMetadata.prototype, "description", void 0);
-class ExportOptionsDto {
+class ExportOptionsDto extends (0, swagger_1.PartialType)(base_dto_1.BaseDto) {
 }
 exports.ExportOptionsDto = ExportOptionsDto;
 __decorate([
@@ -30301,10 +30252,24 @@ let ImportExportService = ImportExportService_1 = class ImportExportService {
             paginationDto.skip = 0;
             paginationDto.filter = options.filter || {};
             paginationDto.relations = relations;
-            paginationDto.select = options.select;
+            paginationDto.branchId = options.branchId;
+            paginationDto.organizationId = options.organizationId;
+            paginationDto.departmentId = options.departmentId;
+            paginationDto.userId = options.userId;
+            // FIX: Convert select array to proper format
+            if (options.select && Array.isArray(options.select)) {
+                // For TypeORM, convert array to JSON string format so the PaginationDto will process it correctly
+                paginationDto.select = JSON.stringify(options.select);
+                this.logger.debug(`Converted select fields: ${paginationDto.select}`);
+            }
+            else {
+                paginationDto.select = options.select;
+            }
             paginationDto.sort = options.sort || { createdAt: 'DESC' };
-            this.logger.debug(`Fetching data with filter: ${JSON.stringify(options.filter)}`);
+            this.logger.debug(`Select fields: ${JSON.stringify(paginationDto.select)}`);
             const { data, totalCount } = await service.findAllComplex(options.scope || role_scope_type_enum_1.RoleScopeType.OWNED, paginationDto);
+            // log json string of the data for debugging
+            this.logger.debug(`Fetched data: ${JSON.stringify(data.slice(0, 5))}...`);
             const queryTime = Date.now() - startTime;
             this.logger.log(`Fetched ${data.length}/${totalCount} records in ${queryTime}ms`);
             if (!data || data.length === 0) {
@@ -30660,7 +30625,6 @@ let ImportExportService = ImportExportService_1 = class ImportExportService {
                 fontSize: 22,
                 bold: true,
                 color: colors.primary,
-                margin: [0, 0, 0, 10]
             },
             subheader: {
                 fontSize: 16,
@@ -30686,7 +30650,6 @@ let ImportExportService = ImportExportService_1 = class ImportExportService {
             footer: {
                 fontSize: 8,
                 color: colors.darkGray,
-                margin: [40, 0]
             }
         };
         // Prepare column definitions and data for the table
@@ -30711,7 +30674,8 @@ let ImportExportService = ImportExportService_1 = class ImportExportService {
                 const value = item[col.dataKey];
                 return {
                     text: this.formatPdfCellValue(value),
-                    style: 'normal'
+                    style: 'normal',
+                    noWrap: false,
                 };
             });
         });
@@ -30744,7 +30708,6 @@ let ImportExportService = ImportExportService_1 = class ImportExportService {
                     text: metadata.title,
                     style: 'header',
                     alignment: 'center',
-                    margin: [0, 40, 0, 20]
                 });
             }
             // Subtitle
@@ -30786,14 +30749,13 @@ let ImportExportService = ImportExportService_1 = class ImportExportService {
                     margin: [0, 20, 0, 20]
                 });
             }
-            // Don't add page break here, continue with filters and custom headers
         }
         else {
             // Simple header if no full metadata
             content.push({
-                text: 'Data Export',
+                text: `Export Data`,
                 style: 'header',
-                margin: [0, 0, 0, 20]
+                alignment: 'center'
             });
         }
         // 2. Add filter section if available (now on same page as metadata)
@@ -30838,8 +30800,6 @@ let ImportExportService = ImportExportService_1 = class ImportExportService {
                 }
             });
         }
-        // NOW add the page break after all the metadata, filters and custom headers
-        content.push({ text: '', pageBreak: 'after' });
         // 4. Data section title
         content.push({ text: 'Data Records', style: 'sectionTitle' });
         // Determine if landscape mode is needed based on the number of columns
@@ -30864,51 +30824,116 @@ let ImportExportService = ImportExportService_1 = class ImportExportService {
         const availableWidth = pageWidth - margins - 20; // 20pt extra buffer
         // Determine column width distribution based on content
         let tableWidths;
+        let tableFontSize = 10; // Default font size for table content
+        let tableHeaderFontSize = 12; // Default font size for header
+        // Calculate scaling factor based on number of columns
         if (columnDefs.length > 0) {
-            if (columnDefs.length <= 3) {
-                // For few columns, allocate even widths with star notation
-                tableWidths = Array(columnDefs.length).fill('*');
+            // Calculate available width
+            const pageWidth = shouldUseLandscape ? 842 : 595;
+            const margins = 40 * 2; // Left and right margins (40 each)
+            const availableWidth = pageWidth - margins - 20; // 20pt extra buffer
+            // Adjust font size based on column count
+            if (columnDefs.length > 10) {
+                tableFontSize = 7;
+                tableHeaderFontSize = 8;
             }
-            else {
-                // For many columns, allocate percentage widths based on column count
-                const colWidth = availableWidth / columnDefs.length;
-                // Calculate relative widths - analyze content in first few rows to make smart decisions
-                const widths = columnDefs.map((col, index) => {
-                    // Estimate content width based on column header and sample data
+            else if (columnDefs.length > 8) {
+                tableFontSize = 8;
+                tableHeaderFontSize = 9;
+            }
+            else if (columnDefs.length > 6) {
+                tableFontSize = 9;
+                tableHeaderFontSize = 10;
+            }
+            // For extremely wide tables, use auto layout
+            if (columnDefs.length > 12) {
+                tableWidths = Array(columnDefs.length).fill('auto');
+            }
+            // For moderately wide tables, use calculated widths
+            else if (columnDefs.length > 3) {
+                // Calculate target column width
+                const targetColumnWidth = availableWidth / columnDefs.length;
+                // Analyze content to determine column width distributions
+                const columnAnalysis = columnDefs.map((col, index) => {
+                    // Get header length
                     const headerLength = col.text.length;
-                    // Sample some values from this column to estimate width needs
+                    // Sample data length
                     const sampleRows = Math.min(tableRows.length, 10);
-                    let avgContentLength = 0;
+                    let maxContentLength = 0;
+                    let totalContentLength = 0;
+                    let contentSamples = 0;
                     for (let i = 0; i < sampleRows; i++) {
-                        if (tableRows[i] && tableRows[i][index] && tableRows[i][index].text) {
-                            avgContentLength += String(tableRows[i][index].text).length;
+                        if (tableRows[i] && tableRows[i][index]) {
+                            const content = String(tableRows[i][index].text || '');
+                            maxContentLength = Math.max(maxContentLength, content.length);
+                            totalContentLength += content.length;
+                            contentSamples++;
                         }
                     }
-                    if (sampleRows > 0) {
-                        avgContentLength /= sampleRows;
-                    }
-                    // Cap width between minimum and maximum
-                    const contentBasedWidth = Math.max(headerLength, Math.min(avgContentLength, 40));
-                    return contentBasedWidth;
+                    const avgContentLength = contentSamples > 0 ? totalContentLength / contentSamples : 0;
+                    return {
+                        index,
+                        headerLength,
+                        maxContentLength,
+                        avgContentLength,
+                        // Determine column importance - headers and short consistent columns get priority
+                        importance: headerLength > 0 ?
+                            (maxContentLength > 3 * avgContentLength ? 1 : 2) : 0.5
+                    };
                 });
-                // Scale widths to fit total available width
-                const totalWidthUnits = widths.reduce((sum, w) => sum + w, 0);
-                tableWidths = widths.map(width => {
-                    const percentage = width / totalWidthUnits;
-                    return availableWidth * percentage;
+                // Get total importance score
+                const totalImportance = columnAnalysis.reduce((sum, col) => sum + col.importance, 0);
+                // Assign widths proportionally to importance
+                tableWidths = columnAnalysis.map(col => {
+                    const proportion = col.importance / totalImportance;
+                    // Calculate column width based on proportion, but enforce minimum
+                    const width = Math.max(20, Math.min(150, proportion * availableWidth));
+                    return width;
                 });
+                // Final check to ensure we don't exceed available width
+                const totalWidth = tableWidths.reduce((sum, width) => sum + width, 0);
+                if (totalWidth > availableWidth) {
+                    const scaleFactor = availableWidth / totalWidth;
+                    tableWidths = tableWidths.map(width => width * scaleFactor);
+                }
+            }
+            // For few columns, use star notation for even distribution
+            else {
+                tableWidths = Array(columnDefs.length).fill('*');
             }
         }
         else {
             tableWidths = ['*']; // Default for empty tables
         }
+        // Update the table headers and rows to use adjusted font sizes
+        if (tableFontSize !== 10) {
+            tableHeaders.forEach(header => {
+                header.fontSize = tableHeaderFontSize;
+            });
+            tableRows.forEach(row => {
+                row.forEach(cell => {
+                    cell.fontSize = tableFontSize;
+                    // For very small font sizes, truncate long content
+                    if (tableFontSize < 9 && typeof cell.text === 'string' && cell.text.length > 30) {
+                        cell.text = cell.text.substring(0, 27) + '...';
+                    }
+                });
+            });
+        }
+        // Use a more compact layout for many columns
+        const cellPadding = columnDefs.length > 8 ? 3 : columnDefs.length > 5 ? 4 : 6;
+        // Create table definition with optimized settings
+        const tableDefinition = {
+            headerRows: 1,
+            widths: tableWidths,
+            body: tableBody,
+            // Enable table fitting
+            dontBreakRows: false,
+            keepWithHeaderRows: 1
+        };
         // Add the table with calculated widths
         content.push({
-            table: {
-                headerRows: 1,
-                widths: tableWidths,
-                body: tableBody
-            },
+            table: tableDefinition,
             layout: {
                 hLineWidth: (i, node) => {
                     return (i === 0 || i === 1 || i === node.table.body.length) ? 1 : 0.5;
@@ -30927,12 +30952,24 @@ let ImportExportService = ImportExportService_1 = class ImportExportService {
                     // Zebra striping
                     return rowIndex % 2 === 0 ? '#F9F9F9' : null;
                 },
-                paddingLeft: () => 8,
-                paddingRight: () => 8,
-                paddingTop: () => 8,
-                paddingBottom: () => 8
+                paddingLeft: () => cellPadding,
+                paddingRight: () => cellPadding,
+                paddingTop: () => cellPadding,
+                paddingBottom: () => cellPadding,
+                defaultBorder: true,
+                fillOpacity: 1
             }
         });
+        // For extremely wide tables, add a note about column width optimization
+        if (columnDefs.length > 10) {
+            content.push({
+                text: '* Table columns have been optimized to fit on page. Some content may be truncated.',
+                fontSize: 8,
+                italics: true,
+                color: colors.darkGray,
+                margin: [0, 5, 0, 0]
+            });
+        }
         // Create the document definition with the table layout
         const docDefinition = {
             pageSize: 'A4',
@@ -30942,7 +30979,7 @@ let ImportExportService = ImportExportService_1 = class ImportExportService {
             styles: styles,
             defaultStyle: {
                 fontSize: 10,
-                color: colors.black
+                color: colors.black,
             },
             footer: function (currentPage, pageCount) {
                 return {
@@ -31087,7 +31124,6 @@ let ImportExportService = ImportExportService_1 = class ImportExportService {
                     startTime: new Date().toISOString(),
                     userId,
                     batchSize: importOptions.batchSize,
-                    withValidation: importOptions.validate
                 }
             };
             // Get entity class from service
@@ -31185,102 +31221,73 @@ let ImportExportService = ImportExportService_1 = class ImportExportService {
     async processImportBatch(service, records, options, result, entityClass, userId, transactionManager) {
         const batchSize = options.batchSize || 100;
         const repo = transactionManager ? transactionManager.getRepository(entityClass) : service.getRepository();
-        // Track entities for potential bulk operations
+        // Use id as the default identifier field if none is specified
+        const identifierField = options.identifierField || 'id';
+        // Track entities for batch operations
         const entitiesToCreate = [];
         const entitiesToUpdate = [];
-        // Process in batches to avoid memory issues with large imports
+        // Process in batches
         for (let i = 0; i < records.length; i += batchSize) {
             const batch = records.slice(i, i + batchSize);
             this.logger.debug(`Processing batch ${Math.floor(i / batchSize) + 1}/${Math.ceil(records.length / batchSize)}`);
-            // First pass: validate all records in batch
-            let hasErrors = false;
+            // Process each record
             for (let j = 0; j < batch.length; j++) {
                 const record = batch[j];
                 const rowNumber = i + j + 1;
                 try {
-                    // Transform and validate
                     let entityDto = record;
-                    // Check if record exists
-                    if (options.identifierField && record[options.identifierField]) {
-                        const criteria = {
-                            [options.identifierField]: record[options.identifierField]
-                        };
-                        const existingRecord = await service.findOneBy(criteria);
-                        if (existingRecord) {
-                            result.skipped.push(String(record[options.identifierField]));
-                            continue;
-                        }
-                    }
-                }
-                catch (error) {
-                    this.handleImportError(record, error, result, 'system', rowNumber);
-                    hasErrors = true;
-                }
-            }
-            // If any validation errors in this batch, skip further processing
-            if (hasErrors) {
-                continue;
-            }
-            // Second pass: process records
-            for (let j = 0; j < batch.length; j++) {
-                const record = batch[j];
-                const rowNumber = i + j + 1;
-                try {
-                    // Transform to entity instance for validation if dtoClass is provided
-                    let entityDto = record;
-                    // Determine if this is a new record or an update
                     let existingRecord = null;
-                    if (options.identifierField && record[options.identifierField]) {
+                    // Determine if record exists by identifier field
+                    if (record[identifierField]) {
                         const criteria = {
-                            [options.identifierField]: record[options.identifierField]
+                            [identifierField]: record[identifierField]
                         };
+                        this.logger.debug(`Looking for existing record with ${identifierField.toString()}=${record[identifierField]}`);
                         existingRecord = await service.findOneBy(criteria);
+                        this.logger.debug(`Existing record found: ${existingRecord ? 'Yes' : 'No'}`);
                     }
-                    // Create or update the record
+                    // Decide whether to create, update, or skip
                     if (existingRecord) {
-                        // Add to batch update list
+                        // Update existing record
+                        this.logger.debug(`Updating record ${existingRecord.id} (${identifierField.toString()}=${record[identifierField]})`);
                         entitiesToUpdate.push({
                             id: existingRecord.id,
                             entity: Object.assign(Object.assign({}, entityDto), { updatedBy: userId })
                         });
                     }
-                    else if (!existingRecord) {
-                        // Add to batch creation list
-                        entitiesToCreate.push(Object.assign(Object.assign({}, entityDto), { createdBy: userId }));
-                    }
                     else {
-                        // Record exists but updateExisting is false
-                        if (options.identifierField && record[options.identifierField]) {
-                            result.skipped.push(String(record[options.identifierField]));
-                        }
-                        else {
-                            result.skipped.push(`row-${rowNumber}`);
-                        }
+                        // Create new record
+                        this.logger.debug(`Creating new record for row ${rowNumber}`);
+                        entitiesToCreate.push(Object.assign(Object.assign({}, entityDto), { createdBy: userId }));
                     }
                 }
                 catch (error) {
                     this.handleImportError(record, error, result, 'system', rowNumber);
                 }
             }
-            // Process bulk operations if collected
+            // Process bulk operations
             try {
                 // Bulk create
                 if (entitiesToCreate.length > 0) {
+                    this.logger.debug(`Creating ${entitiesToCreate.length} new records`);
                     const entities = repo.create(entitiesToCreate);
                     const savedEntities = await repo.save(entities);
                     savedEntities.forEach(entity => {
                         result.created.push(entity.id);
                         result.successCount++;
                     });
-                    entitiesToCreate.length = 0; // Clear array
+                    entitiesToCreate.length = 0;
                 }
                 // Bulk update
-                for (const item of entitiesToUpdate) {
-                    await repo.update(item.id, item.entity);
-                    result.updated.push(item.id);
-                    result.successCount++;
+                if (entitiesToUpdate.length > 0) {
+                    this.logger.debug(`Updating ${entitiesToUpdate.length} existing records`);
+                    for (const item of entitiesToUpdate) {
+                        await repo.update(item.id, item.entity);
+                        result.updated.push(item.id);
+                        result.successCount++;
+                    }
+                    entitiesToUpdate.length = 0;
                 }
-                entitiesToUpdate.length = 0; // Clear array
             }
             catch (bulkError) {
                 this.logger.error(`Error in bulk operation: ${bulkError.message}`, bulkError.stack);
@@ -32722,47 +32729,76 @@ let SystemLogger = class SystemLogger extends common_1.ConsoleLogger {
         this.logQueue = [];
         this.isBatchProcessing = false;
         this.batchSize = 10; // Configurable batch size
+        this.filterMode = 'whitelist'; // Default to blacklist mode
         // Define an array of log patterns to ignore (context + message patterns)
-        this.ignoredLogPatterns = [
+        this.blackListPatterns = [
             { context: 'RouterExplorer' },
             { context: 'RoutesResolver' },
             { context: 'InstanceLoader' },
             // { context: 'BaseGateway' },
         ];
+        // Define an array of log patters to only log
+        this.whiteListPatterns = [
+            { context: 'SystemLogger' }, // Always log messages from SystemLogger
+            { context: 'ScopeGuard' },
+            { context: 'RolesGuard' },
+            { context: 'AuthGuard' },
+        ];
+        this.filterMode = process.env.LOG_FILTER_MODE || this.filterMode; // Allow dynamic setting of filter mode via environment variable
+        // log filter mode
+        this.log(`SystemLogger initialized with filter mode: ${this.filterMode}`, 'SystemLogger');
     }
-    // Helper method to check if a log should be ignored
-    shouldIgnoreLog(message, context) {
-        if (!context)
+    shouldLog(message, context) {
+        if (!context || !message)
             return false;
-        return this.ignoredLogPatterns.some(pattern => context === pattern.context);
+        if (this.filterMode === 'whitelist') {
+            // In whitelist mode, ONLY log if the context matches any pattern
+            return this.whiteListPatterns.some(pattern => context === pattern.context);
+        }
+        else {
+            // In blacklist mode, log UNLESS the context matches an ignored pattern
+            return !this.blackListPatterns.some(pattern => context === pattern.context);
+        }
+    }
+    // Set filter mode dynamically
+    setFilterMode(mode) {
+        this.filterMode = mode;
+    }
+    // Add patterns to the whitelist
+    addToWhitelist(pattern) {
+        this.whiteListPatterns.push(pattern);
+    }
+    // Add patterns to the blacklist
+    addToBlacklist(pattern) {
+        this.blackListPatterns.push(pattern);
     }
     log(message, context) {
-        if (!this.shouldIgnoreLog(message, context)) {
+        if (this.shouldLog(message, context)) {
             super.log(message, context);
             this.saveLog(message, context, log_level_enum_1.LogLevel.LOG);
         }
     }
     error(message, trace, context) {
-        if (!this.shouldIgnoreLog(message, context)) {
+        if (this.shouldLog(message, context)) {
             super.error(message, trace, context);
             const fullMessage = trace ? `${message}\n${trace}` : message;
             this.saveLog(fullMessage, context, log_level_enum_1.LogLevel.ERROR);
         }
     }
     warn(message, context) {
-        if (!this.shouldIgnoreLog(message, context)) {
+        if (this.shouldLog(message, context)) {
             super.warn(message, context);
             this.saveLog(message, context, log_level_enum_1.LogLevel.WARN);
         }
     }
     debug(message, context) {
-        if (!this.shouldIgnoreLog(message, context)) {
+        if (this.shouldLog(message, context)) {
             super.debug(message, context);
             this.saveLog(message, context, log_level_enum_1.LogLevel.DEBUG);
         }
     }
     verbose(message, context) {
-        if (!this.shouldIgnoreLog(message, context)) {
+        if (this.shouldLog(message, context)) {
             super.verbose(message, context);
             this.saveLog(message, context, log_level_enum_1.LogLevel.VERBOSE);
         }
@@ -34725,6 +34761,27 @@ let BranchesService = class BranchesService extends base_service_1.BaseService {
         this.branchesRepository = branchesRepository;
         this.usersService = usersService;
     }
+    // Get branch organization
+    async getBranchOrganization(branchId) {
+        const branch = await this.branchesRepository.findOneOrFail({
+            where: { id: branchId },
+            relations: {
+                organization: true,
+            }
+        });
+        return branch.organization.id;
+    }
+    // Check if department exists in branch
+    async isDepartmentInBranch(branchId, departmentId) {
+        var _a;
+        const branch = await this.branchesRepository.findOneOrFail({
+            where: { id: branchId },
+            relations: {
+                departments: true,
+            }
+        });
+        return ((_a = branch.departments) === null || _a === void 0 ? void 0 : _a.some(department => department.id === departmentId)) || false;
+    }
 };
 exports.BranchesService = BranchesService;
 exports.BranchesService = BranchesService = __decorate([
@@ -34829,6 +34886,16 @@ let DepartmentsService = class DepartmentsService extends base_service_1.BaseSer
         super(departmentsRepository, usersService);
         this.departmentsRepository = departmentsRepository;
         this.usersService = usersService;
+    }
+    // get department branch
+    async getDepartmentBranch(departmentId) {
+        const department = await this.departmentsRepository.findOneOrFail({
+            where: { id: departmentId },
+            relations: {
+                branch: true,
+            }
+        });
+        return department.branch.id;
     }
 };
 exports.DepartmentsService = DepartmentsService;
@@ -35364,6 +35431,7 @@ let OrganizationManagementModule = class OrganizationManagementModule {
 };
 exports.OrganizationManagementModule = OrganizationManagementModule;
 exports.OrganizationManagementModule = OrganizationManagementModule = __decorate([
+    (0, common_1.Global)(),
     (0, common_1.Module)({
         imports: [
             typeorm_1.TypeOrmModule.forFeature([organization_entity_1.Organization]),
@@ -35455,6 +35523,17 @@ let OrganizationsService = class OrganizationsService extends base_service_1.Bas
         super(organizationsRepository, usersService);
         this.organizationsRepository = organizationsRepository;
         this.usersService = usersService;
+    }
+    // Check if branch exists in organization
+    async isBranchInOrganization(organizationId, branchId) {
+        var _a;
+        const organization = await this.organizationsRepository.findOneOrFail({
+            where: { id: organizationId },
+            relations: {
+                branches: true,
+            }
+        });
+        return ((_a = organization.branches) === null || _a === void 0 ? void 0 : _a.some(branch => branch.id === branchId)) || false;
     }
 };
 exports.OrganizationsService = OrganizationsService;

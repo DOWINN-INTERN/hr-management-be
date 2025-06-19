@@ -6,6 +6,7 @@ import { EmployeePayrollItemType } from '@/modules/employee-management/employee-
 import { Column, Entity, OneToMany } from 'typeorm';
 import { PayrollItem } from '../../payroll-items/entities/payroll-item.entity';
 
+// TODO: Add formula jexl logic for formula types
 @Entity('payroll-item-types')
 export class PayrollItemType extends BaseEntity<PayrollItemType> {
     @Column()

@@ -356,10 +356,11 @@ export abstract class BaseController<T extends BaseEntity<T>, K extends BaseServ
         await this.baseService.deleteMany(ids, hardDelete);
     }
 
-    @Post('export')
+    @Get('export')
     @Authorize({ endpointType: Action.READ })
+    @ApiQueryFromDto(ExportOptionsDto<T>)
     async exportData(
-        @Body() exportOptions: Partial<ExportOptionsDto<T>>,
+        @Query() exportOptions: ExportOptionsDto<T>,
         @Req() req: any,
         @Res() res: Response,
         @CurrentUser('sub') userId: string,
@@ -375,11 +376,11 @@ export abstract class BaseController<T extends BaseEntity<T>, K extends BaseServ
             
             // Set default options with improved defaults
             const options: ExportOptionsDto<T> = {
+                ...exportOptions,
                 format: exportOptions.format || FileFormat.CSV,
                 maxRecords: exportOptions.maxRecords || 1000,
                 filter: exportOptions.filter || {},
                 scope: req.resourceScope?.type || RoleScopeType.OWNED,
-                ...exportOptions,
             };
             
             // Generate a filename if not provided
@@ -507,24 +508,20 @@ export abstract class BaseController<T extends BaseEntity<T>, K extends BaseServ
         @CurrentUser('sub') userId: string,
     ): Promise<ImportResult> {
     try {
-        // Check service existence
         if (!this.importExportService) {
             throw new BadRequestException('Import/Export service not available');
         }
-
-        // Convert string values to proper types
-        const providedOptions = {
-            ...queryOptions,
-        };
         
-        // Set default options
+        // Convert string values and set defaults
         const importOptions: ImportOptionsDto<T> = {
-            ...providedOptions,  // Spread first so explicit values below can override
-            format: providedOptions.format || this.detectFileFormat(file.originalname),
-            batchSize: providedOptions.batchSize || 100,
+            ...queryOptions,
+            format: queryOptions.format || this.detectFileFormat(file.originalname),
+            // Set default identifier field to 'id'
+            identifierField: queryOptions.identifierField || 'id' as keyof T,
+            // Handle string vs boolean conversion properly
+            batchSize: queryOptions.batchSize || 100,
         };
         
-        // Import the data
         return await this.importExportService.importData(
             this.baseService,
             file.buffer,
@@ -535,7 +532,6 @@ export abstract class BaseController<T extends BaseEntity<T>, K extends BaseServ
         if (error instanceof BadRequestException) {
             throw error;
         } 
-        
         this.logger.error(`Error importing data: ${error.message}`, error.stack);
         throw new InternalServerErrorException(
             `Failed to import ${this.entityName} data: ${error.message}`

@@ -27,44 +27,27 @@ export class RolesGuard implements CanActivate {
         [context.getHandler(), context.getClass()],
       );
 
-      // log only allow roles
-      this.logger.log(`Only allow roles: ${onlyAllowRoles}`);
-
       const allowEmployee = this.reflector.getAllAndOverride<boolean>(
         ALLOW_EMPLOYEE_KEY,
         [context.getHandler(), context.getClass()],
       );
-      
-      // If no roles are required, allow access
-      if ((!requiredRoles || requiredRoles.length === 0)) {
-        return true;
-      }
 
       // Get the user payload from the request
       const request = context.switchToHttp().getRequest();
       const userClaims = request.user as IJwtPayload;
 
-      var user = await this.usersService.findOneBy({ id: userClaims.sub }, { relations: { employee: { roles: true } } });
-
-      if (!user) {
-        this.logger.warn(`User with ID ${userClaims.sub} not found`);
-        throw new ForbiddenException('User not found');
-      }
-
-      // log user email and user roles
-      this.logger.log(`User email: ${user.email}`);
-      this.logger.log(`User roles: ${user.employee?.roles?.map(role => role.name).join(', ') || 'None'}`);
+      var user = await this.usersService.findOneByOrFail({ id: userClaims.sub }, { relations: { employee: { roles: true } } });
 
       // Do not allow access to users with no role
       if ((!user.employee?.roles || user.employee.roles.length === 0) && onlyAllowRoles) {
-        this.logger.warn(`User with ID ${userClaims.sub} has no roles assigned`);
-        throw new ForbiddenException('You do not have a role to access this resource.');
+        this.logger.warn(`${userClaims.email} tried to access a resource that requires at least a role`);
+        throw new ForbiddenException('You do not have a role to access this resource');
       }
 
       // If allowEmployee is true, check if the user has only the employee role
       if (allowEmployee && user.employee?.roles?.length === 1 && user.employee.roles[0].name === Role.EMPLOYEE) {
-        this.logger.warn(`User with ID ${userClaims.sub} has only the employee role`);
-        throw new ForbiddenException('You do not have sufficient permissions to access this resource.');
+        this.logger.warn(`${userClaims.email} tried to access a resource that regular employees are not allowed to access`);
+        throw new ForbiddenException('Regular employees are not allowed to access this resource');
       }
 
       // If user has the super admin role, allow access

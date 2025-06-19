@@ -14,4 +14,28 @@ export class BranchesService extends BaseService<Branch> {
     ) {
         super(branchesRepository, usersService);
     }
+
+    // Get branch organization
+    async getBranchOrganization(branchId: string): Promise<string> {
+        const branch = await this.branchesRepository.findOneOrFail({
+            where: { id: branchId },
+            relations: {
+                organization: true,
+            }
+        });
+
+        return branch.organization.id;
+    }
+
+    // Check if department exists in branch
+    async isDepartmentInBranch(branchId: string, departmentId: string): Promise<boolean> {
+        const branch = await this.branchesRepository.findOneOrFail({
+            where: { id: branchId },
+            relations: {
+                departments: true,
+            }
+        });
+
+        return branch.departments?.some(department => department.id === departmentId) || false;
+    }
 }

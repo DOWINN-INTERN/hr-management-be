@@ -24,7 +24,7 @@ export interface AuthorizeOptions extends Omit<AccessOptions, 'permissions'> {
 export function Authorize(options?: AuthorizeOptions): MethodDecorator {
   const decorators = [
     Roles(options?.roles),
-    UseGuards(JwtAuthGuard, RolesGuard, PermissionsGuard, ScopeGuard),
+    UseGuards(JwtAuthGuard, RolesGuard, ScopeGuard, PermissionsGuard),
     UseInterceptors(ResourceAccessInterceptor),
     ApiBearerAuth('access-token'),
   ];

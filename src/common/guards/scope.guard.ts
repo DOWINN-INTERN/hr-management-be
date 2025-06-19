@@ -40,7 +40,6 @@ export class ScopeGuard implements CanActivate {
               try {
                 // Determine effective scope
                 const roleScope = UtilityHelper.determineEffectiveScope(user.roles || []);
-                this.logger.log(`Determined effective scope: ${roleScope.scope}`);
                 
                 // Store scope information with correct property names
                 const resourceScope: ResourceScope = {
@@ -63,8 +62,6 @@ export class ScopeGuard implements CanActivate {
               throw error;
             }
       }
-
-
 
       // Log access attempt
       this.logger.log(`Access attempt: ${method} ${path}`);
@@ -93,21 +90,17 @@ export class ScopeGuard implements CanActivate {
         // Fallback to request.params (even if empty)
         return request.params || {};
       })();
-
-      // log body
-      this.logger.log(`Request body: ${JSON.stringify(body)}`);
       
       // Log the attempt with scope information
-      this.logger.log(`Checking permissions for ${method} with scope type: ${resourceScope.type}`);
+      this.logger.log(`Checking scope for ${method} with scope type: ${resourceScope.type}`);
       
       // Check creation permissions based on scope
       if (!this.canDoInScope(body, resourceScope, method)) {
         const errorMessage = this.generateErrorMessage(resourceScope.type, body);
-        this.logger.warn(`Permission denied: ${errorMessage} with your scope ${resourceScope.type}`);
+        this.logger.warn(`Scope denied: ${errorMessage} with your scope ${resourceScope.type}`);
         throw new ForbiddenException(errorMessage);
       }
       
-      this.logger.log('Permission check passed');
       return true;
     } catch (error: any) {
       // Handle and log any unexpected errors
@@ -120,76 +113,84 @@ export class ScopeGuard implements CanActivate {
   }
   
   private canDoInScope(data: any, resourceScope: ResourceScope, method: string): boolean {
-    switch (resourceScope.type) {
-      case RoleScopeType.GLOBAL:
-        // Global scope can create anywhere
-        return true;
-        
-      case RoleScopeType.ORGANIZATION:
-        // Can only create within their organizations
-        if (data.organizationId) {
-          const hasAccess = resourceScope.organizations?.includes(data.organizationId) ?? false;
-          if (!hasAccess) {
-            this.logger.log(`Organization access denied: user tried to access org ${data.organizationId}`);
-          }
-          return hasAccess;
-        }
-        else if (!data.organizationId && method === 'GET')
-        {
-          throw new ForbiddenException('You must provide an organizationId to access this resource');
-        }
-        return true;
-        
-      case RoleScopeType.BRANCH:
-        // Can only create within their branches
-        if (data.branchId) {
-          const hasAccess = resourceScope.branches?.includes(data.branchId) ?? false;
-          if (!hasAccess) {
-            this.logger.log(`Branch access denied: user tried to access branch ${data.branchId}`);
-          }
-          return hasAccess;
-        }
-        else if (!data.branchId && method === 'GET')
-        {
-          throw new ForbiddenException('You must provide a branchId to access this resource');
-        }
-        return true;
-        
-      case RoleScopeType.DEPARTMENT:
-        // Can only create within their departments
-        if (data.departmentId) {
-          const hasAccess = resourceScope.departments?.includes(data.departmentId) ?? false;
-          if (!hasAccess) {
-            this.logger.log(`Department access denied: user tried to access dept ${data.departmentId}`);
-          }
-          else if (!data.departmentId && method === 'GET')
-          {
-            throw new ForbiddenException('You must provide a departmentId to access this resource');
-          }
-          return hasAccess;
-        }
-        return true;
-        
-      case RoleScopeType.OWNED:
-        // Usually can't create resources for others
-        if (data.userId) {
-          const hasAccess = resourceScope.userId === data.userId;
-          if (!hasAccess) {
-            this.logger.log(`User resource access denied: user tried to access another user's resource`);
-          }
-          return hasAccess;
-        }
-        else if (method === 'GET' && !data.userId) {
-          throw new ForbiddenException('You must provide a userId to access this resource');
-        }
-        // If no userId is provided, allow creation
-        return true;
-
-      default:
-        this.logger.warn(`Unknown scope type encountered: ${resourceScope.type}`);
-        return false;
+  // Common validation for all methods
+  const validateScope = (id: string | undefined, scopeIds: string[] | undefined, resourceType: string): boolean => {
+    // Log the validation attempt
+    this.logger.log(`Validating ${resourceType} access for ID: ${id} with scope IDs: ${scopeIds}`);
+    
+    if (!id) {
+      throw new ForbiddenException(`You must provide a ${resourceType}Id to access this resource`);
     }
+    
+    const hasAccess = scopeIds?.includes(id) ?? false;
+    if (!hasAccess) {
+      this.logger.log(`${resourceType} access denied: user tried to access ${resourceType.toLowerCase()} ${id}`);
+    }
+    return hasAccess;
+  };
+
+  switch (resourceScope.type) {
+    case RoleScopeType.GLOBAL:
+      return true;
+      
+    case RoleScopeType.ORGANIZATION:
+      // Specific logic for different methods
+      if (method === 'GET' || method === 'DELETE') {
+        return validateScope(data.organizationId, resourceScope.organizations, 'organization');
+      } else if (method === 'POST') {
+        // For creation, ensure all resource data is provided
+        if (!data.organizationId || !data.branchId || !data.departmentId)
+        {
+          throw new ForbiddenException(`You must provide organizationId, branchId, and departmentId to create this resource`);
+        }
+      }
+      else if (['PUT', 'PATCH'].includes(method)) {
+        // For creation/update, ensure the organization exists and user has access to it
+        return validateScope(data.organizationId, resourceScope.organizations, 'organization');
+      }
+      return validateScope(data.organizationId, resourceScope.organizations, 'organization');
+      
+    case RoleScopeType.BRANCH:
+      if (method === 'GET' || method === 'DELETE') {
+        return validateScope(data.branchId, resourceScope.branches, 'branch');
+      }
+      else if (method === 'POST') {
+        // For creation, ensure all resource data is provided
+        if (!data.branchId || !data.departmentId) {
+          throw new ForbiddenException(`You must provide branchId, and departmentId to create this resource`);
+        }
+        
+      } else if (['PUT', 'PATCH'].includes(method)) {
+        return validateScope(data.branchId, resourceScope.branches, 'branch');
+      }
+      return validateScope(data.branchId, resourceScope.branches, 'branch');
+      
+    case RoleScopeType.DEPARTMENT:
+      if (method === 'GET' || method === 'DELETE') {
+        return validateScope(data.departmentId, resourceScope.departments, 'department');
+      } else if (['POST', 'PUT', 'PATCH'].includes(method)) {
+        return validateScope(data.departmentId, resourceScope.departments, 'department');
+      }
+      return validateScope(data.departmentId, resourceScope.departments, 'department');
+      
+    case RoleScopeType.OWNED:
+      if (method === 'GET' || method === 'DELETE') {
+        return validateScope(data.userId, [resourceScope.userId || ""], 'user');
+      } else if (['POST', 'PUT', 'PATCH'].includes(method)) {
+        // For user resources, they can only create/modify their own resources
+        if (data.userId && data.userId !== resourceScope.userId) {
+          this.logger.log(`User cannot create/modify resources for other users`);
+          return false;
+        }
+        return true;
+      }
+      return validateScope(data.userId, [resourceScope.userId || ""], 'user');
+
+    default:
+      this.logger.warn(`Unknown scope type encountered: ${resourceScope.type}`);
+      return false;
   }
+}
 
   private generateErrorMessage(scopeType: RoleScopeType, data: any): string {
     switch (scopeType) {

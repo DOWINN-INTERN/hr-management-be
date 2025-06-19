@@ -14,4 +14,15 @@ export class OrganizationsService extends BaseService<Organization> {
     ) {
         super(organizationsRepository, usersService);
     }
+
+    // Check if branch exists in organization
+    async isBranchInOrganization(organizationId: string, branchId: string): Promise<boolean> {
+        const organization = await this.organizationsRepository.findOneOrFail({
+            where: { id: organizationId },
+            relations: {
+                branches: true,
+            }
+        });
+        return organization.branches?.some(branch => branch.id === branchId) || false;
+    }
 }

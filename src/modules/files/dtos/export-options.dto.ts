@@ -1,6 +1,7 @@
+import { BaseDto } from '@/common/dtos/base.dto';
 import { FileFormat } from '@/common/enums/file-format';
 import { RoleScopeType } from '@/common/enums/role-scope-type.enum';
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional, PartialType } from '@nestjs/swagger';
 import { IsArray, IsEnum, IsInt, IsNotEmpty, IsObject, IsOptional, IsString } from 'class-validator';
 
 export class DocumentMetadata {
@@ -53,7 +54,7 @@ export class DocumentMetadata {
   description?: string;
 }
 
-export class ExportOptionsDto<T> {
+export class ExportOptionsDto<T> extends PartialType(BaseDto) {
   /**
    * Format of the export file
    */

@@ -7,6 +7,7 @@ import { WorkTimeRequestsModule } from '../attendance-management/work-time-reque
 import { EmployeeManagementModule } from '../employee-management/employee-management.module';
 import { CutoffsModule } from './cutoffs/cutoffs.module';
 import { Payroll } from './entities/payroll.entity';
+import { PayrollConfigurationModule } from './payroll-configuration/payroll-configuration.module';
 import { PayrollItemTypesModule } from './payroll-item-types/payroll-item-types.module';
 import { PayrollItemsModule } from './payroll-items/payroll-items.module';
 import { PayrollsController } from './payrolls.controller';
@@ -27,12 +28,16 @@ import { PayrollStateMachine } from './services/payroll-state-machine.service';
                   module: PayrollManagementModule,
                   children: [
                     {
+                        path: 'configuration',
+                        module: PayrollConfigurationModule
+                    },
+                    {
                         path: 'payroll-items',
                         module: PayrollItemsModule
                     },
                     {
-                        path: 'payroll-item-types',
-                        module: PayrollItemTypesModule
+                      path: 'payroll-item-types',
+                      module: PayrollItemTypesModule
                     },
                     {
                         path: 'cutoffs',
@@ -47,6 +52,7 @@ import { PayrollStateMachine } from './services/payroll-state-machine.service';
         EmployeeManagementModule,
         forwardRef(() => FinalWorkHoursModule),
         WorkTimeRequestsModule,
+        PayrollConfigurationModule,
     ],
     providers: [PayrollsService, PayrollStateMachine, PayrollProcessorService, PayrollMetricsService],
     exports: [
@@ -54,6 +60,7 @@ import { PayrollStateMachine } from './services/payroll-state-machine.service';
         PayrollItemsModule,
         PayrollItemTypesModule,
         CutoffsModule,
+        PayrollConfigurationModule,
     ],
     controllers: [PayrollsController],
 })

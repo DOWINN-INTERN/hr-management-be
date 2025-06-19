@@ -61,15 +61,31 @@ export class ImportExportService {
       paginationDto.skip = 0;
       paginationDto.filter = options.filter || {};
       paginationDto.relations = relations;
-      paginationDto.select = options.select;
+      paginationDto.branchId = options.branchId;
+      paginationDto.organizationId = options.organizationId;
+      paginationDto.departmentId = options.departmentId;
+      paginationDto.userId = options.userId;
+      
+      // FIX: Convert select array to proper format
+      if (options.select && Array.isArray(options.select)) {
+        // For TypeORM, convert array to JSON string format so the PaginationDto will process it correctly
+        paginationDto.select = JSON.stringify(options.select);
+        this.logger.debug(`Converted select fields: ${paginationDto.select}`);
+      } else {
+        paginationDto.select = options.select;
+      }
+      
       paginationDto.sort = options.sort || { createdAt: 'DESC' };
 
-      this.logger.debug(`Fetching data with filter: ${JSON.stringify(options.filter)}`);
+      this.logger.debug(`Select fields: ${JSON.stringify(paginationDto.select)}`);
       
       const { data, totalCount } = await service.findAllComplex(
         options.scope || RoleScopeType.OWNED,
         paginationDto
       );
+
+      // log json string of the data for debugging
+      this.logger.debug(`Fetched data: ${JSON.stringify(data.slice(0, 5))}...`);
 
       const queryTime = Date.now() - startTime;
       this.logger.log(`Fetched ${data.length}/${totalCount} records in ${queryTime}ms`);
@@ -527,7 +543,6 @@ export class ImportExportService {
         fontSize: 22,
         bold: true,
         color: colors.primary,
-        margin: [0, 0, 0, 10]
       },
       subheader: {
         fontSize: 16,
@@ -553,7 +568,6 @@ export class ImportExportService {
       footer: {
         fontSize: 8,
         color: colors.darkGray,
-        margin: [40, 0]
       }
     };
     
@@ -582,7 +596,8 @@ export class ImportExportService {
         const value = item[col.dataKey];
         return { 
           text: this.formatPdfCellValue(value),
-          style: 'normal'
+          style: 'normal',
+          noWrap: false,
         };
       });
     });
@@ -620,7 +635,6 @@ export class ImportExportService {
           text: metadata.title,
           style: 'header',
           alignment: 'center',
-          margin: [0, 40, 0, 20]
         });
       }
       
@@ -670,13 +684,12 @@ export class ImportExportService {
         });
       }
       
-      // Don't add page break here, continue with filters and custom headers
     } else {
       // Simple header if no full metadata
       content.push({
-        text: 'Data Export',
+        text: `Export Data`,
         style: 'header',
-        margin: [0, 0, 0, 20]
+        alignment: 'center'
       });
     }
     
@@ -731,9 +744,6 @@ export class ImportExportService {
       });
     }
     
-    // NOW add the page break after all the metadata, filters and custom headers
-    content.push({ text: '', pageBreak: 'after' });
-    
     // 4. Data section title
     content.push({ text: 'Data Records', style: 'sectionTitle' });
     
@@ -765,61 +775,130 @@ export class ImportExportService {
     
     // Determine column width distribution based on content
     let tableWidths: any[];
-    
+    let tableFontSize = 10; // Default font size for table content
+    let tableHeaderFontSize = 12; // Default font size for header
+
+    // Calculate scaling factor based on number of columns
     if (columnDefs.length > 0) {
-      if (columnDefs.length <= 3) {
-        // For few columns, allocate even widths with star notation
-        tableWidths = Array(columnDefs.length).fill('*');
-      } else {
-        // For many columns, allocate percentage widths based on column count
-        const colWidth = availableWidth / columnDefs.length;
+      // Calculate available width
+      const pageWidth = shouldUseLandscape ? 842 : 595;
+      const margins = 40 * 2; // Left and right margins (40 each)
+      const availableWidth = pageWidth - margins - 20; // 20pt extra buffer
+
+      // Adjust font size based on column count
+      if (columnDefs.length > 10) {
+        tableFontSize = 7;
+        tableHeaderFontSize = 8;
+      } else if (columnDefs.length > 8) {
+        tableFontSize = 8;
+        tableHeaderFontSize = 9;
+      } else if (columnDefs.length > 6) {
+        tableFontSize = 9;
+        tableHeaderFontSize = 10;
+      }
+
+      // For extremely wide tables, use auto layout
+      if (columnDefs.length > 12) {
+        tableWidths = Array(columnDefs.length).fill('auto');
+      }
+      // For moderately wide tables, use calculated widths
+      else if (columnDefs.length > 3) {
+        // Calculate target column width
+        const targetColumnWidth = availableWidth / columnDefs.length;
         
-        // Calculate relative widths - analyze content in first few rows to make smart decisions
-        const widths = columnDefs.map((col, index) => {
-          // Estimate content width based on column header and sample data
+        // Analyze content to determine column width distributions
+        const columnAnalysis = columnDefs.map((col, index) => {
+          // Get header length
           const headerLength = col.text.length;
           
-          // Sample some values from this column to estimate width needs
+          // Sample data length
           const sampleRows = Math.min(tableRows.length, 10);
-          let avgContentLength = 0;
+          let maxContentLength = 0;
+          let totalContentLength = 0;
+          let contentSamples = 0;
           
           for (let i = 0; i < sampleRows; i++) {
-            if (tableRows[i] && tableRows[i][index] && tableRows[i][index].text) {
-              avgContentLength += String(tableRows[i][index].text).length;
+            if (tableRows[i] && tableRows[i][index]) {
+              const content = String(tableRows[i][index].text || '');
+              maxContentLength = Math.max(maxContentLength, content.length);
+              totalContentLength += content.length;
+              contentSamples++;
             }
           }
           
-          if (sampleRows > 0) {
-            avgContentLength /= sampleRows;
-          }
+          const avgContentLength = contentSamples > 0 ? totalContentLength / contentSamples : 0;
           
-          // Cap width between minimum and maximum
-          const contentBasedWidth = Math.max(
-            headerLength, 
-            Math.min(avgContentLength, 40)
-          );
-          
-          return contentBasedWidth;
+          return {
+            index,
+            headerLength,
+            maxContentLength,
+            avgContentLength,
+            // Determine column importance - headers and short consistent columns get priority
+            importance: headerLength > 0 ? 
+              (maxContentLength > 3 * avgContentLength ? 1 : 2) : 0.5
+          };
         });
         
-        // Scale widths to fit total available width
-        const totalWidthUnits = widths.reduce((sum, w) => sum + w, 0);
-        tableWidths = widths.map(width => {
-          const percentage = width / totalWidthUnits;
-          return availableWidth * percentage;
+        // Get total importance score
+        const totalImportance = columnAnalysis.reduce((sum, col) => sum + col.importance, 0);
+        
+        // Assign widths proportionally to importance
+        tableWidths = columnAnalysis.map(col => {
+          const proportion = col.importance / totalImportance;
+          // Calculate column width based on proportion, but enforce minimum
+          const width = Math.max(20, Math.min(150, proportion * availableWidth));
+          return width;
         });
+        
+        // Final check to ensure we don't exceed available width
+        const totalWidth = tableWidths.reduce((sum, width) => sum + width, 0);
+        if (totalWidth > availableWidth) {
+          const scaleFactor = availableWidth / totalWidth;
+          tableWidths = tableWidths.map(width => width * scaleFactor);
+        }
+      }
+      // For few columns, use star notation for even distribution
+      else {
+        tableWidths = Array(columnDefs.length).fill('*');
       }
     } else {
       tableWidths = ['*']; // Default for empty tables
     }
-    
+
+    // Update the table headers and rows to use adjusted font sizes
+    if (tableFontSize !== 10) {
+      tableHeaders.forEach(header => {
+        header.fontSize = tableHeaderFontSize;
+      });
+      
+      tableRows.forEach(row => {
+        row.forEach(cell => {
+          cell.fontSize = tableFontSize;
+          
+          // For very small font sizes, truncate long content
+          if (tableFontSize < 9 && typeof cell.text === 'string' && cell.text.length > 30) {
+            cell.text = cell.text.substring(0, 27) + '...';
+          }
+        });
+      });
+    }
+
+    // Use a more compact layout for many columns
+    const cellPadding = columnDefs.length > 8 ? 3 : columnDefs.length > 5 ? 4 : 6;
+
+    // Create table definition with optimized settings
+    const tableDefinition = {
+      headerRows: 1,
+      widths: tableWidths,
+      body: tableBody,
+      // Enable table fitting
+      dontBreakRows: false,
+      keepWithHeaderRows: 1
+    };
+
     // Add the table with calculated widths
     content.push({
-      table: {
-        headerRows: 1,
-        widths: tableWidths,
-        body: tableBody
-      },
+      table: tableDefinition,
       layout: {
         hLineWidth: (i: number, node: any) => {
           return (i === 0 || i === 1 || i === node.table.body.length) ? 1 : 0.5;
@@ -838,12 +917,25 @@ export class ImportExportService {
           // Zebra striping
           return rowIndex % 2 === 0 ? '#F9F9F9' : null;
         },
-        paddingLeft: () => 8,
-        paddingRight: () => 8,
-        paddingTop: () => 8,
-        paddingBottom: () => 8
+        paddingLeft: () => cellPadding,
+        paddingRight: () => cellPadding,
+        paddingTop: () => cellPadding,
+        paddingBottom: () => cellPadding,
+        defaultBorder: true,
+        fillOpacity: 1
       }
     });
+
+    // For extremely wide tables, add a note about column width optimization
+    if (columnDefs.length > 10) {
+      content.push({
+        text: '* Table columns have been optimized to fit on page. Some content may be truncated.',
+        fontSize: 8,
+        italics: true,
+        color: colors.darkGray,
+        margin: [0, 5, 0, 0]
+      });
+    }
 
     // Create the document definition with the table layout
     const docDefinition: any = {
@@ -854,7 +946,7 @@ export class ImportExportService {
       styles: styles,
       defaultStyle: {
         fontSize: 10,
-        color: colors.black
+        color: colors.black,
       },
       footer: function(currentPage: number, pageCount: number) {
         return {
@@ -1031,7 +1123,6 @@ async importData<T extends BaseEntity<T>>(
         startTime: new Date().toISOString(),
         userId,
         batchSize: importOptions.batchSize,
-        withValidation: importOptions.validate
       }
     };
     
@@ -1171,103 +1262,68 @@ private async processImportBatch<T extends BaseEntity<T>>(
   const batchSize = options.batchSize || 100;
   const repo = transactionManager ? transactionManager.getRepository(entityClass) : service.getRepository();
   
-  // Track entities for potential bulk operations
+  // Use id as the default identifier field if none is specified
+  const identifierField = options.identifierField || 'id';
+  
+  // Track entities for batch operations
   const entitiesToCreate: DeepPartial<T>[] = [];
   const entitiesToUpdate: Array<{ id: string, entity: DeepPartial<T> }> = [];
   
-  // Process in batches to avoid memory issues with large imports
+  // Process in batches
   for (let i = 0; i < records.length; i += batchSize) {
     const batch = records.slice(i, i + batchSize);
     this.logger.debug(`Processing batch ${Math.floor(i / batchSize) + 1}/${Math.ceil(records.length / batchSize)}`);
     
-    // First pass: validate all records in batch
-    let hasErrors = false;
-    
+    // Process each record
     for (let j = 0; j < batch.length; j++) {
       const record = batch[j];
       const rowNumber = i + j + 1;
       
       try {
-        // Transform and validate
         let entityDto = record;
-        
-        // Check if record exists
-        if (options.identifierField && record[options.identifierField as string]) {
-          const criteria = {
-            [options.identifierField as string]: record[options.identifierField as string]
-          } as unknown as Partial<T>;
-          
-          const existingRecord = await service.findOneBy(criteria);
-          
-          if (existingRecord) {
-            result.skipped.push(String(record[options.identifierField as string]));
-            continue;
-          }
-        }
-      } catch (error) {
-        this.handleImportError(record, error, result, 'system', rowNumber);
-        hasErrors = true;
-      }
-    }
-    
-    // If any validation errors in this batch, skip further processing
-    if (hasErrors) {
-      continue;
-    }
-    
-    
-    // Second pass: process records
-    for (let j = 0; j < batch.length; j++) {
-      const record = batch[j];
-      const rowNumber = i + j + 1;
-      
-      try {
-        // Transform to entity instance for validation if dtoClass is provided
-        let entityDto = record;
-        
-        // Determine if this is a new record or an update
         let existingRecord: T | null = null;
-        if (options.identifierField && record[options.identifierField as string]) {
+        
+        // Determine if record exists by identifier field
+        if (record[identifierField]) {
           const criteria = {
-            [options.identifierField as string]: record[options.identifierField as string]
+            [identifierField]: record[identifierField]
           } as unknown as Partial<T>;
           
+          this.logger.debug(`Looking for existing record with ${identifierField.toString()}=${record[identifierField]}`);
           existingRecord = await service.findOneBy(criteria);
+          this.logger.debug(`Existing record found: ${existingRecord ? 'Yes' : 'No'}`);
         }
         
-        // Create or update the record
+        // Decide whether to create, update, or skip
         if (existingRecord) {
-          // Add to batch update list
-            entitiesToUpdate.push({
-              id: existingRecord.id,
-              entity: {
-                ...entityDto as DeepPartial<T>,
-                updatedBy: userId
-              }
-            });
-        } else if (!existingRecord) {
-          // Add to batch creation list
-            entitiesToCreate.push({
+          // Update existing record
+          this.logger.debug(`Updating record ${existingRecord.id} (${identifierField.toString()}=${record[identifierField]})`);
+          entitiesToUpdate.push({
+            id: existingRecord.id,
+            entity: {
               ...entityDto as DeepPartial<T>,
-              createdBy: userId
-            });
-        } else {
-          // Record exists but updateExisting is false
-          if (options.identifierField && record[options.identifierField as string]) {
-            result.skipped.push(String(record[options.identifierField as string]));
-          } else {
-            result.skipped.push(`row-${rowNumber}`);
-          }
+              updatedBy: userId
+            }
+          });
+        }
+        else {
+          // Create new record
+          this.logger.debug(`Creating new record for row ${rowNumber}`);
+          entitiesToCreate.push({
+            ...entityDto as DeepPartial<T>,
+            createdBy: userId
+          });
         }
       } catch (error) {
         this.handleImportError(record, error, result, 'system', rowNumber);
       }
     }
     
-    // Process bulk operations if collected
+    // Process bulk operations
     try {
       // Bulk create
       if (entitiesToCreate.length > 0) {
+        this.logger.debug(`Creating ${entitiesToCreate.length} new records`);
         const entities = repo.create(entitiesToCreate);
         const savedEntities = await repo.save(entities);
         
@@ -1276,17 +1332,20 @@ private async processImportBatch<T extends BaseEntity<T>>(
           result.successCount++;
         });
         
-        entitiesToCreate.length = 0; // Clear array
+        entitiesToCreate.length = 0;
       }
       
       // Bulk update
-      for (const item of entitiesToUpdate) {
-        await repo.update(item.id, item.entity as any);
-        result.updated.push(item.id);
-        result.successCount++;
+      if (entitiesToUpdate.length > 0) {
+        this.logger.debug(`Updating ${entitiesToUpdate.length} existing records`);
+        for (const item of entitiesToUpdate) {
+          await repo.update(item.id, item.entity as any);
+          result.updated.push(item.id);
+          result.successCount++;
+        }
+        
+        entitiesToUpdate.length = 0;
       }
-      
-      entitiesToUpdate.length = 0; // Clear array
     } catch (bulkError: any) {
       this.logger.error(`Error in bulk operation: ${bulkError.message}`, bulkError.stack);
       

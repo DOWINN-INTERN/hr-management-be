@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Global, Module } from '@nestjs/common';
 import { RouterModule } from '@nestjs/core';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { BranchesModule } from './branches/branches.module';
@@ -7,6 +7,7 @@ import { Organization } from './entities/organization.entity';
 import { OrganizationsController } from './organizations.controller';
 import { OrganizationsService } from './organizations.service';
 
+@Global()
 @Module({
   imports: [
     TypeOrmModule.forFeature([Organization]),

@@ -41,6 +41,10 @@ export class PayrollsService extends BaseService<Payroll> {
   private readonly NightDifferentialPayMultiplier = 1.1;
   private readonly NightDifferentialOvertimePayMultiplier = 1.35;
   private readonly BaseAmount: 'grossPay' | 'monthlyRate' = 'monthlyRate';
+  private readonly BusinessDaysCalculationMode: 'Manual' | 'Automatic' = 'Manual';
+  private readonly BusinessDays = 261;
+  private readonly BusinessDaysOccurrence: Occurrence = Occurrence.ANNUALLY;
+  private readonly PayrollType: 'Fixed' | 'Dynamic' = 'Fixed';
 
   constructor(
     @InjectRepository(Payroll)
@@ -71,9 +75,38 @@ export class PayrollsService extends BaseService<Payroll> {
   }> {
     const baseCompensation = await this.employeePayrollItemTypesService.getEmployeeBaseCompensation(employeeId);
     
-    const { rateType, amount } = baseCompensation;
+    const { base, additional, total } = baseCompensation;
+
+    // example
+    // base = { rateType: 'MONTHLY', amount: 40000 }
+    // additional = 10000
+    // total = 50000
+
+    const { rateType, amount } = base;
+
     const businessDaysInPeriod = UtilityHelper.getBusinessDays(cutoff.startDate, cutoff.endDate);
     const businessDaysInMonth = UtilityHelper.getBusinessDaysInMonth(cutoff.startDate);
+    const businessDaysInYear = UtilityHelper.getBusinessDaysInYear(cutoff.startDate);
+
+    const getBusinessDaysByOccurrence = (occurrence: Occurrence): number => {
+      switch (occurrence) {
+        case Occurrence.ANNUALLY:
+          return businessDaysInYear;
+        case Occurrence.MONTHLY:
+          return businessDaysInMonth;
+        case Occurrence.BIWEEKLY:
+          return businessDaysInMonth / 2;
+        case Occurrence.WEEKLY:
+          return businessDaysInMonth / 4;
+        default:
+          return businessDaysInPeriod;
+      }
+    }
+
+    const actualBusinessDays = 
+      this.BusinessDaysCalculationMode === 'Manual' 
+      ? this.BusinessDays 
+      : getBusinessDaysByOccurrence(this.BusinessDaysOccurrence);
     
     // Default values
     let monthlyRate = 0;
@@ -85,27 +118,47 @@ export class PayrollsService extends BaseService<Payroll> {
       case Occurrence.MONTHLY:
         monthlyRate = amount;
         
-        // Calculate daily rate based on cutoff type
-        switch (cutoff.cutoffType) {
-          case CutoffType.DAILY:
-            dailyRate = monthlyRate / businessDaysInMonth;
-            break;
-          case CutoffType.WEEKLY:
-            dailyRate = (monthlyRate / 4) / businessDaysInPeriod;
-            break;
-          case CutoffType.BI_WEEKLY:
-            dailyRate = (monthlyRate / 2) / businessDaysInPeriod;
-            break;
-          case CutoffType.MONTHLY:
-          default:
-            dailyRate = monthlyRate / businessDaysInMonth;
-            break;
+        if (this.PayrollType === 'Fixed') {
+          switch (this.BusinessDaysOccurrence) {
+            case Occurrence.ANNUALLY:
+              // Fixed monthly rate, calculate daily based on business days in year
+              dailyRate = total / actualBusinessDays;
+              break;
+            // TODO: Handle other occurrences if needed
+            case Occurrence.MONTHLY:
+              // Fixed monthly rate, calculate daily based on business days in month
+              dailyRate = monthlyRate / businessDaysInMonth;
+              break;
+            case Occurrence.WEEKLY:
+              // Fixed monthly rate, calculate daily based on business days in period
+              dailyRate = (monthlyRate / 4) / businessDaysInPeriod;
+              break;
+            default:
+              dailyRate = monthlyRate / businessDaysInMonth;
+          }
+
+        } else {
+            // Calculate daily rate based on cutoff type
+          switch (cutoff.cutoffType) {
+            case CutoffType.DAILY:
+              dailyRate = monthlyRate / businessDaysInMonth;
+              break;
+            case CutoffType.WEEKLY:
+              dailyRate = (monthlyRate / 4) / businessDaysInPeriod;
+              break;
+            case CutoffType.BI_WEEKLY:
+              dailyRate = (monthlyRate / 2) / businessDaysInPeriod;
+              break;
+            default:
+              dailyRate = monthlyRate / businessDaysInMonth;
+              break;
+          }
         }
         
         // Standard 8-hour workday
         hourlyRate = dailyRate / 8;
         break;
-        
+      // TODO: Handle other rate types if needed
       case Occurrence.DAILY:
         dailyRate = amount;
         monthlyRate = dailyRate * businessDaysInMonth;
@@ -651,6 +704,7 @@ export class PayrollsService extends BaseService<Payroll> {
             amount: calculatedAmount
           };
         } else if (itemType.type === 'formula') {
+          // TODO: handle dynamic forumala based calculation using jexl
           // // For formula types without actual formula in entity, 
           // // use percentage-based calculation on monthly rate
           // if (itemType.percentage) {

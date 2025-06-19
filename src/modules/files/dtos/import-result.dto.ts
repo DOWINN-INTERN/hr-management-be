@@ -45,7 +45,6 @@ export class ImportResult {
     endTime?: string;
     userId?: string;
     batchSize: number;
-    withValidation: boolean;
     dryRun?: boolean;
   };
   

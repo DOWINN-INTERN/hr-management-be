@@ -1,0 +1,14 @@
+{
+  "name": "Workforce 360",
+  "theme": "material",
+  "output": "documentation",
+  "tsconfig": "tsconfig.json",
+  "port": 8081,
+  "hideGenerator": true,
+  "serve": true,
+  "disableSourceCode": false,
+  "disableCoverage": false,
+  "includes": "./docs",
+  "includesName": "Additional Documentation",
+  "language": "en-US"
+}

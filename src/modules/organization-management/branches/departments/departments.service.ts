@@ -14,4 +14,18 @@ export class DepartmentsService extends BaseService<Department> {
     ) {
         super(departmentsRepository, usersService);
     }
+
+    // get department branch
+    async getDepartmentBranch(departmentId: string): Promise<string> {
+        const department = await this.departmentsRepository.findOneOrFail({
+            where: { id: departmentId },
+            relations: {
+                branch: true,
+            }
+        });
+
+        return department.branch.id;
+    }
+
+    // check if group 
 }
