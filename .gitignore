@@ -51,3 +51,5 @@ pnpm-lock.yaml
 # Build
 /.build
 /build
+
+secret.txt
